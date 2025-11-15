@@ -137,6 +137,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
               trainingInProgress,
               setTrainingInProgress,
               handleUpsertSet,
+              activeTraining,
             });
 
             handleAdvanceInSuperset(

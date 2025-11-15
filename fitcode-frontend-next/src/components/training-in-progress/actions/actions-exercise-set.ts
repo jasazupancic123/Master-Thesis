@@ -4,7 +4,10 @@ import type {
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import type { CreateWorkload } from '@/core/training/type/workload.type';
+import type {
+  CreateWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
 import type { Rep } from '@/lib/pose-detection/type/rep.type';
@@ -23,8 +26,11 @@ export const finishSet = async (state: {
       supersetIndex: number;
       setIndex: number;
       isAiRecorded?: boolean;
-    }
+    },
+    workloads: Workload[],
+    recordedSets: TrainingExerciseRecordedSet[]
   ) => Promise<void>;
+  activeTraining: ActiveTraining | null;
   isAiRecorded?: boolean;
 }) => {
   const {
@@ -36,6 +42,7 @@ export const finishSet = async (state: {
     setTrainingInProgress,
     handleUpsertSet,
     isAiRecorded,
+    activeTraining,
   } = state;
 
   const set = exercise.sets[setIndex];
@@ -83,12 +90,17 @@ export const finishSet = async (state: {
     newRecordedSets
   );
 
-  await handleUpsertSet(workload, {
-    exerciseId: exercise.id,
-    setIndex,
-    supersetIndex,
-    isAiRecorded,
-  });
+  await handleUpsertSet(
+    workload,
+    {
+      exerciseId: exercise.id,
+      setIndex,
+      supersetIndex,
+      isAiRecorded,
+    },
+    activeTraining?.workloads || [],
+    trainingInProgress.recordedSets
+  );
 };
 
 const markExerciseSetAsCompleted = (

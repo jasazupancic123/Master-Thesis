@@ -1,7 +1,7 @@
 import { isAfter, startOfDay } from 'date-fns';
 
 import type { Training } from '../type/training.type';
-import type { UserProgress } from '../type/workload.type';
+import type { CreateWorkload, UserProgress } from '../type/workload.type';
 import { type Workload, WorkloadStatus } from '../type/workload.type';
 import { core } from '@/core/core.service';
 
@@ -109,5 +109,27 @@ export class WorkloadUtil {
     }
 
     return progress;
+  }
+
+  /**
+   * Returns the active time in seconds for the given workload, calculated via prescribed tempo and completed reps
+   */
+  getActiveWorkloadTimeS(workload: Omit<CreateWorkload, 'userId'>): number {
+    const leftRepDuraitonS =
+      (workload.tempoCon || 0) +
+      (workload.tempoEcc || 0) +
+      (workload.tempoIdle || 0) +
+      (workload.tempoIso || 0);
+
+    const rightRepDurationS =
+      (workload.tempoConR || 0) +
+      (workload.tempoEccR || 0) +
+      (workload.tempoIdleR || 0) +
+      (workload.tempoIsoR || 0);
+
+    const leftSideDurationS = (workload.reps || 0) * leftRepDuraitonS;
+    const rightSideDurationS = (workload.repsR || 0) * rightRepDurationS;
+
+    return leftSideDurationS + rightSideDurationS;
   }
 }

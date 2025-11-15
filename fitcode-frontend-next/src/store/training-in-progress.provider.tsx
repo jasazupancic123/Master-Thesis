@@ -7,7 +7,10 @@ import toast from 'react-hot-toast';
 import { useMain } from './main.provider';
 import { useTraining } from './training.provider';
 import { TrainingController } from '@/core/training/training.controller';
-import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
 import type {
   CreateWorkload,
   Workload,
@@ -15,6 +18,8 @@ import type {
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
+import dayjs from 'dayjs';
+import { core } from '@/core/core.service';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExercise | undefined;
@@ -36,7 +41,9 @@ export interface ITrainingInProgressContext {
       supersetIndex: number;
       setIndex: number;
       setCurrentAiRecordedWorkload?: SetState<Workload | null>;
-    }
+    },
+    workloads: Workload[],
+    recordedSets: TrainingExerciseRecordedSet[]
   ) => Promise<void>;
 }
 
@@ -121,7 +128,9 @@ export const TrainingInProgressProvider = ({
       supersetIndex: number;
       setIndex: number;
       isAiRecorded?: boolean;
-    }
+    },
+    workloads: Workload[],
+    recordedSets: TrainingExerciseRecordedSet[]
   ) {
     const {
       exerciseId,
@@ -136,6 +145,73 @@ export const TrainingInProgressProvider = ({
       !trainingInProgress.training
     )
       return;
+
+    // setting from
+    const currentRecordedSet = recordedSets.find(
+      (rs) =>
+        rs.exerciseId === exerciseId &&
+        rs.supersetIndex === stateSupersetIndex &&
+        rs.setIndex === stateSetIndex
+    );
+
+    if (currentRecordedSet) {
+      // was recorded with ai
+      const currentSetStart = currentRecordedSet.repsL
+        .concat(currentRecordedSet.repsR || [])
+        .sort(
+          (a, b) => a.startTimestamp.getTime() - b.startTimestamp.getTime()
+        )[0]?.startTimestamp;
+
+      if (currentSetStart) body.from = currentSetStart;
+    }
+
+    if (!body.from) {
+      // was not recorded with ai
+      const currentSetActiveTimeS =
+        core.training.workload.getActiveWorkloadTimeS(body);
+
+      body.from = dayjs().subtract(currentSetActiveTimeS, 'second').toDate();
+    }
+
+    let updatedPreviousWorkload: Workload | undefined = undefined;
+
+    if (workloads.length > 0 && stateSetIndex > 0) {
+      // we have previous workloads and this is not the first set
+      const prevWorkload = workloads.find(
+        (w) =>
+          w.trainingId === trainingInProgress.training.id &&
+          w.componentId === trainingInProgress.selectedComponent.id &&
+          w.exerciseId === exerciseId &&
+          w.supersetIndex === stateSupersetIndex &&
+          w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
+      );
+
+      if (prevWorkload) {
+        prevWorkload.recTime = Math.abs(
+          dayjs(body.from).diff(
+            dayjs(prevWorkload.to || prevWorkload.timestamp),
+            'second'
+          )
+        );
+
+        handleApiRequest(
+          router,
+          () =>
+            TrainingController.getInstance().upsertSet(
+              trainingInProgress.training.id,
+              trainingInProgress.selectedComponent.id,
+              exerciseId,
+              stateSupersetIndex,
+              stateSetIndex, // previous set (setNumber is 1-based, setIndex is 0-based)
+              { ...prevWorkload, userId: trainingInProgress.userId }
+            ),
+          (fetchedPrevWorkload) => {
+            console.log('fetchedPrevWorkload', fetchedPrevWorkload);
+            updatedPreviousWorkload = fetchedPrevWorkload;
+          }
+        );
+      }
+    }
 
     handleApiRequest(
       router,
@@ -154,15 +230,37 @@ export const TrainingInProgressProvider = ({
         setActiveTraining((prev) => {
           if (!prev) return prev;
 
-          const workloadExists = prev.workloads.find(
+          let prevWorkloads = [...prev.workloads];
+
+          const workloadExists = prevWorkloads.find(
             (w) => w.id === workload.id
           );
 
+          prevWorkloads = workloadExists
+            ? prevWorkloads.map((w) => (w.id === workload.id ? workload : w))
+            : [...prevWorkloads, workload];
+
+          if (updatedPreviousWorkload !== undefined) {
+            // update previous workload in state
+
+            const previousWorkloadExists = prevWorkloads.find(
+              (w) => w.id === updatedPreviousWorkload?.id
+            );
+
+            prevWorkloads = previousWorkloadExists
+              ? prevWorkloads.map((w) =>
+                  w.id === updatedPreviousWorkload?.id
+                    ? updatedPreviousWorkload
+                    : w
+                )
+              : [...prevWorkloads, updatedPreviousWorkload];
+          }
+
+          prevWorkloads = prevWorkloads.filter((w) => w !== undefined);
+
           return {
             ...prev,
-            workloads: workloadExists
-              ? prev.workloads.map((w) => (w.id === workload.id ? workload : w))
-              : [...prev.workloads, workload],
+            workloads: prevWorkloads,
           };
         });
 

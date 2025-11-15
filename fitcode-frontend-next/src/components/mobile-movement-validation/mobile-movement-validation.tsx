@@ -66,6 +66,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import { useMain } from '@/store/main.provider';
 
 const DEBUG = false;
 
@@ -89,6 +90,7 @@ export default function MobileMovementValidation(
   const screenSize = useScreenSize();
   const pathname = usePathname();
 
+  const { activeTraining } = useMain();
   const trainingContext = useTraining();
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
@@ -683,6 +685,7 @@ export default function MobileMovementValidation(
         setTrainingInProgress,
         handleUpsertSet,
         isAiRecorded: true,
+        activeTraining,
       });
 
       // handleAdvanceInSuperset({
