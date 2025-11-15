@@ -1,9 +1,9 @@
+import type { ActiveTraining } from '@/core/training/type/training.type';
 import type {
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { ActiveTraining } from '@/core/training/type/training.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
@@ -120,6 +120,7 @@ export const unmarkExerciseSetAsCompleted = (
     if (!prev) return prev;
 
     return {
+      ...prev,
       workloads: prev.workloads.filter((workload) => {
         return !(
           workload.exerciseId === id.exerciseId &&
