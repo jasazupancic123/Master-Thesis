@@ -129,10 +129,16 @@ export const handleAdvanceInSuperset = (
     useMain: IMainContext;
     useTraining: ITrainingContextDefined;
     useTrainingInProgress: ITrainingInProgressContext;
+    useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
   },
   skipCurrentWorkload?: boolean
 ) => {
-  const { useMain, useTraining, useTrainingInProgress } = context;
+  const {
+    useMain,
+    useTraining,
+    useTrainingInProgress,
+    useTrainingInProgressUtils,
+  } = context;
 
   const { activeTraining } = useMain;
   const { trainingInProgress, setTrainingInProgress } = useTraining;
@@ -145,6 +151,8 @@ export const handleAdvanceInSuperset = (
     selectedExercise: exercise,
     setIndex,
   } = useTrainingInProgress;
+
+  const { handleFinish } = useTrainingInProgressUtils;
 
   if (!trainingInProgress || !exercise) return;
 
@@ -189,7 +197,10 @@ export const handleAdvanceInSuperset = (
       supersetIndex ===
       trainingInProgress.selectedComponent.supersets.length - 1;
 
-    if (isLastSuperset) return;
+    if (isLastSuperset) {
+      handleFinish();
+      return;
+    }
 
     const nextSuperset =
       trainingInProgress.selectedComponent.supersets[supersetIndex + 1];

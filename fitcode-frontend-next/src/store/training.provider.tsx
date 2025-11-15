@@ -82,14 +82,9 @@ export const TrainingProvider = (
       const storedTrainingInProgressObject =
         await lib.common.indexedDb.items.get(STORED_TRAINING_IN_PROGRESS); // LOAD FROM INDEX_DB
 
-      if (!storedTrainingInProgressObject) {
-        setIsLoaded(true);
-        return;
-      }
-
-      const storedTrainingInProgress = JSON.parse(
-        storedTrainingInProgressObject.payload
-      ) as TrainingInProgressIndexDB;
+      const storedTrainingInProgress = storedTrainingInProgressObject
+        ? JSON.parse(storedTrainingInProgressObject.payload)
+        : (undefined as TrainingInProgressIndexDB | undefined);
 
       if (storedTrainingInProgress) {
         setTrainingInProgress({

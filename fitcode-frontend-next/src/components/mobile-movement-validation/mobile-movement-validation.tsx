@@ -1156,13 +1156,13 @@ export default function MobileMovementValidation(
             </>
           ) : (
             <>
-              <Box
-                width="100%"
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-              >
-                {isSandbox ? (
+              {isSandbox && (
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                >
                   <Select
                     value={sandboxExerciseId}
                     onChange={(e) =>
@@ -1190,41 +1190,8 @@ export default function MobileMovementValidation(
                       );
                     })}
                   </Select>
-                ) : (
-                  <Typography
-                    width="100%"
-                    textAlign="center"
-                    fontWeight="bold"
-                    fontSize={20}
-                    sx={{
-                      backgroundColor: theme.palette.primary.main,
-                      py: 1,
-                      textTransform: 'uppercase',
-                      color: theme.palette.text.secondary,
-                    }}
-                  >
-                    {selectedExercise?.exercise?.name || defaultExerciseName}
-                  </Typography>
-                )}
-
-                {trainingInProgress?.training &&
-                  selectedExercise &&
-                  selectedExercise.sets[setIndex] && (
-                    <AthleteTrainingExerciseSets
-                      training={trainingInProgress?.training}
-                      exercise={selectedExercise}
-                      borderBottomRadius={false}
-                      expanded={false}
-                      trainingInProgressView
-                      passedSet={selectedExercise.sets[setIndex]}
-                      supersetIndex={supersetIndex}
-                      setIndex={setIndex}
-                      componentId={componentId}
-                      trainingId={trainingId}
-                      aiDetectionView
-                    />
-                  )}
-              </Box>
+                </Box>
+              )}
             </>
           )}
         </Box>

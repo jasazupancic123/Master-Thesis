@@ -4,6 +4,7 @@ import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import AthleteHeader from '../athlete/athlete-header';
@@ -28,6 +29,7 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
+  const pathname = usePathname();
 
   const { user } = useAuthenticatedAuth();
   const { activeTraining } = useMain();
@@ -72,8 +74,8 @@ export default function TrainingInProgress() {
 
   useEffect(() => {
     const redirectToTrainings = async () => {
-      await clearTrainingState();
       window.location.href = '/trainings';
+      await clearTrainingState();
     };
 
     if (!activeTraining || !activeTraining.statuses?.length) {
@@ -81,16 +83,26 @@ export default function TrainingInProgress() {
       return;
     }
 
-    if (activeTraining && activeTraining.statuses) {
+    const componentId = pathname.split('/').pop() || '';
+
+    if (activeTraining && activeTraining.statuses && componentId) {
       const status = activeTraining.statuses.find(
-        (s) => s.status === TrainingStatus.IN_PROGRESS
+        (s) =>
+          s.componentId === componentId &&
+          (s.status === TrainingStatus.IN_PROGRESS ||
+            s.status === TrainingStatus.PAUSED)
       );
+
+      if (!status) {
+        redirectToTrainings();
+        return;
+      }
 
       const component = activeTraining.components.find(
-        (c) => c.id === status?.componentId
+        (c) => c.id === componentId
       );
 
-      if (!status || !component) {
+      if (!component) {
         redirectToTrainings();
         return;
       }
