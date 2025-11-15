@@ -1,3 +1,5 @@
+import type { DateRangeDto } from '@src/common/dto/date-range.dto';
+
 import type { BaseAggregatedReport } from './training-set.type';
 
 type Meta = {
@@ -27,3 +29,14 @@ export type TrainingReport = Meta &
   PrescribedTrainingStats & {
     prescribed: PrescribedTrainingStats;
   };
+
+export type GroupTrainingReportItem = {
+  attended: number;
+  realization: number;
+};
+
+export type UserTrainingRealizationReportItem = DateRangeDto & {
+  trainingId: string;
+  componentId?: string;
+  realization: number;
+};

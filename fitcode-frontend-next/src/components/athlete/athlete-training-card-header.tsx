@@ -7,7 +7,7 @@ import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainingReport } from '@/core/training/type/training-stats.type';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
 
 interface Props {
   report?: TrainingReport;

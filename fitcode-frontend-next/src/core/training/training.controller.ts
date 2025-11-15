@@ -9,7 +9,11 @@ import type {
   UpdateTraining,
 } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
-import type { TrainingReport } from './type/training-stats.type';
+import type {
+  GroupTrainingReportItem,
+  TrainingReport,
+  UserTrainingRealizationReportItem,
+} from './type/training-report.type';
 import type { CreateWorkload, Workload } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
@@ -42,10 +46,39 @@ export class TrainingController extends BaseController {
     return this.api.get<ActiveTraining | null>(`/get/active`, options);
   }
 
-  async getGroupAttendance(groupId: string, componentId?: string) {
-    return await this.api.get<Record<string, number>>(`/report/attendance`, {
-      query: { groupId, ...(componentId ? { componentId } : {}) },
-    });
+  async getGroupReport(groupId: string, componentId?: string) {
+    return await this.api.get<Record<string, GroupTrainingReportItem>>(
+      `/report/group`,
+      { query: { groupId, ...(componentId ? { componentId } : {}) } }
+    );
+  }
+
+  async getUserTrainingsRealizationReport(
+    institutionId: string,
+    athleteId: string,
+    componentId?: string
+  ) {
+    return await this.api.get<UserTrainingRealizationReportItem[]>(
+      `/report/athlete/trainings-realization`,
+      {
+        query: {
+          institutionId,
+          athleteId,
+          ...(componentId ? { componentId } : {}),
+        },
+      }
+    );
+  }
+
+  async getUserExerciseReport(
+    institutionId: string,
+    athleteId: string,
+    exerciseId: string
+  ) {
+    return await this.api.get<Workload[]>(
+      `/report/athlete/exercise/${exerciseId}`,
+      { query: { athleteId, institutionId } }
+    );
   }
 
   async generateQRCode(
