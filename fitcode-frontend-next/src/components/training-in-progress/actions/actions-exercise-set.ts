@@ -47,6 +47,8 @@ export const finishSet = async (state: {
 
   const set = exercise.sets[setIndex];
 
+  console.log('set', set);
+
   const workload: CreateWorkload = {
     userId: trainingInProgress.userId,
     timestamp: new Date(),

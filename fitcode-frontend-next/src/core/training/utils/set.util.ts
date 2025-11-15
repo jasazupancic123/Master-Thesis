@@ -118,12 +118,12 @@ export class TrainingExerciseSetUtil {
     removeIdle?: boolean
   ): [number, number, number, number] | [number, number, number] {
     if (removeIdle)
-      return [set.tempoEcc || 2, set.tempoIso || 0, set.tempoCon || 1];
+      return [set.tempoEcc || 2, set.tempoIso || 0, set.tempoCon || 0];
 
     return [
       set.tempoEcc || 2,
       set.tempoIso || 0,
-      set.tempoCon || 1,
+      set.tempoCon || 0,
       set.tempoIdle || 0,
     ];
   }
@@ -133,12 +133,12 @@ export class TrainingExerciseSetUtil {
     removeIdle?: boolean
   ): [number, number, number, number] | [number, number, number] {
     if (removeIdle)
-      return [set.tempoEccR || 2, set.tempoIsoR || 0, set.tempoConR || 1];
+      return [set.tempoEccR || 2, set.tempoIsoR || 0, set.tempoConR || 0];
 
     return [
       set.tempoEccR || 2,
       set.tempoIsoR || 0,
-      set.tempoConR || 1,
+      set.tempoConR || 0,
       set.tempoIdleR || 0,
     ];
   }
