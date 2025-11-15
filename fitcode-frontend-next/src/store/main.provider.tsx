@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { withAuth } from './auth.provider';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -8,7 +8,9 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
+import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import type { ActiveTraining } from '@/core/training/type/training.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
@@ -23,6 +25,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
 }
 
 export interface IMainContext extends MainProviderProps {
+  wellness: WellnessZScore[];
   setProfile: SetStateNullable<Profile>;
   setProfiles: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
@@ -50,9 +53,28 @@ export default function MainProvider(props: MainProviderProps) {
   const [users, setUsers] = useState<AuthUser[]>(props.users);
   const [exercises, setExercises] = useState<Exercise[]>(props.exercises);
   const [groups, setGroups] = useState<Group[]>(props.groups);
+  const [wellness, setWellness] = useState<WellnessZScore[]>([]);
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
     props.activeTraining
   );
+
+  useEffect(() => {
+    // fetch wellness
+    async function fetchWellness(): Promise<WellnessZScore[]> {
+      try {
+        const institutionId = props.institutions[0]?.id;
+        if (!institutionId) return [];
+
+        return await ProfileController.getInstance().getWellnessByInstitution(
+          institutionId
+        );
+      } catch {
+        return [];
+      }
+    }
+
+    fetchWellness().then((data) => setWellness(data));
+  }, []);
 
   const value: IMainContext = {
     profile: profile!,
@@ -66,6 +88,7 @@ export default function MainProvider(props: MainProviderProps) {
     institutions: props.institutions,
     groups,
     setGroups,
+    wellness,
     activeTraining,
     setActiveTraining,
   };

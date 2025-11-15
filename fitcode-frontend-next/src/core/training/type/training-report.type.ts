@@ -1,6 +1,7 @@
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
+import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export type BaseReport = {
   reps: number;
@@ -52,3 +53,14 @@ export type TrainingReport = Meta &
   PrescribedTrainingStats & {
     prescribed: PrescribedTrainingStats;
   };
+
+export type GroupTrainingReportItem = {
+  attended: number;
+  realization: number;
+};
+
+export type UserTrainingRealizationReportItem = Required<DateRange> & {
+  trainingId: string;
+  componentId?: string;
+  realization: number;
+};

@@ -46,8 +46,8 @@ describe('Attendance Report', () => {
 
   async function req(token: string, groupId: string, componentId?: string) {
     const url = componentId
-      ? `/training/report/attendance?groupId=${groupId}&componentId=${componentId}`
-      : `/training/report/attendance?groupId=${groupId}`;
+      ? `/training/report/group?groupId=${groupId}&componentId=${componentId}`
+      : `/training/report/group?groupId=${groupId}`;
 
     return testApp.http.get(url, token);
   }
@@ -103,7 +103,7 @@ describe('Attendance Report', () => {
     const res = await req(global.trainer.token, group.id);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      [global.athlete.uid]: 1, // still only 1 unique training completed
+      [global.athlete.uid]: { attended: 1, realization: 0 }, // still only 1 unique training completed
     });
   });
 
@@ -161,8 +161,8 @@ describe('Attendance Report', () => {
     const res = await req(global.trainer.token, group.id);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      [athlete1Id]: 2,
-      [athlete2Id]: 3,
+      [athlete1Id]: { attended: 2, realization: 0 },
+      [athlete2Id]: { attended: 3, realization: 0 },
     });
   });
 
@@ -220,10 +220,16 @@ describe('Attendance Report', () => {
 
     const resC1 = await req(global.trainer.token, group.id, 'c1');
     expect(resC1.status).toBe(200);
-    expect(resC1.body).toEqual({ [athlete1Id]: 1, [athlete2Id]: 1 });
+    expect(resC1.body).toEqual({
+      [athlete1Id]: { attended: 1, realization: 0 },
+      [athlete2Id]: { attended: 1, realization: 0 },
+    });
 
     const resC2 = await req(global.trainer.token, group.id, 'c2');
     expect(resC2.status).toBe(200);
-    expect(resC2.body).toEqual({ [athlete1Id]: 1, [athlete2Id]: 2 });
+    expect(resC2.body).toEqual({
+      [athlete1Id]: { attended: 1, realization: 0 },
+      [athlete2Id]: { attended: 2, realization: 0 },
+    });
   });
 });

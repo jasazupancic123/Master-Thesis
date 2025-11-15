@@ -66,13 +66,11 @@ export class WorkloadService {
     return this.repository.collection({ trainingId });
   }
 
-  async findHistory(ref: ExerciseRef & { userId: string }) {
+  async getUserExerciseReport(ref: ExerciseRef & { userId: string }) {
     return await this.firebase.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', '==', ref.userId)
       .where('exerciseId', '==', ref.exerciseId)
-      .where('status', 'not-in', [SetStatus.NOT_STARTED, SetStatus.IGNORED])
-      .orderBy('intWork1ValueL')
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -88,15 +86,25 @@ export class WorkloadService {
    * so on.
    */
   async findAllByUserTraining(
-    userId: string | undefined,
     ref: Partial<
-      Pick<WorkloadRef, 'trainingId' | 'componentId' | 'exerciseId'>
+      InstitutionRef &
+        Pick<
+          WorkloadRef,
+          'userId' | 'trainingId' | 'componentId' | 'exerciseId'
+        >
     >,
   ): Promise<Workload[]> {
-    const { trainingId, componentId, exerciseId } = ref;
+    const { institutionId, userId, trainingId, componentId, exerciseId } = ref;
     let query = this.firebase.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
+
+    if (institutionId)
+      query = query.where(
+        'institutionId',
+        '==',
+        institutionId,
+      ) as CollectionGroup;
 
     if (userId) query = query.where('userId', '==', userId) as CollectionGroup;
     if (trainingId)
@@ -173,10 +181,7 @@ export class WorkloadService {
     input: CreateWorkload,
   ): Promise<Workload> {
     // find exercise in training
-    const existingExerciseWorkloads = await this.findAllByUserTraining(
-      ref.userId,
-      ref,
-    );
+    const existingExerciseWorkloads = await this.findAllByUserTraining(ref);
 
     // determine in which superset the exercise is being completed and its set number
     let componentId: string;
