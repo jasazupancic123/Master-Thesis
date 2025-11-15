@@ -9,7 +9,7 @@ import type {
   PrescribedTrainingStats,
   SetReport,
   TrainingReport,
-} from './type/training-stats.type';
+} from './type/training-report.type';
 
 const REP_TEMPO_TIME_IN_S = 3; // 3 seconds per rep tempo if not specified
 

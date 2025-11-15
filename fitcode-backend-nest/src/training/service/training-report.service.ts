@@ -15,7 +15,7 @@ import {
   PrescribedTrainingStats,
   TrainingComponentReport,
   TrainingReport,
-} from '../type/training-stats.type';
+} from '../type/training-report.type';
 
 @Injectable()
 export class TrainingReportService {

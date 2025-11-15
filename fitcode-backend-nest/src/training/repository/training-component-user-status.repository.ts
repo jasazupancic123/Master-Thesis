@@ -22,6 +22,10 @@ import { TrainingRepository } from '@src/training/repository/training.repository
 
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
+import {
+  GroupTrainingReportItem,
+  UserTrainingRealizationReportItem,
+} from '../type/training-report.type';
 
 @Injectable()
 export class TrainingComponentUserStatusRepository extends FirestoreRepository<
@@ -180,10 +184,10 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     );
   }
 
-  async getGroupAttendance(
+  async getGroupReport(
     groupId: string,
     componentId?: string,
-  ): Promise<Record<string, number>> {
+  ): Promise<Record<string, GroupTrainingReportItem>> {
     let query = this.collectionGroup().where('groupId', '==', groupId);
     if (componentId) query = query.where('componentId', '==', componentId);
 
@@ -196,18 +200,89 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
 
     // group by userId and the number of unique trainingIds they have
     const attendance: Record<string, Set<string>> = {};
+    const realizationAcc: Record<string, { sum: number; count: number }> = {};
+
     for (const status of statuses) {
       if (status.status !== TrainingStatus.COMPLETED) continue;
+
       if (!attendance[status.userId]) attendance[status.userId] = new Set();
       attendance[status.userId].add(status.trainingId);
+
+      if (!realizationAcc[status.userId])
+        realizationAcc[status.userId] = { sum: 0, count: 0 };
+
+      // if componentId is filtered → use exactly that realization
+      // if no componentId → accumulate to compute the average
+      realizationAcc[status.userId].sum += status.realization;
+      realizationAcc[status.userId].count++;
     }
 
-    // convert sets to counts
-    const counts: Record<string, number> = {};
-    for (const [userId, trainingIds] of Object.entries(attendance))
-      counts[userId] = trainingIds.size;
+    // Final output object
+    const result: Record<string, GroupTrainingReportItem> = {};
+    for (const userId of Object.keys(attendance)) {
+      const r = realizationAcc[userId];
+      const realization =
+        r && r.count > 0 ? Number((r.sum / r.count).toFixed(2)) : 0;
 
-    return counts;
+      result[userId] = {
+        attended: attendance[userId].size,
+        realization,
+      };
+    }
+
+    return result;
+  }
+
+  async getUserTrainingsRealizationReport(
+    institutionId: string,
+    userId: string,
+    componentId?: string,
+  ): Promise<UserTrainingRealizationReportItem[]> {
+    let query = this.collectionGroup()
+      .where('institutionId', '==', institutionId)
+      .where('userId', '==', userId);
+    if (componentId) query = query.where('componentId', '==', componentId);
+
+    const snapshot = await query.get();
+    const statuses = snapshot.docs.map((doc) =>
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
+    );
+
+    // realization is the average realization across all components for the training
+    const realizationAcc: Record<string, { sum: number; count: number }> = {};
+    const trainingMap: Record<string, Date> = {};
+
+    for (const status of statuses) {
+      if (status.status !== TrainingStatus.COMPLETED) continue;
+      if (!realizationAcc[status.trainingId])
+        realizationAcc[status.trainingId] = { sum: 0, count: 0 };
+
+      realizationAcc[status.trainingId].sum += status.realization;
+      realizationAcc[status.trainingId].count++;
+
+      if (!trainingMap[status.trainingId])
+        trainingMap[status.trainingId] = new Date(status.from);
+    }
+
+    // Final output array
+    const result: UserTrainingRealizationReportItem[] = [];
+    for (const trainingId of Object.keys(realizationAcc)) {
+      const r = realizationAcc[trainingId];
+      const realization =
+        r && r.count > 0 ? Number((r.sum / r.count).toFixed(2)) : 0;
+
+      result.push({
+        trainingId,
+        from: trainingMap[trainingId],
+        to: trainingMap[trainingId],
+        realization,
+      });
+    }
+
+    result.sort((a, b) => a.from.getTime() - b.from.getTime());
+    return result;
   }
 
   getKey(ref: TrainingComponentUserStatusRef) {
