@@ -25,9 +25,11 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { usePathname } from 'next/navigation';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
+  const pathname = usePathname();
 
   const { user } = useAuthenticatedAuth();
   const { activeTraining } = useMain();
@@ -72,8 +74,8 @@ export default function TrainingInProgress() {
 
   useEffect(() => {
     const redirectToTrainings = async () => {
-      await clearTrainingState();
       window.location.href = '/trainings';
+      await clearTrainingState();
     };
 
     if (!activeTraining || !activeTraining.statuses?.length) {
@@ -81,16 +83,26 @@ export default function TrainingInProgress() {
       return;
     }
 
-    if (activeTraining && activeTraining.statuses) {
+    const componentId = pathname.split('/').pop() || '';
+
+    if (activeTraining && activeTraining.statuses && componentId) {
       const status = activeTraining.statuses.find(
-        (s) => s.status === TrainingStatus.IN_PROGRESS
+        (s) =>
+          s.componentId === componentId &&
+          (s.status === TrainingStatus.IN_PROGRESS ||
+            s.status === TrainingStatus.PAUSED)
       );
+
+      if (!status) {
+        redirectToTrainings();
+        return;
+      }
 
       const component = activeTraining.components.find(
-        (c) => c.id === status?.componentId
+        (c) => c.id === componentId
       );
 
-      if (!status || !component) {
+      if (!component) {
         redirectToTrainings();
         return;
       }

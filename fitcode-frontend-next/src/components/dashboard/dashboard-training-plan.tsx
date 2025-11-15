@@ -171,7 +171,7 @@ export default function DashboardTrainingPlan() {
 
       <Box width="100%" display="flex" justifyContent="center" mt={-3}>
         <FormControlLabel
-          label="Only my sessions"
+          label="My sessions"
           control={
             <Checkbox
               checked={onlyMySessions}

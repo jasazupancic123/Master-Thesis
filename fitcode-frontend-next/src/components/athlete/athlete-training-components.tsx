@@ -76,10 +76,23 @@ export default function AthleteTrainingComponents(props: Props) {
           {components.map((component) => {
             const IconComponent = lib.common.component.getIcon(component.id);
 
-            const componentStatus = activeTraining?.statuses?.find(
+            let componentStatus = activeTraining?.statuses?.find(
               (s) =>
                 s.componentId === component.id && s.trainingId === training.id
             )?.status;
+
+            if (!componentStatus) {
+              const isTrainingWithStatuses =
+                lib.common.typeChecker.isTrainingWithStatuses(training);
+
+              if (isTrainingWithStatuses) {
+                componentStatus = training.statuses?.find(
+                  (s) =>
+                    s.componentId === component.id &&
+                    s.trainingId === training.id
+                )?.status;
+              }
+            }
 
             return (
               <Box key={component.id} minWidth="48px">
@@ -288,38 +301,46 @@ export default function AthleteTrainingComponents(props: Props) {
             return;
           }
 
+          const newStatus = {
+            id: `${trainingToStart.id}-${component.id}-${user.uid}`,
+            trainingId: trainingToStart.id,
+            componentId: component.id,
+            status: TrainingStatus.IN_PROGRESS,
+            userId: user.uid,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
           setActiveTraining((prev) => {
             if (!prev)
               return {
                 ...trainingToStart,
                 workloads: [],
-                statuses: [
-                  {
-                    id: `${trainingToStart.id}-${component.id}-${user.uid}`,
-                    trainingId: trainingToStart.id,
-                    componentId: component.id,
-                    status: TrainingStatus.IN_PROGRESS,
-                    userId: user.uid,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  },
-                ],
+                statuses: [newStatus],
               };
+
+            const foundStatus = prev.statuses?.find(
+              (s) =>
+                s.trainingId === trainingToStart!.id &&
+                s.componentId === component.id
+            );
 
             return {
               ...prev,
               statuses: prev.statuses
-                ? prev.statuses.map((s) =>
-                    s.componentId === component.id &&
-                    s.trainingId === trainingToStart.id
-                      ? {
-                          ...s,
-                          status: TrainingStatus.IN_PROGRESS,
-                          updatedAt: new Date(),
-                        }
-                      : s
-                  )
-                : [],
+                ? foundStatus
+                  ? prev.statuses.map((s) =>
+                      s.componentId === component.id &&
+                      s.trainingId === trainingToStart.id
+                        ? {
+                            ...s,
+                            status: TrainingStatus.IN_PROGRESS,
+                            updatedAt: new Date(),
+                          }
+                        : s
+                    )
+                  : [...prev.statuses, newStatus]
+                : [newStatus],
             };
           });
 
@@ -347,11 +368,6 @@ export default function AthleteTrainingComponents(props: Props) {
           setModal(false);
 
           lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
-
-          console.log(
-            'pushing to',
-            `/trainings/${training.id}/components/${selectedComponent.id}`
-          );
 
           router.push(
             `/trainings/${training.id}/components/${selectedComponent.id}`

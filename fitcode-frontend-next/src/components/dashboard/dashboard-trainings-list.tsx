@@ -98,15 +98,12 @@ export default function DashboardTrainingsList(props: Props) {
                 return (
                   <Box
                     key={`${training.id}-${component.id}`}
+                    height={50}
                     width="100%"
                     display="flex"
                     alignItems="center"
                     gap={1}
-                    // if group owner, gray background
                     sx={{
-                      backgroundColor: isGroupTrainer
-                        ? theme.palette.background.dark
-                        : 'transparent',
                       borderRadius: 1,
                       p: 1,
                       cursor: 'pointer',

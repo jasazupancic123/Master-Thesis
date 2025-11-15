@@ -120,6 +120,7 @@ export const unmarkExerciseSetAsCompleted = (
     if (!prev) return prev;
 
     return {
+      ...prev,
       workloads: prev.workloads.filter((workload) => {
         return !(
           workload.exerciseId === id.exerciseId &&

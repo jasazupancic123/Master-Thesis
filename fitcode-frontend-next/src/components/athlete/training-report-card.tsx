@@ -13,6 +13,7 @@ import AthleteTrainingCardHeader from './athlete-training-card-header';
 import { theme } from '@/app/style';
 import type { TrainingReport } from '@/core/training/type/training-stats.type';
 import { PieCenterLabel } from '@/ui/mui-charts';
+import { lib } from '@/lib';
 
 interface Props {
   report: TrainingReport;
@@ -179,7 +180,6 @@ export default function TrainingReportCard({ report }: Props) {
             gap={1}
           >
             <CustomValueBox value={`${duration}’`} title="Duration" />
-            <CustomValueBox value={`72%`} title="Intensity" />
           </Box>
         </Box>
         {/* Bar charts for remaining metrics */}
@@ -226,8 +226,9 @@ export default function TrainingReportCard({ report }: Props) {
                     fontSize={11}
                     color={theme.palette.text.primary}
                     mt={0.5}
+                    textAlign="center"
                   >
-                    {metric.completed}
+                    {lib.common.number.formatNumber(metric.completed)}
                     {metric.unit || ''} / {metric.total}
                     {metric.unit || ''}
                   </Typography>
