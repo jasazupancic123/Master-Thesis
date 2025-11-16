@@ -5,29 +5,29 @@ import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
-import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
-import type { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
-import type { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/lib/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/lib/pose-detection/const/status-messages';
-import { DetectionStatus } from '@/lib/pose-detection/enum/detection-status';
-import type { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
-import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
-import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
+import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
+import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
+import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
+import type { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
+import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
+import type { AvgFps } from '@/core/exercise-ai-prescriptions/type/avg-fps.type';
+import type { CurrentSideMutex } from '@/core/exercise-ai-prescriptions/type/current-side-mutex.type';
 import type {
+  ExerciseAiPrescriptionData,
   ExerciseAngleCondition,
-  ExerciseDetectionData,
-} from '@/lib/pose-detection/type/exercise-start-condition.type';
-import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
-import type { Point2D } from '@/lib/pose-detection/type/point.type';
+} from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
+import type { Keypoint } from '@/core/exercise-ai-prescriptions/type/keypoint.type';
+import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
 import type {
   RecordedReps,
   Rep,
   RepsCount,
-} from '@/lib/pose-detection/type/rep.type';
-import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
+} from '@/core/exercise-ai-prescriptions/type/rep.type';
+import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -110,7 +110,7 @@ export const predictWebcam = async (state: {
   recordedRepsRef: RefObject<RecordedReps>;
   lastRecordedRepRef: RefObject<Rep | null>;
   currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
-  exerciseDetectionDataRef: RefObject<ExerciseDetectionData | undefined>;
+  exerciseDetectionDataRef: RefObject<ExerciseAiPrescriptionData | undefined>;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;

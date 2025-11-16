@@ -14,6 +14,7 @@ import { useDashboardUserEdit } from '../context/user-edit.context';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -54,7 +55,7 @@ export default function DashboardEditAthleteModal({
     >
       <Box display="flex" flexDirection="column" gap={2}>
         <FileUpload
-          input="image"
+          input={InputType.IMAGE}
           label="Image"
           makeRound
           initialFileUrl={userToEdit?.photoURL || undefined}

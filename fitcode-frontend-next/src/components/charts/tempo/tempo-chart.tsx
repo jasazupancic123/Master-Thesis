@@ -11,20 +11,21 @@ import {
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
+import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
+import { ConditionDirection } from '@/core/exercise-ai-prescriptions/enum/condition-detection.enum';
+import type {
+  ExerciseAiPrescription,
+  ExerciseAiPrescriptionData,
+} from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
+import type {
+  RecordedReps,
+  RecordedRepsInfo,
+} from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type {
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
-import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
-import { ConditionDirection } from '@/lib/pose-detection/enum/condition-detection.enum';
-import type {
-  ExerciseDetectionData,
-  ExerciseDetectionDataWithExerciseIds,
-} from '@/lib/pose-detection/type/exercise-start-condition.type';
-import type {
-  RecordedReps,
-  RecordedRepsInfo,
-} from '@/lib/pose-detection/type/rep.type';
+import { useMain } from '@/store/main.provider';
 
 function IsoOverlayDual({
   rows,
@@ -117,7 +118,7 @@ interface Props {
   width: number;
   height?: number;
   passedReps?: RecordedReps;
-  passedExercisePose?: ExerciseDetectionData;
+  passedExercisePose?: ExerciseAiPrescriptionData;
   isUnilateral: boolean;
   hideLabels?: boolean;
   sx?: SxProps;
@@ -138,12 +139,16 @@ export default function TempoChart({
 }: Props) {
   const maxValueRef = useRef(0);
 
+  const mainCotnext = useMain();
+  const { exerciseAiPrescriptions } = mainCotnext || {};
+
   const currentRepsRef = useRef<RecordedRepsInfo | null>(passedReps || null);
 
-  const exercisePose: ExerciseDetectionDataWithExerciseIds | undefined =
-    selectedExercise
-      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
-      : undefined;
+  const exercisePose: ExerciseAiPrescription | undefined = selectedExercise
+    ? (exerciseAiPrescriptions || EXERCISE_POSES).find((e) =>
+        e.exerciseIds.includes(selectedExercise.id)
+      )
+    : undefined;
 
   if (!passedReps && completedSet)
     currentRepsRef.current = {
