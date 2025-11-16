@@ -18,7 +18,6 @@ import type { Component } from '@/core/exercise/type/component.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -31,7 +30,6 @@ interface Props {
 
 export default function DashboardTrainingsList(props: Props) {
   const screenSize = useScreenSize();
-  const { user } = useAuthenticatedAuth();
   const { groups } = useMain();
 
   const { trainings, selectedGroups, filter, upcoming } = props;

@@ -11,17 +11,14 @@ import type {
   UpsertManyExercises,
   UpsertManyMuscleValues,
 } from '@/core/exercise/type/exercise.type';
+import { ExerciseAiPrescriptionsController } from '@/core/exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
+import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import { lib } from '@/lib';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import {
-  DEFAULT_EXERCISE,
-  ExercisePageModalState,
-  EXERCISES_PAGE_SIZE,
-} from '@/sites/exercises.page';
-import { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
-import { ExerciseAiPrescriptionsController } from '@/core/exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
+import type { ExercisePageModalState } from '@/sites/exercises.page';
+import { DEFAULT_EXERCISE, EXERCISES_PAGE_SIZE } from '@/sites/exercises.page';
 
 export function handlePaginateExercises(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -442,8 +439,6 @@ export async function handleUpsertAiPrescriptions(
     undefined,
     'Failed to import AI prescriptions'
   );
-
-  const foundPrescriptions = await controller.findAll();
 }
 
 function getMuscleValuesFromCsvRow(

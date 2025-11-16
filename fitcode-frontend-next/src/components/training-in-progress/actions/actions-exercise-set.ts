@@ -1,3 +1,5 @@
+import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type { ActiveTraining } from '@/core/training/type/training.type';
 import type {
   TrainingExercise,
@@ -6,8 +8,6 @@ import type {
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { CreateWorkload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
-import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
 
 export const finishSet = async (state: {
   exercise: TrainingExercise;

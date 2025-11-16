@@ -30,6 +30,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { LINK_DASHBOARD, LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -37,7 +38,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
-import { InputType } from '@/lib/common/const/input-type.const';
 
 const DEFAULT_MARGIN = 1;
 

@@ -24,6 +24,7 @@ import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum'
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { InputType } from '@/lib/common/const/input-type.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -33,7 +34,6 @@ import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { InputType } from '@/lib/common/const/input-type.const';
 
 interface Props {
   selectedView: AthletesTrainers;

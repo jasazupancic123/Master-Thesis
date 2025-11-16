@@ -1,7 +1,7 @@
 import { AppController } from './app.controller';
 import { AuthController } from './auth/auth.controller';
-import { ExerciseAiPrescriptionsController } from './exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 import { ExerciseController } from './exercise/exercise.controller';
+import { ExerciseAiPrescriptionsController } from './exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 import { GroupController } from './group/group.controller';
 import { InstitutionController } from './institution/institution.controller';
 import { ProfileController } from './profile/profile.controller';

@@ -16,12 +16,12 @@ import type {
   ExerciseAttributes,
 } from '@/core/exercise/type/exercise.type';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { InputType } from '@/lib/common/const/input-type.const';
 
 const firebaseStorage = lib.firebase.storage;
 

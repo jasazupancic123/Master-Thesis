@@ -11,10 +11,7 @@ import {
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
-import type {
-  TrainingExercise,
-  TrainingExerciseRecordedSet,
-} from '@/core/training/type/training-exercise.type';
+import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
 import { ConditionDirection } from '@/core/exercise-ai-prescriptions/enum/condition-detection.enum';
 import type {
   ExerciseAiPrescription,
@@ -24,7 +21,10 @@ import type {
   RecordedReps,
   RecordedRepsInfo,
 } from '@/core/exercise-ai-prescriptions/type/rep.type';
-import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
+import type {
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
 import { useMain } from '@/store/main.provider';
 
 function IsoOverlayDual({

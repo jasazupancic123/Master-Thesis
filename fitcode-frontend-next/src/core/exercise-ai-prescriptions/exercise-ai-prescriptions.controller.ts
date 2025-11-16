@@ -1,5 +1,5 @@
-import { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import { BaseController } from '../base.controller';
+import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 
 export class ExerciseAiPrescriptionsController extends BaseController {
   private static instance: ExerciseAiPrescriptionsController;

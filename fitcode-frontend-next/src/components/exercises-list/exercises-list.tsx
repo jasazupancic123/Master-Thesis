@@ -4,8 +4,8 @@ import { useTheme } from '@mui/material';
 import { ExerciseCard } from '../exercise-card/exercise-card';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import type { ExercisePageModalState } from '@/sites/exercises.page';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { ExercisePageModalState } from '@/sites/exercises.page';
 
 interface Props {
   exercises: Exercise[];
