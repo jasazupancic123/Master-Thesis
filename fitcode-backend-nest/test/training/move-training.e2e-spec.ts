@@ -8,6 +8,7 @@ import { getTime } from '@src/common/utils/date.util';
 import type { Group } from '@src/group/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import { generateTrainingComponent } from '@src/training/mock/training.stub';
 import { generateTrainingComponentUserStatusStub } from '@src/training/mock/training-component-user-status.stub';
 
 describe('Move Training (e2e)', () => {
@@ -27,6 +28,7 @@ describe('Move Training (e2e)', () => {
     group = await db.groups.createTest(institution);
     training = await db.trainings.createTest(group, {
       cycleId: group.cycles[1].id,
+      components: [generateTrainingComponent()],
     });
   });
 
@@ -58,15 +60,23 @@ describe('Move Training (e2e)', () => {
   });
 
   it('should successfully move training', async () => {
-    const from = getTime(addDays(training.from, 2), 14, 0);
-    const to = getTime(addDays(training.to, 2), 15, 0);
+    const fromBefore = training.from;
+    const newFrom = getTime(addDays(training.from, 2), 14, 0);
+    const newTo = getTime(addDays(training.to, 2), 15, 0);
 
-    const res = await req({ from, to }, training.id, global.trainer.token);
+    const res = await req(
+      { from: newFrom, to: newTo },
+      training.id,
+      global.trainer.token,
+    );
+
     expect(res.status).toBe(200);
 
+    // day should not be the same, but hours and minutes should match
     const dbTraining = await db.trainings.findById(training.id);
-    expectDatesToMatchUpToMinute(dbTraining.from, from);
-    expectDatesToMatchUpToMinute(dbTraining.to, to);
+    const fromAfter = new Date(dbTraining.from);
+    expect(fromBefore.getDate()).not.toBe(fromAfter.getDate());
+    expectDatesToMatchUpToMinute(fromAfter, newFrom);
   });
 
   it('should successfully move active training and delete all current component statuses', async () => {
@@ -94,9 +104,15 @@ describe('Move Training (e2e)', () => {
 
     expect(dbStatusesBefore.length).toBe(2);
 
-    const from = getTime(addDays(training.from, 3), 18, 0);
-    const to = getTime(addDays(training.to, 3), 20, 0);
-    const res = await req({ from, to }, training.id, global.trainer.token);
+    const fromBefore = training.from;
+    const newFrom = getTime(addDays(training.from, 3), 18, 0);
+    const newTo = getTime(addDays(training.to, 3), 20, 0);
+    const res = await req(
+      { from: newFrom, to: newTo },
+      training.id,
+      global.trainer.token,
+    );
+
     expect(res.status).toBe(200);
 
     const dbStatusesAfter =
@@ -106,9 +122,11 @@ describe('Move Training (e2e)', () => {
       );
 
     expect(dbStatusesAfter.length).toBe(0);
-
     const dbTraining = await db.trainings.findById(training.id);
-    expectDatesToMatchUpToMinute(dbTraining.from, from);
-    expectDatesToMatchUpToMinute(dbTraining.to, to);
+    const fromAfter = new Date(dbTraining.from);
+
+    // day should not be the same, but hours and minutes should match
+    expect(fromBefore.getDate()).not.toBe(fromAfter.getDate());
+    expectDatesToMatchUpToMinute(fromAfter, newFrom);
   });
 });
