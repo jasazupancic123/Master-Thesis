@@ -10,6 +10,7 @@ import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { CommonModule } from './common/common.module';
 import { validationSchema } from './config/environment-validation-schema';
 import { ExerciseModule } from './exercise/exercise.module';
+import { ExerciseAiPrescriptionsModule } from './exercise-ai-prescriptions/exercise-ai-prescriptions.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { GroupModule } from './group/group.module';
 import { InstitutionModule } from './institution/institution.module';
@@ -31,6 +32,7 @@ import { TrainingModule } from './training/training.module';
     ExerciseModule,
     GroupModule,
     TrainingModule,
+    ExerciseAiPrescriptionsModule,
     ...(process.env.NODE_ENV === 'test' ? [TestDbModule] : []),
   ],
   controllers: [AppController],

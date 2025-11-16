@@ -8,7 +8,7 @@ import type {
   ExtremumAngle,
   RequiredPoseCondition,
   StillnessCondition,
-} from './exercise-start-condition.type';
+} from './exercise-detection-data';
 import type { Rep } from './rep.type';
 import type { RepState } from './rep-state.type';
 

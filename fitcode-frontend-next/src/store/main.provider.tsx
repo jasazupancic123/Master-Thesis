@@ -13,6 +13,7 @@ import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import type { ActiveTraining } from '@/core/training/type/training.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
+import { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 
 export interface MainProviderProps extends React.PropsWithChildren {
   profile: Profile;
@@ -22,6 +23,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   institutions: Institution[];
   groups: Group[];
   activeTraining: ActiveTraining | null;
+  exerciseAiPrescriptions: ExerciseAiPrescription[];
 }
 
 export interface IMainContext extends MainProviderProps {
@@ -32,6 +34,7 @@ export interface IMainContext extends MainProviderProps {
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
   setActiveTraining: SetState<ActiveTraining | null>;
+  setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -57,6 +60,9 @@ export default function MainProvider(props: MainProviderProps) {
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
     props.activeTraining
   );
+  const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState<
+    ExerciseAiPrescription[]
+  >(props.exerciseAiPrescriptions);
 
   useEffect(() => {
     // fetch wellness
@@ -91,6 +97,8 @@ export default function MainProvider(props: MainProviderProps) {
     wellness,
     activeTraining,
     setActiveTraining,
+    exerciseAiPrescriptions,
+    setExerciseAiPrescriptions,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

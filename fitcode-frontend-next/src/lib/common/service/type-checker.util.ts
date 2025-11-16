@@ -2,9 +2,9 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
-import { KeypointId } from '@/lib/pose-detection/enum/keypoint-id';
-import type { Keypoint } from '@/lib/pose-detection/type/keypoint.type';
-import type { Point2D } from '@/lib/pose-detection/type/point.type';
+import { KeypointId } from '@/core/exercise-ai-prescriptions/enum/keypoint-id';
+import type { Keypoint } from '@/core/exercise-ai-prescriptions/type/keypoint.type';
+import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {

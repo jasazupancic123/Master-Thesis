@@ -5,6 +5,7 @@ import { ExerciseCard } from '../exercise-card/exercise-card';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { ExercisePageModalState } from '@/sites/exercises.page';
 
 interface Props {
   exercises: Exercise[];
@@ -12,13 +13,7 @@ interface Props {
   setSelectedExerciseIds?: SetState<string[]>;
   newAddedExercisesIds?: string[];
   setNewAddedExercisesIds?: SetState<string[]>;
-  setModal?: SetState<{
-    add: boolean;
-    edit: boolean;
-    import: boolean;
-    muscleValues: boolean;
-    confirmDelete: boolean;
-  }>;
+  setModal?: SetState<ExercisePageModalState>;
   setExercise?: SetState<Partial<Exercise>>;
   addExerciseForm?: boolean;
   children?: React.ReactNode;

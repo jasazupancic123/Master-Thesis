@@ -33,6 +33,7 @@ import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { InputType } from '@/lib/common/const/input-type.const';
 
 interface Props {
   selectedView: AthletesTrainers;
@@ -307,7 +308,7 @@ export default function DashboardInstitution(props: Props) {
       >
         <FileUpload
           label="CSV of users"
-          input="csv"
+          input={InputType.CSV}
           onFileUpload={async (file) => {
             setIsUploadingMembers(true);
 

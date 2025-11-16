@@ -20,7 +20,7 @@ import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { preloadPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
+import { preloadPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';

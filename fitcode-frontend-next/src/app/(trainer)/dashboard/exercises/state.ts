@@ -15,7 +15,13 @@ import { lib } from '@/lib';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { DEFAULT_EXERCISE, EXERCISES_PAGE_SIZE } from '@/sites/exercises.page';
+import {
+  DEFAULT_EXERCISE,
+  ExercisePageModalState,
+  EXERCISES_PAGE_SIZE,
+} from '@/sites/exercises.page';
+import { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
+import { ExerciseAiPrescriptionsController } from '@/core/exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 
 export function handlePaginateExercises(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,13 +70,7 @@ export async function handleAddExercise(
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
     setAllExercises: SetState<Exercise[]>;
-    setModal: SetState<{
-      add: boolean;
-      edit: boolean;
-      import: boolean;
-      muscleValues: boolean;
-      confirmDelete: boolean;
-    }>;
+    setModal: SetState<ExercisePageModalState>;
   }
 ) {
   const {
@@ -138,13 +138,7 @@ export async function handleUpdateExercise(
     setExercises: SetState<Exercise[]>;
     setAllExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
-    setModal: SetState<{
-      add: boolean;
-      edit: boolean;
-      import: boolean;
-      muscleValues: boolean;
-      confirmDelete: boolean;
-    }>;
+    setModal: SetState<ExercisePageModalState>;
   }
 ) {
   const {
@@ -334,6 +328,30 @@ export async function handleMuscleValuesCsvFileUpload(
   });
 }
 
+export async function handleAiPrescriptionsJsonFileUpload(
+  file: File,
+  state: {
+    setImportedAiPrescriptions: SetState<ExerciseAiPrescription[]>;
+  }
+) {
+  const { setImportedAiPrescriptions } = state;
+
+  try {
+    const text = await file.text();
+
+    const parsed = JSON.parse(text);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('JSON is not an array');
+    }
+
+    setImportedAiPrescriptions(parsed as ExerciseAiPrescription[]);
+  } catch (error) {
+    toast.error('Failed to import AI prescriptions JSON file');
+    console.error('Failed to import AI prescriptions JSON:', error);
+  }
+}
+
 export async function handleUpsertManyExercises(
   input: UpsertManyExercises,
   state: {
@@ -401,6 +419,31 @@ export async function handleUpsertMuscleValues(
     undefined,
     'Failed to import muscle values'
   );
+}
+
+export async function handleUpsertAiPrescriptions(
+  prescriptions: ExerciseAiPrescription[],
+  state: {
+    router: AppRouterInstance;
+    setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
+  }
+) {
+  const { router, setExerciseAiPrescriptions } = state;
+
+  const controller = ExerciseAiPrescriptionsController.getInstance();
+
+  handleApiRequest(
+    router,
+    () => controller.upsertMany(prescriptions),
+    (postedPrescriptions) => {
+      setExerciseAiPrescriptions(postedPrescriptions);
+      toast.success('Successfully imported muscle values!');
+    },
+    undefined,
+    'Failed to import AI prescriptions'
+  );
+
+  const foundPrescriptions = await controller.findAll();
 }
 
 function getMuscleValuesFromCsvRow(

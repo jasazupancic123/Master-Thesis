@@ -20,6 +20,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { InputType } from '@/lib/common/const/input-type.const';
 
 const DEFAULT_MARGIN = 1;
 
@@ -54,7 +55,7 @@ export default function DashboardEditAthleteModal({
     >
       <Box display="flex" flexDirection="column" gap={2}>
         <FileUpload
-          input="image"
+          input={InputType.IMAGE}
           label="Image"
           makeRound
           initialFileUrl={userToEdit?.photoURL || undefined}
