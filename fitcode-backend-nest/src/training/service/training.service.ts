@@ -441,6 +441,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
+    this.validateIsDateInFuture(input.from);
     this.validateIsDateInCycle(input.from, cycle);
     await this.validateOverlapAndMaxLimit(
       user,
