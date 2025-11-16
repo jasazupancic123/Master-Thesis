@@ -47,7 +47,30 @@ export const finishSet = async (state: {
 
   const set = exercise.sets[setIndex];
 
-  console.log('set', set);
+  const recordedSet = (newRecordedSets || trainingInProgress.recordedSets).find(
+    (r) => {
+      return (
+        r.exerciseId === exercise.id &&
+        r.supersetIndex === supersetIndex &&
+        r.setIndex === setIndex
+      );
+    }
+  );
+
+  const photoUrls = [];
+
+  const imagesLength = Math.max(
+    recordedSet?.imagesL?.length || 0,
+    recordedSet?.imagesR?.length || 0
+  );
+
+  for (let i = 0; i < imagesLength; i++) {
+    if (recordedSet?.imagesL && recordedSet.imagesL[i])
+      photoUrls.push(recordedSet.imagesL[i].url);
+
+    if (recordedSet?.imagesR && recordedSet.imagesR[i])
+      photoUrls.push(recordedSet.imagesR[i].url);
+  }
 
   const workload: CreateWorkload = {
     userId: trainingInProgress.userId,
@@ -77,7 +100,7 @@ export const finishSet = async (state: {
     recTimeR: set.recTimeR,
     recDist: set.recDist,
     recDistR: set.recDistR,
-    photoURLs: [],
+    photoURLs: photoUrls,
     rir: undefined,
     rirR: undefined,
     rom: undefined,
@@ -101,7 +124,7 @@ export const finishSet = async (state: {
       isAiRecorded,
     },
     activeTraining?.workloads || [],
-    trainingInProgress.recordedSets
+    newRecordedSets || trainingInProgress.recordedSets
   );
 };
 

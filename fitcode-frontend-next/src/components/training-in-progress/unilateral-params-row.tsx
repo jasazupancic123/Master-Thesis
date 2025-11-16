@@ -47,7 +47,7 @@ export default function UnilateralParamsRow(props: Props) {
       width="100%"
       justifyContent="center"
       alignItems="center"
-      gap={1}
+      gap={0.9}
     >
       {params.map((param, index) => {
         switch (param) {

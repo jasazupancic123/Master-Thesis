@@ -29,7 +29,6 @@ import {
 import { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
 import { CurrentSideMutexValues } from '@/core/exercise-ai-prescriptions/enum/current-side-mutex-values.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
@@ -66,6 +65,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 
 const DEBUG = false;
 
@@ -739,7 +739,7 @@ export default function MobileMovementValidation(
       loadedPoseLandmarkerTimestampRef.current &&
       Math.abs(
         dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
-      ) < POSE_DETECTION_CONSTRAINTS.TIME_BETWEEN_MODEL_RELOAD_S
+      ) < lib.common.env.ai.TIME_BETWEEN_MODEL_RELOAD_S()
     ) {
       return;
     }
@@ -918,13 +918,12 @@ export default function MobileMovementValidation(
                   ? Math.max(
                       dayjs(stillnessCountdownRef.current)
                         .add(
-                          POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
-                            1,
+                          lib.common.env.ai.STILLNESS_COUNTDOWN_DURATION_S(),
                           'seconds'
                         )
                         .diff(dayjs(), 'second'),
                       0
-                    )
+                    ) + 1
                   : null
               }
             />

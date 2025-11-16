@@ -1,6 +1,5 @@
 import type { RefObject } from 'react';
 
-import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.const';
 import { ConditionDirection } from '../enum/condition-detection.enum';
 import type { KeypointId } from '../enum/keypoint-id';
 import type { Keypoint } from '../type/keypoint.type';
@@ -8,6 +7,7 @@ import type { Rep } from '../type/rep.type';
 import { KeypointUtil } from './keypoint.util';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-validation/mobile-movement-validation';
 import { lib } from '@/lib';
+import { AINumericConstantName } from '../enum/ai-numeric-constant-name.enum';
 
 export class RepPostProcessingUtil {
   private static _instance: RepPostProcessingUtil;
@@ -73,14 +73,13 @@ export class RepPostProcessingUtil {
       };
 
     const kTreshold =
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S /
-      (avgFps?.value || 30);
+      lib.common.env.ai.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S() / (avgFps?.value || 30);
 
     let timeAtExtremumStartKeypoint: Keypoint | undefined;
     let timeAtExtremumEndKeypoint: Keypoint | undefined;
 
     const numConsecutiveFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S,
+      lib.common.env.ai.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S(),
       avgFps?.value || 30
     );
 

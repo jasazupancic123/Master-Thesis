@@ -1,3 +1,7 @@
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/
+
 export const POSE_DETECTION_CONSTRAINTS = {
   // State detection
   IN_FRAME_VISIBLITY_THRESHOLD: 0.5,
@@ -10,6 +14,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
   STILLNESS_COUNTDOWN_DURATION_S: 3, // in seconds
   MIN_TIME_PASSED_TO_DETECT_STILLNESS_S: 1, // in seconds
 
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/
+
   // Nod detection
   NOD_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for nod detection
   Y_POS_HELPER_M: 0.001335, // in meters, how much we help the y for better detection
@@ -17,6 +25,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // Head shake
   HEAD_SHAKE_DETECTION_BUFFER_DURATION_S: 1.5, // how many ms to track for head shake detection
   HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES: 155, // read as 180 - this_value; min angle to consider head shake
+
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/
 
   // Jitter detection
   MIN_KEYPOINTS_FOR_JITTER_DETECTION: 3, // min % number of keypoints that need to be jittering to consider the whole pose as jittering
@@ -31,6 +43,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
   MIN_FRAMES_FOR_EXTREMUM: 4, // min 4 total consecutive correct frames (2pos k's, 2neg k's)
   MIN_TIME_FOR_EXTREMUM_S: 0.2, // in seconds, it's time for the value to go into opposite direction to detect extremum
 
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/
+
   // Rep start
   PRE_WINDOW_FRAMES_REP_START: 4, // stevilo tock pred zaznano končno, v katerih iščemo ekstremum
   MAX_LOOKBACK_REP_START_S: 1, // maksimalno število sekund, ki jih lahko gledamo nazaj, da najdemo začetek ponovitve
@@ -40,6 +56,10 @@ export const POSE_DETECTION_CONSTRAINTS = {
   REP_START_VELOCITY_SUSTAIN_S: 0.3, // if this many frames go under the velocity threshold, then rep started
   REP_START_CONSECUTIVE_FRAMES_UNDER_VELOCITY_THRESHOLD_S: 0.2, // if this many frames go under the velocity threshold, then rep started
   REP_START_JOINT_STILLNESS_VELOCITY_THRESHOLD_M_PER_S: 0.01, // tracking stillness of a joint for rep start
+
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/
 
   // Rep end
   REP_END_VELOCITY_M_PER_S: 0.02, // when speed goes under (this_value)m/s, then we ended the rep!
@@ -52,3 +72,7 @@ export const POSE_DETECTION_CONSTRAINTS = {
   // Detection end
   MIN_STILL_TIME_TO_STOP_DETECTION_S: 2, // at least how many seconds of recording state to stop detection
 };
+
+/*
+  DONT UPDATE THIS, UPDATE .ENV FILE!
+*/

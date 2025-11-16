@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import { KeypointHistory } from './class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import { HorizontalVertical } from './enum/horizontal-vertical.enum';
@@ -31,6 +30,7 @@ import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-val
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class RepDetectionService {
   private static _instance: RepDetectionService;
@@ -393,13 +393,13 @@ export class RepDetectionService {
 
     const totalNumFrames = avgFps
       ? Math.max(
-          POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM,
+          lib.common.env.ai.MIN_FRAMES_FOR_EXTREMUM(),
           this.keypoint.getFramesCountFromSeconds(
-            POSE_DETECTION_CONSTRAINTS.MIN_TIME_FOR_EXTREMUM_S,
+            lib.common.env.ai.MIN_TIME_FOR_EXTREMUM_S(),
             avgFps.value
           )
         )
-      : POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
+      : lib.common.env.ai.MIN_FRAMES_FOR_EXTREMUM(); // min 4 total consecutive correct frames (2pos k's, 2neg k's)
 
     const startKCheckIndex = buffer.history.length - 1 - totalNumFrames;
 
@@ -861,12 +861,11 @@ export class RepDetectionService {
 
     // Limit how far back we can search for the first rep's start
     const lookback =
-      (avgFps?.value || 30) *
-      POSE_DETECTION_CONSTRAINTS.MAX_LOOKBACK_REP_START_S;
+      (avgFps?.value || 30) * lib.common.env.ai.MAX_LOOKBACK_REP_START_S();
 
     const maxLookbackFrames = Math.max(
       lookback,
-      POSE_DETECTION_CONSTRAINTS.MAX_LOOKBACK_REP_START_S
+      lib.common.env.ai.MAX_LOOKBACK_REP_START_S()
     );
     const leftBound = Math.max(0, n - Math.floor(maxLookbackFrames));
 
@@ -874,7 +873,7 @@ export class RepDetectionService {
     // If condition is POSITIVE, look for local min; if NEGATIVE, look for local max
     const left = Math.max(
       leftBound,
-      slope - POSE_DETECTION_CONSTRAINTS.PRE_WINDOW_FRAMES_REP_START
+      slope - lib.common.env.ai.PRE_WINDOW_FRAMES_REP_START()
     );
 
     let extremumIdx = left,
@@ -923,7 +922,7 @@ export class RepDetectionService {
 
     const closeByMagnitude =
       Math.abs(currentValue - startingValue) <=
-      diff * POSE_DETECTION_CONSTRAINTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO;
+      diff * lib.common.env.ai.CLOSE_ENOUGH_TO_START_VALUE_RATIO();
 
     const consistentWithDirection =
       conditionDirection === ConditionDirection.POSITIVE
@@ -1039,20 +1038,18 @@ export class RepDetectionService {
     const { velocity, direction, detectingRepStart, avgFps } = state;
 
     const isHighFps =
-      avgFps?.value &&
-      avgFps?.value > POSE_DETECTION_CONSTRAINTS.HIGH_FPS_THRESHOLD;
+      avgFps?.value && avgFps?.value > lib.common.env.ai.HIGH_FPS_THRESHOLD();
 
     // if we are over this velocity, then we are still moving - starting or ending the rep!
     const minVelocityPerFrame =
       (detectingRepStart
         ? isHighFps
-          ? POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_HIGH_FPS_M_PER_S
-          : POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_LOW_FPS_M_PER_S
-        : POSE_DETECTION_CONSTRAINTS.REP_END_VELOCITY_M_PER_S) /
-      (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
+          ? lib.common.env.ai.REP_START_END_VELOCITY_HIGH_FPS_M_PER_S()
+          : lib.common.env.ai.REP_START_END_VELOCITY_LOW_FPS_M_PER_S()
+        : lib.common.env.ai.REP_END_VELOCITY_M_PER_S()) / (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
 
     const minVelocitySustainNumFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_SUSTAIN_S,
+      lib.common.env.ai.REP_START_VELOCITY_SUSTAIN_S(),
       avgFps?.value || 30
     );
 
@@ -1066,8 +1063,7 @@ export class RepDetectionService {
             Math.max(
               4,
               Math.ceil(
-                (avgFps?.value || 0) *
-                  POSE_DETECTION_CONSTRAINTS.REP_END_LOOKBACK_S
+                (avgFps?.value || 0) * lib.common.env.ai.REP_END_LOOKBACK_S()
               )
             )
         )

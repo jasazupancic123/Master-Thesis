@@ -87,11 +87,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
             gap={1}
             sx={{
               position: uni ? 'relative' : undefined,
-              pr: uni ? (isSetCompleted ? 5 : 3) : undefined,
+              pr: uni ? 5 : undefined,
             }}
           >
             {uni && (
-              <Box width={8} sx={{ mr: isSetCompleted ? 3 : 1 }}>
+              <Box width={8} sx={{ mr: 3 }}>
                 <LeftRightExerciseText title="L" />
               </Box>
             )}
@@ -227,11 +227,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 gap={1}
                 mt={0.5}
                 sx={{
-                  pr: uni ? (isSetCompleted ? 5 : 3) : undefined,
+                  pr: uni ? 5 : undefined,
                 }}
               >
                 {uni && (
-                  <Box width={8} sx={{ mr: isSetCompleted ? 3 : 1 }}>
+                  <Box width={8} sx={{ mr: 3 }}>
                     <LeftRightExerciseText title="R" />
                   </Box>
                 )}

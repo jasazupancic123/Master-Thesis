@@ -188,9 +188,6 @@ export const TrainingInProgressProvider = ({
           w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
       );
 
-      console.log('body.from', body.from);
-      console.log('prevWorkload', prevWorkload);
-
       if (prevWorkload) {
         const recTime = Math.abs(
           dayjs(body.from).diff(

@@ -1,7 +1,6 @@
 import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
@@ -11,6 +10,8 @@ import type { Keypoint } from './type/keypoint.type';
 import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
+import { lib } from '@/lib';
+import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class PoseDetectionService {
   private static _instance: PoseDetectionService;
@@ -130,7 +131,7 @@ export class PoseDetectionService {
     const { keypointBuffer, avgFps } = state;
 
     const numFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.NOD_DETECTION_BUFFER_DURATION_S,
+      lib.common.env.ai.NOD_DETECTION_BUFFER_DURATION_S(),
       avgFps?.value || 30
     );
 
@@ -252,7 +253,7 @@ export class PoseDetectionService {
       }
 
       if (!earsAboveEyes) {
-        if (avgEarY < avgEyeY + POSE_DETECTION_CONSTRAINTS.Y_POS_HELPER_M) {
+        if (avgEarY < avgEyeY + lib.common.env.ai.Y_POS_HELPER_M()) {
           // console.log('EARS ABOVE EYES');
           earsAboveEyes = true;
         }
