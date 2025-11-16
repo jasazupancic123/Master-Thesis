@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 
-import { POSE_DETECTION_CONSTRAINTS } from '../const/pose-detection-constrains.const';
+import type { AINumericConstantName } from '../enum/ai-numeric-constant-name.enum';
 import { ConditionDirection } from '../enum/condition-detection.enum';
 import type { KeypointId } from '../enum/keypoint-id';
 import type { Keypoint } from '../type/keypoint.type';
@@ -30,6 +30,7 @@ export class RepPostProcessingUtil {
     extremeKeypoint: Keypoint;
     keypointId: KeypointId;
     direction: ConditionDirection;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): {
     timeAtExtremumStartKeypoint: Keypoint | undefined;
     timeAtExtremumEndKeypoint: Keypoint | undefined;
@@ -41,6 +42,7 @@ export class RepPostProcessingUtil {
       extremeKeypoint,
       keypointId,
       direction,
+      POSE_DETECTION_CONSTANTS,
     } = input;
 
     if (!currentRepRef.current) {
@@ -73,14 +75,14 @@ export class RepPostProcessingUtil {
       };
 
     const kTreshold =
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S /
+      POSE_DETECTION_CONSTANTS.TIME_AT_EXTREMUM_VELOCITY_THRESHOLD_M_PER_S /
       (avgFps?.value || 30);
 
     let timeAtExtremumStartKeypoint: Keypoint | undefined;
     let timeAtExtremumEndKeypoint: Keypoint | undefined;
 
     const numConsecutiveFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S,
+      POSE_DETECTION_CONSTANTS.TIME_AT_EXTREMUM_VELOCITY_SUSTAIN_S,
       avgFps?.value || 30
     );
 
