@@ -1,4 +1,7 @@
 export function expectDatesToMatchUpToMinute(date1: Date, date2: Date) {
+  date1 = new Date(date1);
+  date2 = new Date(date2);
+
   expect(date1.getFullYear()).toBe(date2.getFullYear());
   expect(date1.getMonth()).toBe(date2.getMonth());
   expect(date1.getDate()).toBe(date2.getDate());

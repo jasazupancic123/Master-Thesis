@@ -288,6 +288,16 @@ export class TrainingController {
     return await this.trainingService.updateComponentTime(user, ref, body);
   }
 
+  @Patch(':trainingId/move')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async move(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: DateRangeDto,
+  ) {
+    return await this.trainingService.move(user, { trainingId }, body);
+  }
+
   @Delete(':trainingId')
   @Auth()
   async delete(

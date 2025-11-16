@@ -114,6 +114,11 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     await ref.delete();
   }
 
+  async recursiveDelete(id: string) {
+    const ref = this.doc(id);
+    await this.firebase.firestore.recursiveDelete(ref);
+  }
+
   async addMember(training: Training, memberId: string) {
     const { ref, data } = this.getUpdateMemberOperation(
       training,

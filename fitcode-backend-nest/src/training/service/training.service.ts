@@ -350,6 +350,8 @@ export class TrainingService implements Permission<Training, Institution> {
       this.validateCanEdit(user, training, training.institution);
     }
 
+    this.validateIsDateInFuture(training.from);
+
     // if no components, delete training
     if (input.components.length === 0) {
       await this.trainingComponentUserStatusRepository.deleteAllByTraining(
@@ -422,6 +424,42 @@ export class TrainingService implements Permission<Training, Institution> {
       ref.componentId,
       input,
     );
+  }
+
+  @LogMethod()
+  async move(user: User, ref: TrainingRef, input: DateRangeDto): Promise<void> {
+    const training = await this.findOneByIdOrFail(user, ref);
+    const _ref = {
+      ...ref,
+      institutionId: training.institutionId,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+    };
+
+    const group = await this.groupService.findOneByIdOrFail(user, _ref);
+    const cycle = this.groupService.findCycleOrFail(training.cycleId, group);
+
+    this.validateCanEdit(user, training, training.institution);
+    this.validateIsDateInFuture(training.from);
+    this.validateIsDateInCycle(input.from, cycle);
+    await this.validateOverlapAndMaxLimit(
+      user,
+      training.institutionId,
+      _ref,
+      input.from,
+      input.to,
+    );
+
+    // delete statuses
+    await this.trainingComponentUserStatusRepository.deleteAllByTraining(
+      ref.trainingId,
+    );
+
+    // update training times
+    await this.repository.update(ref.trainingId, {
+      from: input.from,
+      to: input.to,
+    });
   }
 
   @LogMethod()
