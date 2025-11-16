@@ -6,7 +6,7 @@ import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { StatusDetectionService } from './status-detection.service';
-import type { ExerciseDetectionData } from './type/exercise-start-condition.type';
+import type { ExerciseAiPrescriptionData } from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
 import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
@@ -36,7 +36,7 @@ export class PoseDetectionService {
     keypoints: Keypoint[];
     keypointBuffer: KeypointHistory;
     keypointHistory: KeypointHistory;
-    exerciseDetectionData: ExerciseDetectionData;
+    exerciseDetectionData: ExerciseAiPrescriptionData;
     avgFps: { value: number; count: number } | null;
     recordingTimestampRef: RefObject<Date | null>;
     statusMessage: RefObject<string>;

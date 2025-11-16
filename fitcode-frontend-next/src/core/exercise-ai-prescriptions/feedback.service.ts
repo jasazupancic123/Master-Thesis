@@ -1,9 +1,9 @@
 import type { RefObject } from 'react';
 
-import { lib } from '..';
+import { lib } from '../../lib';
 import type { KeypointId } from './enum/keypoint-id';
 import { MoreLess } from './enum/more-less.enum';
-import type { ExerciseAngleCondition } from './type/exercise-start-condition.type';
+import type { ExerciseAngleCondition } from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
 import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';

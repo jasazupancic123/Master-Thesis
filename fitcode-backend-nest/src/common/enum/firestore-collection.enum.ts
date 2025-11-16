@@ -15,4 +15,7 @@ export enum FirestoreCollection {
   TRAINING = 'trainings',
   TRAINING_WORKLOAD = 'training-workload',
   TRAINING_COMPONENT_USER_STATUS = 'training-component-user-status',
+
+  // ai
+  EXERCISE_AI_PRESCRIPTIONS = 'exercise-ai-prescriptions',
 }

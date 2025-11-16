@@ -79,7 +79,11 @@ import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
-import { TrainingReport } from '../type/training-stats.type';
+import {
+  GroupTrainingReportItem,
+  TrainingReport,
+  UserTrainingRealizationReportItem,
+} from '../type/training-report.type';
 import { TrainingPlanService } from './training-plan.service';
 import { TrainingReportService } from './training-report.service';
 
@@ -813,10 +817,9 @@ export class TrainingService implements Permission<Training, Institution> {
       uid,
     );
 
-    const workloads = await this.workloadService.findAllByUserTraining(
-      undefined,
-      { trainingId: training.id },
-    );
+    const workloads = await this.workloadService.findAllByUserTraining({
+      trainingId: training.id,
+    });
 
     const errors: ValidateError<Record<string, unknown>>[] = [];
     for (const userId of memberIds) {
@@ -888,16 +891,53 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async getGroupAttendance(
+  async getGroupReport(
     user: User,
     groupId: string,
     componentId?: string,
-  ): Promise<Record<string, number>> {
+  ): Promise<Record<string, GroupTrainingReportItem>> {
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
-    return await this.trainingComponentUserStatusRepository.getGroupAttendance(
+    return await this.trainingComponentUserStatusRepository.getGroupReport(
       group.id,
       componentId,
     );
+  }
+
+  @LogMethod()
+  async getTrainingsRealizationReport(
+    user: User,
+    institutionId: string,
+    uid: string, // athlete uid
+    componentId?: string,
+  ): Promise<UserTrainingRealizationReportItem[]> {
+    const institution = await this.institutionService.findByIdOrFail({
+      institutionId,
+    });
+
+    const athlete = await this.getAthlete(user, uid, institution);
+    return await this.trainingComponentUserStatusRepository.getUserTrainingsRealizationReport(
+      institutionId,
+      athlete.uid,
+      componentId,
+    );
+  }
+
+  @LogMethod()
+  async getUserExerciseReport(
+    user: User,
+    institutionId: string,
+    exerciseId: string,
+    uid: string, // athlete uid
+  ): Promise<Workload[]> {
+    const institution = await this.institutionService.findByIdOrFail({
+      institutionId,
+    });
+
+    const athlete = await this.getAthlete(user, uid, institution);
+    return await this.workloadService.getUserExerciseReport({
+      userId: athlete.uid,
+      exerciseId,
+    });
   }
 
   private async getMemberIdsForTrainingReport(
@@ -1076,10 +1116,10 @@ export class TrainingService implements Permission<Training, Institution> {
     athleteId: string,
     training: Training,
   ): Promise<Workload[]> {
-    const workloads = await this.workloadService.findAllByUserTraining(
-      athleteId,
-      { trainingId: training.id },
-    );
+    const workloads = await this.workloadService.findAllByUserTraining({
+      userId: athleteId,
+      trainingId: training.id,
+    });
 
     if (workloads.length)
       this.trainingPlanService.applyWorkloadsToTraining(training, workloads);

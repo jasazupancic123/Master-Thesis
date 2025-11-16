@@ -11,14 +11,13 @@ import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
-import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseControls() {
-  const { activeTraining } = useMain();
+  const { activeTraining, exerciseAiPrescriptions } = useMain();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
 
@@ -49,7 +48,7 @@ export default function TrainingInProgressExerciseControls() {
 
   const isAiReady =
     selectedExercise?.exercise?.id !== undefined &&
-    EXERCISE_POSES.find((ep) =>
+    exerciseAiPrescriptions.find((ep) =>
       ep.exerciseIds.includes(selectedExercise?.exercise?.id || 'UNKNOWN')
     );
 
@@ -117,7 +116,7 @@ export default function TrainingInProgressExerciseControls() {
 
             const hasPoseLogic =
               selectedExercise.exercise !== undefined &&
-              EXERCISE_POSES.some((ep) =>
+              exerciseAiPrescriptions.some((ep) =>
                 ep.exerciseIds.includes(selectedExercise.exercise!.id)
               );
 

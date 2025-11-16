@@ -18,7 +18,6 @@ import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Profile } from '@/core/profile/type/user.type';
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -88,7 +87,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
-  const [wellness, setWellness] = useState<WellnessZScore[]>([]);
   const [loading, setLoading] = useState(false);
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
@@ -150,22 +148,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   useEffect(() => {
     if (selectedAthlete) previousSelectedAthlete.current = selectedAthlete;
   }, [selectedAthlete]);
-
-  // Fetch group members and wellness data
-  useEffect(() => {
-    async function fetchWellness() {
-      handleApiRequest(
-        router,
-        () => controller.profile.getWellnessByInstitution(group.institutionId),
-        (wellness) => {
-          setWellness(wellness);
-        },
-        undefined
-      );
-    }
-
-    fetchWellness().then();
-  }, [group.institutionId]);
 
   /**
    * Reset selected training and its children on certain changes
@@ -636,8 +618,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     setSelectedPeriod,
     component,
     setComponent,
-    wellness,
-    setWellness,
     selectedExerciseIds,
     setSelectedExerciseIds,
     supersets,

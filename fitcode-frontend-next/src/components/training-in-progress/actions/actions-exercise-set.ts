@@ -1,3 +1,5 @@
+import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type { ActiveTraining } from '@/core/training/type/training.type';
 import type {
   TrainingExercise,
@@ -9,8 +11,6 @@ import type {
   Workload,
 } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
-import type { Rep } from '@/lib/pose-detection/type/rep.type';
 
 export const finishSet = async (state: {
   exercise: TrainingExercise;
@@ -63,14 +63,14 @@ export const finishSet = async (state: {
     loadKgR: set.loadKgR,
     vel: set.vel,
     velR: set.velR,
-    tempoEcc: set.tempoEcc || 0,
-    tempoIso: set.tempoIso || 0,
-    tempoCon: set.tempoCon || 0,
-    tempoIdle: set.tempoIdle || 0,
-    tempoEccR: set.tempoEccR || 0,
-    tempoIsoR: set.tempoIsoR || 0,
-    tempoConR: set.tempoConR || 0,
-    tempoIdleR: set.tempoIdleR || 0,
+    tempoEcc: set.tempoEcc,
+    tempoIso: set.tempoIso,
+    tempoCon: set.tempoCon,
+    tempoIdle: set.tempoIdle,
+    tempoEccR: set.tempoEccR,
+    tempoIsoR: set.tempoIsoR,
+    tempoConR: set.tempoConR,
+    tempoIdleR: set.tempoIdleR,
     eff: set.eff,
     effR: set.effR,
     recTime: set.recTime,
