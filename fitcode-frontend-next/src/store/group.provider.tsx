@@ -1,6 +1,7 @@
 'use client';
 
 import type { DragEndEvent } from '@dnd-kit/core';
+import { addMinutes } from 'date-fns';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -75,12 +76,27 @@ export function GroupProvider(
     const newFrom = dayjs(date).hour(startHour).minute(0).second(0).toDate();
     const newTo = dayjs(date).hour(endHour).minute(0).second(0).toDate();
 
+    const duration = 30; // 30 min per component default
     const state = { trainings: structuredClone(trainings) };
     await lib.common.generic.optimisticUpdate(
       () =>
         setTrainings((prev) =>
           prev.map((t) =>
-            t.id === training.id ? { ...t, from: newFrom, to: newTo } : t
+            t.id === training.id
+              ? {
+                  ...t,
+                  from: newFrom,
+                  to: addMinutes(
+                    newFrom,
+                    training.components.length * duration
+                  ),
+                  components: t.components.map((c, i) => ({
+                    ...c,
+                    from: addMinutes(newFrom, i * duration),
+                    to: addMinutes(newFrom, (i + 1) * duration),
+                  })),
+                }
+              : t
           )
         ),
       (snapshot) => setTrainings(snapshot.trainings),
@@ -89,7 +105,13 @@ export function GroupProvider(
           from: newFrom,
           to: newTo,
         }),
-      state
+      state,
+      (training) => {
+        if (!training?.id) return;
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === training.id ? training : t))
+        );
+      }
     );
   }
 

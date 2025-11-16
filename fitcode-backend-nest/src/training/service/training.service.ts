@@ -427,7 +427,11 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async move(user: User, ref: TrainingRef, input: DateRangeDto): Promise<void> {
+  async move(
+    user: User,
+    ref: TrainingRef,
+    input: DateRangeDto,
+  ): Promise<Training | null> {
     const training = await this.findOneByIdOrFail(user, ref);
     const _ref = {
       ...ref,
@@ -456,9 +460,16 @@ export class TrainingService implements Permission<Training, Institution> {
       ref.trainingId,
     );
 
+    if (training.components.length === 0) return null;
+
     // update training times
-    if (training.components.length > 0)
-      await this.repository.moveTraining(training, input);
+    const result = await this.repository.moveTraining(training, input);
+    return {
+      ...training,
+      from: result.from,
+      to: result.to,
+      components: result.components,
+    };
   }
 
   @LogMethod()
@@ -751,6 +762,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
+    this.validateIsToday(training.from);
 
     const memberIds = await this.getMemberIdsForTrainingReport(
       user,
@@ -908,6 +920,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async pauseComponent(user: User, ref: TrainingComponentRef): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
+    this.validateIsToday(training.from);
 
     const statusRef: TrainingComponentUserStatusRef = { ...ref, uid: user.uid };
     const status =
@@ -1320,6 +1333,11 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private isInPast(date: Date, relativeDate = new Date()) {
     return isBefore(date, relativeDate.setHours(0, 0, 0, 0));
+  }
+
+  validateIsToday(date: Date) {
+    if (!isSameDay(date, new Date()))
+      throw new BadRequestException('Training is not scheduled for today');
   }
 
   validateCanView(user: User, training: Training, institution?: Institution) {

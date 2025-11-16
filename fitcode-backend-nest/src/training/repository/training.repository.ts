@@ -233,6 +233,7 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     };
 
     await this.update(training.id, query);
+    return query;
   }
 
   async deleteComponent(training: Training, componentId: string) {

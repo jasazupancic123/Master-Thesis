@@ -50,7 +50,7 @@ export default function SelectedMemberReport() {
       setQrOpen(true);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to generate QR code');
+      toast.error((e as Error).message);
     }
   }
 
