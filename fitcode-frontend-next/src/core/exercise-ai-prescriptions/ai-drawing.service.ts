@@ -1,14 +1,14 @@
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
-import { lib } from '..';
+import { lib } from '../../lib';
 import { HorizontalVertical } from './enum/horizontal-vertical.enum';
 import type { KeypointId } from './enum/keypoint-id';
 import { RepStatus } from './enum/rep-state';
 import type {
   DrawRadar,
   ExerciseAngleCondition,
-} from './type/exercise-start-condition.type';
+} from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
 import type { Point2D } from './type/point.type';
 import type { Rep } from './type/rep.type';

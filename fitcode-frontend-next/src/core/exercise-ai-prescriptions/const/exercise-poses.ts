@@ -3,11 +3,12 @@ import { HorizontalVertical } from '../enum/horizontal-vertical.enum';
 import { KeypointId } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { MoreLess } from '../enum/more-less.enum';
-import type { ExerciseDetectionDataWithExerciseIds } from '../type/exercise-start-condition.type';
+import type { ExerciseAiPrescription } from '../type/exercise-detection-data';
 
 // Smaller the duration, more accurate will the rep cuting be
-export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
+export const EXERCISE_POSES: ExerciseAiPrescription[] = [
   {
+    id: 'squat-general',
     exerciseIds: [
       'acceleration-squat-fw',
       'deep-back-squat',
@@ -118,6 +119,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'lateral-squat',
     exerciseIds: [
       'lateral-squat-bw',
       'lateral-lunge-w-plate-reach-di',
@@ -153,6 +155,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'carioca-squat',
     exerciseIds: ['carioca-squat-bw'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -224,6 +227,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'pull-up-trx',
     exerciseIds: [
       'pull-up',
       'trx-row-[level-1]',
@@ -249,6 +253,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'sa-bent-over-row-db',
     exerciseIds: ['sa-bent-over-row-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -267,6 +272,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'push-up',
     exerciseIds: ['push-up'],
     data: {
       stillnessEvaluationKeypoints: [
@@ -291,6 +297,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'split-squat-lunge',
     exerciseIds: [
       'split-squat-bb',
       'split-squat-db',
@@ -376,6 +383,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'bicep-rowing-exercises-sa',
     exerciseIds: [
       'biceps-curl-sa-db',
       'bent-over-row-bb',
@@ -414,6 +422,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'biceps-curl',
     exerciseIds: ['arm-curl', 'arm-curl-db', 'biceps-curl-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -432,6 +441,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'bench-press-skull-crusher',
     exerciseIds: [
       'bench-press',
       'bench-press-bb',
@@ -483,6 +493,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'triceps-dips',
     exerciseIds: ['triceps-bench-dips', 'triceps-dips'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -501,6 +512,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'triceps-press-down-ca',
     exerciseIds: ['triceps-press-down-ca'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -519,6 +531,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'overhead-triceps-extensions-ca',
     exerciseIds: ['overhead-triceps-extensions-ca'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -537,6 +550,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'sit-up',
     exerciseIds: ['sit-up'],
     data: {
       stillnessEvaluationKeypoints: [
@@ -577,6 +591,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'triceps-press-down-sa-ca',
     exerciseIds: ['triceps-press-down-sa-ca'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -608,6 +623,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'overhead-triceps-extension-sa-ca',
     exerciseIds: ['overhead-triceps-extension-sa-ca'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -639,6 +655,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'bench-press-sa-db',
     exerciseIds: ['bench-press-sa-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -696,6 +713,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'bench-press-top-down-alt-db',
     exerciseIds: ['bench-press-[top-down-alt]-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -752,6 +770,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'shoulder-raises-sa-ca',
     exerciseIds: [
       'diagonal-shoulder-raises-sa-ca',
       'lateral-shoulder-raises-sa-ca',
@@ -802,6 +821,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'shoulder-press',
     exerciseIds: [
       'shoulder-press-bb',
       'shoulder-press-db',
@@ -825,6 +845,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'rdl-general',
     exerciseIds: [
       'sl-rdl-bw',
       'sl-rdl-db',
@@ -852,6 +873,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'leg-raises',
     exerciseIds: ['leg-raises'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
@@ -876,6 +898,7 @@ export const EXERCISE_POSES: ExerciseDetectionDataWithExerciseIds[] = [
     },
   },
   {
+    id: 'mummy-plank',
     exerciseIds: ['mummy-plank'],
     data: {
       romValueType: KeypointValueType.POSITION_X,

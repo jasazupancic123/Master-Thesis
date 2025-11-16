@@ -26,6 +26,31 @@ import {
   predictWebcam,
   setupVideoAndContex,
 } from './state';
+import { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
+import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
+import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
+import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
+import { CurrentSideMutexValues } from '@/core/exercise-ai-prescriptions/enum/current-side-mutex-values.enum';
+import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
+import { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
+import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
+import { RepDetectionService } from '@/core/exercise-ai-prescriptions/rep-detection.service';
+import type { AvgFps } from '@/core/exercise-ai-prescriptions/type/avg-fps.type';
+import type { CurrentSideMutex } from '@/core/exercise-ai-prescriptions/type/current-side-mutex.type';
+import type {
+  ExerciseAiPrescriptionData,
+  ExerciseAngleCondition,
+} from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
+import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
+import type {
+  RecordedReps,
+  Rep,
+  RepInfo,
+  RepsCount,
+} from '@/core/exercise-ai-prescriptions/type/rep.type';
+import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
+import { getPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type {
   RepImage,
@@ -35,31 +60,6 @@ import type {
 } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { FrameBitmapBuffer } from '@/lib/pose-detection/class/frame-bitmap-buffer';
-import { KeypointHistory } from '@/lib/pose-detection/class/keypoint-history';
-import { EXERCISE_POSES } from '@/lib/pose-detection/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/lib/pose-detection/const/pose-detection-constrains.const';
-import { STATUS_MESSAGES } from '@/lib/pose-detection/const/status-messages';
-import { CurrentSideMutexValues } from '@/lib/pose-detection/enum/current-side-mutex-values.enum';
-import { DetectionStatus } from '@/lib/pose-detection/enum/detection-status';
-import { PoseModel } from '@/lib/pose-detection/enum/pose-model.enum';
-import { RepStatus } from '@/lib/pose-detection/enum/rep-state';
-import { RepDetectionService } from '@/lib/pose-detection/rep-detection.service';
-import type { AvgFps } from '@/lib/pose-detection/type/avg-fps.type';
-import type { CurrentSideMutex } from '@/lib/pose-detection/type/current-side-mutex.type';
-import type {
-  ExerciseAngleCondition,
-  ExerciseDetectionData,
-} from '@/lib/pose-detection/type/exercise-start-condition.type';
-import type { Point2D } from '@/lib/pose-detection/type/point.type';
-import type {
-  RecordedReps,
-  Rep,
-  RepInfo,
-  RepsCount,
-} from '@/lib/pose-detection/type/rep.type';
-import type { RepState } from '@/lib/pose-detection/type/rep-state.type';
-import { getPoseLandmarker } from '@/lib/pose-detection/util/pose-landmarker-loader.util';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -89,7 +89,9 @@ export default function MobileMovementValidation(
   const screenSize = useScreenSize();
   const pathname = usePathname();
 
-  const { activeTraining } = useMain();
+  const mainContext = useMain();
+  const { exerciseAiPrescriptions, activeTraining } = mainContext || {};
+
   const trainingContext = useTraining();
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
@@ -139,18 +141,22 @@ export default function MobileMovementValidation(
   const [defaultExerciseName, setDefaultExerciseName] = useState('');
 
   const [exercisePose, setExercisePose] = useState<
-    ExerciseDetectionData | undefined
+    ExerciseAiPrescriptionData | undefined
   >(
     selectedExercise
-      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
-          ?.data
-      : EXERCISE_POSES[0].data
+      ? (exerciseAiPrescriptions || EXERCISE_POSES).find((e) =>
+          e.exerciseIds.includes(selectedExercise.id)
+        )?.data
+      : (exerciseAiPrescriptions || EXERCISE_POSES)[0].data
   );
 
-  const exerciseDetectionDataRef = useRef<ExerciseDetectionData | undefined>(
+  const exerciseDetectionDataRef = useRef<
+    ExerciseAiPrescriptionData | undefined
+  >(
     selectedExercise
-      ? EXERCISE_POSES.find((e) => e.exerciseIds.includes(selectedExercise.id))
-          ?.data
+      ? (exerciseAiPrescriptions || EXERCISE_POSES).find((e) =>
+          e.exerciseIds.includes(selectedExercise.id)
+        )?.data
       : exercisePose
   );
 
@@ -240,8 +246,8 @@ export default function MobileMovementValidation(
   useEffect(() => {
     if (!sandboxExerciseId) return;
 
-    const foundExercisePose = EXERCISE_POSES.find((e) =>
-      e.exerciseIds.includes(sandboxExerciseId)
+    const foundExercisePose = (exerciseAiPrescriptions || EXERCISE_POSES).find(
+      (e) => e.exerciseIds.includes(sandboxExerciseId)
     );
 
     if (!foundExercisePose) return;
@@ -506,6 +512,7 @@ export default function MobileMovementValidation(
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       exercisePose &&
       setSelectedTrackingMethod &&
+      activeTraining &&
       trainingInProgress &&
       setTrainingInProgress !== undefined &&
       handleUpsertSet !== undefined &&

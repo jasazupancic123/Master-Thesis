@@ -12,10 +12,10 @@ import { MoreLess } from './enum/more-less.enum';
 import { RepStatus } from './enum/rep-state';
 import { FeedbackService } from './feedback.service';
 import type {
+  ExerciseAiPrescriptionData,
   ExerciseAngleCondition,
-  ExerciseDetectionData,
   ExerciseRepStartCondition,
-} from './type/exercise-start-condition.type';
+} from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
 import type { Point2D } from './type/point.type';
 import type { Rep } from './type/rep.type';
@@ -53,7 +53,7 @@ export class StatusDetectionService {
       canProceedIntoReadyStateRef: RefObject<boolean>;
       keypointBuffer: KeypointHistory;
       keypointHistory: KeypointHistory;
-      exerciseDetectionData: ExerciseDetectionData;
+      exerciseDetectionData: ExerciseAiPrescriptionData;
       avgFps: { value: number; count: number } | null;
       recordingTimestampRef: RefObject<Date | null>;
       statusMessage: RefObject<string>;

@@ -16,6 +16,7 @@ import type {
   ExerciseAttributes,
 } from '@/core/exercise/type/exercise.type';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -139,7 +140,7 @@ export default function ExerciseModal({
             <Stack direction="column" alignItems="center" height="100%">
               <FileUpload
                 label="Video"
-                input="video"
+                input={InputType.VIDEO}
                 initialFileUrl={data.videoUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
@@ -154,7 +155,7 @@ export default function ExerciseModal({
             <Stack direction="column" alignItems="center">
               <FileUpload
                 label="Image"
-                input="image"
+                input={InputType.IMAGE}
                 initialFileUrl={data.imageUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;

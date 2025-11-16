@@ -4,12 +4,13 @@ import type { KeypointId } from '../enum/keypoint-id';
 import type { KeypointValueType } from '../enum/keypoint-value-type';
 import type { MoreLess } from '../enum/more-less.enum';
 
-export type ExerciseDetectionDataWithExerciseIds = {
+export type ExerciseAiPrescription = {
+  id: string;
   exerciseIds: string[];
-  data: ExerciseDetectionData;
+  data: ExerciseAiPrescriptionData;
 };
 
-export type ExerciseDetectionData = {
+export type ExerciseAiPrescriptionData = {
   romValueType: KeypointValueType;
   cannotDoBothSidesSimultaneously?: boolean; // If true, only one side can be active at a time (e.g. lateral lunges)
   stillnessEvaluationKeypoints?: KeypointId[]; // Which keypoints are evaluated for stillness at start only

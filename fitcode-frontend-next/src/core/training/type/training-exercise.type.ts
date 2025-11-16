@@ -1,7 +1,7 @@
 import type { ExerciseSet } from './exercise-set.type';
 import type { IdEntity } from '@/core/entity.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import type { RepInfo } from '@/lib/pose-detection/type/rep.type';
+import type { RepInfo } from '@/core/exercise-ai-prescriptions/type/rep.type';
 
 export type TrainingExercise = IdEntity & {
   sets: ExerciseSet[];

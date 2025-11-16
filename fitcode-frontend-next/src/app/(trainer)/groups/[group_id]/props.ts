@@ -6,7 +6,6 @@ import type { Method } from '@/core/exercise/type/method.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -63,8 +62,6 @@ export type TrainerDayViewContextProps = {
   setSelectedPeriod: SetState<{ key: Date; value: 'AM' | 'PM' } | undefined>;
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
-  wellness: WellnessZScore[];
-  setWellness: SetState<WellnessZScore[]>;
   selectedExerciseIds: string[]; // selected exercises in the component
   setSelectedExerciseIds: SetState<string[]>;
   supersets: Superset[]; // supersets of the selected component
