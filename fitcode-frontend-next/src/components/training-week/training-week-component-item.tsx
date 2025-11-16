@@ -1,12 +1,14 @@
-import { Event } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
+import { AccessTime, Event } from '@mui/icons-material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
+import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 import { core } from '@/core/core.service';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface TrainerWeekViewItemProps {
@@ -20,6 +22,7 @@ interface TrainerWeekViewItemProps {
 export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const groupContext = useGroup();
 
   const { item, setSelectedItem, setOpenModal } = props;
 
@@ -85,10 +88,47 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
         setOpenModal(true);
       }}
     >
-      <Typography fontSize={12}>
-        {lib.common.date.format(item.from, {}, 'H:mm')} -{' '}
-        {lib.common.date.format(item.to, {}, 'H:mm')}
-      </Typography>
+      <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
+        <Typography fontSize={12}>
+          {lib.common.date.format(item.from, {}, 'H:mm')} -{' '}
+          {lib.common.date.format(item.to, {}, 'H:mm')}
+        </Typography>
+
+        <IconButton
+          size="small"
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (!isComponent) return;
+
+            const checkIsTrainingComponent = (
+              item: TrainingComponentWithTrainingId | GroupEvent
+            ): item is TrainingComponentWithTrainingId => {
+              return (
+                (item as TrainingComponentWithTrainingId).supersets !==
+                undefined
+              );
+            };
+
+            await handleUpdateTrainingTimes(
+              {
+                item,
+                newItem: {
+                  ...(item as TrainingComponentWithTrainingId),
+                  from: item.from,
+                  to: core.training.component.calculateEndDate(item),
+                },
+                selectedItem: item,
+                setSelectedItem,
+                checkIsTrainingComponent,
+              },
+              groupContext
+            );
+          }}
+        >
+          <AccessTime sx={{ width: 16, height: 16 }} />
+        </IconButton>
+      </Box>
+
       <Box
         width="100%"
         display="flex"
@@ -129,6 +169,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
               : ''}
         </Typography>
       </Box>
+
       <Typography fontSize={12}>{item.location}</Typography>
     </Box>
   );

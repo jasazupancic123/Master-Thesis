@@ -39,7 +39,6 @@ export default function TrainerWeekView() {
 
   const groupContext = useGroup();
   const weekViewUtils = useWeekViewUtils();
-
   const { group, trainings } = groupContext;
 
   const {
@@ -88,6 +87,7 @@ export default function TrainerWeekView() {
         }}
       >
         <VerticalLinesBorders />
+
         {/* Week selector */}
         <Box
           width="100%"
@@ -152,6 +152,7 @@ export default function TrainerWeekView() {
             {!selectedEventType && (
               <InputLabel id="event-type-label">Event type</InputLabel>
             )}
+
             <DraggableSelect selectedEventType={selectedEventType}>
               <Select
                 ref={selectRef}

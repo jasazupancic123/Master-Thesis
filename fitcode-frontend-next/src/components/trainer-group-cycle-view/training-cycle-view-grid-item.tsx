@@ -1,6 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
+import { DragIndicator } from '@mui/icons-material';
 import type { SvgIconProps } from '@mui/material';
-import { Tooltip, Typography } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import type { ElementType } from 'react';
 import React, { useRef } from 'react';
@@ -41,22 +42,23 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     containerRef,
   });
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: `training-${training.id}`,
-    data: { training },
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `training-${training.id}`,
+      data: { training },
+    });
 
   return (
     <Box
       ref={setNodeRef}
-      style={{
-        transform: transform
-          ? `translate(${transform.x}px, ${transform.y}px)`
-          : undefined,
-        cursor: 'grab',
-      }}
-      {...listeners}
       {...attributes}
+      sx={{
+        position: 'relative',
+        opacity: isDragging ? 0.5 : 1,
+        transform: transform
+          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+          : undefined,
+      }}
     >
       <Box
         ref={containerRef}
@@ -240,6 +242,21 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
           );
         })}
       </Box>
+
+      <IconButton
+        size="small"
+        {...listeners}
+        sx={{
+          position: 'absolute',
+          top: 4,
+          right: 4,
+          cursor: 'grab',
+          zIndex: 10,
+        }}
+        // onPointerDown={(e) => e.stopPropagation()}
+      >
+        <DragIndicator fontSize="small" />
+      </IconButton>
     </Box>
   );
 }
