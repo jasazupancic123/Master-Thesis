@@ -2,6 +2,7 @@ import { AudioUtil } from './service/audio.util';
 import { CanvasUtil } from './service/canvas.util';
 import { DateUtil } from './service/date.util';
 import { EnvUtil } from './service/env.util';
+import { FileUtil } from './service/file.util';
 import { GenericUtil } from './service/generic.util';
 import { ComponentUtil } from './service/icons.util';
 import { IndexedDbUtil } from './service/indexed-db.util';
@@ -26,6 +27,7 @@ export class CommonService {
   readonly typeChecker: TypeCheckerUtil;
   readonly canvas: CanvasUtil;
   readonly audio: AudioUtil;
+  readonly file: FileUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -41,5 +43,6 @@ export class CommonService {
     this.typeChecker = new TypeCheckerUtil();
     this.canvas = new CanvasUtil();
     this.audio = new AudioUtil();
+    this.file = new FileUtil();
   }
 }

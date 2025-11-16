@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { withAuth } from './auth.provider';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
@@ -22,6 +23,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
   institutions: Institution[];
   groups: Group[];
   activeTraining: ActiveTraining | null;
+  exerciseAiPrescriptions: ExerciseAiPrescription[];
 }
 
 export interface IMainContext extends MainProviderProps {
@@ -32,6 +34,7 @@ export interface IMainContext extends MainProviderProps {
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
   setActiveTraining: SetState<ActiveTraining | null>;
+  setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -57,6 +60,9 @@ export default function MainProvider(props: MainProviderProps) {
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
     props.activeTraining
   );
+  const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState<
+    ExerciseAiPrescription[]
+  >(props.exerciseAiPrescriptions);
 
   useEffect(() => {
     // fetch wellness
@@ -91,6 +97,8 @@ export default function MainProvider(props: MainProviderProps) {
     wellness,
     activeTraining,
     setActiveTraining,
+    exerciseAiPrescriptions,
+    setExerciseAiPrescriptions,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

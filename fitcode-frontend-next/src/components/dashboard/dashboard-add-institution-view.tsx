@@ -11,6 +11,7 @@ import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -150,7 +151,7 @@ export default function AddInstitutionDashboard() {
         >
           <FileUpload
             label={!imageUrl?.length ? 'Image' : ''}
-            input="image"
+            input={InputType.IMAGE}
             initialFileUrl={imageUrl}
             onFileUpload={async (file: File) => {
               const path = `media/exercise/${Date.now()}-${file.name}`;
