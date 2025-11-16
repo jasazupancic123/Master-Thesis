@@ -9,6 +9,14 @@ export function expectDatesToMatchUpToMinute(date1: Date, date2: Date) {
   expect(date1.getMinutes()).toBe(date2.getMinutes());
 }
 
+export function expectHoursAndMinutesToMatch(date1: Date, date2: Date) {
+  date1 = new Date(date1);
+  date2 = new Date(date2);
+
+  expect(date1.getHours()).toBe(date2.getHours());
+  expect(date1.getMinutes()).toBe(date2.getMinutes());
+}
+
 export function getNextFriday(fromDate = new Date()) {
   const date = new Date(fromDate);
   const day = date.getDay();
