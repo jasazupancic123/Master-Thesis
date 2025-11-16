@@ -14,7 +14,6 @@ import dayjs from 'dayjs';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';

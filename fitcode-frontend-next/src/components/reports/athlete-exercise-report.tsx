@@ -13,6 +13,8 @@ import { TrainingController } from '@/core/training/training.controller';
 import type { Workload } from '@/core/training/type/workload.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import ImageGallery from '@/ui/image-gallery';
+import MyModal from '@/ui/modal';
 
 type Props = {
   selectedUserId?: string;
@@ -24,6 +26,9 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
   const { exercises } = useMain();
   const { selectedInstitution, trainings } = useDashboard();
   const [data, setData] = useState<Workload[]>([]);
+
+  const [openGallery, setOpenGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   const uniqueExerciseIds = [
     ...new Set(
@@ -49,8 +54,9 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
   useEffect(() => {
     if (!selectedUserId || !selectedExerciseId) return;
 
-    if (cache.has(selectedUserId)) {
-      setData(cache.get(selectedUserId)!);
+    const key = `${selectedUserId}-${selectedExerciseId}`;
+    if (cache.has(key)) {
+      setData(cache.get(key)!);
       return;
     }
 
@@ -62,7 +68,7 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
           selectedExerciseId
         );
 
-      cache.set(selectedUserId, workloads);
+      cache.set(key, workloads);
       setData(workloads);
     };
 
@@ -95,7 +101,6 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
           {
             dataKey: 'load',
             label: 'Load (kg)',
-            curve: 'natural',
             showMark: true,
           },
         ]}
@@ -117,6 +122,14 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
         width={650}
         height={350}
         margin={{ top: 40, bottom: 60, left: 60, right: 20 }}
+        onMarkClick={(_, item) => {
+          const workload = data[item.dataIndex || 0];
+          const photoURLs = workload?.photoURLs || [];
+          if (photoURLs.length > 0) {
+            setGalleryImages(photoURLs);
+            setOpenGallery(true);
+          }
+        }}
       />
 
       {/* Exercise selector */}
@@ -135,6 +148,14 @@ export default function AthleteExerciseReport({ selectedUserId }: Props) {
           ))}
         </Select>
       </FormControl>
+
+      <MyModal isOpen={openGallery} setIsOpen={setOpenGallery}>
+        <ImageGallery
+          imagesL={galleryImages}
+          imagesR={[]}
+          enableImagePickerSlider
+        />
+      </MyModal>
     </Box>
   );
 }
