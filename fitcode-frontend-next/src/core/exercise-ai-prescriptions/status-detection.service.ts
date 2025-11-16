@@ -63,6 +63,7 @@ export class StatusDetectionService {
       doItTimestamp: RefObject<Date | null>;
       reloadingModelRef: RefObject<boolean>;
       reloadModel: () => Promise<void>;
+      POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
     }
   ): Promise<boolean> {
     const {
@@ -81,6 +82,7 @@ export class StatusDetectionService {
       videoHeight,
       doItTimestamp,
       reloadingModelRef,
+      POSE_DETECTION_CONSTANTS,
       reloadModel,
     } = state;
 
@@ -97,7 +99,10 @@ export class StatusDetectionService {
             reloadingModelRef,
           });
         }
-        const isFullyInFrame = this.checkIsFullyInFrame(keypoints);
+        const isFullyInFrame = this.checkIsFullyInFrame(
+          keypoints,
+          POSE_DETECTION_CONSTANTS
+        );
 
         const canProceedIntoNotFacingCamera = isFullyInFrame;
 
@@ -124,6 +129,7 @@ export class StatusDetectionService {
         }
         const isFacingCamera = this.checkIsFacingCamera(
           keypoints,
+          POSE_DETECTION_CONSTANTS,
           exerciseDetectionData.stillnessEvaluationKeypoints
         );
 
@@ -171,6 +177,7 @@ export class StatusDetectionService {
           videoHeight,
           stillnessEvaluationKeypoints:
             exerciseDetectionData.stillnessEvaluationKeypoints,
+          POSE_DETECTION_CONSTANTS,
         });
 
         return this.updateStatus(
@@ -197,6 +204,7 @@ export class StatusDetectionService {
           buffer: keypointBuffer,
           avgFps,
           videoHeight,
+          POSE_DETECTION_CONSTANTS,
         });
 
         // const canStartRecording = hasNodded && isStill;
@@ -235,13 +243,13 @@ export class StatusDetectionService {
           dayjs(new Date()).diff(
             dayjs(recordingTimestampRef.current),
             'second'
-          ) < lib.common.env.ai.MIN_STILL_TIME_TO_STOP_DETECTION_S()
+          ) < POSE_DETECTION_CONSTANTS.MIN_STILL_TIME_TO_STOP_DETECTION_S
         )
           return false;
 
         // look for 1 second of stillness
         const bufferCutOf = this.keypoint.getFramesCountFromSeconds(
-          lib.common.env.ai.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S(),
+          POSE_DETECTION_CONSTANTS.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S,
           avgFps?.value || 30
         );
 
@@ -251,6 +259,7 @@ export class StatusDetectionService {
           avgFps,
           bufferCutOff: bufferCutOf,
           videoHeight,
+          POSE_DETECTION_CONSTANTS,
         });
 
         // const hasNodded = this.checkHasNodded({
@@ -260,6 +269,7 @@ export class StatusDetectionService {
 
         const hasShakedHead = this.checkHasShakedHead({
           keypointBuffer,
+          POSE_DETECTION_CONSTANTS,
           avgFps,
         });
 
@@ -285,6 +295,7 @@ export class StatusDetectionService {
     nextStatus: DetectionStatus,
     statusMessage: RefObject<string>
   ): boolean {
+    console.log('statusRef.current', statusRef.current);
     if (!condition && statusRef.current === currentStatus) {
       return false;
     } else if (!condition) {
@@ -301,7 +312,10 @@ export class StatusDetectionService {
     return true;
   }
 
-  private checkIsFullyInFrame(keypoints: Keypoint[]): boolean {
+  private checkIsFullyInFrame(
+    keypoints: Keypoint[],
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>
+  ): boolean {
     const requiredKeypointCombinations = [
       [KeypointId.LEFT_SHOULDER, KeypointId.LEFT_EYE, KeypointId.LEFT_ANKLE],
       [KeypointId.RIGHT_SHOULDER, KeypointId.RIGHT_EYE, KeypointId.RIGHT_ANKLE],
@@ -312,8 +326,7 @@ export class StatusDetectionService {
         const kp = this.keypoint.getDesiredKeypointFromArray(keypoints, id);
         return (
           kp &&
-          kp.visibility >
-            lib.common.env.ai.IN_FRAME_VISIBLITY_THRESHOLD()
+          kp.visibility > POSE_DETECTION_CONSTANTS.IN_FRAME_VISIBILITY_THRESHOLD
         );
       });
     });
@@ -321,6 +334,7 @@ export class StatusDetectionService {
 
   private checkIsFacingCamera(
     keypoints: Keypoint[],
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>,
     passedFacingCameraKeypointIds?: KeypointId[]
   ): boolean {
     const facingCameraKeypointIds = passedFacingCameraKeypointIds || [
@@ -344,7 +358,7 @@ export class StatusDetectionService {
       (kp) =>
         kp &&
         kp.visibility >
-          lib.common.env.ai.FACING_CAMERA_VISIBLITY_THRESHOLD()
+          POSE_DETECTION_CONSTANTS.FACING_CAMERA_VISIBILITY_THRESHOLD
     );
   }
 
@@ -356,6 +370,7 @@ export class StatusDetectionService {
     bufferCutOff?: number;
     stillnessCountdownRef?: RefObject<Date | null>;
     stillnessEvaluationKeypoints?: KeypointId[];
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): boolean {
     const {
       keypoints,
@@ -365,13 +380,15 @@ export class StatusDetectionService {
       bufferCutOff,
       stillnessCountdownRef,
       stillnessEvaluationKeypoints,
+      POSE_DETECTION_CONSTANTS,
     } = state;
 
     if (!avgFps) return false;
 
     const framesNeededInBuffer = Math.min(
       buffer.bufferLength || Infinity,
-      lib.common.env.ai.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S() * avgFps.value // at least this much second of data
+      POSE_DETECTION_CONSTANTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S *
+        avgFps.value // at least this much second of data
     );
 
     const stillnessKeypointIds =
@@ -395,8 +412,7 @@ export class StatusDetectionService {
       const stdDev = this.calculateStandardDeviation(history);
 
       const isKeypointStill =
-        stdDev <
-        lib.common.env.ai.STILLNESS_THRESHOLD_M();
+        stdDev < POSE_DETECTION_CONSTANTS.STILLNESS_THRESHOLD_M;
 
       return isKeypointStill;
     });
@@ -405,7 +421,8 @@ export class StatusDetectionService {
       buffer: buffer,
       videoHeight,
       bufferCutOff,
-      tresholdPercentage: lib.common.env.ai.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD(),
+      tresholdPercentage:
+        POSE_DETECTION_CONSTANTS.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD,
     });
 
     const isStill = isStillXY && isStillZ;
@@ -422,8 +439,7 @@ export class StatusDetectionService {
       );
 
       const passedDiff =
-        diff >=
-        lib.common.env.ai.STILLNESS_COUNTDOWN_DURATION_S();
+        diff >= POSE_DETECTION_CONSTANTS.STILLNESS_COUNTDOWN_DURATION_S;
 
       return isStill && passedDiff;
     }
@@ -697,11 +713,12 @@ export class StatusDetectionService {
   checkHasShakedHead(state: {
     keypointBuffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): boolean {
-    const { keypointBuffer, avgFps } = state;
+    const { keypointBuffer, avgFps, POSE_DETECTION_CONSTANTS } = state;
 
     const numFrames = this.keypoint.getFramesCountFromSeconds(
-      lib.common.env.ai.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S(),
+      POSE_DETECTION_CONSTANTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
       avgFps?.value || 30
     );
 
@@ -834,15 +851,13 @@ export class StatusDetectionService {
       if (
         isLeftAngle &&
         !hasRotatedLeft &&
-        angle <
-          lib.common.env.ai.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES()
+        angle < POSE_DETECTION_CONSTANTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
       ) {
         hasRotatedLeft = true;
       } else if (
         !isLeftAngle &&
         !hasRotatedRight &&
-        angle <
-          lib.common.env.ai.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES()
+        angle < POSE_DETECTION_CONSTANTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
       ) {
         hasRotatedRight = true;
       }

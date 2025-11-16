@@ -36,6 +36,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import Logo from '@/ui/logo';
+import { usePathname } from 'next/navigation';
 
 interface Props {
   trainingInProgressUndoneExercisesContext?: IUndoneExercisesCtx;
@@ -46,6 +47,7 @@ interface Props {
 export default function AthleteHeader(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const pathname = usePathname();
 
   const { user, role, logout } = useAuthenticatedAuth();
   const { filter, setFilter } = useAthlete() || {};
@@ -70,6 +72,8 @@ export default function AthleteHeader(props: Props) {
     handleOpenMenu,
     handleCloseMenu,
   } = trainingInProgressUtilsContext || {};
+
+  const includeBottomHeader = !pathname.includes('/components/');
 
   const [open, setOpen] = useState(false);
 
@@ -256,7 +260,7 @@ export default function AthleteHeader(props: Props) {
         </Box>
 
         {(screenSize.isLandscapeMobile || screenSize.isMobile) &&
-          !trainingInProgress && (
+          includeBottomHeader && (
             <Box
               position="fixed"
               bottom={0}

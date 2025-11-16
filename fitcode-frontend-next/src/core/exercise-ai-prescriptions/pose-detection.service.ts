@@ -45,6 +45,7 @@ export class PoseDetectionService {
     videoHeight: number;
     doItTimestamp: RefObject<Date | null>;
     reloadingModelRef: RefObject<boolean>;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
     reloadModel: () => Promise<void>;
   }) {
     const {
@@ -63,6 +64,7 @@ export class PoseDetectionService {
       videoHeight,
       doItTimestamp,
       reloadingModelRef,
+      POSE_DETECTION_CONSTANTS,
       reloadModel,
     } = state;
 
@@ -93,6 +95,7 @@ export class PoseDetectionService {
         videoHeight,
         doItTimestamp,
         reloadingModelRef,
+        POSE_DETECTION_CONSTANTS,
         reloadModel,
       });
 
@@ -127,11 +130,12 @@ export class PoseDetectionService {
   checkHasNodded(state: {
     keypointBuffer: KeypointHistory;
     avgFps: { value: number; count: number } | null;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): boolean {
-    const { keypointBuffer, avgFps } = state;
+    const { keypointBuffer, avgFps, POSE_DETECTION_CONSTANTS } = state;
 
     const numFrames = this.keypoint.getFramesCountFromSeconds(
-      lib.common.env.ai.NOD_DETECTION_BUFFER_DURATION_S(),
+      POSE_DETECTION_CONSTANTS.NOD_DETECTION_BUFFER_DURATION_S,
       avgFps?.value || 30
     );
 
@@ -253,7 +257,7 @@ export class PoseDetectionService {
       }
 
       if (!earsAboveEyes) {
-        if (avgEarY < avgEyeY + lib.common.env.ai.Y_POS_HELPER_M()) {
+        if (avgEarY < avgEyeY + POSE_DETECTION_CONSTANTS.Y_POS_HELPER_M) {
           // console.log('EARS ABOVE EYES');
           earsAboveEyes = true;
         }
