@@ -127,6 +127,7 @@ export const predictWebcam = async (state: {
   isCurrentlySavingImageRef: RefObject<boolean>;
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
   reloadingModelRef: RefObject<boolean>;
+  POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
   setRepCount: SetState<RepsCount>;
@@ -169,6 +170,7 @@ export const predictWebcam = async (state: {
     isCurrentlySavingImageRef,
     canExitWhenImageIsDoneSavingRef,
     reloadingModelRef,
+    POSE_DETECTION_CONSTANTS,
     setFps,
     finishAiDetection,
     setRepCount,
@@ -358,6 +360,7 @@ export const predictWebcam = async (state: {
         keypoints,
         isMobile,
         avgFps,
+        POSE_DETECTION_CONSTANTS,
       });
 
       await lib.ai.pose.checkStatus({
@@ -376,6 +379,7 @@ export const predictWebcam = async (state: {
         videoHeight: video.videoHeight,
         doItTimestamp,
         reloadingModelRef,
+        POSE_DETECTION_CONSTANTS,
         reloadModel,
       });
 
@@ -430,6 +434,7 @@ export const predictWebcam = async (state: {
                 }
               : undefined,
           setRepCount,
+          POSE_DETECTION_CONSTANTS,
         });
       }
 
@@ -496,6 +501,7 @@ function insertKeypointsIntoBuffers(state: {
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<AvgFps>;
+  POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
 }) {
   const {
     statusRef,
@@ -509,6 +515,7 @@ function insertKeypointsIntoBuffers(state: {
     keypoints,
     isMobile,
     avgFps,
+    POSE_DETECTION_CONSTANTS,
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
@@ -516,7 +523,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      lib.common.env.ai.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS() / 1000
+      POSE_DETECTION_CONSTANTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS / 1000
     );
 
     constantKeypointHistory.insertFrame(keypoints); // never cut, always all history
@@ -525,7 +532,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      lib.common.env.ai.KEYPOINT_BUFFER_DURATION_MS() / 1000
+      POSE_DETECTION_CONSTANTS.KEYPOINT_BUFFER_DURATION_MS / 1000
     );
   }
 

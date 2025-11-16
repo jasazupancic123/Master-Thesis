@@ -65,7 +65,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 
 const DEBUG = false;
 
@@ -110,6 +109,8 @@ export default function MobileMovementValidation(
     supersetIndex,
     setIndex,
   } = props;
+
+  const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -473,6 +474,7 @@ export default function MobileMovementValidation(
           isCurrentlySavingImageRef,
           canExitWhenImageIsDoneSavingRef,
           reloadingModelRef,
+          POSE_DETECTION_CONSTANTS,
           setFps,
           finishAiDetection,
           setRepCount,
@@ -739,7 +741,7 @@ export default function MobileMovementValidation(
       loadedPoseLandmarkerTimestampRef.current &&
       Math.abs(
         dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
-      ) < lib.common.env.ai.TIME_BETWEEN_MODEL_RELOAD_S()
+      ) < POSE_DETECTION_CONSTANTS.TIME_BETWEEN_MODEL_RELOAD_S
     ) {
       return;
     }
@@ -918,7 +920,7 @@ export default function MobileMovementValidation(
                   ? Math.max(
                       dayjs(stillnessCountdownRef.current)
                         .add(
-                          lib.common.env.ai.STILLNESS_COUNTDOWN_DURATION_S(),
+                          POSE_DETECTION_CONSTANTS.STILLNESS_COUNTDOWN_DURATION_S,
                           'seconds'
                         )
                         .diff(dayjs(), 'second'),
