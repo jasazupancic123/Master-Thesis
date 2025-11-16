@@ -515,7 +515,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     }
   }
 
-  function applyNewMethod(method: Method) {
+  function applyNewMethod(method?: Method) {
     if (!component || !training) return;
 
     if (selectedExerciseIds.length === 0)
