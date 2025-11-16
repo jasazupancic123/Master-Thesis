@@ -1,6 +1,6 @@
 import { alpha } from '@mui/material';
 
-import type { Point2D } from '@/lib/pose-detection/type/point.type';
+import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
 
 export class CanvasUtil {
   // ---- draw torso guide lines ----

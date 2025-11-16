@@ -1,7 +1,7 @@
 import { CommonService } from './common/common.service';
 import { FirebaseService } from './firebase/firebase.service';
 import { MaterialUIService } from './material-ui/material-ui.service';
-import { AIService } from './pose-detection/ai.service';
+import { AIService } from '../core/exercise-ai-prescriptions/ai.service';
 
 class Lib {
   readonly common: CommonService;

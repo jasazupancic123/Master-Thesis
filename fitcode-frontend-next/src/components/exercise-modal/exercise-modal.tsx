@@ -21,6 +21,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { InputType } from '@/lib/common/const/input-type.const';
 
 const firebaseStorage = lib.firebase.storage;
 
@@ -139,7 +140,7 @@ export default function ExerciseModal({
             <Stack direction="column" alignItems="center" height="100%">
               <FileUpload
                 label="Video"
-                input="video"
+                input={InputType.VIDEO}
                 initialFileUrl={data.videoUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
@@ -154,7 +155,7 @@ export default function ExerciseModal({
             <Stack direction="column" alignItems="center">
               <FileUpload
                 label="Image"
-                input="image"
+                input={InputType.IMAGE}
                 initialFileUrl={data.imageUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;

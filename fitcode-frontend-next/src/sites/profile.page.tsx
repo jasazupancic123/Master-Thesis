@@ -37,6 +37,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
+import { InputType } from '@/lib/common/const/input-type.const';
 
 const DEFAULT_MARGIN = 1;
 
@@ -197,7 +198,7 @@ export default function ProfilePage() {
         </Box>
 
         <FileUpload
-          input="image"
+          input={InputType.IMAGE}
           label="Upload Profile Image"
           initialFileUrl={user.photoURL || undefined}
           sx={{ width: 200, margin: 'auto', height: 150 }}

@@ -1,5 +1,6 @@
 import { AppController } from './app.controller';
 import { AuthController } from './auth/auth.controller';
+import { ExerciseAiPrescriptionsController } from './exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 import { ExerciseController } from './exercise/exercise.controller';
 import { GroupController } from './group/group.controller';
 import { InstitutionController } from './institution/institution.controller';
@@ -15,6 +16,7 @@ export class Controller {
   public institution: InstitutionController;
   public training: TrainingController;
   public profile: ProfileController;
+  public exerciseAiPrescriptions: ExerciseAiPrescriptionsController;
   public app: AppController;
 
   private constructor() {
@@ -24,6 +26,8 @@ export class Controller {
     this.institution = InstitutionController.getInstance();
     this.training = TrainingController.getInstance();
     this.profile = ProfileController.getInstance();
+    this.exerciseAiPrescriptions =
+      ExerciseAiPrescriptionsController.getInstance();
     this.app = AppController.getInstance();
   }
 

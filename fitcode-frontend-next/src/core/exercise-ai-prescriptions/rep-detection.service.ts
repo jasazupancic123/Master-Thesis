@@ -14,11 +14,11 @@ import type { AvgFps } from './type/avg-fps.type';
 import type { CurrentSideMutex } from './type/current-side-mutex.type';
 import type {
   ExerciseAngleCondition,
-  ExerciseDetectionData,
+  ExerciseAiPrescriptionData,
   ExerciseRepStartCondition,
   RequiredPoseCondition,
   StillnessCondition,
-} from './type/exercise-start-condition.type';
+} from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
 import type { NumericValueFrameNum } from './type/numeric-value-frame-num';
 import type { Point2D } from './type/point.type';
@@ -78,7 +78,7 @@ export class RepDetectionService {
     keypointHistory: KeypointHistory;
     constantKeypointHistory: KeypointHistory;
     lastRecordedRepRef: RefObject<Rep | null>;
-    exerciseDetectionData: ExerciseDetectionData;
+    exerciseDetectionData: ExerciseAiPrescriptionData;
     currentSideMutexRef: RefObject<CurrentSideMutex>;
     currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
     valueType: KeypointValueType;
