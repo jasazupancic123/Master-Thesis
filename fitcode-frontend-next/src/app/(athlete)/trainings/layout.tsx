@@ -10,7 +10,6 @@ import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import path from 'path';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
@@ -51,8 +50,6 @@ function TrainingContent({ children }: React.PropsWithChildren) {
       );
     }
   }, [router, activeTraining]); // run when activeTraining changes
-
-  console.log('includeHeader', includeHeader);
 
   return (
     <>

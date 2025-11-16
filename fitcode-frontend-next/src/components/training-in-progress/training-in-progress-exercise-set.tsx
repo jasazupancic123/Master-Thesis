@@ -53,17 +53,6 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   if (!trainingInProgress) return null;
 
-  const isSetCompleted = ExerciseSetService.isSetCompleted(
-    {
-      trainingId: trainingInProgress.training.id,
-      componentId: trainingInProgress.selectedComponent.id,
-      exerciseId: selectedExercise.id,
-      supersetIndex: supersetIndex,
-      setIndex: setIndex,
-    },
-    activeTraining.workloads
-  );
-
   return (
     <Box
       id="athlete-training-exercise-sets-container"
