@@ -457,10 +457,8 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update training times
-    await this.repository.update(ref.trainingId, {
-      from: input.from,
-      to: input.to,
-    });
+    if (training.components.length > 0)
+      await this.repository.moveTraining(training, input);
   }
 
   @LogMethod()

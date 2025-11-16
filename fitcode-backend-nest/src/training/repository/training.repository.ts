@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { isAfter, isBefore } from 'date-fns';
+import { addMinutes, isAfter, isBefore } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
@@ -20,6 +20,7 @@ import { FirestoreRepository } from '@src/common/type/firestore.type';
 import { BatchWriteOperation, Filter } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { DURATION_TRAINING_COMPONENT_IN_MIN } from '../constant/training-limits.constant';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 
@@ -217,6 +218,21 @@ export class TrainingRepository extends FirestoreRepository<Training> {
     query.components = all;
     await this.update(training.id, query);
     return query;
+  }
+
+  async moveTraining(training: Training, input: DateRangeDto) {
+    const duration = DURATION_TRAINING_COMPONENT_IN_MIN;
+    const query: Update<Training> = {
+      from: input.from,
+      to: addMinutes(input.from, training.components.length * duration),
+      components: training.components.map((c, i) => ({
+        ...c,
+        from: addMinutes(input.from, i * duration),
+        to: addMinutes(input.from, (i + 1) * duration),
+      })),
+    };
+
+    await this.update(training.id, query);
   }
 
   async deleteComponent(training: Training, componentId: string) {
