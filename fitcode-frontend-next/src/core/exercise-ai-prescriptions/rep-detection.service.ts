@@ -13,8 +13,8 @@ import { StatusDetectionService } from './status-detection.service';
 import type { AvgFps } from './type/avg-fps.type';
 import type { CurrentSideMutex } from './type/current-side-mutex.type';
 import type {
-  ExerciseAngleCondition,
   ExerciseAiPrescriptionData,
+  ExerciseAngleCondition,
   ExerciseRepStartCondition,
   RequiredPoseCondition,
   StillnessCondition,

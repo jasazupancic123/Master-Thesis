@@ -39,8 +39,11 @@ import type {
   CreateExerciseMuscleValues,
   Exercise,
 } from '@/core/exercise/type/exercise.type';
+import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
+import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -49,9 +52,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
-import { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
-import { InputType } from '@/lib/common/const/input-type.const';
 
 type AttributeValue =
   | string

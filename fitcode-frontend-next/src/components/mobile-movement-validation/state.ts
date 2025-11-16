@@ -5,8 +5,6 @@ import type { RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
-import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
 import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
@@ -17,8 +15,8 @@ import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
 import type { AvgFps } from '@/core/exercise-ai-prescriptions/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/core/exercise-ai-prescriptions/type/current-side-mutex.type';
 import type {
-  ExerciseAngleCondition,
   ExerciseAiPrescriptionData,
+  ExerciseAngleCondition,
 } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import type { Keypoint } from '@/core/exercise-ai-prescriptions/type/keypoint.type';
 import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
@@ -28,6 +26,8 @@ import type {
   RepsCount,
 } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;

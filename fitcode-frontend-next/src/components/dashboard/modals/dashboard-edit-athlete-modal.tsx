@@ -14,13 +14,13 @@ import { useDashboardUserEdit } from '../context/user-edit.context';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { InputType } from '@/lib/common/const/input-type.const';
 
 const DEFAULT_MARGIN = 1;
 

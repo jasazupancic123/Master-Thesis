@@ -14,7 +14,6 @@ import dayjs from 'dayjs';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import AthleteTrainingExerciseSets from '../athlete/athlete-training-exercise-sets';
 import TempoChart from '../charts/tempo/tempo-chart';
 import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
@@ -27,15 +26,6 @@ import {
   predictWebcam,
   setupVideoAndContex,
 } from './state';
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import type {
-  RepImage,
-  RepRomTimestamp,
-  TrainingExercise,
-  TrainingExerciseRecordedSet,
-} from '@/core/training/type/training-exercise.type';
-import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
 import { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
@@ -49,8 +39,8 @@ import { RepDetectionService } from '@/core/exercise-ai-prescriptions/rep-detect
 import type { AvgFps } from '@/core/exercise-ai-prescriptions/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/core/exercise-ai-prescriptions/type/current-side-mutex.type';
 import type {
-  ExerciseAngleCondition,
   ExerciseAiPrescriptionData,
+  ExerciseAngleCondition,
 } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
 import type {
@@ -61,12 +51,21 @@ import type {
 } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { getPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type {
+  RepImage,
+  RepRomTimestamp,
+  TrainingExercise,
+  TrainingExerciseRecordedSet,
+} from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import { useMain } from '@/store/main.provider';
 
 const DEBUG = false;
 
