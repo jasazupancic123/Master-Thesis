@@ -57,9 +57,7 @@ export const TrainingInProgressProvider = ({
   children,
 }: React.PropsWithChildren) => {
   const { setActiveTraining } = useMain();
-  const { trainingInProgress } = useTraining();
-
-  console.log('trainingInProgress', trainingInProgress);
+  const { trainingInProgress, updateTrainingInProgress } = useTraining();
 
   const router = useRouter();
 
@@ -216,8 +214,21 @@ export const TrainingInProgressProvider = ({
               { ...prevWorkload, userId: trainingInProgress.userId }
             ),
           (fetchedPrevWorkload) => {
-            console.log('fetchedPrevWorkload', fetchedPrevWorkload);
             updatedPreviousWorkload = fetchedPrevWorkload;
+
+            const exercise = trainingInProgress.supersets[
+              stateSupersetIndex
+            ].exercises.find((ex) => ex.id === exerciseId);
+
+            if (exercise) {
+              const set = exercise.sets[stateSetIndex - 1]; // previous set
+
+              if (set) {
+                set.recTime = recTime;
+                if (set.repsR) set.recTimeR = recTime;
+                updateTrainingInProgress(exercise, supersetIndex || 0);
+              }
+            }
           }
         );
       }
