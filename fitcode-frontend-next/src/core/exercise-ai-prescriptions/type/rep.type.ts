@@ -1,5 +1,5 @@
 import type { KeypointHistory } from '../class/keypoint-history';
-import type { ExtremumAngleWithValue } from './exercise-start-condition.type';
+import type { ExtremumAngleWithValue } from './exercise-detection-data';
 import type { Keypoint } from './keypoint.type';
 
 export type Rep = {

@@ -8,6 +8,7 @@ import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';
 import { measureAsync } from './common/utils/time.util';
 import { ExerciseService } from './exercise/service/exercise.service';
+import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
 import { GroupService } from './group/group.service';
 import { InstitutionService } from './institution/service/institution.service';
 import { ProfileService } from './profile/service/profile.service';
@@ -26,6 +27,7 @@ export class AppController {
     private readonly institutionService: InstitutionService,
     private readonly groupService: GroupService,
     private readonly trainingService: TrainingService,
+    private readonly exerciseAiPrescriptionsService: ExerciseAiPrescriptionsService,
   ) {}
 
   @Get()
@@ -52,6 +54,7 @@ export class AppController {
       profilesRes,
       groupsRes,
       trainingRes,
+      exerciseAiPrescriptionsRes,
     ] = await Promise.all([
       measureAsync(
         'profileService.findOneById()',
@@ -88,6 +91,11 @@ export class AppController {
         () => this.trainingService.getActiveTrainingByAthlete(user, user.uid),
         this.logger,
       ),
+      measureAsync(
+        'exerciseAiPrescriptionsService.findAll()',
+        () => this.exerciseAiPrescriptionsService.findAll(),
+        this.logger,
+      ),
     ]);
 
     const profile = profileRes.result;
@@ -97,6 +105,7 @@ export class AppController {
     const profiles = profilesRes.result;
     const groups = groupsRes.result;
     const activeTraining = trainingRes.result;
+    const exerciseAiPrescriptions = exerciseAiPrescriptionsRes.result;
 
     const institutionExercises = await Promise.all(
       institutions.map((inst) =>
@@ -114,6 +123,7 @@ export class AppController {
       institutions,
       groups,
       activeTraining,
+      exerciseAiPrescriptions,
     };
   }
 }

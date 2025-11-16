@@ -30,6 +30,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { LINK_DASHBOARD, LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -197,7 +198,7 @@ export default function ProfilePage() {
         </Box>
 
         <FileUpload
-          input="image"
+          input={InputType.IMAGE}
           label="Upload Profile Image"
           initialFileUrl={user.photoURL || undefined}
           sx={{ width: 200, margin: 'auto', height: 150 }}
