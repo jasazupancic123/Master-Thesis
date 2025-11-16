@@ -250,7 +250,6 @@ export default function TrainerWeekView() {
             {weeks[index]?.map(({ date }, i) => {
               const { amItems, pmItems } = getAmPmItems(date, {
                 trainings,
-                commonService: lib.common,
                 group,
               });
 
