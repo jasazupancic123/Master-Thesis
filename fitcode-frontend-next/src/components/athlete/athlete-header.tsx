@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useState } from 'react';
 
@@ -46,6 +47,7 @@ interface Props {
 export default function AthleteHeader(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const pathname = usePathname();
 
   const { user, role, logout } = useAuthenticatedAuth();
   const { filter, setFilter } = useAthlete() || {};
@@ -70,6 +72,8 @@ export default function AthleteHeader(props: Props) {
     handleOpenMenu,
     handleCloseMenu,
   } = trainingInProgressUtilsContext || {};
+
+  const includeBottomHeader = !pathname.includes('/components/');
 
   const [open, setOpen] = useState(false);
 
@@ -256,7 +260,7 @@ export default function AthleteHeader(props: Props) {
         </Box>
 
         {(screenSize.isLandscapeMobile || screenSize.isMobile) &&
-          !trainingInProgress && (
+          includeBottomHeader && (
             <Box
               position="fixed"
               bottom={0}

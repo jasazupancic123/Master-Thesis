@@ -3,7 +3,7 @@
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import AthleteHeader from '@/components/athlete/athlete-header';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
@@ -30,7 +30,11 @@ function TrainingContent({ children }: React.PropsWithChildren) {
 
   const pathname = usePathname();
 
-  const includeHeader = !pathname.includes('/components/');
+  const [includeHeader, setIncludeHeader] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIncludeHeader(!pathname.includes('/components/'));
+  }, [pathname]);
 
   useEffect(() => {
     if (!activeTraining?.statuses?.length) return;
