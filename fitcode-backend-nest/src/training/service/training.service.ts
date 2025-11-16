@@ -36,6 +36,7 @@ import {
   SubgroupRef,
   TrainingComponentRef,
   TrainingComponentUserStatusRef,
+  TrainingProtocolRef,
   TrainingRef,
   UserRef,
   WorkloadRef,
@@ -70,9 +71,11 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
+import { TrainingProtocol } from '../entity/training-protocol.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingStatus } from '../enum/training-status.enum';
@@ -334,6 +337,75 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const id = await this.repository.save(data);
     return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  @LogMethod()
+  async createProtocol(
+    user: User,
+    institutionId: string,
+    input: TrainingProtocol,
+  ) {
+    await this.institutionService.checkCanEditProtocols(user, institutionId);
+
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercisesBySupersets(
+        input.supersets,
+      );
+
+    const supersets = this.trainingPlanService.validateSupersets(input, {
+      exercises,
+    });
+
+    await this.institutionService.createTrainingProtocol(
+      { institutionId },
+      {
+        id: null,
+        institutionId,
+        name: input.name,
+        componentId: input.componentId,
+        description: input.description,
+        supersets,
+      },
+    );
+  }
+
+  @LogMethod()
+  async updateProtocol(
+    user: User,
+    ref: TrainingProtocolRef,
+    input: TrainingProtocol,
+  ) {
+    await this.institutionService.checkCanEditProtocols(
+      user,
+      ref.institutionId,
+    );
+
+    let supersets: Superset[];
+    if (input.supersets) {
+      const exercises =
+        await this.trainingPlanService.getAllTrainingExercisesBySupersets(
+          input.supersets,
+        );
+
+      supersets = this.trainingPlanService.validateSupersets(input, {
+        exercises,
+      });
+    }
+
+    await this.institutionService.updateTrainingProtocol(ref, {
+      name: input.name,
+      description: input.description,
+      supersets,
+    });
+  }
+
+  @LogMethod()
+  async deleteProtocol(user: User, institutionId: string, protocolId: string) {
+    await this.institutionService.checkCanEditProtocols(user, institutionId);
+    await this.institutionService.deleteTrainingProtocol({
+      institutionId,
+      protocolId,
+    });
   }
 
   @LogMethod()
