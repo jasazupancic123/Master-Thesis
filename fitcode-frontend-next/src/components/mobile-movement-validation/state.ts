@@ -7,7 +7,6 @@ import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
 import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
 import type { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
@@ -28,6 +27,7 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -516,8 +516,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS /
-        1000
+      lib.common.env.ai.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS() / 1000
     );
 
     constantKeypointHistory.insertFrame(keypoints); // never cut, always all history
@@ -526,7 +525,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS / 1000
+      lib.common.env.ai.KEYPOINT_BUFFER_DURATION_MS() / 1000
     );
   }
 

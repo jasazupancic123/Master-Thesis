@@ -3,7 +3,6 @@ import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
 import { DEFAULT_STILLNESS_KEYPOINTS } from './const/ai.const';
-import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
@@ -23,6 +22,8 @@ import type { RepState } from './type/rep-state.type';
 import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
+import { lib } from '@/lib';
+import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class StatusDetectionService {
   private static _instance: StatusDetectionService;
@@ -234,13 +235,13 @@ export class StatusDetectionService {
           dayjs(new Date()).diff(
             dayjs(recordingTimestampRef.current),
             'second'
-          ) < POSE_DETECTION_CONSTRAINTS.MIN_STILL_TIME_TO_STOP_DETECTION_S
+          ) < lib.common.env.ai.MIN_STILL_TIME_TO_STOP_DETECTION_S()
         )
           return false;
 
         // look for 1 second of stillness
         const bufferCutOf = this.keypoint.getFramesCountFromSeconds(
-          POSE_DETECTION_CONSTRAINTS.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S,
+          lib.common.env.ai.STILLNESS_DETECTION_WINDOW_DURING_RECORDING_S(),
           avgFps?.value || 30
         );
 
@@ -312,7 +313,7 @@ export class StatusDetectionService {
         return (
           kp &&
           kp.visibility >
-            POSE_DETECTION_CONSTRAINTS.IN_FRAME_VISIBLITY_THRESHOLD
+            lib.common.env.ai.IN_FRAME_VISIBLITY_THRESHOLD()
         );
       });
     });
@@ -343,7 +344,7 @@ export class StatusDetectionService {
       (kp) =>
         kp &&
         kp.visibility >
-          POSE_DETECTION_CONSTRAINTS.FACING_CAMERA_VISIBLITY_THRESHOLD
+          lib.common.env.ai.FACING_CAMERA_VISIBLITY_THRESHOLD()
     );
   }
 
@@ -370,8 +371,7 @@ export class StatusDetectionService {
 
     const framesNeededInBuffer = Math.min(
       buffer.bufferLength || Infinity,
-      POSE_DETECTION_CONSTRAINTS.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S *
-        avgFps.value // at least this much second of data
+      lib.common.env.ai.MIN_TIME_PASSED_TO_DETECT_STILLNESS_S() * avgFps.value // at least this much second of data
     );
 
     const stillnessKeypointIds =
@@ -395,7 +395,8 @@ export class StatusDetectionService {
       const stdDev = this.calculateStandardDeviation(history);
 
       const isKeypointStill =
-        stdDev < POSE_DETECTION_CONSTRAINTS.STILLNESS_THRESHOLD_M;
+        stdDev <
+        lib.common.env.ai.STILLNESS_THRESHOLD_M();
 
       return isKeypointStill;
     });
@@ -404,8 +405,7 @@ export class StatusDetectionService {
       buffer: buffer,
       videoHeight,
       bufferCutOff,
-      tresholdPercentage:
-        POSE_DETECTION_CONSTRAINTS.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD,
+      tresholdPercentage: lib.common.env.ai.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD(),
     });
 
     const isStill = isStillXY && isStillZ;
@@ -422,7 +422,8 @@ export class StatusDetectionService {
       );
 
       const passedDiff =
-        diff >= POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S;
+        diff >=
+        lib.common.env.ai.STILLNESS_COUNTDOWN_DURATION_S();
 
       return isStill && passedDiff;
     }
@@ -700,7 +701,7 @@ export class StatusDetectionService {
     const { keypointBuffer, avgFps } = state;
 
     const numFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S,
+      lib.common.env.ai.HEAD_SHAKE_DETECTION_BUFFER_DURATION_S(),
       avgFps?.value || 30
     );
 
@@ -833,13 +834,15 @@ export class StatusDetectionService {
       if (
         isLeftAngle &&
         !hasRotatedLeft &&
-        angle < POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
+        angle <
+          lib.common.env.ai.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES()
       ) {
         hasRotatedLeft = true;
       } else if (
         !isLeftAngle &&
         !hasRotatedRight &&
-        angle < POSE_DETECTION_CONSTRAINTS.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES
+        angle <
+          lib.common.env.ai.HEAD_SHAKE_ANGLE_THRESHOLD_DEGREES()
       ) {
         hasRotatedRight = true;
       }

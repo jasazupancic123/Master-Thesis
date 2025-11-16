@@ -3,8 +3,15 @@ import {
   POSE_LANDMARKER_HEAVY_PATH,
   POSE_LANDMARKER_LITE_PATH,
 } from '@/core/exercise-ai-prescriptions/const/pose-landmarker-paths';
+import { AiEnvUtil } from './ai-env.util';
 
 export class EnvUtil {
+  public readonly ai: AiEnvUtil;
+
+  constructor() {
+    this.ai = new AiEnvUtil();
+  }
+
   isProd(): boolean {
     return process.env.NODE_ENV === 'production';
   }
