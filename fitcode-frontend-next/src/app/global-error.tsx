@@ -2,7 +2,7 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import { Onest } from 'next/font/google';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
@@ -16,6 +16,7 @@ interface Props {
 const onest = Onest({ subsets: ['latin'] });
 
 export default function GlobalError({ error }: Props) {
+  const router = useRouter();
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -53,7 +54,9 @@ export default function GlobalError({ error }: Props) {
               color: '#000000',
             }}
             onClick={() => {
-              redirect(LINK_SIGN_IN.href);
+              router.push(LINK_SIGN_IN.href);
+              router.refresh();
+              router.refresh();
             }}
           >
             Try again

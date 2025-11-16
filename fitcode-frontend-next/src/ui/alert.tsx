@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Button, Typography } from '@mui/material';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 
 import Logo from './logo';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export default function Alert({ type, errorMessage }: Props) {
+  const router = useRouter();
   const screenSize = useScreenSize();
 
   return (
@@ -45,7 +46,9 @@ export default function Alert({ type, errorMessage }: Props) {
         <Button
           variant="contained"
           onClick={() => {
-            redirect(LINK_SIGN_IN.href);
+            router.push(LINK_SIGN_IN.href);
+            router.refresh();
+            router.refresh();
           }}
         >
           Sign in
