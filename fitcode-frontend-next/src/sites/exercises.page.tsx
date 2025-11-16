@@ -1,6 +1,6 @@
 'use client';
 
-import { Publish } from '@mui/icons-material';
+import { Download, Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import {
   Button,
@@ -19,11 +19,13 @@ import React, { useEffect, useState } from 'react';
 
 import {
   handleAddExercise,
+  handleAiPrescriptionsJsonFileUpload,
   handleDeleteExercise,
   handleExerciseCsvFileUpload,
   handleMuscleValuesCsvFileUpload,
   handlePaginateExercises,
   handleUpdateExercise,
+  handleUpsertAiPrescriptions,
   handleUpsertManyExercises,
   handleUpsertMuscleValues,
 } from '@/app/(trainer)/dashboard/exercises/state';
@@ -37,8 +39,11 @@ import type {
   CreateExerciseMuscleValues,
   Exercise,
 } from '@/core/exercise/type/exercise.type';
+import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
+import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';
 import type { Pagination as PaginationType } from '@/lib/common/type/paginate.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -66,9 +71,22 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
 
 export const EXERCISES_PAGE_SIZE = 20;
 
+export type ExercisePageModalState = {
+  add: boolean;
+  edit: boolean;
+  import: boolean;
+  muscleValues: boolean;
+  importAiPrescriptions: boolean;
+  confirmDelete: boolean;
+};
+
 export default function ExercisesPage() {
   const { role } = useAuthenticatedAuth();
-  const { exercises: allExercises, setExercises: setAllExercises } = useMain();
+  const {
+    exercises: allExercises,
+    setExercises: setAllExercises,
+    setExerciseAiPrescriptions,
+  } = useMain();
 
   const router = useRouter();
   const theme = useTheme();
@@ -95,13 +113,17 @@ export default function ExercisesPage() {
   const [importedExercises, setImportedExercises] = useState<Exercise[]>([]);
   const [importedMuscleValueExercises, setImportedMuscleValueExercises] =
     useState<CreateExerciseMuscleValues[]>([]);
+  const [importedAiPrescriptions, setImportedAiPrescriptions] = useState<
+    ExerciseAiPrescription[]
+  >([]);
 
   const [openFilters, setOpenFilters] = useState(false);
-  const [modal, setModal] = useState({
+  const [modal, setModal] = useState<ExercisePageModalState>({
     add: false,
     edit: false,
     import: false,
     muscleValues: false,
+    importAiPrescriptions: false,
     confirmDelete: false,
   });
 
@@ -123,6 +145,22 @@ export default function ExercisesPage() {
       icon: <Publish />,
       name: 'Import Muscle Values',
       onClick: () => setModal((prev) => ({ ...prev, muscleValues: true })),
+    },
+    {
+      icon: <Download />,
+      name: 'Export Ai Prescriptions',
+      onClick: () => {
+        lib.common.file.downloadJson(
+          EXERCISE_POSES,
+          'exercise-ai-prescriptions.json'
+        );
+      },
+    },
+    {
+      icon: <Publish />,
+      name: 'Import Ai Prescriptions',
+      onClick: () =>
+        setModal((prev) => ({ ...prev, importAiPrescriptions: true })),
     },
   ];
 
@@ -246,7 +284,7 @@ export default function ExercisesPage() {
               <SpeedDial
                 ariaLabel="Exercise Actions"
                 icon={<SpeedDialIcon />}
-                direction={screenSize.isMobile ? 'left' : 'right'}
+                direction={screenSize.isMobile ? 'down' : 'right'}
                 FabProps={{ size: 'small', color: 'primary' }}
                 sx={{
                   '& .MuiSpeedDial-fab': {
@@ -423,7 +461,7 @@ export default function ExercisesPage() {
       >
         <FileUpload
           label="Exercises"
-          input="csv"
+          input={InputType.CSV}
           onFileUpload={async (file) => {
             handleExerciseCsvFileUpload(file, { setImportedExercises });
           }}
@@ -447,10 +485,38 @@ export default function ExercisesPage() {
       >
         <FileUpload
           label="Muscle Values"
-          input="csv"
+          input={InputType.CSV}
           onFileUpload={async (file) => {
             handleMuscleValuesCsvFileUpload(file, exercises, {
               setImportedMuscleValueExercises,
+            });
+          }}
+        />
+      </MyModal>
+
+      <MyModal
+        isOpen={modal.importAiPrescriptions}
+        setIsOpen={(open) =>
+          setModal((prev) => ({ ...prev, importAiPrescriptions: open }))
+        }
+        width={screenSize.isMobile ? undefined : 500}
+        onConfirm={() => {
+          // Handle importing Ai Prescriptions here
+          handleUpsertAiPrescriptions(importedAiPrescriptions, {
+            router,
+            setExerciseAiPrescriptions,
+          });
+
+          setModal((prev) => ({ ...prev, importAiPrescriptions: false }));
+        }}
+      >
+        <FileUpload
+          label="Ai Prescriptions"
+          input={InputType.JSON}
+          onFileUpload={async (file) => {
+            // update state with imported Ai Prescriptions
+            await handleAiPrescriptionsJsonFileUpload(file, {
+              setImportedAiPrescriptions,
             });
           }}
         />

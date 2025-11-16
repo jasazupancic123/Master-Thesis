@@ -8,11 +8,12 @@ import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 
 import { lib } from '@/lib';
+import { InputType } from '@/lib/common/const/input-type.const';
 
 interface Props extends Partial<React.PropsWithChildren> {
   label: string;
   onFileUpload: (file: File) => Promise<void>;
-  input: 'image' | 'video' | 'csv';
+  input: InputType;
   initialFileUrl?: string;
   sx?: SxProps;
   makeRound?: boolean;
@@ -34,7 +35,7 @@ export default function FileUpload(props: Props) {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (input === 'csv')
+    if ([InputType.CSV, InputType.JSON].includes(input))
       // For CSV files, no preview is needed
       setPreview((prev) => ({ ...prev, url: '', error: '' }));
     else {
@@ -44,16 +45,17 @@ export default function FileUpload(props: Props) {
   }, []);
 
   const maxSize =
-    input === 'image'
+    input === InputType.IMAGE
       ? MAX_IMAGE_SIZE
-      : input === 'video'
+      : input === InputType.VIDEO
         ? MAX_VIDEO_SIZE
         : MAX_CSV_SIZE;
 
   const accept: Accept = {
-    ...(input === 'image' && { 'image/*': ['.png', '.jpeg'] }),
-    ...(input === 'video' && { 'video/*': ['.mp4'] }),
-    ...(input === 'csv' && { 'text/csv': ['.csv'] }),
+    ...(input === InputType.IMAGE && { 'image/*': ['.png', '.jpeg'] }),
+    ...(input === InputType.VIDEO && { 'video/*': ['.mp4'] }),
+    ...(input === InputType.CSV && { 'text/csv': ['.csv'] }),
+    ...(input === InputType.JSON && { 'application/json': ['.json'] }),
   };
 
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } =
@@ -135,51 +137,56 @@ export default function FileUpload(props: Props) {
           )}
         </Box>
 
-        {!preview.error && preview.url && input !== 'csv' && (
-          <Box
-            height={150}
-            position="relative"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            {children ? (
-              children
-            ) : input === 'video' ? (
-              <video
-                src={preview.url}
-                muted
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                onError={(_e) => {
-                  setPreview((prev) => ({ ...prev, error: 'Invalid video' }));
-                }}
-              />
-            ) : (
-              <Image
-                src={preview.url}
-                alt="Image Preview"
-                width={props.width || 140}
-                height={props.height || 140}
-                style={{
-                  objectFit: 'cover',
-                  borderRadius: props.makeRound ? '50%' : undefined,
-                  overflow: 'hidden', // ensures overflow is hidden
-                  display: 'block',
-                }}
-                unoptimized={lib.common.env.unoptimizeImages()}
-                onError={(_e) => {
-                  setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
-                }}
-              />
-            )}
-          </Box>
-        )}
+        {!preview.error &&
+          preview.url &&
+          ![InputType.CSV, InputType.JSON].includes(input) && (
+            <Box
+              height={150}
+              position="relative"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+            >
+              {children ? (
+                children
+              ) : input === InputType.VIDEO ? (
+                <video
+                  src={preview.url}
+                  muted
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                  onError={(_e) => {
+                    setPreview((prev) => ({ ...prev, error: 'Invalid video' }));
+                  }}
+                />
+              ) : (
+                <Image
+                  src={preview.url}
+                  alt="Image Preview"
+                  width={props.width || 140}
+                  height={props.height || 140}
+                  style={{
+                    objectFit: 'cover',
+                    borderRadius: props.makeRound ? '50%' : undefined,
+                    overflow: 'hidden', // ensures overflow is hidden
+                    display: 'block',
+                  }}
+                  unoptimized={lib.common.env.unoptimizeImages()}
+                  onError={(_e) => {
+                    setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
+                  }}
+                />
+              )}
+            </Box>
+          )}
 
-        {input === 'csv' && acceptedFiles.length > 0 && (
-          <Box height={100} position="relative" p={1}>
-            <Typography>CSV File: {acceptedFiles[0].name}</Typography>
-          </Box>
-        )}
+        {[InputType.CSV, InputType.JSON].includes(input) &&
+          acceptedFiles.length > 0 && (
+            <Box height={100} position="relative" p={1}>
+              <Typography>
+                {input.toUpperCase()} File: {acceptedFiles[0].name}
+              </Typography>
+            </Box>
+          )}
       </DragAndDropPlaceholder>
     </div>
   );

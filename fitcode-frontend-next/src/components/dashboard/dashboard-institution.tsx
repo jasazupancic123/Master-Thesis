@@ -24,6 +24,7 @@ import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum'
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { InputType } from '@/lib/common/const/input-type.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -307,7 +308,7 @@ export default function DashboardInstitution(props: Props) {
       >
         <FileUpload
           label="CSV of users"
-          input="csv"
+          input={InputType.CSV}
           onFileUpload={async (file) => {
             setIsUploadingMembers(true);
 
