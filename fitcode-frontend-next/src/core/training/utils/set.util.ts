@@ -14,13 +14,17 @@ import {
   REC_TIME,
   REPS,
   RM,
+  TEMPO_CON,
   TEMPO_ECC,
+  TEMPO_IDLE,
+  TEMPO_ISO,
   TIME,
   VEL,
 } from '@/core/exercise/constant/exercise-param.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 
-type ExerciseParamNoSets = Exclude<ExerciseMainParamField, 'sets'>;
+type ExerciseMainParamNoSets = Exclude<ExerciseMainParamField, 'sets'>;
+type ExerciseParamNoSets = Exclude<ExerciseParamFieldExtended, 'sets'>;
 
 export class TrainingExerciseSetUtil {
   stub(
@@ -209,15 +213,30 @@ export class TrainingExerciseSetUtil {
 
     const option =
       options.find((o) => o.field === preferredField) || options[0];
-    const field = option.field as ExerciseParamNoSets;
+    const field = option.field as ExerciseMainParamNoSets;
     const value = (data?.[field] ?? option.defaultValue) as ExerciseSet[T];
     set[field] = value as never;
+
+    if (field === 'tempoEcc') {
+      // edge case -> populate all other tempos as well
+      set.tempoIso = (data?.tempoIso ?? TEMPO_ISO.defaultValue) as never;
+      set.tempoCon = (data?.tempoCon ?? TEMPO_CON.defaultValue) as never;
+      set.tempoIdle = (data?.tempoIdle ?? TEMPO_IDLE.defaultValue) as never;
+    }
 
     if (exercise.isUnilateral) {
       const pair = core.exercise.param.pairs[field] as ExerciseParamNoSets;
       if (pair) {
         const valueR = (data?.[pair] ?? option.defaultValue) as ExerciseSet[T];
         set[pair] = valueR as never;
+
+        if (pair === 'tempoEccR') {
+          // edge case -> populate all other tempos as well
+          set.tempoIsoR = (data?.tempoIsoR ?? TEMPO_ISO.defaultValue) as never;
+          set.tempoConR = (data?.tempoConR ?? TEMPO_CON.defaultValue) as never;
+          set.tempoIdleR = (data?.tempoIdleR ??
+            TEMPO_IDLE.defaultValue) as never;
+        }
       }
     }
   }
