@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
+import type { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
@@ -10,8 +11,6 @@ import type { Keypoint } from './type/keypoint.type';
 import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
-import { lib } from '@/lib';
-import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class PoseDetectionService {
   private static _instance: PoseDetectionService;

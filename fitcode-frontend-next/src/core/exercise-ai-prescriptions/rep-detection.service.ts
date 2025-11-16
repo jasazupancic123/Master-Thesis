@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import { KeypointHistory } from './class/keypoint-history';
+import type { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import { HorizontalVertical } from './enum/horizontal-vertical.enum';
@@ -30,7 +31,6 @@ import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-val
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class RepDetectionService {
   private static _instance: RepDetectionService;

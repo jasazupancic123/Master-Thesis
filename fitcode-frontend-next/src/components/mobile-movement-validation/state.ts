@@ -8,6 +8,7 @@ import { theme } from '@/app/style';
 import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
+import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
 import type { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
 import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
@@ -27,7 +28,6 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;

@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useState } from 'react';
 
@@ -36,7 +37,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import Logo from '@/ui/logo';
-import { usePathname } from 'next/navigation';
 
 interface Props {
   trainingInProgressUndoneExercisesContext?: IUndoneExercisesCtx;

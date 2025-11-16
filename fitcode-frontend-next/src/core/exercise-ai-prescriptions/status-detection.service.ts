@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 
 import type { KeypointHistory } from './class/keypoint-history';
 import { DEFAULT_STILLNESS_KEYPOINTS } from './const/ai.const';
+import type { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
@@ -22,8 +23,6 @@ import type { RepState } from './type/rep-state.type';
 import { AngleUtil } from './util/angle-util';
 import { KeypointUtil } from './util/keypoint.util';
 import { getStatusMessage } from '@/components/mobile-movement-validation/state';
-import { lib } from '@/lib';
-import { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 
 export class StatusDetectionService {
   private static _instance: StatusDetectionService;
@@ -295,7 +294,6 @@ export class StatusDetectionService {
     nextStatus: DetectionStatus,
     statusMessage: RefObject<string>
   ): boolean {
-    console.log('statusRef.current', statusRef.current);
     if (!condition && statusRef.current === currentStatus) {
       return false;
     } else if (!condition) {
