@@ -1,3 +1,4 @@
+import { useDraggable } from '@dnd-kit/core';
 import type { SvgIconProps } from '@mui/material';
 import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -40,8 +41,23 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     containerRef,
   });
 
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `training-${training.id}`,
+    data: { training },
+  });
+
   return (
-    <Box>
+    <Box
+      ref={setNodeRef}
+      style={{
+        transform: transform
+          ? `translate(${transform.x}px, ${transform.y}px)`
+          : undefined,
+        cursor: 'grab',
+      }}
+      {...listeners}
+      {...attributes}
+    >
       <Box
         ref={containerRef}
         display="flex"
@@ -56,16 +72,10 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile
               ? 'auto'
               : undefined,
-          scrollbarWidth: 'thin', // Standard for Firefox
-          '&::-webkit-scrollbar': {
-            width: '6px', // Small and modern scrollbar
-          },
-          '::-webkit-scrollbar-track': {
-            color: 'transparent',
-          },
-          '::-webkit-scrollbar-thumb': {
-            background: 'red',
-          },
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '6px' },
+          '::-webkit-scrollbar-track': { color: 'transparent' },
+          '::-webkit-scrollbar-thumb': { background: 'red' },
         }}
       >
         {components.map((trainingComponent) => {

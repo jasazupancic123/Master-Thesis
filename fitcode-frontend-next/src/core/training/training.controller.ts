@@ -216,6 +216,10 @@ export class TrainingController extends BaseController {
     );
   }
 
+  async move(trainingId: string, body: DateRange) {
+    return this.api.patch<void>(`/${trainingId}/move`, body);
+  }
+
   async delete(trainingId: string, options?: FetchOptions) {
     await this.api.delete<null>(`/${trainingId}`, options);
     return null;
