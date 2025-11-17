@@ -66,7 +66,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           right: 0,
           bottom: 0,
           backgroundColor: selectedExerciseIds.some((ex) => ex === exercise.id)
-            ? theme.palette.background.darkBorder
+            ? '#312f2fff'
             : theme.palette.background.light,
           zIndex: 0,
         }}

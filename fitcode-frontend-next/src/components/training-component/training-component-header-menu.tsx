@@ -117,7 +117,7 @@ export default function TrainingComponentHeaderMenu() {
               disableInputLabel={false}
               setValue={(newMethod) => {
                 const method = methodologies.find((m) => m.field === newMethod);
-                if (method) applyMethod(method);
+                applyMethod(method);
                 setMethod(method || null);
               }}
             />

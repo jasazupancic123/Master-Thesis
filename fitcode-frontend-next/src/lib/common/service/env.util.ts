@@ -1,8 +1,11 @@
+import toast from 'react-hot-toast';
+
 import {
   POSE_LANDMARKER_FULL_PATH,
   POSE_LANDMARKER_HEAVY_PATH,
   POSE_LANDMARKER_LITE_PATH,
 } from '@/core/exercise-ai-prescriptions/const/pose-landmarker-paths';
+import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 
 export class EnvUtil {
   isProd(): boolean {
@@ -36,5 +39,21 @@ export class EnvUtil {
 
   unoptimizeImages(): boolean {
     return process.env.NEXT_PUBLIC_UNOPTIMIZE_IMAGES === '1';
+  }
+
+  getAiNumericConstants(): Record<AINumericConstantName, number> {
+    const jsonString = process.env.NEXT_PUBLIC_AI_CONSTANTS;
+    if (!jsonString) {
+      toast.error('AI constants are not defined in the environment variables.');
+      throw new Error(
+        'AI constants are not defined in the environment variables.'
+      );
+    }
+
+    const constants = JSON.parse(jsonString) as Record<
+      AINumericConstantName,
+      number
+    >;
+    return constants;
   }
 }

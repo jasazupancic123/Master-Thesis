@@ -434,7 +434,7 @@ export async function handleUpsertAiPrescriptions(
     () => controller.upsertMany(prescriptions),
     (postedPrescriptions) => {
       setExerciseAiPrescriptions(postedPrescriptions);
-      toast.success('Successfully imported muscle values!');
+      toast.success('Successfully imported AI prescriptions!');
     },
     undefined,
     'Failed to import AI prescriptions'

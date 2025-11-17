@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 
 import { KeypointHistory } from './class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from './const/pose-detection-constrains.const';
+import type { AINumericConstantName } from './enum/ai-numeric-constant-name.enum';
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import { HorizontalVertical } from './enum/horizontal-vertical.enum';
@@ -86,6 +86,7 @@ export class RepDetectionService {
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     leftData: RepSideDetectionData;
     rightData?: RepSideDetectionData | undefined;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
     setRepCount: SetState<RepsCount>;
   }) {
     const {
@@ -101,6 +102,7 @@ export class RepDetectionService {
       initedFirstFrameInRecordingMode,
       leftData,
       rightData,
+      POSE_DETECTION_CONSTANTS,
       setRepCount,
     } = state;
 
@@ -271,6 +273,7 @@ export class RepDetectionService {
             valueType,
             conditionDirection: direction,
             avgFps,
+            POSE_DETECTION_CONSTANTS,
           });
 
           if (isRepDone && endKeypoint !== undefined && currentRepRef.current) {
@@ -286,6 +289,7 @@ export class RepDetectionService {
               valueType,
               direction,
               avgFps,
+              POSE_DETECTION_CONSTANTS,
             });
 
             lastRecordedRepRef.current = currentRepRef.current;
@@ -331,6 +335,7 @@ export class RepDetectionService {
             initedFirstFrameInRecordingMode,
             recordedReps,
             side,
+            POSE_DETECTION_CONSTANTS,
           });
 
           if (
@@ -373,8 +378,16 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     avgFps: AvgFps;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }) {
-    const { currentRepRef, direction, keypointId, valueType, avgFps } = state;
+    const {
+      currentRepRef,
+      direction,
+      keypointId,
+      valueType,
+      avgFps,
+      POSE_DETECTION_CONSTANTS,
+    } = state;
 
     if (currentRepRef.current?.extremeValue === undefined) return;
 
@@ -393,13 +406,13 @@ export class RepDetectionService {
 
     const totalNumFrames = avgFps
       ? Math.max(
-          POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM,
+          POSE_DETECTION_CONSTANTS.MIN_FRAMES_FOR_EXTREMUM,
           this.keypoint.getFramesCountFromSeconds(
-            POSE_DETECTION_CONSTRAINTS.MIN_TIME_FOR_EXTREMUM_S,
+            POSE_DETECTION_CONSTANTS.MIN_TIME_FOR_EXTREMUM_S,
             avgFps.value
           )
         )
-      : POSE_DETECTION_CONSTRAINTS.MIN_FRAMES_FOR_EXTREMUM; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
+      : POSE_DETECTION_CONSTANTS.MIN_FRAMES_FOR_EXTREMUM; // min 4 total consecutive correct frames (2pos k's, 2neg k's)
 
     const startKCheckIndex = buffer.history.length - 1 - totalNumFrames;
 
@@ -432,6 +445,7 @@ export class RepDetectionService {
     valueType: KeypointValueType;
     conditionDirection: ConditionDirection;
     avgFps: AvgFps;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): { isRepDone: boolean; endKeypoint?: Keypoint } {
     const {
       currentFrameKeypoints,
@@ -443,6 +457,7 @@ export class RepDetectionService {
       valueType,
       conditionDirection,
       avgFps,
+      POSE_DETECTION_CONSTANTS,
     } = state;
 
     // Detecting the U turn in the rep (extremum), so we can finish it
@@ -497,6 +512,7 @@ export class RepDetectionService {
       direction,
       detectingRepStart: false,
       avgFps,
+      POSE_DETECTION_CONSTANTS,
     });
 
     if (slope === undefined) {
@@ -510,7 +526,8 @@ export class RepDetectionService {
         currentValue,
         recordedReps,
         currentRepRef,
-        conditionDirection
+        conditionDirection,
+        POSE_DETECTION_CONSTANTS
       )
     ) {
       // console.log('NOT CLOSE ENOUGH TO START VALUE');
@@ -548,6 +565,7 @@ export class RepDetectionService {
     initedFirstFrameInRecordingMode: RefObject<boolean>;
     recordedReps: Rep[];
     side: 'L' | 'R';
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): {
     hasRepStarted: boolean;
     startValue?: number;
@@ -567,6 +585,7 @@ export class RepDetectionService {
       initedFirstFrameInRecordingMode, // if the very first rep has been inited
       recordedReps,
       side,
+      POSE_DETECTION_CONSTANTS,
     } = state;
 
     // const isFirstRep = !initedFirstFrameInRecordingMode.current;
@@ -609,6 +628,7 @@ export class RepDetectionService {
       valueType,
       direction,
       avgFps,
+      POSE_DETECTION_CONSTANTS,
     });
 
     keypointHistory.cutAtIndex(startIndex, true);
@@ -771,8 +791,16 @@ export class RepDetectionService {
     valueType: KeypointValueType;
     direction: ConditionDirection;
     avgFps: AvgFps;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): { startIndex: number; startValue: number; startValueFrameNum: number } {
-    const { buffer, keypointId, valueType, direction, avgFps } = state;
+    const {
+      buffer,
+      keypointId,
+      valueType,
+      direction,
+      avgFps,
+      POSE_DETECTION_CONSTANTS,
+    } = state;
 
     // 1) Get smoothed values of the keypoint's values
     const values = this.getSmoothedValues(
@@ -797,6 +825,7 @@ export class RepDetectionService {
       direction,
       detectingRepStart: true,
       avgFps,
+      POSE_DETECTION_CONSTANTS,
     });
 
     // 4) If nothing found, fallback to global extremum consistent with effDir
@@ -861,12 +890,11 @@ export class RepDetectionService {
 
     // Limit how far back we can search for the first rep's start
     const lookback =
-      (avgFps?.value || 30) *
-      POSE_DETECTION_CONSTRAINTS.MAX_LOOKBACK_REP_START_S;
+      (avgFps?.value || 30) * POSE_DETECTION_CONSTANTS.MAX_LOOKBACK_REP_START_S;
 
     const maxLookbackFrames = Math.max(
       lookback,
-      POSE_DETECTION_CONSTRAINTS.MAX_LOOKBACK_REP_START_S
+      POSE_DETECTION_CONSTANTS.MAX_LOOKBACK_REP_START_S
     );
     const leftBound = Math.max(0, n - Math.floor(maxLookbackFrames));
 
@@ -874,7 +902,7 @@ export class RepDetectionService {
     // If condition is POSITIVE, look for local min; if NEGATIVE, look for local max
     const left = Math.max(
       leftBound,
-      slope - POSE_DETECTION_CONSTRAINTS.PRE_WINDOW_FRAMES_REP_START
+      slope - POSE_DETECTION_CONSTANTS.PRE_WINDOW_FRAMES_REP_START
     );
 
     let extremumIdx = left,
@@ -904,7 +932,8 @@ export class RepDetectionService {
     currentValue: number,
     recordedReps: Rep[],
     currentRepRef: RefObject<Rep | null>,
-    conditionDirection: ConditionDirection
+    conditionDirection: ConditionDirection,
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>
   ) {
     // repStateRef.current.avgStartValue is null only on the very first rep
     const startingValue =
@@ -923,7 +952,7 @@ export class RepDetectionService {
 
     const closeByMagnitude =
       Math.abs(currentValue - startingValue) <=
-      diff * POSE_DETECTION_CONSTRAINTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO;
+      diff * POSE_DETECTION_CONSTANTS.CLOSE_ENOUGH_TO_START_VALUE_RATIO;
 
     const consistentWithDirection =
       conditionDirection === ConditionDirection.POSITIVE
@@ -1035,24 +1064,31 @@ export class RepDetectionService {
     direction: ConditionDirection;
     detectingRepStart: boolean;
     avgFps: AvgFps;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }): number | undefined {
-    const { velocity, direction, detectingRepStart, avgFps } = state;
+    const {
+      velocity,
+      direction,
+      detectingRepStart,
+      avgFps,
+      POSE_DETECTION_CONSTANTS,
+    } = state;
 
     const isHighFps =
       avgFps?.value &&
-      avgFps?.value > POSE_DETECTION_CONSTRAINTS.HIGH_FPS_THRESHOLD;
+      avgFps?.value > POSE_DETECTION_CONSTANTS.HIGH_FPS_THRESHOLD;
 
     // if we are over this velocity, then we are still moving - starting or ending the rep!
     const minVelocityPerFrame =
       (detectingRepStart
         ? isHighFps
-          ? POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_HIGH_FPS_M_PER_S
-          : POSE_DETECTION_CONSTRAINTS.REP_START_END_VELOCITY_LOW_FPS_M_PER_S
-        : POSE_DETECTION_CONSTRAINTS.REP_END_VELOCITY_M_PER_S) /
+          ? POSE_DETECTION_CONSTANTS.REP_START_END_VELOCITY_HIGH_FPS_M_PER_S
+          : POSE_DETECTION_CONSTANTS.REP_START_END_VELOCITY_LOW_FPS_M_PER_S
+        : POSE_DETECTION_CONSTANTS.REP_END_VELOCITY_M_PER_S) /
       (avgFps?.value || 30); // when we go under this velocity, then we started/ended the rep!
 
     const minVelocitySustainNumFrames = this.keypoint.getFramesCountFromSeconds(
-      POSE_DETECTION_CONSTRAINTS.REP_START_VELOCITY_SUSTAIN_S,
+      POSE_DETECTION_CONSTANTS.REP_START_VELOCITY_SUSTAIN_S,
       avgFps?.value || 30
     );
 
@@ -1067,7 +1103,7 @@ export class RepDetectionService {
               4,
               Math.ceil(
                 (avgFps?.value || 0) *
-                  POSE_DETECTION_CONSTRAINTS.REP_END_LOOKBACK_S
+                  POSE_DETECTION_CONSTANTS.REP_END_LOOKBACK_S
               )
             )
         )
@@ -1285,6 +1321,7 @@ export class RepDetectionService {
     valueType: KeypointValueType;
     direction: ConditionDirection;
     avgFps: AvgFps;
+    POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }) {
     const {
       currentRepRef,
@@ -1293,6 +1330,7 @@ export class RepDetectionService {
       valueType,
       direction,
       avgFps,
+      POSE_DETECTION_CONSTANTS,
     } = state;
 
     if (!currentRepRef.current || !currentRepRef.current) return;
@@ -1315,6 +1353,7 @@ export class RepDetectionService {
         extremeKeypoint,
         keypointId,
         direction,
+        POSE_DETECTION_CONSTANTS,
       });
 
     // UPDATE ALL NECESARY TIMES HERE!

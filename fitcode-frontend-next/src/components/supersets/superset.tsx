@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha, Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SupersetExercise from './superset-exercise';
@@ -28,8 +28,14 @@ export default function Superset({ superset, supersetIndex }: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
-  const { training, component, selectedSubgroup, changeSupersetMainSet } =
-    useTrainerDayView();
+  const {
+    training,
+    component,
+    selectedSubgroup,
+    selectedAthlete,
+    changeSupersetMainSet,
+    getGrid2DivisionNumber,
+  } = useTrainerDayView();
 
   const containerId = `${component?.id}-${supersetIndex}`;
   const items = superset.exercises.map((e) => e.id);
@@ -37,37 +43,50 @@ export default function Superset({ superset, supersetIndex }: Props) {
 
   if (!component || !training) return null;
 
+  const isWarmupOrCooldown = superset.warmup || superset.cooldown;
   const isVirtualSubgroup = core.training.subgroup.isVirtual(selectedSubgroup);
 
   return (
     <Grid2
       key={`${component.id}-${supersetIndex}`}
-      size={{
-        xs: 12,
-        sm:
-          selectedExercise &&
-          superset.exercises.some((e) => e.id === selectedExercise.id)
-            ? 12
-            : screenSize.isLandscapeMobile
-              ? 4
-              : 12,
-        md:
-          selectedExercise &&
-          superset.exercises.some((e) => e.id === selectedExercise.id)
-            ? screenSize.isLandscapeMobile
-              ? 4
-              : 6
-            : screenSize.isLandscapeMobile
-              ? 4
-              : screenSize.isSmallerThanLaptop
-                ? 6
-                : screenSize.isLaptop
-                  ? 4
-                  : 3,
+      direction={isWarmupOrCooldown ? 'row' : 'column'}
+      size={
+        isWarmupOrCooldown
+          ? 12
+          : {
+              xs: 12,
+              sm:
+                selectedExercise &&
+                superset.exercises.some((e) => e.id === selectedExercise.id)
+                  ? 12
+                  : screenSize.isLandscapeMobile
+                    ? 4
+                    : 12,
+              md:
+                selectedExercise &&
+                superset.exercises.some((e) => e.id === selectedExercise.id)
+                  ? screenSize.isLandscapeMobile
+                    ? 4
+                    : 6
+                  : screenSize.isLandscapeMobile
+                    ? 4
+                    : screenSize.isSmallerThanLaptop
+                      ? 6
+                      : screenSize.isLaptop
+                        ? 4
+                        : 3,
+            }
+      }
+      sx={{
+        px: 0.5,
       }}
-      sx={{ px: 0.5 }}
     >
       <Box
+        width={
+          isWarmupOrCooldown && !superset.exercises.length
+            ? `calc(100% / ${getGrid2DivisionNumber()})`
+            : undefined
+        }
         ref={setNodeRef}
         sx={{
           p:
@@ -75,11 +94,11 @@ export default function Superset({ superset, supersetIndex }: Props) {
               ? '1.1px'
               : '1px',
           borderRadius: '5px',
-          background: superset.warmup
-            ? theme.palette.warning.light
-            : superset.cooldown
-              ? theme.palette.success.light
-              : lib.common.component.getBorderGradient(theme),
+          border: `1px solid ${
+            superset.warmup || superset.cooldown
+              ? alpha(theme.palette.text.primary, 0.5)
+              : alpha(theme.palette.primary.main, 0.75)
+          }`,
           position: 'relative',
           zIndex: 100,
         }}
@@ -181,9 +200,14 @@ export default function Superset({ superset, supersetIndex }: Props) {
             items={items}
             strategy={rectSortingStrategy}
           >
-            <Grid2 id="exercises-container" container>
-              {(superset.warmup || superset.cooldown) &&
-              superset.exercises.length === 0 ? (
+            <Grid2
+              id="exercises-container"
+              container
+              direction={isWarmupOrCooldown ? 'row' : 'column'}
+            >
+              {isWarmupOrCooldown &&
+              superset.exercises.length === 0 &&
+              !selectedAthlete ? (
                 <Box
                   borderRadius={2}
                   py={3}
@@ -194,7 +218,13 @@ export default function Superset({ superset, supersetIndex }: Props) {
                     cursor: 'pointer',
                     backgroundColor: theme.palette.background.light,
                   }}
-                  onClick={() => setOpenAddExerciseModal(true)}
+                  onClick={() =>
+                    setOpenAddExerciseModal({
+                      open: true,
+                      warmup: superset.warmup || false,
+                      cooldown: superset.cooldown || false,
+                    })
+                  }
                 >
                   <Typography variant="body2" align="center">
                     Add exercise

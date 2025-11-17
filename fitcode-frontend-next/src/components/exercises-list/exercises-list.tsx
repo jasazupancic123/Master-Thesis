@@ -42,15 +42,13 @@ export default function ExercisesList({
       gap={2}
       mb={addExerciseForm ? 2 : 10}
       maxWidth={
-        !addExerciseForm
-          ? undefined
-          : screenSize.isUltraSmall
-            ? 160
-            : screenSize.isReallySmall
-              ? '70%'
-              : screenSize.isSmallMobile
-                ? '100%'
-                : undefined
+        screenSize.isUltraSmall
+          ? 160
+          : screenSize.isReallySmall
+            ? '70%'
+            : screenSize.isSmallMobile
+              ? '100%'
+              : undefined
       }
       sx={{
         mx: 'auto',
@@ -58,15 +56,14 @@ export default function ExercisesList({
     >
       {exercises.map((exercise) => (
         <Box
+          id={`exercise-${exercise.id}`}
           key={exercise.id}
           width={
-            !screenSize.isTablet && !screenSize.isMobile
-              ? `${100 / Math.min(exercises.length, 5) - 2}%`
-              : screenSize.isUltraSmall && addExerciseForm
-                ? '100%'
-                : screenSize.isSmallMobile && addExerciseForm
-                  ? '45%'
-                  : '40%'
+            screenSize.isUltraSmall
+              ? '100%'
+              : screenSize.isSmallMobile
+                ? '45%'
+                : '40%'
           }
           sx={{
             cursor: 'pointer',
