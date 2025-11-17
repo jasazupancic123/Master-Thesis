@@ -67,10 +67,7 @@ export default function TrainingComponentLayout({
               flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
               width="100%"
             >
-              <TrainingComponentCard
-                trainingComponent={trainingComponent}
-                setOpenAddExerciseModal={setOpenAddExerciseModal}
-              />
+              <TrainingComponentCard trainingComponent={trainingComponent} />
 
               <Box
                 display="flex"
