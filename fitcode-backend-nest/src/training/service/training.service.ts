@@ -346,7 +346,7 @@ export class TrainingService implements Permission<Training, Institution> {
     user: User,
     institutionId: string,
     input: CreateTrainingProtocolDto,
-  ) {
+  ): Promise<TrainingProtocol> {
     await this.institutionService.checkCanEditProtocols(user, institutionId);
 
     const component = Components.find((c) => c.field === input.componentId);
@@ -371,7 +371,7 @@ export class TrainingService implements Permission<Training, Institution> {
       exercises,
     });
 
-    await this.institutionService.createTrainingProtocol(
+    const protocolId = await this.institutionService.createTrainingProtocol(
       { institutionId },
       {
         id: null,
@@ -382,6 +382,15 @@ export class TrainingService implements Permission<Training, Institution> {
         supersets,
       },
     );
+
+    return {
+      id: protocolId,
+      institutionId,
+      name: input.name,
+      componentId: input.componentId,
+      description: input.description,
+      supersets,
+    };
   }
 
   async updateProtocol(

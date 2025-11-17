@@ -11,6 +11,7 @@ import type {
 import type { TrainingComponent } from './type/training-component.type';
 import type {
   CreateTrainingProtocol,
+  TrainingProtocol,
   UpdateTrainingProtocol,
 } from './type/training-protocol.type';
 import type {
@@ -110,7 +111,10 @@ export class TrainingController extends BaseController {
   }
 
   async createProtocol(institutionId: string, body: CreateTrainingProtocol) {
-    return this.api.post<void>(`/institution/${institutionId}/protocol`, body);
+    return this.api.post<TrainingProtocol>(
+      `/institution/${institutionId}/protocol`,
+      body
+    );
   }
 
   async updateProtocol(
