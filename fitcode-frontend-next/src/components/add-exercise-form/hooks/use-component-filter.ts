@@ -81,19 +81,42 @@ export default function useComponentFilter() {
       childrenPropertyName: 'options',
     });
 
+    const isAtLeastOneLeafSelected = leafes.some((leaf) => {
+      const tree = computeWholeTree(leaf, allItems);
+
+      const computedId = computeWholeComponentId(tree);
+
+      return selectedComponentsIds.includes(computedId as string);
+    });
+
     setLeafComponents(leafes);
 
-    if (!selectedComponentsIds.includes(componentId)) {
-      setSelectedComponentsIds((prev) => [
-        ...prev,
-        ...leafes
-          .map((c) => {
-            const tree = computeWholeTree(c, allItems);
+    if (isAtLeastOneLeafSelected) {
+      setSelectedComponentsIds((prev) =>
+        prev.filter(
+          (id) =>
+            !leafes.some((c) => {
+              const tree = computeWholeTree(c, allItems);
 
-            return computeWholeComponentId(tree);
-          })
-          .filter((v) => v !== null),
-      ]);
+              const computedId = computeWholeComponentId(tree);
+
+              return computedId === id;
+            })
+        )
+      );
+    } else {
+      if (!selectedComponentsIds.includes(componentId)) {
+        setSelectedComponentsIds((prev) => [
+          ...prev,
+          ...leafes
+            .map((c) => {
+              const tree = computeWholeTree(c, allItems);
+
+              return computeWholeComponentId(tree);
+            })
+            .filter((v) => v !== null),
+        ]);
+      }
     }
 
     setSelectedRootComponentId(componentId);
