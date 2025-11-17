@@ -53,6 +53,7 @@ export default function SupersetExercise({
     selectedExerciseIds,
     selectedAthlete,
     deleteSupersetExercise,
+    getGrid2DivisionNumber,
   } = useTrainerDayView();
 
   const { attributes, listeners, setNodeRef, disabledDrag, style } =
@@ -65,11 +66,16 @@ export default function SupersetExercise({
 
   return (
     <Grid2
-      id={exercise.id}
-      size={screenSize.isSmallerThanLaptop ? 12 : { xs: 12 }}
       key={exercise.id}
+      id={exercise.id}
+      size={
+        superset.warmup || superset.cooldown
+          ? 12 / getGrid2DivisionNumber()
+          : screenSize.isSmallerThanLaptop
+            ? 12
+            : { xs: 12 }
+      }
       sx={{
-        width: '99.5%',
         mb: superset.exercises.length - 1 !== exerciseIndex ? 0.4 : undefined,
       }}
     >
