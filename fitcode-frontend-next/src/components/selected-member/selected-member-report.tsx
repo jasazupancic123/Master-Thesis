@@ -1,23 +1,11 @@
-import { QrCode, SettingsBackupRestoreOutlined } from '@mui/icons-material';
-import {
-  Avatar,
-  Box,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { Avatar, Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 
 import { deselectAthlete } from './actions/actions-selected-athlete';
 import useSelectedMemberWeight from './hooks/use-weight';
-import { TrainingController } from '@/core/training/training.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import MyModal from '@/ui/modal';
 
 export default function SelectedMemberReport() {
   const screenSize = useScreenSize();

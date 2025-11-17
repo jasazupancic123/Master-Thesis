@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Button, Typography } from '@mui/material';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import Logo from './logo';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';

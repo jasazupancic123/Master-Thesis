@@ -2,7 +2,7 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import { Onest } from 'next/font/google';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';

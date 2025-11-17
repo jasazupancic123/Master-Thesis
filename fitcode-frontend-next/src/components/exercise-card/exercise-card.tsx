@@ -1,14 +1,14 @@
+import { CameraEnhanceOutlined } from '@mui/icons-material';
 import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
 import React from 'react';
 
+import { theme } from '@/app/style';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useMain } from '@/store/main.provider';
-import { CameraEnhanceOutlined } from '@mui/icons-material';
-import { theme } from '@/app/style';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   exercise: Exercise;
