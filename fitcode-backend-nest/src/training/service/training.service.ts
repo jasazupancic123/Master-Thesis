@@ -75,7 +75,10 @@ import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
-import { TrainingProtocol } from '../entity/training-protocol.entity';
+import {
+  CreateTrainingProtocolDto,
+  TrainingProtocol,
+} from '../entity/training-protocol.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingStatus } from '../enum/training-status.enum';
@@ -339,13 +342,25 @@ export class TrainingService implements Permission<Training, Institution> {
     return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
   }
 
-  @LogMethod()
   async createProtocol(
     user: User,
     institutionId: string,
-    input: TrainingProtocol,
+    input: CreateTrainingProtocolDto,
   ) {
     await this.institutionService.checkCanEditProtocols(user, institutionId);
+
+    const component = Components.find((c) => c.field === input.componentId);
+    if (!component) throw new NotFoundException('Component not found');
+
+    const found = await this.institutionService.getProtocol(user, {
+      institutionId,
+      protocolId: this.common.string.slug(input.name),
+    });
+
+    if (found)
+      throw new ConflictException(
+        'Training protocol already exists, choose another name',
+      );
 
     const exercises =
       await this.trainingPlanService.getAllTrainingExercisesBySupersets(
@@ -369,11 +384,10 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
-  @LogMethod()
   async updateProtocol(
     user: User,
     ref: TrainingProtocolRef,
-    input: TrainingProtocol,
+    input: Partial<TrainingProtocol>,
   ) {
     await this.institutionService.checkCanEditProtocols(
       user,
@@ -387,9 +401,10 @@ export class TrainingService implements Permission<Training, Institution> {
           input.supersets,
         );
 
-      supersets = this.trainingPlanService.validateSupersets(input, {
-        exercises,
-      });
+      supersets = this.trainingPlanService.validateSupersets(
+        { supersets: input.supersets },
+        { exercises },
+      );
     }
 
     await this.institutionService.updateTrainingProtocol(ref, {
@@ -399,13 +414,13 @@ export class TrainingService implements Permission<Training, Institution> {
     });
   }
 
-  @LogMethod()
-  async deleteProtocol(user: User, institutionId: string, protocolId: string) {
-    await this.institutionService.checkCanEditProtocols(user, institutionId);
-    await this.institutionService.deleteTrainingProtocol({
-      institutionId,
-      protocolId,
-    });
+  async deleteProtocol(user: User, ref: TrainingProtocolRef) {
+    await this.institutionService.checkCanEditProtocols(
+      user,
+      ref.institutionId,
+    );
+
+    await this.institutionService.deleteTrainingProtocol(ref);
   }
 
   @LogMethod()

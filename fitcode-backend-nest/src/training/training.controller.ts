@@ -26,6 +26,7 @@ import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
 import {
   TrainingComponentRef,
+  TrainingProtocolRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
@@ -42,6 +43,10 @@ import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
 import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
+import {
+  CreateTrainingProtocolDto,
+  UpdateTrainingProtocolDto,
+} from './entity/training-protocol.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
 
@@ -220,6 +225,42 @@ export class TrainingController {
     );
   }
 
+  @Post('institution/:institutionId/protocol')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async createProtocol(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body()
+    body: CreateTrainingProtocolDto,
+  ) {
+    return await this.trainingService.createProtocol(user, institutionId, body);
+  }
+
+  @Patch('institution/:institutionId/protocol/:protocolId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async updateProtocol(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Param('protocolId') protocolId: string,
+    @Body()
+    body: UpdateTrainingProtocolDto,
+  ) {
+    const ref: TrainingProtocolRef = { institutionId, protocolId };
+    return await this.trainingService.updateProtocol(user, ref, body);
+  }
+
+  @Delete('institution/:institutionId/protocol/:protocolId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async deleteProtocol(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Param('protocolId') protocolId: string,
+  ) {
+    const ref = { institutionId, protocolId };
+    await this.trainingService.deleteProtocol(user, ref);
+    return {};
+  }
+
   @Get(':trainingId/athlete/:athleteId/workloads')
   @Auth()
   async findCompletedAthleteWorkloads(
@@ -243,6 +284,7 @@ export class TrainingController {
     return await this.trainingService.create(user, body);
   }
 
+  @Auth()
   @Patch('/:baseTrainingId/periodize/component/:componentId')
   @Auth()
   async periodize(

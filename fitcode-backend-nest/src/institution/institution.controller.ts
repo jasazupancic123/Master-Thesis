@@ -58,6 +58,15 @@ export class InstitutionController {
     return this.institutionService.update(user, { institutionId }, body);
   }
 
+  @Get(':institutionId/protocol')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getProtocols(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+  ) {
+    return this.institutionService.getProtocols(user, { institutionId });
+  }
+
   @Patch(':institutionId/athlete')
   @Auth([UserRole.MANAGER])
   async addAthlete(

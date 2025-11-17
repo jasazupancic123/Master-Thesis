@@ -8,6 +8,7 @@ import { ExerciseTestRepository } from './service/exercise-test.repository';
 import { GroupTestRepository } from './service/group-test.repository';
 import { InstitutionTestRepository } from './service/institution-test.repository';
 import { ProfileTestRepository } from './service/profile-test.repository';
+import { ProtocolTestRepository } from './service/protocol-test.repository';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TrainingComponentUserStatusTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
@@ -22,6 +23,7 @@ export class TestDbService {
     readonly trainings: TrainingTestRepository,
     readonly trainingComponentUserStatus: TrainingComponentUserStatusTestRepository,
     readonly institutions: InstitutionTestRepository,
+    readonly protocols: ProtocolTestRepository,
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,
     readonly profiles: ProfileTestRepository,
@@ -33,7 +35,6 @@ export class TestDbService {
       this.firebase.deleteCollection(FirestoreCollection.INSTITUTION),
       this.firebase.deleteCollection(FirestoreCollection.GROUP),
       this.firebase.deleteCollection(FirestoreCollection.PROFILE),
-      this.firebase.deleteCollection(FirestoreCollection.TRAINING),
       this.firebase.deleteCollection(FirestoreCollection.TRAINING),
     ]);
 

@@ -132,8 +132,37 @@ export class InstitutionService implements Permission<Institution> {
 
     if (!isManagerAllowed && !isTrainerAllowed)
       throw new UnauthorizedException(
-        'You do not have permission to delete training protocols',
+        'You do not have permission to edit training protocols',
       );
+  }
+
+  @LogMethod()
+  async getProtocols(
+    user: User,
+    ref: InstitutionRef,
+  ): Promise<TrainingProtocol[]> {
+    const institution = await this.findByIdOrFail(ref);
+
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException(
+        'You do not have permission to view training protocols',
+      );
+
+    return await this.protocolRepository.getAllByInstitution(ref);
+  }
+
+  async getProtocol(
+    user: User,
+    ref: TrainingProtocolRef,
+  ): Promise<TrainingProtocol> {
+    const institution = await this.findByIdOrFail(ref);
+
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException(
+        'You do not have permission to view this training protocol',
+      );
+
+    return await this.protocolRepository.findById(ref);
   }
 
   async createTrainingProtocol(ref: InstitutionRef, input: TrainingProtocol) {
