@@ -4,15 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import {
-  alpha,
-  Box,
-  Grid2,
-  Stack,
-  Tooltip,
-  Typography,
-  unstable_useEnhancedEffect,
-} from '@mui/material';
+import { alpha, Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import SupersetExercise from './superset-exercise';

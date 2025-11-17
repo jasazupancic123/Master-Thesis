@@ -1,9 +1,10 @@
-import { TrainingController } from '@/core/training/training.controller';
-import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import QRCode from 'qrcode';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import QRCode from 'qrcode';
+
+import { TrainingController } from '@/core/training/training.controller';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 export default function useQRCode() {
   const screenSize = useScreenSize();

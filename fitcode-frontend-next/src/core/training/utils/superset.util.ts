@@ -90,7 +90,6 @@ export class TrainingSupersetUtil {
     }
 
     const filteredSupersets = supersets.filter((s) => {
-      console.log(!options?.warmup, s.warmup);
       return (
         !(!options?.warmup && s.warmup) && !(!options?.cooldown && s.cooldown)
       );

@@ -1,5 +1,5 @@
 import { Circle } from '@mui/icons-material';
-import { Box, Divider, LinearProgress, Typography } from '@mui/material';
+import { Box, LinearProgress, Typography } from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';

@@ -118,9 +118,6 @@ export default function Supersets({
 
   if (!component || !training) return null;
 
-  const defaultSupersets = supersets.filter(
-    (superset) => !superset.warmup && !superset.cooldown
-  ); // without warmup/cooldown
   const warmupSuperset = supersets.find((superset) => superset.warmup);
   const cooldownSuperset = supersets.find((superset) => superset.cooldown);
 
