@@ -13,6 +13,7 @@ export enum FirestoreCollection {
 
   // training
   TRAINING = 'trainings',
+  TRAINING_PROTOCOLS = 'protocols',
   TRAINING_WORKLOAD = 'training-workload',
   TRAINING_COMPONENT_USER_STATUS = 'training-component-user-status',
 

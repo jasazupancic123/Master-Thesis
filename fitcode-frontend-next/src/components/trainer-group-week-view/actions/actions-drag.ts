@@ -6,21 +6,19 @@ import { v4 } from 'uuid';
 
 import type { UseWeekViewUtilsReturnType } from '../hooks/use-utils';
 import { getAmPmItems } from './actions-items';
-import type { CommonService } from '@/lib/common/common.service';
 import type { IGroupCtx } from '@/store/group.provider';
 
 export const onDragEndAddEvent = (
   input: {
     e: DragEndEvent;
     selectRef: RefObject<HTMLDivElement | null>;
-    commonService: CommonService;
   },
   context: {
     useGroup: IGroupCtx;
     useWeekUtils: UseWeekViewUtilsReturnType;
   }
 ) => {
-  const { selectRef, e, commonService } = input;
+  const { selectRef, e } = input;
   const { over, active } = e;
 
   const { useGroup, useWeekUtils } = context;
@@ -47,7 +45,6 @@ export const onDragEndAddEvent = (
   const date = day.date;
   const { amItems, pmItems } = getAmPmItems(date, {
     trainings,
-    commonService,
     group,
   });
 

@@ -5,7 +5,6 @@ import { useTheme } from '@mui/material';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { handleUpdateTrainingTimes } from './actions/actions-week-item';
@@ -24,7 +23,6 @@ export type WeekViewItemProps = {
 export default function WeekViewItem({ item }: WeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
 
   const groupContext = useGroup();
   const { setGroup, setTrainings } = groupContext;
@@ -186,7 +184,6 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                         selectedItem,
                         setSelectedItem,
                         checkIsTrainingComponent,
-                        router,
                       },
                       groupContext
                     );
@@ -214,7 +211,6 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                         selectedItem,
                         setSelectedItem,
                         checkIsTrainingComponent,
-                        router,
                       },
                       groupContext
                     );

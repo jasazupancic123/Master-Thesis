@@ -38,9 +38,9 @@ export class AppController {
   /**
    * Warmup handler for App Engine to keep instances warm.
    */
-  @Get('_ah/warmup')
+  @Get('_ah/start')
   warmup(): void {
-    this.logger.log('Warming up instance ...');
+    this.logger.log('Starting instance ...');
   }
 
   @Auth()
@@ -115,6 +115,14 @@ export class AppController {
 
     institutionExercises.forEach((list) => exercises.push(...list));
 
+    const protocols = (
+      await Promise.all(
+        institutions.map(({ id }) =>
+          this.institutionService.getProtocols(user, { institutionId: id }),
+        ),
+      )
+    ).flat();
+
     return {
       profile,
       profiles,
@@ -124,6 +132,7 @@ export class AppController {
       groups,
       activeTraining,
       exerciseAiPrescriptions,
+      protocols,
     };
   }
 }

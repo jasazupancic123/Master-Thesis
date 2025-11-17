@@ -39,7 +39,6 @@ export default function TrainerWeekView() {
 
   const groupContext = useGroup();
   const weekViewUtils = useWeekViewUtils();
-
   const { group, trainings } = groupContext;
 
   const {
@@ -66,11 +65,8 @@ export default function TrainerWeekView() {
       onDragEnd={(e) =>
         selectedEventType
           ? onDragEndAddEvent(
-              { e, selectRef, commonService: lib.common },
-              {
-                useGroup: groupContext,
-                useWeekUtils: weekViewUtils,
-              }
+              { e, selectRef },
+              { useGroup: groupContext, useWeekUtils: weekViewUtils }
             )
           : undefined
       }
@@ -88,6 +84,7 @@ export default function TrainerWeekView() {
         }}
       >
         <VerticalLinesBorders />
+
         {/* Week selector */}
         <Box
           width="100%"
@@ -152,6 +149,7 @@ export default function TrainerWeekView() {
             {!selectedEventType && (
               <InputLabel id="event-type-label">Event type</InputLabel>
             )}
+
             <DraggableSelect selectedEventType={selectedEventType}>
               <Select
                 ref={selectRef}
@@ -249,7 +247,6 @@ export default function TrainerWeekView() {
             {weeks[index]?.map(({ date }, i) => {
               const { amItems, pmItems } = getAmPmItems(date, {
                 trainings,
-                commonService: lib.common,
                 group,
               });
 
