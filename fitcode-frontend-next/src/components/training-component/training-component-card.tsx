@@ -24,7 +24,6 @@ import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
-  setOpenAddExerciseModal: SetState<boolean>;
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {

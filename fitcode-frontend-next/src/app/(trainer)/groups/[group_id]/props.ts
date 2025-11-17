@@ -88,7 +88,8 @@ export type TrainerDayViewContextProps = {
   handleRemoveMember: (user: AuthUser) => Promise<void>;
   addTrainingExercises: (
     exercises: TrainingExercise[],
-    mainSet: MainSet
+    mainSet: MainSet,
+    options: { warmup: boolean; cooldown: boolean }
   ) => void;
   deleteSupersetExercise: (
     exerciseId: string,
@@ -99,4 +100,5 @@ export type TrainerDayViewContextProps = {
   addCooldownSuperset: () => void;
   applyMethod: (method: Method | undefined) => void;
   changeSupersetMainSet: (supersetIndex: number, mainSet: MainSet) => void;
+  getGrid2DivisionNumber: () => number;
 };

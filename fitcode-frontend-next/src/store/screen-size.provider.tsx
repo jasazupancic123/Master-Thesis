@@ -17,6 +17,11 @@ interface Props {
   isUltraSmallTablet: boolean;
   isSmallTablet: boolean;
   isSmallerThanLaptop: boolean;
+  xs: boolean;
+  sm: boolean;
+  md: boolean;
+  lg: boolean;
+  xl: boolean;
 }
 
 const ScreenSizeContext = createContext<Props | undefined>(undefined);
@@ -46,6 +51,12 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   );
   const isLaptop = useMediaQuery('(min-width:1024px) and (max-width:1700px)');
 
+  const xs = useMediaQuery('(max-width:600px)');
+  const sm = useMediaQuery('(min-width:600px) and (max-width:900px)');
+  const md = useMediaQuery('(min-width:900px) and (max-width:1200px)');
+  const lg = useMediaQuery('(min-width:1200px) and (max-width:1536)');
+  const xl = useMediaQuery('(min-width:1536)');
+
   return (
     <ScreenSizeContext.Provider
       value={{
@@ -62,6 +73,11 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
         isUltraSmallTablet,
         isSmallerThanLaptop,
         isSmallMobile,
+        xs,
+        sm,
+        md,
+        lg,
+        xl,
       }}
     >
       {children}

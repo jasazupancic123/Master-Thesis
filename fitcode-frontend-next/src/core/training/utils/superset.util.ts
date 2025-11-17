@@ -61,7 +61,8 @@ export class TrainingSupersetUtil {
   addExercises(
     supersets: Superset[],
     exercises: TrainingExercise[],
-    mainSet: MainSet
+    mainSet: MainSet,
+    options?: { warmup: boolean; cooldown: boolean }
   ): void {
     if (supersets.length === 0) supersets.push({ exercises: [], mainSet });
 
@@ -71,7 +72,38 @@ export class TrainingSupersetUtil {
         : MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET;
 
     let i = 0;
+
+    const firstSuperset = options?.warmup
+      ? supersets.find((s) => s.warmup)
+      : options?.cooldown
+        ? supersets.find((s) => s.cooldown)
+        : null;
+
+    if (firstSuperset) {
+      while (
+        firstSuperset.exercises.length < maxExercisesPerSuperset &&
+        i < exercises.length
+      ) {
+        if (exercises[i]) firstSuperset.exercises.push({ ...exercises[i] });
+        i++;
+      }
+    }
+
+    const filteredSupersets = supersets.filter((s) => {
+      console.log(!options?.warmup, s.warmup);
+      return (
+        !(!options?.warmup && s.warmup) && !(!options?.cooldown && s.cooldown)
+      );
+    });
+
+    if (!filteredSupersets.length) supersets.push({ exercises: [], mainSet });
+
+    const skipWarmupCooldown = !options?.warmup && !options?.cooldown;
+
     for (const superset of supersets) {
+      if (skipWarmupCooldown && (superset.warmup || superset.cooldown))
+        continue;
+
       while (
         superset.exercises.length < maxExercisesPerSuperset &&
         i < exercises.length
@@ -80,7 +112,7 @@ export class TrainingSupersetUtil {
         i++;
       }
 
-      if (i === exercises.length)
+      if (i >= exercises.length)
         break; // stop if no exercises left
       else if (supersets.indexOf(superset) === supersets.length - 1) {
         // if this is the last superset, add a new one if there are still exercises to add

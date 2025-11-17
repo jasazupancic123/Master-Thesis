@@ -22,8 +22,12 @@ interface Props extends React.PropsWithChildren {
   setMenuExercise: SetState<TrainingExercise | null>;
   openVideoPlayerModal: boolean;
   setOpenVideoPlayerModal: SetState<boolean>;
-  openAddExerciseModal: boolean;
-  setOpenAddExerciseModal: SetState<boolean>;
+  openAddExerciseModal: { open: boolean; warmup: boolean; cooldown: boolean };
+  setOpenAddExerciseModal: SetState<{
+    open: boolean;
+    warmup: boolean;
+    cooldown: boolean;
+  }>;
 }
 
 interface ISupersetsContext extends Props {
