@@ -1,4 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  PartialType,
+  PickType,
+} from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsNotEmpty,
@@ -44,3 +49,14 @@ export class TrainingProtocol extends IdEntity {
   @Expose()
   supersets: Superset[]; // actual prescription of the training protocol
 }
+
+export class CreateTrainingProtocolDto extends PickType(TrainingProtocol, [
+  'name',
+  'componentId',
+  'description',
+  'supersets',
+] as const) {}
+
+export class UpdateTrainingProtocolDto extends PartialType(
+  CreateTrainingProtocolDto,
+) {}
