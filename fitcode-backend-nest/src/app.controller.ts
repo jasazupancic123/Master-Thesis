@@ -115,6 +115,14 @@ export class AppController {
 
     institutionExercises.forEach((list) => exercises.push(...list));
 
+    const protocols = (
+      await Promise.all(
+        institutions.map(({ id }) =>
+          this.institutionService.getProtocols(user, { institutionId: id }),
+        ),
+      )
+    ).flat();
+
     return {
       profile,
       profiles,
@@ -124,6 +132,7 @@ export class AppController {
       groups,
       activeTraining,
       exerciseAiPrescriptions,
+      protocols,
     };
   }
 }

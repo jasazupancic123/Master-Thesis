@@ -165,9 +165,12 @@ export class InstitutionService implements Permission<Institution> {
     return await this.protocolRepository.findById(ref);
   }
 
-  async createTrainingProtocol(ref: InstitutionRef, input: TrainingProtocol) {
+  async createTrainingProtocol(
+    ref: InstitutionRef,
+    input: TrainingProtocol,
+  ): Promise<string> {
     const { institutionId } = ref;
-    await this.protocolRepository.save(
+    return await this.protocolRepository.save(
       { ...input, institutionId },
       { institutionId },
     );

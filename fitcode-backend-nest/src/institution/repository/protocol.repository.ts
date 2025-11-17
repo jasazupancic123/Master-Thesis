@@ -8,7 +8,7 @@ import {
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { Create, Update } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import {
   FirestoreRepository,
   InstitutionRef,
@@ -58,11 +58,13 @@ export class ProtocolRepository extends FirestoreRepository<
 
   async getAllByInstitution(ref: InstitutionRef): Promise<TrainingProtocol[]> {
     const snapshot = await this.collection(ref).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<TrainingProtocol>),
+    );
   }
 
   async save(data: Create<TrainingProtocol>, ref: InstitutionRef) {
-    const id = this.common.string.slug(data.name);
+    const id = this.firebase.firestore.collection('_').doc().id;
     const query = this.firebase.buildCreateQuery<TrainingProtocol>({
       ...data,
       id,

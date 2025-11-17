@@ -30,6 +30,8 @@ export interface Props {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PaperProps<React.ElementType<any, keyof React.JSX.IntrinsicElements>>
   >;
+  customTitleComponent?: ReactNode;
+  additionalDialogue?: ReactNode;
 }
 
 export default function MyModal(props: Props) {
@@ -49,6 +51,8 @@ export default function MyModal(props: Props) {
     dialogueContentSx,
     componentCalendarView,
     PaperProps,
+    customTitleComponent,
+    additionalDialogue,
   } = props;
 
   const screenSize = useScreenSize();
@@ -74,7 +78,10 @@ export default function MyModal(props: Props) {
           sx={sx}
           PaperProps={{ ...PaperProps }}
         >
-          {title && <DialogTitle>{title}</DialogTitle>}
+          {customTitleComponent
+            ? customTitleComponent
+            : title && <DialogTitle>{title}</DialogTitle>}
+
           <DialogContent
             dividers
             sx={{
@@ -85,7 +92,6 @@ export default function MyModal(props: Props) {
             }}
           >
             {children}
-
             {actions}
 
             {(onConfirm || onCancel) && (
@@ -105,6 +111,8 @@ export default function MyModal(props: Props) {
                     {cancelText}
                   </Button>
                 )}
+
+                {additionalDialogue}
               </DialogActions>
             )}
           </DialogContent>

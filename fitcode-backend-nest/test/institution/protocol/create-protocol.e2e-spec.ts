@@ -64,26 +64,6 @@ describe('Create Training Protocol E2E', () => {
     expect(res.body.message).toBe('Component not found');
   });
 
-  it('should fail if protocol with the same name already exists', async () => {
-    const protocol = await db.protocols.createTest(institution1);
-    const res = await req(institution1.trainers[0].token, institution1.id, {
-      name: 'Protocol 1',
-      componentId: 'other',
-      supersets: [],
-    });
-
-    expect(res.status).toBe(409);
-    expect(res.body.message).toBe(
-      'Training protocol already exists, choose another name',
-    );
-
-    // cleanup
-    await db.protocols.delete({
-      institutionId: institution1.id,
-      protocolId: protocol.id,
-    });
-  });
-
   it('should fail if supersets are not valid', async () => {
     const res = await req(institution1.trainers[0].token, institution1.id, {
       name: 'Protocol 2',
@@ -115,7 +95,7 @@ describe('Create Training Protocol E2E', () => {
     expect(dbProtocols).toHaveLength(1);
 
     const protocol = dbProtocols[0];
-    expect(protocol.id).toBe('protocol-3');
+    expect(protocol.id).toBeDefined();
     expect(protocol.institutionId).toBe(institution1.id);
     expect(protocol.name).toBe('Protocol 3');
     expect(protocol.componentId).toBe('other');

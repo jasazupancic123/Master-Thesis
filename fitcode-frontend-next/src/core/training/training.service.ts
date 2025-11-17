@@ -2,6 +2,7 @@ import type { AuthUser } from '../auth/type/user.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../group/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
+import type { Superset } from './type/superset.type';
 import type { Training } from './type/training.type';
 import type { TrainingReport } from './type/training-report.type';
 
@@ -24,6 +25,13 @@ export class TrainingService {
     }
 
     return item;
+  }
+
+  static mapSupersets(supersets: Superset[], data: { exercises?: Exercise[] }) {
+    if (data.exercises)
+      for (const s of supersets)
+        for (const e of s.exercises)
+          e.exercise = data.exercises.find(({ id }) => id === e.id);
   }
 
   static mapMembers(item: Training, users: AuthUser[]): Training {
