@@ -65,11 +65,8 @@ export default function TrainerWeekView() {
       onDragEnd={(e) =>
         selectedEventType
           ? onDragEndAddEvent(
-              { e, selectRef, commonService: lib.common },
-              {
-                useGroup: groupContext,
-                useWeekUtils: weekViewUtils,
-              }
+              { e, selectRef },
+              { useGroup: groupContext, useWeekUtils: weekViewUtils }
             )
           : undefined
       }

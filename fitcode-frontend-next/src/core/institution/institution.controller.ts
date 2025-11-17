@@ -40,6 +40,10 @@ export class InstitutionController extends BaseController {
     return this.api.patch<Institution>(`/${institutionId}`, body);
   }
 
+  async getProtocols(institutionId: string) {
+    return this.api.get(`/${institutionId}/protocol`);
+  }
+
   async addAthlete(institutionId: string, body: UserId) {
     return this.api.patch<void>(`/${institutionId}/athlete`, body);
   }
