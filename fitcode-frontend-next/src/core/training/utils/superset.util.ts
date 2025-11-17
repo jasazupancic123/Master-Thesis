@@ -61,7 +61,8 @@ export class TrainingSupersetUtil {
   addExercises(
     supersets: Superset[],
     exercises: TrainingExercise[],
-    mainSet: MainSet
+    mainSet: MainSet,
+    options?: { warmup: boolean; cooldown: boolean }
   ): void {
     if (supersets.length === 0) supersets.push({ exercises: [], mainSet });
 
@@ -71,7 +72,37 @@ export class TrainingSupersetUtil {
         : MAX_NUM_EXERCISES_IN_BLOCK_SUPERSET;
 
     let i = 0;
+
+    const firstSuperset = options?.warmup
+      ? supersets.find((s) => s.warmup)
+      : options?.cooldown
+        ? supersets.find((s) => s.cooldown)
+        : null;
+
+    if (firstSuperset) {
+      while (
+        firstSuperset.exercises.length < maxExercisesPerSuperset &&
+        i < exercises.length
+      ) {
+        if (exercises[i]) firstSuperset.exercises.push({ ...exercises[i] });
+        i++;
+      }
+    }
+
+    const filteredSupersets = supersets.filter((s) => {
+      return (
+        !(!options?.warmup && s.warmup) && !(!options?.cooldown && s.cooldown)
+      );
+    });
+
+    if (!filteredSupersets.length) supersets.push({ exercises: [], mainSet });
+
+    const skipWarmupCooldown = !options?.warmup && !options?.cooldown;
+
     for (const superset of supersets) {
+      if (skipWarmupCooldown && (superset.warmup || superset.cooldown))
+        continue;
+
       while (
         superset.exercises.length < maxExercisesPerSuperset &&
         i < exercises.length
@@ -80,7 +111,7 @@ export class TrainingSupersetUtil {
         i++;
       }
 
-      if (i === exercises.length)
+      if (i >= exercises.length)
         break; // stop if no exercises left
       else if (supersets.indexOf(superset) === supersets.length - 1) {
         // if this is the last superset, add a new one if there are still exercises to add
@@ -180,7 +211,7 @@ export class TrainingSupersetUtil {
   }
 
   applyMethodToExercises(
-    method: Method,
+    method: Method | undefined,
     supersets: Superset[],
     selectedExercises: Exercise[]
   ): void {
@@ -199,64 +230,66 @@ export class TrainingSupersetUtil {
    * Clamps values that exceed limits and removes invalid params.
    */
   applyMethod(
-    method: Method,
+    method: Method | undefined,
     trainingExercise: TrainingExercise
   ): TrainingExercise {
-    trainingExercise.methodId = method.field as string;
+    trainingExercise.methodId = method?.field as string;
     const updated = structuredClone(trainingExercise);
 
-    for (const attr of method.attributes) {
-      if (attr.field === 'sets') {
-        const sets = updated.sets.length;
-        if (attr.min && sets < attr.min) {
-          // add missing sets
-          for (let i = sets; i < attr.min; i++) {
-            const newSet = structuredClone(updated.sets[0]);
-            newSet.setNumber = i + 1;
-            updated.sets.push(newSet);
+    if (method) {
+      for (const attr of method?.attributes) {
+        if (attr.field === 'sets') {
+          const sets = updated.sets.length;
+          if (attr.min && sets < attr.min) {
+            // add missing sets
+            for (let i = sets; i < attr.min; i++) {
+              const newSet = structuredClone(updated.sets[0]);
+              newSet.setNumber = i + 1;
+              updated.sets.push(newSet);
+            }
           }
+
+          if (attr.max && sets > attr.max)
+            updated.sets = updated.sets.slice(0, attr.max);
+
+          continue;
         }
 
-        if (attr.max && sets > attr.max)
-          updated.sets = updated.sets.slice(0, attr.max);
+        const isUnilateral = trainingExercise.exercise?.isUnilateral ?? false;
+        for (const set of updated.sets) {
+          const fields = [
+            attr.field,
+            ...(isUnilateral ? [core.exercise.param.pairs[attr.field]] : []),
+          ];
 
-        continue;
-      }
+          for (const field of fields) {
+            let value = set[field];
+            if (value === null || value === undefined) continue;
 
-      const isUnilateral = trainingExercise.exercise?.isUnilateral ?? false;
-      for (const set of updated.sets) {
-        const fields = [
-          attr.field,
-          ...(isUnilateral ? [core.exercise.param.pairs[attr.field]] : []),
-        ];
+            // clamp numeric values
+            if (typeof value === 'number') {
+              const min = typeof attr.min === 'number' ? attr.min : 0;
+              const max = typeof attr.max === 'number' ? attr.max : Infinity;
+              if (value < min) value = min;
+              if (value > max) value = max;
+            }
 
-        for (const field of fields) {
-          let value = set[field];
-          if (value === null || value === undefined) continue;
+            // disable field
+            if (attr.disabled) {
+              value = undefined;
+              set[field] = value as never;
 
-          // clamp numeric values
-          if (typeof value === 'number') {
-            const min = typeof attr.min === 'number' ? attr.min : 0;
-            const max = typeof attr.max === 'number' ? attr.max : Infinity;
-            if (value < min) value = min;
-            if (value > max) value = max;
+              // find another param in the same "option" group to set new default value
+              const alternative = this.findAlternativeMethodParam(
+                method,
+                field as ExerciseMainParamField
+              );
+
+              if (alternative)
+                set[alternative.field as keyof ExerciseSet] =
+                  alternative.value as never;
+            } else set[field] = value as never;
           }
-
-          // disable field
-          if (attr.disabled) {
-            value = undefined;
-            set[field] = value as never;
-
-            // find another param in the same "option" group to set new default value
-            const alternative = this.findAlternativeMethodParam(
-              method,
-              field as ExerciseMainParamField
-            );
-
-            if (alternative)
-              set[alternative.field as keyof ExerciseSet] =
-                alternative.value as never;
-          } else set[field] = value as never;
         }
       }
     }

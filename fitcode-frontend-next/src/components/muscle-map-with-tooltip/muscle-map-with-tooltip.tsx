@@ -426,7 +426,8 @@ export default function MuscleMapWithTooltip(props: Props) {
                         addTrainingExercises(
                           [trainingExercise],
                           supersets[supersets.length - 1]?.mainSet ||
-                            MainSet.BLOCK // same main set as the last superset
+                            MainSet.BLOCK, // same main set as the last superset
+                          { warmup: false, cooldown: false }
                         );
                       }}
                     >

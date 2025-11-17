@@ -47,7 +47,7 @@ export function AddMembersModal({
   };
 
   useEffect(() => {
-    const filteredUsers = users.filter(
+    const newFilteredUsers = users.filter(
       (user) =>
         user.email
           ?.toLowerCase()
@@ -57,10 +57,10 @@ export function AddMembersModal({
           .includes(searchQueryAddPlayer.toLowerCase())
     );
 
-    if (!enableScroll) filteredUsers.length = 5; // limit to 5
+    if (!enableScroll) newFilteredUsers.length = 5; // limit to 5
 
     setFilteredUsers(
-      filteredUsers
+      newFilteredUsers
         .filter(
           (user, index, self) =>
             index === self.findIndex((t) => t.uid === user.uid)
@@ -77,7 +77,7 @@ export function AddMembersModal({
           return 0;
         })
     );
-  }, [searchQueryAddPlayer]);
+  }, [users, searchQueryAddPlayer]);
 
   return (
     <MyModal

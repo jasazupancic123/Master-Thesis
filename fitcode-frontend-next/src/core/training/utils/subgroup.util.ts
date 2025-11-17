@@ -56,6 +56,25 @@ export class TrainingSubgroupUtil {
     });
   }
 
+  deleteVirtual(
+    athleteId: string,
+    component: TrainingComponent
+  ): TrainingComponent {
+    const newSubgroups = component.subgroups.filter(
+      (s) =>
+        !(
+          s.parentId &&
+          s.membersIds.length === 1 &&
+          s.membersIds.includes(athleteId)
+        )
+    );
+
+    return {
+      ...component,
+      subgroups: newSubgroups,
+    };
+  }
+
   /**
    * Checks if subgroup prescription is equal to its parent prescription.
    * Subgroup can be either virtual or regular. The function finds its
