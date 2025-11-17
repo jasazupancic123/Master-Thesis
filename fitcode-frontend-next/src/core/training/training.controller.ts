@@ -10,6 +10,11 @@ import type {
 } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type {
+  CreateTrainingProtocol,
+  TrainingProtocol,
+  UpdateTrainingProtocol,
+} from './type/training-protocol.type';
+import type {
   GroupTrainingReportItem,
   TrainingReport,
   UserTrainingRealizationReportItem,
@@ -103,6 +108,30 @@ export class TrainingController extends BaseController {
 
   async findAllByInstitutionToday(options?: FetchOptions) {
     return this.api.get<Training[]>('/institution/today', options);
+  }
+
+  async createProtocol(institutionId: string, body: CreateTrainingProtocol) {
+    return this.api.post<TrainingProtocol>(
+      `/institution/${institutionId}/protocol`,
+      body
+    );
+  }
+
+  async updateProtocol(
+    institutionId: string,
+    protocolId: string,
+    body: UpdateTrainingProtocol
+  ) {
+    return this.api.patch<void>(
+      `/institution/${institutionId}/protocol/${protocolId}`,
+      body
+    );
+  }
+
+  async deleteProtocol(institutionId: string, protocolId: string) {
+    return this.api.delete<void>(
+      `/institution/${institutionId}/protocol/${protocolId}`
+    );
   }
 
   async completeNextSet(
@@ -214,6 +243,10 @@ export class TrainingController extends BaseController {
       body,
       options
     );
+  }
+
+  async move(trainingId: string, body: DateRange) {
+    return this.api.patch<Training>(`/${trainingId}/move`, body);
   }
 
   async delete(trainingId: string, options?: FetchOptions) {

@@ -1,3 +1,4 @@
+import { DndContext } from '@dnd-kit/core';
 import { Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -30,8 +31,8 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function TrainerCycleView() {
   const { exercises: allExercises } = useMain();
-
-  const { group, cycle, setCycle, setTrainings } = useGroup();
+  const { group, cycle, setCycle, setTrainings, handleMoveTraining } =
+    useGroup();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -186,38 +187,40 @@ export default function TrainerCycleView() {
 
           {/* Training weeks */}
           <Stack sx={{ backgroundColor: theme.palette.background.dark }}>
-            {lib.common.date.weeks(cycle.from, cycle.to).map((week, i) => (
-              <Fragment key={i}>
-                <TrainingWeek
-                  week={week.map(({ date }) => dayjs(date!))}
-                  selected={selectedComponents}
-                  cycleView
-                  setSelected={(component) =>
-                    setSelectedComponents(component as Component[])
-                  }
-                  addTrainingComponent={(trainingId, input) => {
-                    handleAddTrainingComponents(
-                      controller,
-                      { trainingId, ...input },
-                      {
-                        router,
-                        setTrainings,
-                        exercises: allExercises,
-                        selectedTargets,
-                      }
-                    );
-                  }}
-                  deleteTrainingComponent={(trainingId, componentId) =>
-                    handleDeleteTrainingComponent(
-                      controller,
-                      { trainingId, componentId },
-                      { router, setTrainings, exercises: allExercises }
-                    )
-                  }
-                  selectedTargets={selectedTargets}
-                />
-              </Fragment>
-            ))}
+            <DndContext onDragEnd={handleMoveTraining}>
+              {lib.common.date.weeks(cycle.from, cycle.to).map((week, i) => (
+                <Fragment key={i}>
+                  <TrainingWeek
+                    week={week.map(({ date }) => dayjs(date!))}
+                    selected={selectedComponents}
+                    cycleView
+                    setSelected={(component) =>
+                      setSelectedComponents(component as Component[])
+                    }
+                    addTrainingComponent={(trainingId, input) => {
+                      handleAddTrainingComponents(
+                        controller,
+                        { trainingId, ...input },
+                        {
+                          router,
+                          setTrainings,
+                          exercises: allExercises,
+                          selectedTargets,
+                        }
+                      );
+                    }}
+                    deleteTrainingComponent={(trainingId, componentId) =>
+                      handleDeleteTrainingComponent(
+                        controller,
+                        { trainingId, componentId },
+                        { router, setTrainings, exercises: allExercises }
+                      )
+                    }
+                    selectedTargets={selectedTargets}
+                  />
+                </Fragment>
+              ))}
+            </DndContext>
           </Stack>
         </Box>
       )}

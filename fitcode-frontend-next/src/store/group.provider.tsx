@@ -1,5 +1,7 @@
 'use client';
 
+import type { DragEndEvent } from '@dnd-kit/core';
+import { addMinutes } from 'date-fns';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -11,6 +13,7 @@ import type {
 import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Group } from '@/core/group/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
+import { TrainingController } from '@/core/training/training.controller';
 import { lib } from '@/lib';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 
@@ -53,6 +56,65 @@ export function GroupProvider(
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
+  async function handleMoveTraining(e: DragEndEvent) {
+    const { over, active } = e;
+    if (!over) return;
+
+    // Dragged training
+    const training = active.data.current?.training;
+    if (!training) return;
+
+    // Dropped cell
+    const payload = over.data.current;
+    if (!payload) return;
+
+    const { date, period } = payload;
+    const isPm = period === 'PM';
+    const startHour = isPm ? 18 : 9;
+    const endHour = isPm ? 20 : 11;
+
+    const newFrom = dayjs(date).hour(startHour).minute(0).second(0).toDate();
+    const newTo = dayjs(date).hour(endHour).minute(0).second(0).toDate();
+
+    const duration = 30; // 30 min per component default
+    const state = { trainings: structuredClone(trainings) };
+    await lib.common.generic.optimisticUpdate(
+      () =>
+        setTrainings((prev) =>
+          prev.map((t) =>
+            t.id === training.id
+              ? {
+                  ...t,
+                  from: newFrom,
+                  to: addMinutes(
+                    newFrom,
+                    training.components.length * duration
+                  ),
+                  components: t.components.map((c, i) => ({
+                    ...c,
+                    from: addMinutes(newFrom, i * duration),
+                    to: addMinutes(newFrom, (i + 1) * duration),
+                  })),
+                }
+              : t
+          )
+        ),
+      (snapshot) => setTrainings(snapshot.trainings),
+      async () =>
+        await TrainingController.getInstance().move(training.id, {
+          from: newFrom,
+          to: newTo,
+        }),
+      state,
+      (training) => {
+        if (!training?.id) return;
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === training.id ? training : t))
+        );
+      }
+    );
+  }
+
   // filter trainings by cycle
   useEffect(() => {
     if (!cycle) return;
@@ -81,6 +143,7 @@ export function GroupProvider(
     setFilteredUsers,
     detectedChanges,
     setDetectedChanges,
+    handleMoveTraining,
   };
 
   return (

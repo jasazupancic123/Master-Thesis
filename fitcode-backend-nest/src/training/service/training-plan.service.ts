@@ -237,6 +237,14 @@ export class TrainingPlanService {
     return await this.exerciseService.getAll(ids);
   }
 
+  async getAllTrainingExercisesBySupersets(
+    supersets: Superset[],
+  ): Promise<Exercise[]> {
+    return await this.exerciseService.getAll([
+      ...new Set(supersets.flatMap((s) => s.exercises).map((e) => e.id)),
+    ]);
+  }
+
   findComponentOrFail(
     training: Training,
     componentId: string,
