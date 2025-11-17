@@ -18,13 +18,11 @@ import CompletedMembersGroup from './completed-members-group';
 import { core } from '@/core/core.service';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
-  setOpenAddExerciseModal: SetState<boolean>;
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {

@@ -7,8 +7,8 @@ import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
 import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
-import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
+import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
 import type { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
 import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
@@ -127,6 +127,7 @@ export const predictWebcam = async (state: {
   isCurrentlySavingImageRef: RefObject<boolean>;
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
   reloadingModelRef: RefObject<boolean>;
+  POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
   setRepCount: SetState<RepsCount>;
@@ -169,6 +170,7 @@ export const predictWebcam = async (state: {
     isCurrentlySavingImageRef,
     canExitWhenImageIsDoneSavingRef,
     reloadingModelRef,
+    POSE_DETECTION_CONSTANTS,
     setFps,
     finishAiDetection,
     setRepCount,
@@ -358,6 +360,7 @@ export const predictWebcam = async (state: {
         keypoints,
         isMobile,
         avgFps,
+        POSE_DETECTION_CONSTANTS,
       });
 
       await lib.ai.pose.checkStatus({
@@ -376,6 +379,7 @@ export const predictWebcam = async (state: {
         videoHeight: video.videoHeight,
         doItTimestamp,
         reloadingModelRef,
+        POSE_DETECTION_CONSTANTS,
         reloadModel,
       });
 
@@ -430,6 +434,7 @@ export const predictWebcam = async (state: {
                 }
               : undefined,
           setRepCount,
+          POSE_DETECTION_CONSTANTS,
         });
       }
 
@@ -496,6 +501,7 @@ function insertKeypointsIntoBuffers(state: {
   keypoints: Keypoint[];
   isMobile: boolean;
   avgFps: RefObject<AvgFps>;
+  POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
 }) {
   const {
     statusRef,
@@ -509,6 +515,7 @@ function insertKeypointsIntoBuffers(state: {
     keypoints,
     isMobile,
     avgFps,
+    POSE_DETECTION_CONSTANTS,
   } = state;
 
   // if we are in recording state, don't update the keypointHistory's size
@@ -516,8 +523,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS /
-        1000
+      POSE_DETECTION_CONSTANTS.KEEP_KEYPOINT_HISTORY_DURING_RECORDING_MS / 1000
     );
 
     constantKeypointHistory.insertFrame(keypoints); // never cut, always all history
@@ -526,7 +532,7 @@ function insertKeypointsIntoBuffers(state: {
     keypointHistory.insertFrame(
       keypoints,
       avgFps.current,
-      POSE_DETECTION_CONSTRAINTS.KEYPOINT_BUFFER_DURATION_MS / 1000
+      POSE_DETECTION_CONSTANTS.KEYPOINT_BUFFER_DURATION_MS / 1000
     );
   }
 

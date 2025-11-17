@@ -6,7 +6,10 @@ import type {
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import type { CreateWorkload } from '@/core/training/type/workload.type';
+import type {
+  CreateWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
 export const finishSet = async (state: {
@@ -23,8 +26,11 @@ export const finishSet = async (state: {
       supersetIndex: number;
       setIndex: number;
       isAiRecorded?: boolean;
-    }
+    },
+    workloads: Workload[],
+    recordedSets: TrainingExerciseRecordedSet[]
   ) => Promise<void>;
+  activeTraining: ActiveTraining | null;
   isAiRecorded?: boolean;
 }) => {
   const {
@@ -36,9 +42,35 @@ export const finishSet = async (state: {
     setTrainingInProgress,
     handleUpsertSet,
     isAiRecorded,
+    activeTraining,
   } = state;
 
   const set = exercise.sets[setIndex];
+
+  const recordedSet = (newRecordedSets || trainingInProgress.recordedSets).find(
+    (r) => {
+      return (
+        r.exerciseId === exercise.id &&
+        r.supersetIndex === supersetIndex &&
+        r.setIndex === setIndex
+      );
+    }
+  );
+
+  const photoUrls = [];
+
+  const imagesLength = Math.max(
+    recordedSet?.imagesL?.length || 0,
+    recordedSet?.imagesR?.length || 0
+  );
+
+  for (let i = 0; i < imagesLength; i++) {
+    if (recordedSet?.imagesL && recordedSet.imagesL[i])
+      photoUrls.push(recordedSet.imagesL[i].url);
+
+    if (recordedSet?.imagesR && recordedSet.imagesR[i])
+      photoUrls.push(recordedSet.imagesR[i].url);
+  }
 
   const workload: CreateWorkload = {
     userId: trainingInProgress.userId,
@@ -68,7 +100,7 @@ export const finishSet = async (state: {
     recTimeR: set.recTimeR,
     recDist: set.recDist,
     recDistR: set.recDistR,
-    photoURLs: [],
+    photoURLs: photoUrls,
     rir: undefined,
     rirR: undefined,
     rom: undefined,
@@ -83,12 +115,17 @@ export const finishSet = async (state: {
     newRecordedSets
   );
 
-  await handleUpsertSet(workload, {
-    exerciseId: exercise.id,
-    setIndex,
-    supersetIndex,
-    isAiRecorded,
-  });
+  await handleUpsertSet(
+    workload,
+    {
+      exerciseId: exercise.id,
+      setIndex,
+      supersetIndex,
+      isAiRecorded,
+    },
+    activeTraining?.workloads || [],
+    newRecordedSets || trainingInProgress.recordedSets
+  );
 };
 
 const markExerciseSetAsCompleted = (

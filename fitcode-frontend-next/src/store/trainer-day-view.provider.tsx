@@ -403,7 +403,8 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
 
   function addTrainingExercises(
     exercises: TrainingExercise[],
-    mainSet: MainSet
+    mainSet: MainSet,
+    options?: { warmup: boolean; cooldown: boolean }
   ) {
     if (!component || !training || selectedSubgroup?.parentId) return; // disable for virtual subgroups
 
@@ -420,9 +421,14 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       component
     );
 
-    core.training.superset.addExercises(supersets, exercises, mainSet);
+    core.training.superset.addExercises(supersets, exercises, mainSet, options);
     for (const sg of childrenSubgroups)
-      core.training.superset.addExercises(sg.supersets, exercises, mainSet);
+      core.training.superset.addExercises(
+        sg.supersets,
+        exercises,
+        mainSet,
+        options
+      );
 
     updateSupersets(supersets, childrenSubgroups);
   }
@@ -515,7 +521,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     }
   }
 
-  function applyNewMethod(method: Method) {
+  function applyNewMethod(method?: Method) {
     if (!component || !training) return;
 
     if (selectedExerciseIds.length === 0)
@@ -608,6 +614,16 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     });
   }
 
+  function getGrid2DivisionNumber(): number {
+    return screenSize.xs || screenSize.sm
+      ? 1
+      : screenSize.md && screenSize.isSmallerThanLaptop
+        ? 2
+        : screenSize.isDesktop
+          ? 4
+          : 3;
+  }
+
   const value: TrainerDayViewContextProps = {
     day,
     setDay,
@@ -648,6 +664,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     addCooldownSuperset,
     applyMethod: applyNewMethod,
     changeSupersetMainSet,
+    getGrid2DivisionNumber,
   };
 
   return (

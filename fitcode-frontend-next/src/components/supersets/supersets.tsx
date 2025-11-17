@@ -32,8 +32,12 @@ import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import MyModal from '@/ui/modal';
 
 interface Props {
-  openAddExerciseModal: boolean;
-  setOpenAddExerciseModal: SetState<boolean>;
+  openAddExerciseModal: { open: boolean; warmup: boolean; cooldown: boolean };
+  setOpenAddExerciseModal: SetState<{
+    open: boolean;
+    warmup: boolean;
+    cooldown: boolean;
+  }>;
 }
 
 // Simple droppable wrapper for areas that aren't Sortable containers
@@ -114,6 +118,9 @@ export default function Supersets({
 
   if (!component || !training) return null;
 
+  const warmupSuperset = supersets.find((superset) => superset.warmup);
+  const cooldownSuperset = supersets.find((superset) => superset.cooldown);
+
   // This function needs to be here
   function adaptAndCallOnDragEnd(e: DragEndEvent) {
     if (!training || !component) return;
@@ -164,7 +171,7 @@ export default function Supersets({
 
   const handleAddExercises = () => {
     if (selectedExerciseIds.length === 0) {
-      setOpenAddExerciseModal(false);
+      setOpenAddExerciseModal({ open: false, warmup: false, cooldown: false });
       return;
     }
 
@@ -185,11 +192,15 @@ export default function Supersets({
 
     trainerDayViewContext.addTrainingExercises(
       trainingExercises,
-      supersets[supersets.length - 1]?.mainSet || MainSet.BLOCK
+      MainSet.BLOCK,
+      {
+        warmup: openAddExerciseModal.warmup,
+        cooldown: openAddExerciseModal.cooldown,
+      }
     );
 
     setNewAddedExercisesIds([]);
-    setOpenAddExerciseModal(false);
+    setOpenAddExerciseModal({ open: false, warmup: false, cooldown: false });
     setSearch('');
     setSelectedExerciseIds([]);
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -232,48 +243,68 @@ export default function Supersets({
           openAddExerciseModal={openAddExerciseModal}
           setOpenAddExerciseModal={setOpenAddExerciseModal}
         >
+          {warmupSuperset && (
+            <Superset
+              key={supersets.indexOf(warmupSuperset)}
+              superset={warmupSuperset}
+              supersetIndex={supersets.indexOf(warmupSuperset)}
+            />
+          )}
           {supersets &&
-            supersets.map((superset, i) => (
-              <Superset key={i} superset={superset} supersetIndex={i} />
-            ))}
-        </SupersetsProvider>
+            supersets.map((superset, i) => {
+              if (superset.warmup || superset.cooldown) return null;
+              return <Superset key={i} superset={superset} supersetIndex={i} />;
+            })}
 
-        {/* Add new superset field */}
-        {selectedAthlete ||
-        (supersets.length === 1 && supersets[0].exercises.length === 0)
-          ? null
-          : supersets.length < MAX_NUM_SUPERSETS && (
-              <Grid2
-                size={{
-                  xs: 12,
-                  sm: screenSize.isLandscapeMobile ? 4 : 12,
-                  md: screenSize.isSmallerThanLaptop
-                    ? 6
-                    : screenSize.isLaptop
-                      ? 4
-                      : 3,
-                }}
-              >
-                <DroppableArea id={ADD_SUPERSET_DROPPABLE_ID}>
-                  <Box
-                    border="1px dashed #B2B3B7"
-                    borderRadius={2}
-                    sx={{
-                      cursor: 'pointer',
-                      backgroundColor: theme.palette.background.dark,
-                      mx: 1,
-                    }}
-                    p={1}
-                    py={!expandedExercisesView ? 2.25 : 3}
-                    onClick={() => setOpenAddExerciseModal(true)}
-                  >
-                    <Typography variant="body2" align="center" fontSize={12}>
-                      {'Add/drop exercises'}
-                    </Typography>
-                  </Box>
-                </DroppableArea>
-              </Grid2>
-            )}
+          {/* Add new superset field */}
+          {selectedAthlete
+            ? null
+            : supersets.length < MAX_NUM_SUPERSETS && (
+                <Grid2
+                  size={{
+                    xs: 12,
+                    sm: screenSize.isLandscapeMobile ? 4 : 12,
+                    md: screenSize.isSmallerThanLaptop
+                      ? 6
+                      : screenSize.isLaptop
+                        ? 4
+                        : 3,
+                  }}
+                >
+                  <DroppableArea id={ADD_SUPERSET_DROPPABLE_ID}>
+                    <Box
+                      border="1px dashed #B2B3B7"
+                      borderRadius={2}
+                      sx={{
+                        cursor: 'pointer',
+                        backgroundColor: theme.palette.background.dark,
+                        mx: 1,
+                      }}
+                      p={1}
+                      py={!expandedExercisesView ? 2.25 : 3}
+                      onClick={() =>
+                        setOpenAddExerciseModal({
+                          open: true,
+                          warmup: false,
+                          cooldown: false,
+                        })
+                      }
+                    >
+                      <Typography variant="body2" align="center" fontSize={12}>
+                        Add/drop exercises
+                      </Typography>
+                    </Box>
+                  </DroppableArea>
+                </Grid2>
+              )}
+          {cooldownSuperset && (
+            <Superset
+              key={supersets.indexOf(cooldownSuperset)}
+              superset={cooldownSuperset}
+              supersetIndex={supersets.indexOf(cooldownSuperset)}
+            />
+          )}
+        </SupersetsProvider>
       </Grid2>
 
       <DragOverlay>
@@ -296,8 +327,10 @@ export default function Supersets({
 
       {/* Component exercises modal */}
       <MyModal
-        isOpen={openAddExerciseModal}
-        setIsOpen={(open) => setOpenAddExerciseModal(open)}
+        isOpen={openAddExerciseModal.open}
+        setIsOpen={(open) =>
+          setOpenAddExerciseModal({ ...openAddExerciseModal, open })
+        }
         cancelText="Close"
         onCancel={() => {
           const oldExercises = selectedExerciseIds.filter((id) =>
@@ -310,7 +343,11 @@ export default function Supersets({
           setNewAddedExercisesIds([]);
           setPagination((prev) => ({ ...prev, page: 1 }));
           setSelectedExerciseIds(oldExercises);
-          setOpenAddExerciseModal(false);
+          setOpenAddExerciseModal({
+            open: false,
+            warmup: false,
+            cooldown: false,
+          });
           setSearch('');
         }}
         PaperProps={{

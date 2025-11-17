@@ -29,7 +29,6 @@ import {
 import { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
-import { POSE_DETECTION_CONSTRAINTS } from '@/core/exercise-ai-prescriptions/const/pose-detection-constrains.const';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
 import { CurrentSideMutexValues } from '@/core/exercise-ai-prescriptions/enum/current-side-mutex-values.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
@@ -90,7 +89,7 @@ export default function MobileMovementValidation(
   const pathname = usePathname();
 
   const mainContext = useMain();
-  const { exerciseAiPrescriptions } = mainContext || {};
+  const { exerciseAiPrescriptions, activeTraining } = mainContext || {};
 
   const trainingContext = useTraining();
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
@@ -110,6 +109,8 @@ export default function MobileMovementValidation(
     supersetIndex,
     setIndex,
   } = props;
+
+  const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -473,6 +474,7 @@ export default function MobileMovementValidation(
           isCurrentlySavingImageRef,
           canExitWhenImageIsDoneSavingRef,
           reloadingModelRef,
+          POSE_DETECTION_CONSTANTS,
           setFps,
           finishAiDetection,
           setRepCount,
@@ -512,6 +514,7 @@ export default function MobileMovementValidation(
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       exercisePose &&
       setSelectedTrackingMethod &&
+      activeTraining &&
       trainingInProgress &&
       setTrainingInProgress !== undefined &&
       handleUpsertSet !== undefined &&
@@ -690,6 +693,7 @@ export default function MobileMovementValidation(
         setTrainingInProgress,
         handleUpsertSet,
         isAiRecorded: true,
+        activeTraining,
       });
 
       // handleAdvanceInSuperset({
@@ -737,7 +741,7 @@ export default function MobileMovementValidation(
       loadedPoseLandmarkerTimestampRef.current &&
       Math.abs(
         dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
-      ) < POSE_DETECTION_CONSTRAINTS.TIME_BETWEEN_MODEL_RELOAD_S
+      ) < POSE_DETECTION_CONSTANTS.TIME_BETWEEN_MODEL_RELOAD_S
     ) {
       return;
     }
@@ -916,13 +920,12 @@ export default function MobileMovementValidation(
                   ? Math.max(
                       dayjs(stillnessCountdownRef.current)
                         .add(
-                          POSE_DETECTION_CONSTRAINTS.STILLNESS_COUNTDOWN_DURATION_S +
-                            1,
+                          POSE_DETECTION_CONSTANTS.STILLNESS_COUNTDOWN_DURATION_S,
                           'seconds'
                         )
                         .diff(dayjs(), 'second'),
                       0
-                    )
+                    ) + 1
                   : null
               }
             />

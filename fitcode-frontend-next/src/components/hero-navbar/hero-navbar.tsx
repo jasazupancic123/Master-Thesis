@@ -153,7 +153,8 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                         href={item.href}
                         passHref
                         onClick={
-                          item.id === SIGN_OUT_LINK_ID &&
+                          item.id.toLowerCase() ===
+                            SIGN_OUT_LINK_ID.toLowerCase() &&
                           auth.status === 'authenticated'
                             ? () => auth.logout()
                             : undefined
@@ -221,7 +222,8 @@ export default function HeroNavbar(props: HeroNavbarProps) {
                           sx={{ p: 1, zIndex: 1000 }}
                           onClick={() => {
                             if (
-                              item.label === 'Sign Out' &&
+                              item.id.toLowerCase() ===
+                                SIGN_OUT_LINK_ID.toLowerCase() &&
                               auth.status === 'authenticated'
                             )
                               auth.logout();

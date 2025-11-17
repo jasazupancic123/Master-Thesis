@@ -172,6 +172,8 @@ export function withAuth<P extends object>(
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
       router.replace(LINK_SIGN_IN.href);
+      router.refresh();
+      router.refresh();
       return null;
     }
 
