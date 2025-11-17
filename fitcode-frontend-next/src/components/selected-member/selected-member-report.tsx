@@ -1,12 +1,12 @@
-import { QrCode } from '@mui/icons-material';
+import { QrCode, SettingsBackupRestoreOutlined } from '@mui/icons-material';
 import {
   Avatar,
   Box,
   IconButton,
   Tooltip as MuiTooltip,
+  Tooltip,
   Typography,
 } from '@mui/material';
-import QRCode from 'qrcode';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -26,35 +26,7 @@ export default function SelectedMemberReport() {
   const trainerDayViewContext = useTrainerDayView();
   const { component, training, selectedAthlete } = trainerDayViewContext;
 
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [qrOpen, setQrOpen] = useState(false);
-
   if (!selectedAthlete) return null;
-
-  async function generateQRCode(userId: string) {
-    if (!training || !component) {
-      return toast.error('Select training component');
-    }
-
-    try {
-      const { link } = await TrainingController.getInstance().generateQRCode(
-        training.id,
-        component.id,
-        userId
-      );
-
-      await navigator.clipboard.writeText(link);
-      const qr = await QRCode.toDataURL(link);
-
-      setQrDataUrl(qr);
-      setQrOpen(true);
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to generate QR code');
-    }
-  }
-
-  const qrCodeSize = screenSize.isMobile ? 200 : 500;
 
   return (
     <Box
@@ -65,15 +37,9 @@ export default function SelectedMemberReport() {
       position="relative"
       gap={1}
       my={screenSize.isMobile ? 1 : 0}
-      flexDirection={screenSize.isMobile ? 'column' : 'row'}
+      //flexDirection={screenSize.isMobile ? 'column' : 'row'}
     >
-      <Box width={screenSize.isMobile ? '100%' : `${100 / 3}%`} display="flex">
-        {training && component && (
-          <IconButton onClick={() => generateQRCode(selectedAthlete.uid)}>
-            <QrCode sx={{ fontSize: 30, mx: 'auto' }} />
-          </IconButton>
-        )}
-      </Box>
+      <Box width={screenSize.isMobile ? '100%' : `${100 / 3}%`} />
 
       <Box
         width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
@@ -115,6 +81,7 @@ export default function SelectedMemberReport() {
 
         <Typography
           fontSize={16}
+          textAlign="center"
         >{`Weight: ${weight !== undefined ? weight.toString() + 'kg' : 'N/A'}`}</Typography>
 
         <Typography fontSize={16} textAlign="center">
@@ -126,22 +93,6 @@ export default function SelectedMemberReport() {
         width={screenSize.isMobile ? '100%' : `${100 / 3}%`}
         textAlign="center"
       />
-
-      <MyModal
-        isOpen={qrOpen}
-        onCancel={() => setQrOpen(false)}
-        setIsOpen={(open) => setQrOpen(open)}
-      >
-        <Box p={2} display="flex" flexDirection="column" alignItems="center">
-          {qrDataUrl && (
-            <img
-              src={qrDataUrl}
-              alt="QR Code"
-              style={{ width: qrCodeSize, height: qrCodeSize }}
-            />
-          )}
-        </Box>
-      </MyModal>
     </Box>
   );
 }

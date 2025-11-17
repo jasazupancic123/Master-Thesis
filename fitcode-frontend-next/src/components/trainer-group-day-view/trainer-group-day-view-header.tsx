@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
@@ -15,6 +15,10 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import HorizontalItemsList from '@/ui/horizontal-items-list';
+import { QrCode, SettingsBackupRestoreOutlined } from '@mui/icons-material';
+import MyModal from '@/ui/modal';
+import { core } from '@/core/core.service';
+import useQRCode from './hooks/use-qr-code';
 
 dayjs.extend(weekOfYear);
 
@@ -37,13 +41,22 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
   } = useGroup();
 
   const {
+    training,
+    component,
     day,
     setDay,
     selectedPeriod,
     setSelectedPeriod,
     selectedAthlete,
     setSelectedExerciseIds,
+    setSelectedAthlete,
+    setSelectedSubgroup,
+    setComponent,
+    setTraining,
   } = useTrainerDayView();
+
+  const { qrDataUrl, qrOpen, setQrOpen, generateQRCode, qrCodeSize } =
+    useQRCode();
 
   // const { isSticky } = useTrainerDayViewHeaderSticky();
   const isSticky = false;
@@ -177,9 +190,35 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
             width="100%"
             height={DIVIDER_HEIGHT}
             justifyContent="space-around"
-            alignItems="flex-start"
+            alignItems="center"
           >
-            <Box width="25%"></Box>
+            <Box
+              width="25%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              flexDirection="column"
+            >
+              {training && component && (
+                <>
+                  <Tooltip title="Generate QR Code" placement="left">
+                    <IconButton
+                      onClick={() => generateQRCode(selectedAthlete.uid)}
+                    >
+                      <QrCode sx={{ fontSize: 30, mx: 'auto' }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip
+                    title="Reset training to group default"
+                    placement="left"
+                  >
+                    <IconButton onClick={() => {}}>
+                      <SettingsBackupRestoreOutlined />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+            </Box>
             <Box
               width="50%"
               display="flex"
@@ -228,8 +267,65 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
             justifyContent="space-around"
             alignItems="flex-start"
           >
-            <Box width="25%">
+            <Box
+              width="25%"
+              height="100%"
+              display="flex"
+              justifyContent="space-between"
+            >
               <PeriodSelect />
+              <Box
+                width="25%"
+                height="100%"
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                flexDirection="column"
+              >
+                {training && component && selectedAthlete && (
+                  <>
+                    <Tooltip title="Generate QR Code" placement="left">
+                      <IconButton
+                        onClick={() => generateQRCode(selectedAthlete.uid)}
+                      >
+                        <QrCode sx={{ fontSize: 30, mx: 'auto' }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip
+                      title="Reset athlete's training to group default"
+                      placement="left"
+                    >
+                      <IconButton
+                        onClick={() => {
+                          const updatedComponent =
+                            core.training.subgroup.deleteVirtual(
+                              selectedAthlete.uid,
+                              structuredClone(component)
+                            );
+
+                          setSelectedAthlete(undefined);
+                          setSelectedSubgroup(null);
+                          setComponent(updatedComponent);
+                          setTraining((prev) =>
+                            !prev
+                              ? undefined
+                              : {
+                                  ...prev,
+                                  components: prev.components.map((c) =>
+                                    c.id === updatedComponent.id
+                                      ? updatedComponent
+                                      : c
+                                  ),
+                                }
+                          );
+                        }}
+                      >
+                        <SettingsBackupRestoreOutlined />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+              </Box>
             </Box>
             <Box
               width="50%"
@@ -268,6 +364,21 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
           )}
         </Box>
       )}
+      <MyModal
+        isOpen={qrOpen}
+        onCancel={() => setQrOpen(false)}
+        setIsOpen={(open) => setQrOpen(open)}
+      >
+        <Box p={2} display="flex" flexDirection="column" alignItems="center">
+          {qrDataUrl && (
+            <img
+              src={qrDataUrl}
+              alt="QR Code"
+              style={{ width: qrCodeSize, height: qrCodeSize }}
+            />
+          )}
+        </Box>
+      </MyModal>
     </Box>
   );
 }

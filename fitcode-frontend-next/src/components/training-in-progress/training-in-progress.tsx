@@ -1,5 +1,5 @@
 import { Circle } from '@mui/icons-material';
-import { Box, LinearProgress, Typography } from '@mui/material';
+import { Box, Divider, LinearProgress, Typography } from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
@@ -205,6 +205,8 @@ export default function TrainingInProgress() {
             }}
           >
             {(trainingInProgress.supersets || []).map((superset, i) => {
+              if (!superset.exercises.length) return null;
+
               const isSelected = supersetIndex === i; // <- key change
 
               return (
@@ -220,6 +222,7 @@ export default function TrainingInProgress() {
                     fontSize={14}
                     fontWeight={isSelected ? 600 : undefined}
                     textAlign="center"
+                    lineHeight={1}
                     noWrap
                     sx={{
                       flex: '0 0 auto',
@@ -241,6 +244,16 @@ export default function TrainingInProgress() {
                     )}
                     Block {i + 1}
                   </Typography>
+
+                  <Box
+                    sx={{
+                      width: '95%',
+                      height: '1px',
+                      backgroundColor: isSelected
+                        ? theme.palette.primary.main
+                        : 'transparent',
+                    }}
+                  />
 
                   <Box display="flex" justifyContent="center" gap={0.5}>
                     {superset.exercises.map((e) => {

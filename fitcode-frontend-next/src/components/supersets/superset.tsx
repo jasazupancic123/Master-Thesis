@@ -5,6 +5,7 @@ import { rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import {
+  alpha,
   Box,
   Grid2,
   Stack,
@@ -101,11 +102,11 @@ export default function Superset({ superset, supersetIndex }: Props) {
               ? '1.1px'
               : '1px',
           borderRadius: '5px',
-          background: superset.warmup
-            ? theme.palette.warning.light
-            : superset.cooldown
-              ? theme.palette.success.light
-              : lib.common.component.getBorderGradient(theme),
+          border: `1px solid ${
+            superset.warmup || superset.cooldown
+              ? alpha(theme.palette.text.primary, 0.5)
+              : alpha(theme.palette.primary.main, 0.75)
+          }`,
           position: 'relative',
           zIndex: 100,
         }}
