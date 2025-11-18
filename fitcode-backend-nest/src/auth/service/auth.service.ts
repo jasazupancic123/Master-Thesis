@@ -155,8 +155,12 @@ export class AuthService {
       ),
     );
 
+    const filtered = filter?.role
+      ? users.filter((u) => this.firebase.checkRole(u, filter.role))
+      : users;
+
     // some users can be in multiple institutions, so we need to filter out duplicates
-    const uniqueUsers = users.filter(
+    const uniqueUsers = filtered.filter(
       (u, index, self) => index === self.findIndex((t) => t.uid === u.uid),
     );
 

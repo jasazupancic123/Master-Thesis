@@ -55,7 +55,14 @@ describe('Find Profiles (e2e)', () => {
     const profileIds = await Promise.all(
       users
         .filter((_, i) => i < 5)
-        .map((user) => db.profiles.save({ uid: user.uid, email: user.email })),
+        .map((user) =>
+          db.profiles.save({
+            uid: user.uid,
+            email: user.email,
+            height: 0,
+            weight: 0,
+          }),
+        ),
     );
 
     const profilesBefore = (await db.profiles.findAll()).filter((p) =>

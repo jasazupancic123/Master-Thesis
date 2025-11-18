@@ -29,6 +29,12 @@ export class Wellness {
 
   @IsOptional()
   @IsNumber()
+  @Expose()
+  @ApiPropertyOptional()
+  height?: number;
+
+  @IsOptional()
+  @IsNumber()
   @ApiPropertyOptional()
   @Expose()
   sleep?: number;

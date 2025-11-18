@@ -233,6 +233,8 @@ export class DataSetup extends BaseSetup {
         await userRepository.save({
           uid: user.uid,
           email: user.email,
+          height: 0,
+          weight: 0,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
