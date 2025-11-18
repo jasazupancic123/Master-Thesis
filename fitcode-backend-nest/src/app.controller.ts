@@ -1,5 +1,6 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { config } from 'dotenv';
 
 import { AppService } from './app.service';
 import { AuthService } from './auth/service/auth.service';
@@ -7,6 +8,7 @@ import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
 import { User } from './common/type/firebase-auth.type';
 import { measureAsync } from './common/utils/time.util';
+import { NodeEnv } from './config/environment-validation-schema';
 import { ExerciseService } from './exercise/service/exercise.service';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
 import { GroupService } from './group/group.service';
@@ -38,9 +40,15 @@ export class AppController {
   /**
    * Warmup handler for App Engine to keep instances warm.
    */
-  @Get('_ah/start')
+  @Get('_ah/warmup')
   warmup(): void {
-    this.logger.log('Starting instance ...');
+    const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
+    this.logger.log(`Warming up instance ... (${nodeEnv})`);
+    console.log('ENV:', process.env);
+
+    if (!['staging'].includes(nodeEnv))
+      // in production and staging, the environment variables are set in other ways
+      config({ quiet: true, path: `.env.${nodeEnv}` });
   }
 
   @Auth()

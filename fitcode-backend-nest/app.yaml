@@ -1,5 +1,13 @@
 runtime: nodejs20
+
 env: standard
-entrypoint: NODE_ENV=production && node dist/main
-manual_scaling:
-  instances: 1
+instance_class: F4
+
+inbound_services:
+  - warmup
+
+automatic_scaling:
+  min_instances: 1
+  min_idle_instances: 1
+  max_instances: 2
+  target_cpu_utilization: 0.65
