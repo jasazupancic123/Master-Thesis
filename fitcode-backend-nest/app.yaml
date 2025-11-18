@@ -1,4 +1,5 @@
 runtime: nodejs20
 env: standard
+entrypoint: NODE_ENV=production && node dist/main
 manual_scaling:
   instances: 1
