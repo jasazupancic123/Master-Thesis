@@ -15,7 +15,7 @@ import {
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { updateReportInIndexDb } from './actions/index-db';
+import { updateReportInIndexDb } from './actions/actions-index-db';
 import useAthleteExerciseReportAthletes from './hooks/useAthletes';
 import useAthleteExerciseReportData from './hooks/useData';
 import useAthleteExerciseReportExercises from './hooks/useExercises';
@@ -25,6 +25,7 @@ import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   id: string;
@@ -37,6 +38,8 @@ interface Props {
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
+  const { selectedInstitution } = useDashboard();
+
   const {
     id,
     reportType,
@@ -194,7 +197,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                     <MenuItem
                       key={athlete.uid}
                       onClick={async () => {
-                        if (!selectedExercise) return;
+                        if (!selectedExercise || !selectedInstitution) return;
 
                         if (reportType === 'comparison') {
                           const isAlreadySelected = selectedAthletes.some(
@@ -217,6 +220,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise.id,
+                            institutionId: selectedInstitution.id,
                             userIds: newAthletes.map((a) => a.uid),
                           };
 
@@ -227,6 +231,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise.id,
+                            institutionId: selectedInstitution.id,
                             userId: athlete.uid,
                           };
 
