@@ -223,7 +223,7 @@ export class TrainingService implements Permission<Training, Institution> {
       user,
       institutionId,
       { from: subDays(new Date(), 7), to: endOfDay(new Date()) },
-      { limit: 10 },
+      { limit: 100 },
     );
 
     const workloads = await this.workloadService.findAllByUserTrainingIds(
