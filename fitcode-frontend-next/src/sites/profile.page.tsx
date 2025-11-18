@@ -55,6 +55,8 @@ export default function ProfilePage() {
   >({
     uid: user.uid,
     email: user.email!,
+    height: profileGlobal?.height || 0,
+    weight: profileGlobal?.weight || 0,
     sport: profileGlobal?.sport,
     level: profileGlobal?.level,
     gender: profileGlobal?.gender,
