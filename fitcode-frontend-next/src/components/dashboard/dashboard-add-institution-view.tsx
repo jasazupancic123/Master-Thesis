@@ -19,10 +19,10 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 
 export default function AddInstitutionDashboard() {
-  const { users } = useMain();
+  const { users, setUsers } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { setInstitutions, setUsers } = useDashboard();
+  const { setInstitutions } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

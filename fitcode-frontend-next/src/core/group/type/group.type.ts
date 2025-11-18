@@ -12,6 +12,7 @@ export type Group = BaseEntity & {
   events?: GroupEvent[];
 
   // mapped properties
+  trainers?: AuthUser[];
   members?: AuthUser[];
 };
 

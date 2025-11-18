@@ -15,7 +15,7 @@ export default function DashboardPageContainer(props: Props) {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      sx={{ py: 1, ...sx }}
+      sx={{ py: 1, ...sx, pb: 6 }}
       gap={2}
     >
       {children}
