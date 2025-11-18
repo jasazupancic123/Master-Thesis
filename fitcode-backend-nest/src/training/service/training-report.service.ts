@@ -29,9 +29,17 @@ export class TrainingReportService {
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     );
 
-    const prescribed = this.getPrescribedTrainingStats(training);
     const from = new Date(workloads[0]?.timestamp) || new Date();
     const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
+
+    // filter out warmup and cooldown
+    workloads = workloads.filter(
+      (w) => w.componentId !== 'warmup' && w.componentId !== 'cooldown',
+    );
+
+    const prescribed = this.getPrescribedTrainingStats(training, {
+      excludeWarmupCooldown: true,
+    });
 
     const components = new Set(workloads.map((w) => w.componentId));
     const exercises = new Set(workloads.map((w) => w.exerciseId));
@@ -131,7 +139,10 @@ export class TrainingReportService {
     return report;
   }
 
-  getPrescribedTrainingStats(training: Training): PrescribedTrainingStats {
+  getPrescribedTrainingStats(
+    training: Training,
+    options?: { excludeWarmupCooldown?: boolean },
+  ): PrescribedTrainingStats {
     const stats: PrescribedTrainingStats = {
       realization: 100,
       components: 0,
@@ -147,8 +158,10 @@ export class TrainingReportService {
     };
 
     for (const component of training.components) {
-      const componentStats =
-        this.getPrescribedTrainingComponentStats(component);
+      const componentStats = this.getPrescribedTrainingComponentStats(
+        component,
+        options,
+      );
 
       stats.components += 1;
       stats.exercises += componentStats.exercises;
@@ -167,6 +180,7 @@ export class TrainingReportService {
 
   getPrescribedTrainingComponentStats(
     component: TrainingComponent,
+    options?: { excludeWarmupCooldown?: boolean },
   ): PrescribedTrainingComponentStats {
     const stats: PrescribedTrainingComponentStats = {
       realization: 100,
@@ -182,7 +196,13 @@ export class TrainingReportService {
       recDist: 0,
     };
 
-    for (const superset of component.supersets)
+    for (const superset of component.supersets) {
+      if (
+        options?.excludeWarmupCooldown &&
+        (superset.warmup || superset.cooldown)
+      )
+        continue;
+
       for (const exercise of superset.exercises) {
         stats.exercises += 1;
 
@@ -199,6 +219,7 @@ export class TrainingReportService {
           if (setReport.recDist) stats.recDist += setReport.recDist;
         }
       }
+    }
 
     return stats;
   }
