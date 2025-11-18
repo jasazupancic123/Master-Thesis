@@ -59,11 +59,13 @@ export default function ExercisesList({
           id={`exercise-${exercise.id}`}
           key={exercise.id}
           width={
-            screenSize.isUltraSmall
-              ? '100%'
-              : screenSize.isSmallMobile
-                ? '45%'
-                : '40%'
+            !screenSize.isTablet && !screenSize.isMobile
+              ? `${100 / Math.max(3, Math.min(exercises.length, 5)) - 2}%`
+              : screenSize.isUltraSmall && addExerciseForm
+                ? '100%'
+                : screenSize.isSmallMobile && addExerciseForm
+                  ? '45%'
+                  : '40%'
           }
           sx={{
             cursor: 'pointer',

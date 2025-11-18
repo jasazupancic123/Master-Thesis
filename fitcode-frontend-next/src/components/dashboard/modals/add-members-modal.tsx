@@ -19,6 +19,7 @@ import { SearchBar } from '@/ui/search-bar/search-bar';
 interface Props extends ModalProps {
   title?: string;
   placeholder?: string;
+  addTrainers?: boolean;
   group: Group | null;
   users: AuthUser[];
   disableMaxWidth?: boolean;
@@ -29,6 +30,7 @@ interface Props extends ModalProps {
 export function AddMembersModal({
   group,
   users,
+  addTrainers,
   title,
   placeholder,
   disableMaxWidth,
@@ -37,12 +39,14 @@ export function AddMembersModal({
   open,
   setOpen,
 }: Props) {
-  const { addGroupMember, removeGroupMember } = useDashboard();
+  const { addGroupMember, removeGroupMember, updateGroup } = useDashboard();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[] | null>(null);
 
   const isUserIncluded = (user: AuthUser) => {
+    if (addTrainers) return group?.trainerIds.includes(user.uid);
+
     return group?.membersIds.includes(user.uid);
   };
 
@@ -150,7 +154,16 @@ export function AddMembersModal({
                         onClick={async () => {
                           if (!group) return;
 
-                          await removeGroupMember(user.uid, group.id);
+                          if (addTrainers) {
+                            const updatedGroup: Group = {
+                              ...group,
+                              trainerIds: group.trainerIds.filter(
+                                (id) => id !== user.uid
+                              ),
+                            };
+
+                            await updateGroup(updatedGroup.id, updatedGroup);
+                          } else await removeGroupMember(user.uid, group.id);
                         }}
                       >
                         <Typography variant="body2" color="white">
@@ -167,9 +180,17 @@ export function AddMembersModal({
                             backgroundColor: theme.palette.primary.dark,
                           },
                         }}
-                        onClick={() => {
+                        onClick={async () => {
                           if (!group) return;
-                          addGroupMember(user, group.id);
+
+                          if (addTrainers) {
+                            const updatedGroup: Group = {
+                              ...group,
+                              trainerIds: [group.trainerIds, user.uid].flat(),
+                            };
+
+                            await updateGroup(updatedGroup.id, updatedGroup);
+                          } else await addGroupMember(user, group.id);
                         }}
                       >
                         <Typography

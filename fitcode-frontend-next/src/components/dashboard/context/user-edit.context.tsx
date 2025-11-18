@@ -1,10 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -24,7 +25,11 @@ interface IDashboardUserEditCtx {
   setCurrentUsers: SetState<AuthUser[]>;
   onHoverUser: (user: AuthUser | null) => void;
   toggleUser: (user: AuthUser | null) => void;
-  updateUserProfile: () => Promise<void>;
+  updateUserProfile: (options?: {
+    force?: boolean;
+    passedUser?: AuthUser | null;
+    passedProfile?: Profile | undefined;
+  }) => Promise<void>;
   onProfileChange: <K extends keyof Profile>(key: K, value: Profile[K]) => void;
   onUserChange: <K extends keyof AuthUser>(key: K, value: AuthUser[K]) => void;
 }
@@ -38,8 +43,8 @@ export const useDashboardUserEdit = () => useContext(DashboardUserEditContext)!;
 export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
-  const { profiles, setProfiles } = useMain();
-  const { setUsers, setSelectedInstitution } = useDashboard();
+  const { profiles, setProfiles, users, setUsers, setGroups } = useMain();
+  const { setSelectedInstitution } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<AuthUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<AuthUser | null>(null);
@@ -48,6 +53,13 @@ export function DashboardUserEditProvider({
   const [isEditedUser, setIsEditedUser] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([]);
   const [currentUsers, setCurrentUsers] = useState<AuthUser[]>([]);
+
+  useEffect(() => {
+    if (!userToEdit) return;
+
+    const newUserToEdit = users.find((u) => u.uid === userToEdit.uid) || null;
+    setUserToEdit(newUserToEdit);
+  }, [users]);
 
   function onHoverUser(user: AuthUser | null) {
     setHoveredUser(user);
@@ -61,50 +73,70 @@ export function DashboardUserEditProvider({
       setProfileToEdit(undefined);
     } else {
       const profile = profiles.find((m) => m.uid === user.uid);
-      setUserToEdit(user);
+      setUserToEdit(structuredClone(user));
       setProfileToEdit(profile);
     }
   }
 
-  async function updateUserProfile() {
-    if ((!isEditedProfile || !profileToEdit) && (!userToEdit || !isEditedUser))
+  async function updateUserProfile(options?: {
+    force?: boolean;
+    passedUser?: AuthUser | null;
+    passedProfile?: Profile | undefined;
+  }) {
+    const { force, passedUser, passedProfile } = options || {};
+
+    const finalUserToEdit = passedUser || userToEdit;
+    const finalProfileToEdit = passedProfile || profileToEdit;
+
+    if (
+      !force &&
+      (!finalProfileToEdit || !isEditedProfile) &&
+      (!finalUserToEdit || !isEditedUser)
+    )
       return;
 
     try {
-      if (profileToEdit && isEditedProfile)
+      if (finalProfileToEdit && (isEditedProfile || force)) {
         await ProfileController.getInstance().update({
-          photoURLBase64: profileToEdit.photoURLBase64,
-          level: profileToEdit.level,
-          sport: profileToEdit.sport,
-          birthDate: profileToEdit.birthDate,
-          gender: profileToEdit.gender,
-          userId: profileToEdit.uid,
+          photoURLBase64: finalProfileToEdit.photoURLBase64,
+          level: finalProfileToEdit.level,
+          sport: finalProfileToEdit.sport,
+          birthDate: finalProfileToEdit.birthDate,
+          gender: finalProfileToEdit.gender,
+          userId: finalProfileToEdit.uid,
         });
+      }
 
-      if (userToEdit && isEditedUser)
-        await AuthController.getInstance().updateUser(userToEdit.uid, {
-          displayName: userToEdit.displayName,
-          photoURL: userToEdit.photoURL,
+      if (finalUserToEdit && (isEditedUser || force)) {
+        await AuthController.getInstance().updateUser(finalUserToEdit.uid, {
+          displayName: finalUserToEdit.displayName,
+          photoURL: finalUserToEdit.photoURL,
         });
+      }
 
       function mapUsers(users?: AuthUser[]) {
         if (!users) return [];
         return users.map((user) =>
-          user.uid === userToEdit?.uid ? userToEdit : user
+          user.uid === finalUserToEdit?.uid ? finalUserToEdit : user
         );
       }
 
       function mapProfiles(profiles?: Profile[]) {
         if (!profiles) return [];
         return profiles.map((p) =>
-          p.uid === profileToEdit?.uid ? profileToEdit : p
+          p.uid === finalProfileToEdit?.uid ? finalProfileToEdit : p
         );
       }
 
+      const mappedUsers = mapUsers(users);
       setUsers(mapUsers);
       setProfiles(mapProfiles);
       setFilteredUsers(mapUsers);
       setCurrentUsers(mapUsers);
+
+      setGroups((prev) =>
+        prev.map((g) => core.group.mapMembers(g, mappedUsers))
+      );
 
       setSelectedInstitution((prev) =>
         !prev
@@ -113,6 +145,9 @@ export function DashboardUserEditProvider({
               ...prev,
               athletes: mapUsers(prev.athletes),
               trainers: mapUsers(prev.trainers),
+              groups: prev.groups.map((group) =>
+                core.group.mapMembers(group, mappedUsers)
+              ),
             }
       );
 

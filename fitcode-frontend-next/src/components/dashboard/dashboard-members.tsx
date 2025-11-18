@@ -20,9 +20,8 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 
 export default function DashboardMembers() {
-  const screenSize = useScreenSize();
-
   const { groups } = useMain();
+  const screenSize = useScreenSize();
 
   const [filter, setFilter] = useState<DashboardMembersFilter>(
     DashboardMembersFilter.GROUP
