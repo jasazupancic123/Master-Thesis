@@ -1,4 +1,9 @@
 import {
+  Groups,
+  KeyboardArrowDownOutlined,
+  KeyboardArrowUpOutlined,
+} from '@mui/icons-material';
+import {
   alpha,
   Avatar,
   Box,
@@ -7,24 +12,19 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-
-import type { Workload } from '@/core/training/type/workload.type';
-import {
-  Groups,
-  KeyboardArrowDownOutlined,
-  KeyboardArrowUpOutlined,
-} from '@mui/icons-material';
-import { theme } from '@/app/style';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import useAthleteExerciseReportExercises from './hooks/useExercises';
-import useAthleteExerciseReportAthletes from './hooks/useAthletes';
-import useAthleteExerciseReportData from './hooks/useData';
-import { SetState } from '@/lib/common/type/state.type';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
+
 import { updateReportInIndexDb } from './actions/index-db';
+import useAthleteExerciseReportAthletes from './hooks/useAthletes';
+import useAthleteExerciseReportData from './hooks/useData';
+import useAthleteExerciseReportExercises from './hooks/useExercises';
+import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
+import { theme } from '@/app/style';
+import type { Workload } from '@/core/training/type/workload.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import type { SetState } from '@/lib/common/type/state.type';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 interface Props {
   id: string;

@@ -1,7 +1,8 @@
-import { AuthUser } from '@/core/auth/type/user.type';
+import { useMemo, useState } from 'react';
+
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { useMemo, useState } from 'react';
 
 export default function useAthleteExerciseReportAthletes(
   passedUserId?: string,

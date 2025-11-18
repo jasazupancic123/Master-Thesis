@@ -1,3 +1,4 @@
+import { Clear } from '@mui/icons-material';
 import { IconButton, type SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -9,8 +10,6 @@ import { useDropzone } from 'react-dropzone';
 
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Clear } from '@mui/icons-material';
 
 interface Props extends Partial<React.PropsWithChildren> {
   label: string;

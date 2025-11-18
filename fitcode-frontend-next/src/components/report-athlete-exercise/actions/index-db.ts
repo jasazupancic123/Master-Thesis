@@ -1,6 +1,6 @@
-import { lib } from '@/lib';
-import { IndexDbAthleteExerciseReport } from '../types/index-db-athlete-exercise-report';
 import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from '../const/index-db-id.const';
+import type { IndexDbAthleteExerciseReport } from '../types/index-db-athlete-exercise-report';
+import { lib } from '@/lib';
 
 export async function updateReportInIndexDb(
   item: IndexDbAthleteExerciseReport

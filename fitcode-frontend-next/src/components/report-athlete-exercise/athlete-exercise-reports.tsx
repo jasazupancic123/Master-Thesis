@@ -1,16 +1,7 @@
-import { Fragment, JSX, useEffect, useState } from 'react';
-import AthleteExerciseReport from './athlete-exercise-report';
-import { Workload } from '@/core/training/type/workload.type';
-import { Box, IconButton } from '@mui/material';
-import AddButton from '@/ui/add-button';
-import { v4 } from 'uuid';
-import { GridView, ViewWeek } from '@mui/icons-material';
-import { theme } from '@/app/style';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
   closestCenter,
   DndContext,
-  DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -20,9 +11,20 @@ import {
   rectSortingStrategy,
   SortableContext,
 } from '@dnd-kit/sortable';
-import { lib } from '@/lib';
+import { GridView, ViewWeek } from '@mui/icons-material';
+import { Box, IconButton } from '@mui/material';
+import type { JSX } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { v4 } from 'uuid';
+
+import AthleteExerciseReport from './athlete-exercise-report';
 import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from './const/index-db-id.const';
-import { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
+import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
+import { theme } from '@/app/style';
+import type { Workload } from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import AddButton from '@/ui/add-button';
 
 interface Props {
   cache: Map<string, Workload[]>;

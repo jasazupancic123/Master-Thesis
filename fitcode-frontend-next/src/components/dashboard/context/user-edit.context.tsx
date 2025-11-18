@@ -5,13 +5,12 @@ import { toast } from 'react-hot-toast';
 
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { GroupController } from '@/core/group/group.controller';
-import { core } from '@/core/core.service';
 
 interface IDashboardUserEditCtx {
   // getters
@@ -96,13 +95,6 @@ export function DashboardUserEditProvider({
     )
       return;
 
-    console.log(
-      finalProfileToEdit,
-      finalUserToEdit,
-      isEditedProfile,
-      isEditedUser
-    );
-
     try {
       if (finalProfileToEdit && (isEditedProfile || force)) {
         await ProfileController.getInstance().update({
@@ -181,8 +173,6 @@ export function DashboardUserEditProvider({
   }
 
   function onUserChange<K extends keyof AuthUser>(key: K, value: AuthUser[K]) {
-    console.log('onUserChange', key, value, userToEdit);
-
     if (!userToEdit) return;
     const newUser: AuthUser = { ...userToEdit, [key]: value };
 
