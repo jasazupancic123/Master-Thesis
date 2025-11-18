@@ -73,6 +73,7 @@ export function DashboardUserEditProvider({
     try {
       if (profileToEdit && isEditedProfile)
         await ProfileController.getInstance().update({
+          photoURLBase64: profileToEdit.photoURLBase64,
           level: profileToEdit.level,
           sport: profileToEdit.sport,
           birthDate: profileToEdit.birthDate,

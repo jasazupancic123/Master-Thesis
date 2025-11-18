@@ -115,8 +115,6 @@ export default function GroupsDataGrid({
     const oldRow = rows.find((r) => r.id === newRow.id);
     if (!oldRow) return newRow;
 
-    newRow.trainerIds = [newRow.trainerIds];
-
     setRows((prev) =>
       prev.map((r) => (r.id === newRow.id ? (newRow as Group) : r))
     );
@@ -191,8 +189,7 @@ export default function GroupsDataGrid({
       headerName: 'Trainers',
       flex: 1,
       minWidth: 150,
-      editable: true,
-      type: 'singleSelect',
+      editable: false,
       valueOptions: (institution.trainers || []).map((t) => ({
         value: t.uid,
         label: t.displayName,

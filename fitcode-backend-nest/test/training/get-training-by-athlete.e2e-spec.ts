@@ -5,7 +5,6 @@ import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/group/entity/group.entity';
-import type { Wellness } from '@src/profile/entity/wellness.entity';
 import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
@@ -342,30 +341,7 @@ describe('Get Training By Athlete (e2e)', () => {
   });
 
   it('should populate weight for exercises with bodyweight param', async () => {
-    const wellnessRefToday = { uid: global.athlete.uid, date: new Date() };
-    const wellnessRefYesterday = {
-      ...wellnessRefToday,
-      date: subDays(new Date(), 2),
-    };
-
-    // it should use this weight since it is more recent
-    await db.wellness.save(
-      {
-        userId: global.athlete.uid,
-        date: wellnessRefToday.date,
-        weight: 85,
-      },
-      wellnessRefToday,
-    );
-
-    await db.wellness.save(
-      {
-        userId: global.athlete.uid,
-        date: wellnessRefYesterday.date,
-        weight: 60,
-      },
-      wellnessRefYesterday,
-    );
+    await db.profiles.update(global.athlete.uid, { weight: 85 });
 
     const trainingId = await db.trainings.save(
       generateTrainingStub({
@@ -429,18 +405,12 @@ describe('Get Training By Athlete (e2e)', () => {
       expect(+set.loadBw).toBe(65);
     });
 
-    const spy = jest.spyOn(wellnessService, 'getLastBodyweight');
-
     // insert wellness weight for athlete
     // const response = await req(global.athlete, trainingId);
     const trainingAfter = await trainingService.getTrainingByAthlete(
       global.athlete.uid,
       trainingBefore,
     );
-
-    const spyResult = (await spy.mock.results[0].value) as Wellness;
-    expect(spyResult).toBe(85);
-    spy.mockRestore();
 
     deadlift = findExercise(trainingAfter, 'deadlift');
     bench = findExercise(trainingAfter, 'bench');
@@ -459,8 +429,6 @@ describe('Get Training By Athlete (e2e)', () => {
 
     // clear up
     await db.trainings.delete(trainingId);
-    await db.wellness.delete(wellnessRefToday);
-    await db.wellness.delete(wellnessRefYesterday);
   });
 
   it('should not call "getLatestWellnessByUser" if no bodyweight param', async () => {

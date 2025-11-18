@@ -5,6 +5,8 @@ export class ProfileUtil {
   userToProfile(user: AuthUser): Profile {
     return {
       uid: user.uid,
+      height: 0,
+      weight: 0,
       email: user.email!,
       createdAt: new Date(),
       updatedAt: new Date(),
