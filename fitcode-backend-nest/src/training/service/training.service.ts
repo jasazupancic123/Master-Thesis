@@ -36,6 +36,7 @@ import {
   SubgroupRef,
   TrainingComponentRef,
   TrainingComponentUserStatusRef,
+  TrainingProtocolRef,
   TrainingRef,
   UserRef,
   WorkloadRef,
@@ -58,7 +59,7 @@ import { Institution } from '@src/institution/entity/institution.entity';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { WellnessService } from '@src/profile/service/wellness.service';
+import { ProfileService } from '@src/profile/service/profile.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
@@ -70,9 +71,14 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
+import {
+  CreateTrainingProtocolDto,
+  TrainingProtocol,
+} from '../entity/training-protocol.entity';
 import { CreateWorkload, Workload } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { TrainingStatus } from '../enum/training-status.enum';
@@ -99,7 +105,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly repository: TrainingRepository,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly periodizationService: PeriodizationService,
-    private readonly wellnessService: WellnessService,
+    private readonly profileService: ProfileService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
     private readonly groupService: GroupService,
@@ -336,6 +342,96 @@ export class TrainingService implements Permission<Training, Institution> {
     return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
   }
 
+  async createProtocol(
+    user: User,
+    institutionId: string,
+    input: CreateTrainingProtocolDto,
+  ): Promise<TrainingProtocol> {
+    await this.institutionService.checkCanEditProtocols(user, institutionId);
+
+    const component = Components.find((c) => c.field === input.componentId);
+    if (!component) throw new NotFoundException('Component not found');
+
+    const found = await this.institutionService.getProtocol(user, {
+      institutionId,
+      protocolId: this.common.string.slug(input.name),
+    });
+
+    if (found)
+      throw new ConflictException(
+        'Training protocol already exists, choose another name',
+      );
+
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercisesBySupersets(
+        input.supersets,
+      );
+
+    const supersets = this.trainingPlanService.validateSupersets(input, {
+      exercises,
+    });
+
+    const protocolId = await this.institutionService.createTrainingProtocol(
+      { institutionId },
+      {
+        id: null,
+        institutionId,
+        name: input.name,
+        componentId: input.componentId,
+        description: input.description,
+        supersets,
+      },
+    );
+
+    return {
+      id: protocolId,
+      institutionId,
+      name: input.name,
+      componentId: input.componentId,
+      description: input.description,
+      supersets,
+    };
+  }
+
+  async updateProtocol(
+    user: User,
+    ref: TrainingProtocolRef,
+    input: Partial<TrainingProtocol>,
+  ) {
+    await this.institutionService.checkCanEditProtocols(
+      user,
+      ref.institutionId,
+    );
+
+    let supersets: Superset[];
+    if (input.supersets) {
+      const exercises =
+        await this.trainingPlanService.getAllTrainingExercisesBySupersets(
+          input.supersets,
+        );
+
+      supersets = this.trainingPlanService.validateSupersets(
+        { supersets: input.supersets },
+        { exercises },
+      );
+    }
+
+    await this.institutionService.updateTrainingProtocol(ref, {
+      name: input.name,
+      description: input.description,
+      supersets,
+    });
+  }
+
+  async deleteProtocol(user: User, ref: TrainingProtocolRef) {
+    await this.institutionService.checkCanEditProtocols(
+      user,
+      ref.institutionId,
+    );
+
+    await this.institutionService.deleteTrainingProtocol(ref);
+  }
+
   @LogMethod()
   async update(
     user: User,
@@ -349,6 +445,8 @@ export class TrainingService implements Permission<Training, Institution> {
       await this.groupService.findOneByIdOrFail(user, { groupId });
       this.validateCanEdit(user, training, training.institution);
     }
+
+    this.validateIsDateInFuture(training.from);
 
     // if no components, delete training
     if (input.components.length === 0) {
@@ -422,6 +520,52 @@ export class TrainingService implements Permission<Training, Institution> {
       ref.componentId,
       input,
     );
+  }
+
+  @LogMethod()
+  async move(
+    user: User,
+    ref: TrainingRef,
+    input: DateRangeDto,
+  ): Promise<Training | null> {
+    const training = await this.findOneByIdOrFail(user, ref);
+    const _ref = {
+      ...ref,
+      institutionId: training.institutionId,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+    };
+
+    const group = await this.groupService.findOneByIdOrFail(user, _ref);
+    const cycle = this.groupService.findCycleOrFail(training.cycleId, group);
+
+    this.validateCanEdit(user, training, training.institution);
+    this.validateIsDateInFuture(training.from);
+    this.validateIsDateInFuture(input.from);
+    this.validateIsDateInCycle(input.from, cycle);
+    await this.validateOverlapAndMaxLimit(
+      user,
+      training.institutionId,
+      _ref,
+      input.from,
+      input.to,
+    );
+
+    // delete statuses
+    await this.trainingComponentUserStatusRepository.deleteAllByTraining(
+      ref.trainingId,
+    );
+
+    if (training.components.length === 0) return null;
+
+    // update training times
+    const result = await this.repository.moveTraining(training, input);
+    return {
+      ...training,
+      from: result.from,
+      to: result.to,
+      components: result.components,
+    };
   }
 
   @LogMethod()
@@ -714,6 +858,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
+    this.validateIsToday(training.from);
 
     const memberIds = await this.getMemberIdsForTrainingReport(
       user,
@@ -871,6 +1016,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async pauseComponent(user: User, ref: TrainingComponentRef): Promise<void> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
+    this.validateIsToday(training.from);
 
     const statusRef: TrainingComponentUserStatusRef = { ...ref, uid: user.uid };
     const status =
@@ -1071,8 +1217,10 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (!hasBwParamType) return;
 
-    const ref = { uid: athleteId };
-    const bw = await this.wellnessService.getLastBodyweight(ref);
+    const profile = await this.profileService.findOneById(athleteId);
+    if (!profile) return;
+
+    const bw = profile.weight;
     if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
@@ -1283,6 +1431,11 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private isInPast(date: Date, relativeDate = new Date()) {
     return isBefore(date, relativeDate.setHours(0, 0, 0, 0));
+  }
+
+  validateIsToday(date: Date) {
+    if (!isSameDay(date, new Date()))
+      throw new BadRequestException('Training is not scheduled for today');
   }
 
   validateCanView(user: User, training: Training, institution?: Institution) {

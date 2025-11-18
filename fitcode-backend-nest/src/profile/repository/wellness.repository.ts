@@ -109,21 +109,4 @@ export class WellnessRepository extends FirestoreRepository<
       this.firebase.serialize(doc.data() as FirestoreEntity<Wellness>),
     );
   }
-
-  /**
-   * Bodyweight can be empty in wellness entries, so we need to find the latest entry that has it set.
-   */
-  async getLastBodyweight(ref: UserRef): Promise<number | null> {
-    const snapshot = await this.collection(ref)
-      .where('weight', '>', 0)
-      .orderBy('date', 'desc')
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) return null;
-
-    return this.firebase.serialize(
-      snapshot.docs[0].data() as FirestoreEntity<Wellness>,
-    ).weight!;
-  }
 }

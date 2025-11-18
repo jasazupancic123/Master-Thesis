@@ -32,6 +32,7 @@ interface Props<T> {
   disableNoneChoice?: boolean;
   alignToStart?: boolean;
   selectSx?: SxProps<Theme>;
+  onCreateNew?: () => void;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -133,6 +134,19 @@ export default function SelectInput<T>(props: Props<T>) {
             }
           >
             {props.placeholder ? props.placeholder : <>None</>}
+          </MenuItem>
+        )}
+
+        {props.onCreateNew && (
+          <MenuItem
+            value="__create_new__"
+            sx={{ color: theme.palette.primary.main }}
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onCreateNew!();
+            }}
+          >
+            + Create new
           </MenuItem>
         )}
 

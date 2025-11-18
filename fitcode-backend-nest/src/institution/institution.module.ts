@@ -5,6 +5,7 @@ import { AuthModule } from '@src/auth/auth.module';
 import { InstitutionController } from './institution.controller';
 import { InstitutionRepository } from './repository/institution.repository';
 import { InstitutionMembersRepository } from './repository/institution-members.repository';
+import { ProtocolRepository } from './repository/protocol.repository';
 import { InstitutionService } from './service/institution.service';
 
 @Module({
@@ -13,6 +14,7 @@ import { InstitutionService } from './service/institution.service';
   providers: [
     InstitutionRepository,
     InstitutionMembersRepository,
+    ProtocolRepository,
     InstitutionService,
   ],
   exports: [InstitutionService],

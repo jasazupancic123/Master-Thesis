@@ -567,12 +567,7 @@ describe('Complete Next Set (e2e)', () => {
       }),
     );
 
-    const bwDate = subDays(new Date(), 3);
-    await db.wellness.save(
-      { userId: global.athlete.uid, date: bwDate, weight: 78.5 },
-      { uid: global.athlete.uid, date: bwDate },
-    );
-
+    await db.profiles.update(global.athlete.uid, { weight: 78.5 });
     await db.workloads.createMany([
       {
         trainingId,

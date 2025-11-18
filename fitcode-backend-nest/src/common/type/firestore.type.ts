@@ -61,6 +61,7 @@ export abstract class FirestoreRepository<Model extends object, Ref = string> {
 export type ComponentRef = { componentId: string };
 export type InstitutionRef = { institutionId: string };
 export type InstitutionMemberRef = InstitutionRef & UserRef;
+export type TrainingProtocolRef = InstitutionRef & { protocolId: string };
 export type MethodRef = { methodId: string };
 export type ExerciseRef = { exerciseId: string };
 
@@ -69,6 +70,7 @@ export type ProfileRef = UserRef;
 export type WellnessRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };
 export type CycleRef = GroupRef & { cycleId: string };
+
 export type TrainingRef = { trainingId: string };
 export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;

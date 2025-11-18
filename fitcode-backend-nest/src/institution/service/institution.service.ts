@@ -18,12 +18,14 @@ import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionMemberRef,
   InstitutionRef,
+  TrainingProtocolRef,
 } from '@src/common/type/firestore.type';
 import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Profile } from '@src/profile/entity/profile.entity';
 import { ProfileService } from '@src/profile/service/profile.service';
+import { TrainingProtocol } from '@src/training/entity/training-protocol.entity';
 
 import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
@@ -34,6 +36,7 @@ import { InstitutionMember } from '../entity/institution-member.entity';
 import { UpdateInstitutionAthleteEvent } from '../event/update-institution-athlete.event';
 import { InstitutionRepository } from '../repository/institution.repository';
 import { InstitutionMembersRepository } from '../repository/institution-members.repository';
+import { ProtocolRepository } from '../repository/protocol.repository';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {
@@ -46,6 +49,7 @@ export class InstitutionService implements Permission<Institution> {
     private readonly repository: InstitutionRepository,
     private readonly profileService: ProfileService,
     private readonly membersRepository: InstitutionMembersRepository,
+    private readonly protocolRepository: ProtocolRepository,
   ) {}
 
   async findById(ref: InstitutionRef): Promise<Institution | null> {
@@ -114,6 +118,73 @@ export class InstitutionService implements Permission<Institution> {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+  }
+
+  async checkCanEditProtocols(user: User, institutionId: string) {
+    const institution = await this.findByIdOrFail({ institutionId });
+
+    const isManagerAllowed =
+      this.firebase.isManager(user) && institution.ownerId === user.uid;
+
+    const isTrainerAllowed =
+      this.firebase.isTrainer(user) &&
+      institution.trainerIds.includes(user.uid);
+
+    if (!isManagerAllowed && !isTrainerAllowed)
+      throw new UnauthorizedException(
+        'You do not have permission to edit training protocols',
+      );
+  }
+
+  @LogMethod()
+  async getProtocols(
+    user: User,
+    ref: InstitutionRef,
+  ): Promise<TrainingProtocol[]> {
+    const institution = await this.findByIdOrFail(ref);
+
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException(
+        'You do not have permission to view training protocols',
+      );
+
+    return await this.protocolRepository.getAllByInstitution(ref);
+  }
+
+  async getProtocol(
+    user: User,
+    ref: TrainingProtocolRef,
+  ): Promise<TrainingProtocol> {
+    const institution = await this.findByIdOrFail(ref);
+
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException(
+        'You do not have permission to view this training protocol',
+      );
+
+    return await this.protocolRepository.findById(ref);
+  }
+
+  async createTrainingProtocol(
+    ref: InstitutionRef,
+    input: TrainingProtocol,
+  ): Promise<string> {
+    const { institutionId } = ref;
+    return await this.protocolRepository.save(
+      { ...input, institutionId },
+      { institutionId },
+    );
+  }
+
+  async updateTrainingProtocol(
+    ref: TrainingProtocolRef,
+    input: Partial<TrainingProtocol>,
+  ) {
+    await this.protocolRepository.update(ref, input);
+  }
+
+  async deleteTrainingProtocol(ref: TrainingProtocolRef) {
+    await this.protocolRepository.delete(ref);
   }
 
   @LogMethod()

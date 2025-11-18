@@ -23,6 +23,7 @@ import { ImportProfileDto } from '../dto/import-profiles.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { Profile } from '../entity/profile.entity';
 import { ProfileRepository } from '../repository/profile.repository';
+import { AuthProfileMerged } from '../type/auth-profile-merged.type';
 
 @Injectable()
 export class ProfileService implements Permission<Profile, Institution> {
@@ -71,6 +72,35 @@ export class ProfileService implements Permission<Profile, Institution> {
     }
   }
 
+  /**
+   * Returns all profiles the user has access to, merge with auth users.
+   */
+  async findAllMerged(user: User): Promise<AuthProfileMerged[]> {
+    const profiles = await this.findAll(user);
+    const authUsers = await this.firebase.authUsers({
+      ids: profiles.map((p) => p.uid),
+    });
+
+    return profiles
+      .map((profile) => {
+        const authUser = authUsers.find((u) => u.uid === profile.uid);
+        if (!authUser) return null;
+
+        return {
+          uid: profile.uid,
+          email: profile.email,
+          role: authUser.customClaims?.role?.[0],
+          faceEmbedding: [],
+          height: profile.height,
+          weight: profile.weight,
+          displayName: authUser.displayName || '',
+          photoURL: authUser.photoURL || '',
+          photoURLBase64: profile.photoURLBase64 || '',
+        };
+      })
+      .filter(Boolean);
+  }
+
   async findAllByInstitution(institution: Institution) {
     return await this.repository.findAllByInstitution(institution);
   }
@@ -110,6 +140,8 @@ export class ProfileService implements Permission<Profile, Institution> {
         data: this.firebase.buildCreateQuery<Profile>({
           uid: profile.uid,
           email: profile.email!,
+          height: 0,
+          weight: 0,
         }),
       }),
     );

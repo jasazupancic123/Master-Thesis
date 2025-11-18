@@ -1,6 +1,7 @@
-import { addMinutes } from 'date-fns';
+import { addMinutes, addSeconds } from 'date-fns';
 
 import type { TrainingComponent } from '../type/training-component.type';
+import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
@@ -48,5 +49,15 @@ export class TrainingComponentUtil {
 
   findMethodologies(componentId: string): Method[] {
     return Methods.filter((m) => m.componentId === componentId);
+  }
+
+  calculateEndDate(component: TrainingComponent): Date {
+    const duration = component.supersets
+      .flatMap((s) => s.exercises)
+      .reduce((total, e) => {
+        return total + (core.training.exercise.calculateDuration(e) || 0);
+      }, 0);
+
+    return addSeconds(new Date(component.from), duration);
   }
 }

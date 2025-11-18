@@ -50,4 +50,53 @@ export class TrainingExerciseUtil {
 
     return `${method.name}: ${formatted.join(', ')}`;
   }
+
+  /**
+   * Calculate the total duration of a training exercise in seconds.
+   */
+  calculateDuration(exercise: TrainingExercise): number {
+    let duration = 0;
+
+    for (const set of exercise.sets) {
+      if (set.time || set.timeR) {
+        if (set.time) duration += set.time;
+        if (set.timeR) duration += set.timeR;
+        continue;
+      }
+
+      if (set.dist || set.distR) {
+        // assume 3 seconds per unit of distance
+        if (set.dist) duration += set.dist * 3;
+        if (set.distR) duration += set.distR * 3;
+        continue;
+      }
+
+      // prescribe by reps
+      if (set.reps || set.repsR) {
+        if (set.reps) {
+          const time = set.tempoEcc
+            ? (set.tempoEcc || 0) +
+              (set.tempoIso || 0) +
+              (set.tempoCon || 0) +
+              (set.tempoIdle || 0)
+            : 3; // default 3 seconds per rep
+
+          duration += set.reps * time;
+        }
+
+        if (set.repsR) {
+          const time = set.tempoEccR
+            ? (set.tempoEccR || 0) +
+              (set.tempoIsoR || 0) +
+              (set.tempoConR || 0) +
+              (set.tempoIdleR || 0)
+            : 3;
+
+          duration += set.repsR * time;
+        }
+      }
+    }
+
+    return duration;
+  }
 }
