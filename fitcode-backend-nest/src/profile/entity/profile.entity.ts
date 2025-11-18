@@ -20,6 +20,11 @@ export class Profile extends TimestampEntity {
   @Expose()
   email: string;
 
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
+  photoURLBase64?: string;
+
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()
