@@ -1,5 +1,5 @@
 import { PersonAdd, Remove } from '@mui/icons-material';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 
@@ -27,7 +27,8 @@ export default function DashboardGroupsMembers(props: Props) {
 
   const { users } = useMain();
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, removeGroupMember } = useDashboard();
+  const { selectedInstitution, removeGroupMember, updateGroup } =
+    useDashboard();
   const { setFilteredUsers, hoveredUser, toggleUser, onHoverUser } =
     useDashboardUserEdit();
 
@@ -37,29 +38,33 @@ export default function DashboardGroupsMembers(props: Props) {
   const [search, setSearch] = useState('');
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+  const [openAddTrainersModal, setOpenAddTrainersModal] = useState(false);
 
   useEffect(() => {
-    if (!group || !group.members) {
+    if (!group) {
       setFilteredMembers([]);
       return;
     }
 
     if (!search) {
-      setFilteredMembers(group.members);
+      setFilteredMembers((group.trainers || []).concat(group.members || []));
       return;
     }
 
-    const filtered = (group.members || []).filter((user) => {
-      if (!user.displayName) return false;
-      return user.displayName.toLowerCase().includes(search.toLowerCase());
-    });
+    // add trainers array to goreup and map them on map
+    const filtered = (group.trainers || [])
+      .concat(group.members || [])
+      .filter((user) => {
+        if (!user.displayName) return false;
+        return user.displayName.toLowerCase().includes(search.toLowerCase());
+      });
 
     setFilteredMembers(filtered);
-  }, [group, search]);
+  }, [users, selectedInstitution, group, search]);
 
   useEffect(() => {
     setSearch('');
-  }, [group]);
+  }, [selectedInstitution, group]);
 
   return (
     <Box
@@ -103,12 +108,24 @@ export default function DashboardGroupsMembers(props: Props) {
         {role &&
           (lib.firebase.auth.isTrainer(role) ||
             lib.firebase.auth.isManager(role)) && (
-            <IconButton
-              onClick={() => setOpenAddMemberModal(true)}
-              sx={{ p: 0, m: 0 }}
-            >
-              <PersonAdd />
-            </IconButton>
+            <>
+              <Tooltip title="Add athletes">
+                <IconButton
+                  onClick={() => setOpenAddMemberModal(true)}
+                  sx={{ p: 0, m: 0 }}
+                >
+                  <PersonAdd />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Add trainers">
+                <IconButton
+                  onClick={() => setOpenAddTrainersModal(true)}
+                  sx={{ p: 0, m: 0 }}
+                >
+                  <PersonAdd />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
       </Box>
 
@@ -129,75 +146,6 @@ export default function DashboardGroupsMembers(props: Props) {
             <Typography>No groups yet</Typography>
           ) : (
             <>
-              {group.trainerIds.map((userId) => {
-                const owner = users.find((u) => u.uid === userId);
-                const ownerNames = owner?.displayName
-                  ? owner.displayName.split(' ')
-                  : [];
-
-                return (
-                  <Box
-                    key={owner?.uid}
-                    display="flex"
-                    flexDirection="column"
-                    gap={1}
-                    sx={{ position: 'relative' }}
-                  >
-                    <Avatar
-                      className="avatar-border"
-                      src={
-                        users.find((m) => m.uid === userId)?.photoURL ||
-                        USER_AVATAR_IMG_URL
-                      }
-                      sx={{
-                        width: screenSize.isMobile ? 70 : 80,
-                        height: screenSize.isMobile ? 70 : 80,
-                      }}
-                      onClick={() => {
-                        setOpenEditAthleteModal(true);
-                      }}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        textAlign: 'center',
-                        fontWeight: 400,
-                        fontSize: screenSize.isMobile ? 12 : 14,
-                      }}
-                    >
-                      {ownerNames.length > 1 ? (
-                        <>
-                          {ownerNames[0]}
-                          <br />
-                          {ownerNames[1].toUpperCase()}
-                        </>
-                      ) : (
-                        <>{(owner?.displayName || '').toUpperCase()}</>
-                      )}
-                    </Typography>
-                    <Typography
-                      fontWeight={600}
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        backgroundColor: theme.palette.primary.main,
-                        borderRadius: '50%',
-                        width: 16,
-                        height: 16,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        fontSize: 10,
-                        color: theme.palette.background.default,
-                      }}
-                    >
-                      T
-                    </Typography>
-                  </Box>
-                );
-              })}
-
               {(filteredMembers || []).map((user) => {
                 if (!user || !user.displayName) return;
                 const names = user.displayName.split(' ');
@@ -207,6 +155,7 @@ export default function DashboardGroupsMembers(props: Props) {
                     key={user.uid}
                     display="flex"
                     flexDirection="column"
+                    alignItems="center"
                     gap={1}
                     sx={{ position: 'relative' }}
                     onMouseEnter={() => onHoverUser(user)}
@@ -221,6 +170,23 @@ export default function DashboardGroupsMembers(props: Props) {
                           size="small"
                           onClick={async (e) => {
                             e.stopPropagation();
+
+                            const isTrainer = group.trainerIds?.some(
+                              (id) => id === user.uid
+                            );
+
+                            if (isTrainer) {
+                              const updatedGroup: Group = {
+                                ...group,
+                                trainerIds: group.trainerIds?.filter(
+                                  (id) => id !== user.uid
+                                ),
+                              };
+
+                              await updateGroup(updatedGroup.id, updatedGroup);
+                              return;
+                            }
+
                             await removeGroupMember(user.uid, group.id);
                           }}
                           sx={{
@@ -228,12 +194,35 @@ export default function DashboardGroupsMembers(props: Props) {
                             top: -8,
                             right: -8,
                             backgroundColor: theme.palette.error.main,
-                            zIndex: 1,
+                            zIndex: 2,
                           }}
                         >
                           <Remove sx={{ fontSize: 10 }} />
                         </IconButton>
                       )}
+
+                    {lib.firebase.auth.isTrainer(user.customClaims.role[0]) && (
+                      <Typography
+                        fontWeight={600}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          backgroundColor: theme.palette.primary.main,
+                          borderRadius: '50%',
+                          width: 16,
+                          height: 16,
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          fontSize: 10,
+                          zIndex: 1,
+                          color: theme.palette.background.default,
+                        }}
+                      >
+                        T
+                      </Typography>
+                    )}
 
                     <Avatar
                       className="avatar-border"
@@ -284,6 +273,16 @@ export default function DashboardGroupsMembers(props: Props) {
         enableScroll
         open={openAddMemberModal}
         setOpen={setOpenAddMemberModal}
+      />
+
+      <AddMembersModal
+        addTrainers
+        users={selectedInstitution?.trainers || []}
+        group={group}
+        enableFirstShowUsers
+        enableScroll
+        open={openAddTrainersModal}
+        setOpen={setOpenAddTrainersModal}
       />
 
       <DashboardEditAthleteModal

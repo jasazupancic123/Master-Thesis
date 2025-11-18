@@ -21,6 +21,7 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { Workload } from '@/core/training/type/workload.type';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
+import { useMain } from '@/store/main.provider';
 
 enum ReportTab {
   Realization = 'Realization',
@@ -33,6 +34,7 @@ const cache = new Map<string, Workload[]>(); // LATER PUT THIS EVEN ONE HIGHER, 
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
+  const { groups } = useMain();
   const { selectedInstitution } = useDashboard();
   const { selectedGroup, setSelectedGroup } = useDashboardGroupView();
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
@@ -41,7 +43,6 @@ export default function DashboardReports() {
   );
 
   const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
-  const groups = selectedInstitution?.groups || [];
 
   useEffect(() => {
     setSelectedUser(null);
