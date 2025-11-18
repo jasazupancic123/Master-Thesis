@@ -15,14 +15,13 @@ import AddGroupModal from './modals/dashboard-add-group-modal';
 import { theme } from '@/app/style';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardMembers() {
-  const screenSize = useScreenSize();
-
   const { groups } = useMain();
+  const screenSize = useScreenSize();
 
   const [filter, setFilter] = useState<DashboardMembersFilter>(
     DashboardMembersFilter.GROUP

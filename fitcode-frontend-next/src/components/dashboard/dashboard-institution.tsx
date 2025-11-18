@@ -214,6 +214,7 @@ export default function DashboardInstitution(props: Props) {
                 key={user.uid}
                 display="flex"
                 flexDirection="column"
+                alignItems="center"
                 gap={1}
                 sx={{ position: 'relative' }}
                 onMouseEnter={() => onHoverUser(user)}

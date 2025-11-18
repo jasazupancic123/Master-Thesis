@@ -43,7 +43,6 @@ export interface IDashboardContext {
   setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  setUsers: SetState<AuthUser[]>;
   updateInstitution: (
     institutionId: string,
     input: UpdateInstitution
@@ -74,6 +73,7 @@ export function DashboardProvider(props: Props) {
     setGroups,
     institutions: propsInstitutions,
   } = useMain();
+
   const pathname = usePathname();
   const { groups } = useMain();
 
@@ -143,7 +143,6 @@ export function DashboardProvider(props: Props) {
     setTrainings,
     detectedChanges,
     setDetectedChanges,
-    setUsers,
     updateInstitution: async (institutionId, input) => {
       const prevState = {
         institution: structuredClone(selectedInstitution),
@@ -183,11 +182,14 @@ export function DashboardProvider(props: Props) {
 
       function mapper(group: Group): Group {
         if (group.id !== groupId) return group;
-        return {
+        let newGroup: Group = {
           ...group,
           name: input.name ?? group.name,
           trainerIds: input.trainerIds ?? group.trainerIds,
         };
+
+        newGroup = core.group.mapMembers(newGroup, users || []);
+        return newGroup;
       }
 
       const apply = () => {
@@ -195,6 +197,7 @@ export function DashboardProvider(props: Props) {
         setSelectedInstitution((prev) =>
           prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
         );
+        setGroups((prev) => prev.map(mapper));
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

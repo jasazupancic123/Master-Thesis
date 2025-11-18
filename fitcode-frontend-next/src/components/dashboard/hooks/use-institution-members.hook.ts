@@ -25,12 +25,11 @@ export default function useInstitutionMembers(
   group: Group | null,
   setGroup: SetState<Group | null>
 ) {
-  const { users, profiles, setProfiles } = useMain();
+  const { users, profiles, setProfiles, setUsers } = useMain();
   const { isFormEmpty, setFormData, formData, resetForm } =
     useRegisterMemberForm();
 
-  const { selectedInstitution, setSelectedInstitution, setUsers } =
-    useDashboard();
+  const { selectedInstitution, setSelectedInstitution } = useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);

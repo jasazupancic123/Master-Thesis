@@ -21,6 +21,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { useState } from 'react';
 
 const DEFAULT_MARGIN = 1;
 
@@ -33,12 +34,16 @@ export default function DashboardEditAthleteModal({
 
   const {
     userToEdit,
+    setUserToEdit,
     profileToEdit,
     updateUserProfile,
     toggleUser,
     onProfileChange,
     onUserChange,
   } = useDashboardUserEdit();
+
+  const [base64Preview, setBase64Preview] = useState<string>('');
+  const [file, setFile] = useState<File | null>(null);
 
   if (!userToEdit) return;
 
@@ -47,35 +52,88 @@ export default function DashboardEditAthleteModal({
       isOpen={open && userToEdit?.uid !== user.uid}
       setIsOpen={setOpen}
       cancelText="Close"
-      onConfirm={updateUserProfile}
+      onConfirm={async () => {
+        let url: string | null = null;
+        let base64: string | undefined = undefined;
+
+        if (file) {
+          const path = `user/${userToEdit.uid}/${file.name}`;
+          const { url: uploadedUrl, base64: uploadedBase64 } =
+            await lib.firebase.storage.uploadFileWithBase64(file, path);
+
+          url = uploadedUrl;
+          base64 = uploadedBase64;
+
+          onUserChange('photoURL', url);
+          onProfileChange('photoURLBase64', base64);
+        }
+
+        await updateUserProfile({
+          force: url !== null || base64 !== undefined ? true : false,
+          passedUser: {
+            ...userToEdit,
+            photoURL: url,
+          },
+          passedProfile: profileToEdit
+            ? {
+                ...profileToEdit,
+                photoURLBase64: base64 || profileToEdit?.photoURLBase64,
+              }
+            : undefined,
+        });
+
+        setOpen(false);
+        setBase64Preview('');
+        setFile(null);
+        toggleUser(null);
+      }}
       onCancel={() => {
         setOpen(false);
         toggleUser(null);
+        setBase64Preview('');
+        setFile(null);
       }}
     >
       <Box display="flex" flexDirection="column" gap={2}>
-        <FileUpload
-          input={InputType.IMAGE}
-          label="Image"
-          makeRound
-          initialFileUrl={userToEdit?.photoURL || undefined}
-          disableBorder={
-            userToEdit?.photoURL !== undefined && userToEdit?.photoURL !== null
-          }
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
           sx={{
-            maxWidth: screenSize.isMobile ? 200 : 400,
-            maxHeight: screenSize.isMobile ? 150 : 300,
-            margin: 'auto',
+            position: 'relative',
           }}
-          onFileUpload={async (file) => {
-            const path = `user/${userToEdit.uid}/${file.name}`;
-            const { url, base64 } =
-              await lib.firebase.storage.uploadFileWithBase64(file, path);
+        >
+          <FileUpload
+            input={InputType.IMAGE}
+            label="Image"
+            makeRound
+            initialFileUrl={base64Preview || userToEdit?.photoURL || undefined}
+            disableBorder={
+              userToEdit?.photoURL !== undefined &&
+              userToEdit?.photoURL !== null
+            }
+            onRemoveFile={
+              userToEdit.photoURL || base64Preview
+                ? () => {
+                    setUserToEdit({ ...userToEdit, photoURL: null });
+                    setBase64Preview('');
+                    setFile(null);
+                  }
+                : undefined
+            }
+            sx={{
+              maxWidth: screenSize.isMobile ? 200 : 400,
+              maxHeight: screenSize.isMobile ? 150 : 300,
+              margin: 'auto',
+            }}
+            onFileUpload={async (file) => {
+              const base64 = await lib.firebase.storage.fileToBase64(file);
 
-            onUserChange('photoURL', url);
-            onProfileChange('photoURLBase64', base64);
-          }}
-        />
+              setFile(file);
+              setBase64Preview(base64);
+            }}
+          />
+        </Box>
 
         {/* First & Last Name - Ensuring Equal Width */}
         <Box
