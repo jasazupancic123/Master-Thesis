@@ -52,11 +52,13 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
     let profile = await this.findById(uid);
     if (!profile) {
       const user = await this.firebase.auth.getUser(uid);
-      await this.save({ uid, email: user.email! });
+      await this.save({ uid, email: user.email!, height: 0, weight: 0 });
 
       profile = {
         uid,
         email: user.email!,
+        height: 0,
+        weight: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -86,7 +88,7 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
         const user = users.find((u) => u.uid === uid);
         if (!user || !user.email) return;
 
-        const profile = { uid, email: user.email };
+        const profile = { uid, email: user.email, height: 0, weight: 0 };
         profiles.push({
           ...profile,
           createdAt: new Date(),

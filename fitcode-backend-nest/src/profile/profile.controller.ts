@@ -19,6 +19,18 @@ export class ProfileController {
     private readonly wellnessService: WellnessService,
   ) {}
 
+  @Get('all')
+  @Auth()
+  async findAllMerged(@RequestUser() user: User) {
+    return await this.profileService.findAllMerged(user);
+  }
+
+  @Get()
+  @Auth()
+  async findProfile(@RequestUser() user: User) {
+    return await this.profileService.findOneById(user.uid);
+  }
+
   @Post('/import')
   @Auth([UserRole.MANAGER])
   async importProfiles(
@@ -27,12 +39,6 @@ export class ProfileController {
     { profiles }: ImportProfilesDto,
   ) {
     return await this.profileService.importProfiles(user, profiles);
-  }
-
-  @Get()
-  @Auth()
-  async findProfile(@RequestUser() user: User) {
-    return await this.profileService.findOneById(user.uid);
   }
 
   @Patch()

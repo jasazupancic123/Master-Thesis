@@ -59,7 +59,7 @@ import { Institution } from '@src/institution/entity/institution.entity';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { WellnessService } from '@src/profile/service/wellness.service';
+import { ProfileService } from '@src/profile/service/profile.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
 import {
@@ -105,7 +105,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly repository: TrainingRepository,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly periodizationService: PeriodizationService,
-    private readonly wellnessService: WellnessService,
+    private readonly profileService: ProfileService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
     private readonly groupService: GroupService,
@@ -1217,8 +1217,10 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (!hasBwParamType) return;
 
-    const ref = { uid: athleteId };
-    const bw = await this.wellnessService.getLastBodyweight(ref);
+    const profile = await this.profileService.findOneById(athleteId);
+    if (!profile) return;
+
+    const bw = profile.weight;
     if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(

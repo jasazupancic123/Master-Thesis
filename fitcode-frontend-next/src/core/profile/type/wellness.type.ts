@@ -4,6 +4,7 @@ export interface Wellness {
   userId: string;
   date: Date;
   weight?: number;
+  height?: number;
   sleep?: number;
   fatigue?: number;
   soreness?: number;

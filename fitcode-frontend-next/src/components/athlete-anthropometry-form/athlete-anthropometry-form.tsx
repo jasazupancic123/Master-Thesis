@@ -59,6 +59,34 @@ export default function AthleteAnthropometryForm({ state, setState }: Props) {
           }}
         />
 
+        {/* Height in cm */}
+        <TextField
+          label="Height (cm)"
+          type="number"
+          value={state.height}
+          onChange={(event) => {
+            if (isNaN(Number(event.target.value))) return;
+            setState((prev) => ({
+              ...prev,
+              height: Number(event.target.value),
+            }));
+          }}
+          sx={{
+            mt: 2,
+            backgroundColor: 'background.default',
+            borderRadius: '10px',
+          }}
+          inputProps={{
+            min: 0,
+            step: 0.5,
+            style: {
+              padding: '5px 10px',
+              display: 'flex',
+              alignItems: 'center',
+            },
+          }}
+        />
+
         {/* Comment */}
         <TextField
           label="Comment"
