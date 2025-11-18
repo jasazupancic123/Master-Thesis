@@ -2,11 +2,23 @@ rules_version = '2';
 
 service cloud.firestore {
     match /databases/{database}/documents {
+        function isManager() {
+            return request.auth != null
+                && "role" in request.auth.token
+                && request.auth.token.role.hasAny(["manager"]);
+        }
+
+        function isManagerOfInstitution(instId) {
+            return isManager()
+                && request.auth.uid ==
+                get(/databases/$(database)/documents/institutions/$(instId)).data.ownerId;
+        }
+
         // Trainings collection listener
         match /trainings/{trainingId} {
-            allow read: if request.auth != null 
-                && (request.auth.uid == resource.data.ownerId 
-                    || request.auth.uid in resource.data.memberIds);
+            allow read: if (request.auth != null 
+                && (request.auth.uid == resource.data.ownerId || request.auth.uid in resource.data.memberIds))
+                || isManagerOfInstitution(resource.data.institutionId);
 
             // Training workloads subcollection
             match /training-workload/{workloadId} {
@@ -17,6 +29,16 @@ service cloud.firestore {
                     // or member
                     || request.auth.uid in get(/databases/$(database)/documents/trainings/$(trainingId)).data.memberIds
                 );
+            }
+        }
+
+        match /institutions/{instId} {
+            // Allow manager to read institution doc if they own it
+            allow read: if isManagerOfInstitution(instId);
+
+            // Allow manager to read members of the institution they own
+            match /institution-members/{memberId} {
+                allow read: if isManagerOfInstitution(instId);
             }
         }
     }

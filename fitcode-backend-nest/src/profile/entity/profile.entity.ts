@@ -1,6 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 import { TimestampEntity } from '@src/common/entity/timestamp.entity';
 
@@ -19,6 +27,23 @@ export class Profile extends TimestampEntity {
   @ApiProperty()
   @Expose()
   email: string;
+
+  @IsNumber()
+  @ApiProperty()
+  @Min(0)
+  @Max(250)
+  height: number;
+
+  @IsNumber()
+  @ApiProperty()
+  @Min(0)
+  @Max(500)
+  weight: number; // in kg
+
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
+  photoURLBase64?: string;
 
   @IsOptional()
   @IsString()

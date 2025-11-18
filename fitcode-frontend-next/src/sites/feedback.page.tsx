@@ -69,6 +69,7 @@ export default function FeedbackPage() {
       soreness: 5,
       comment: '',
       weight: 0,
+      height: 0,
     } as Wellness;
   });
 

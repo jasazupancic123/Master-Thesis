@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 export interface EditableTextFieldProps {
   value: string;
   onChange?: (newValue: string) => void | Promise<void>;
+  onFocusOutSave?: boolean;
   fontWeight?: number;
   fontSize?: number;
   textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
@@ -15,6 +16,7 @@ export interface EditableTextFieldProps {
 export default function EditableTextField({
   value: propValue,
   onChange,
+  onFocusOutSave = false,
   fontWeight = 600,
   fontSize = 16,
   textTransform = 'none',
@@ -32,28 +34,34 @@ export default function EditableTextField({
 
   useEffect(() => {
     if (!editing) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
-        setValue(propValue); // discard edits
-        setEditing(false);
+        if (onFocusOutSave) handleSave();
+        else {
+          setValue(propValue); // discard edits
+          setEditing(false);
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [editing, propValue]);
+  }, [editing, value, propValue, onFocusOutSave]);
 
   const handleClick = () => setEditing(true);
-  const handleBlur = async () => {
+
+  const handleSave = async () => {
     setEditing(false);
     const trimmed = value.trim();
     if (trimmed && trimmed !== propValue) await onChange?.(trimmed);
+    else setValue(propValue);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleBlur();
+      handleSave();
     } else if (e.key === 'Escape') {
       setValue(propValue);
       setEditing(false);
@@ -65,7 +73,7 @@ export default function EditableTextField({
       value={value}
       inputRef={inputRef}
       onChange={(e) => setValue(e.target.value)}
-      onBlur={handleBlur}
+      onBlur={handleSave}
       onKeyDown={handleKeyDown}
       size="small"
       autoFocus={autoFocus}

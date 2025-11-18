@@ -4,30 +4,27 @@ import type { Group } from '@/core/group/type/group.type';
 import type { GroupEvent } from '@/core/group/type/group-event.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
-import type { CommonService } from '@/lib/common/common.service';
+import { lib } from '@/lib';
 
 export const getAmPmItems = (
   date: Date,
   state: {
     trainings: Training[];
-    commonService: CommonService;
     group: Group;
   }
 ): {
   amItems: (TrainingComponentWithTrainingId | GroupEvent)[];
   pmItems: (TrainingComponentWithTrainingId | GroupEvent)[];
 } => {
-  const { group, trainings, commonService } = state;
-
+  const { group, trainings } = state;
   const day = dayjs(date);
+
   const filteredItems: (TrainingComponentWithTrainingId | GroupEvent)[] = [
     ...trainings
       .map((t) => t.components.map((c) => ({ ...c, trainingId: t.id })))
       .flat(),
     ...(group.events || []),
-  ].filter((t) =>
-    commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
-  );
+  ].filter((t) => lib.common.date.isBetween(day, dayjs(t.from), dayjs(t.to)));
 
   if (!filteredItems.length) return { amItems: [], pmItems: [] };
 

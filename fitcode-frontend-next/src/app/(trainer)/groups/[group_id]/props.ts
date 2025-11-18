@@ -1,3 +1,4 @@
+import type { DragEndEvent } from '@dnd-kit/core';
 import type { Dayjs } from 'dayjs';
 
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -50,6 +51,7 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredUsers: SetState<AuthUser[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
+  handleMoveTraining: (e: DragEndEvent) => Promise<void>;
 };
 
 export type TrainerDayViewContextProps = {

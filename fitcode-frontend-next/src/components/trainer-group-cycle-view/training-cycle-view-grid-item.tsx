@@ -1,5 +1,7 @@
+import { useDraggable } from '@dnd-kit/core';
+import { DragIndicator } from '@mui/icons-material';
 import type { SvgIconProps } from '@mui/material';
-import { Tooltip, Typography } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import type { ElementType } from 'react';
 import React, { useRef } from 'react';
@@ -40,8 +42,24 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     containerRef,
   });
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `training-${training.id}`,
+      data: { training },
+    });
+
   return (
-    <Box>
+    <Box
+      ref={setNodeRef}
+      {...attributes}
+      sx={{
+        position: 'relative',
+        opacity: isDragging ? 0.5 : 1,
+        transform: transform
+          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+          : undefined,
+      }}
+    >
       <Box
         ref={containerRef}
         display="flex"
@@ -56,16 +74,10 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile
               ? 'auto'
               : undefined,
-          scrollbarWidth: 'thin', // Standard for Firefox
-          '&::-webkit-scrollbar': {
-            width: '6px', // Small and modern scrollbar
-          },
-          '::-webkit-scrollbar-track': {
-            color: 'transparent',
-          },
-          '::-webkit-scrollbar-thumb': {
-            background: 'red',
-          },
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '6px' },
+          '::-webkit-scrollbar-track': { color: 'transparent' },
+          '::-webkit-scrollbar-thumb': { background: 'red' },
         }}
       >
         {components.map((trainingComponent) => {
@@ -230,6 +242,21 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
           );
         })}
       </Box>
+
+      <IconButton
+        size="small"
+        {...listeners}
+        sx={{
+          position: 'absolute',
+          top: 4,
+          right: 4,
+          cursor: 'grab',
+          zIndex: 10,
+        }}
+        // onPointerDown={(e) => e.stopPropagation()}
+      >
+        <DragIndicator fontSize="small" />
+      </IconButton>
     </Box>
   );
 }

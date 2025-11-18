@@ -69,8 +69,11 @@ export default function DashboardEditAthleteModal({
           }}
           onFileUpload={async (file) => {
             const path = `user/${userToEdit.uid}/${file.name}`;
-            const url = await lib.firebase.storage.uploadFile(file, path);
+            const { url, base64 } =
+              await lib.firebase.storage.uploadFileWithBase64(file, path);
+
             onUserChange('photoURL', url);
+            onProfileChange('photoURLBase64', base64);
           }}
         />
 

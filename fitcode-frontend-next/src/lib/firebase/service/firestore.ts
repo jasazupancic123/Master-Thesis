@@ -18,6 +18,10 @@ export class FirebaseFirestoreUtil {
     this.firestore = getFirebaseFirestore();
   }
 
+  get db(): Firestore {
+    return this.firestore;
+  }
+
   serialize<T>(obj: FirestoreEntity<T>): T {
     if (obj === null || typeof obj !== 'object') return obj as T;
     if (Array.isArray(obj)) return obj.map((item) => this.serialize(item)) as T;

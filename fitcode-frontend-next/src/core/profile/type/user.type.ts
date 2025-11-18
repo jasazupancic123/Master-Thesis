@@ -7,6 +7,9 @@ import type { TimestampEntity } from '@/core/entity.type';
 export type Profile = TimestampEntity & {
   uid: string;
   email: string;
+  weight: number;
+  height: number;
+  photoURLBase64?: string;
   sport?: string;
   level?: SportLevel;
   gender?: Gender;
@@ -15,7 +18,7 @@ export type Profile = TimestampEntity & {
 
 export type UpdateProfile = { userId: string } & Pick<
   Profile,
-  'sport' | 'level' | 'gender' | 'birthDate'
+  'photoURLBase64' | 'sport' | 'level' | 'gender' | 'birthDate'
 >;
 
 export type ImportProfile = CreateUser &
