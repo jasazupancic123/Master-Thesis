@@ -1,4 +1,5 @@
-import type { SxProps } from '@mui/material';
+import { Clear } from '@mui/icons-material';
+import { IconButton, type SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Image from 'next/image';
@@ -20,6 +21,7 @@ interface Props extends Partial<React.PropsWithChildren> {
   disableBorder?: boolean;
   width?: number;
   height?: number;
+  onRemoveFile?: () => void;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -27,7 +29,15 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_CSV_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function FileUpload(props: Props) {
-  const { label, onFileUpload, input, initialFileUrl, sx, children } = props;
+  const {
+    label,
+    onFileUpload,
+    input,
+    initialFileUrl,
+    sx,
+    children,
+    onRemoveFile,
+  } = props;
   const [preview, setPreview] = useState(() => ({
     url: initialFileUrl || '',
     error: '',
@@ -102,6 +112,24 @@ export default function FileUpload(props: Props) {
 
   return (
     <div {...getRootProps()} style={{ width: '100%', height: 150 }}>
+      {onRemoveFile && (
+        <IconButton
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: '20%',
+            zIndex: 10,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+
+            setPreview({ url: '', error: '' });
+            onRemoveFile();
+          }}
+        >
+          <Clear />
+        </IconButton>
+      )}
       <input {...getInputProps()} />
 
       <DragAndDropPlaceholder
