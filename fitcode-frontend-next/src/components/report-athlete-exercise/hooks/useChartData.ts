@@ -1,7 +1,8 @@
-import { Workload } from '@/core/training/type/workload.type';
 import { useEffect, useState } from 'react';
-import { AthleteExerciseReportChartData } from '../types/athlete-exercise-report-chart-data';
+
+import type { AthleteExerciseReportChartData } from '../types/athlete-exercise-report-chart-data';
 import { theme } from '@/app/style';
+import type { Workload } from '@/core/training/type/workload.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteChartData() {

@@ -9,6 +9,7 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useState } from 'react';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
 import { Gender } from '@/core/profile/enum/gender.enum';
@@ -21,7 +22,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { useState } from 'react';
 
 const DEFAULT_MARGIN = 1;
 

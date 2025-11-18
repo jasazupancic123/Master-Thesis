@@ -1,10 +1,11 @@
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Exercise } from '@/core/exercise/type/exercise.type';
-import { TrainingController } from '@/core/training/training.controller';
-import { Workload } from '@/core/training/type/workload.type';
-import { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useEffect } from 'react';
+
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import { TrainingController } from '@/core/training/training.controller';
+import type { Workload } from '@/core/training/type/workload.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useAthleteExerciseReportData(
   reportType: 'single' | 'comparison',

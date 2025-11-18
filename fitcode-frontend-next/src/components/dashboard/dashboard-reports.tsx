@@ -4,6 +4,7 @@ import { Avatar, Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
+import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import WellnessChart from '../reports/wellness-chart';
@@ -14,14 +15,13 @@ import useDashboardGroupView from './hooks/use-group-view';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Component } from '@/core/exercise/type/component.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { Workload } from '@/core/training/type/workload.type';
-import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 enum ReportTab {
   Realization = 'Realization',

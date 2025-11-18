@@ -1,19 +1,21 @@
-import { Workload } from '@/core/training/type/workload.type';
-import AthleteExerciseReportHeader from './athlete-exercise-report-header';
-import { JSX, useState } from 'react';
-import { LineChart } from '@mui/x-charts';
-import ImageGallery from '@/ui/image-gallery';
-import MyModal from '@/ui/modal';
-import { Box, IconButton, Tooltip } from '@mui/material';
-import { theme } from '@/app/style';
-import { SetState } from '@/lib/common/type/state.type';
-import { Clear, DragIndicator, Groups, Person } from '@mui/icons-material';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useScreenSize } from '@/store/screen-size.provider';
+import { Clear, DragIndicator, Groups, Person } from '@mui/icons-material';
+import { Box, IconButton, Tooltip } from '@mui/material';
+import { LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
+import type { JSX } from 'react';
+import { useState } from 'react';
+
 import { deleteReportFromIndexDb } from './actions/index-db';
+import AthleteExerciseReportHeader from './athlete-exercise-report-header';
 import useAthleteChartData from './hooks/useChartData';
+import { theme } from '@/app/style';
+import type { Workload } from '@/core/training/type/workload.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useScreenSize } from '@/store/screen-size.provider';
+import ImageGallery from '@/ui/image-gallery';
+import MyModal from '@/ui/modal';
 
 interface Props {
   id: string;

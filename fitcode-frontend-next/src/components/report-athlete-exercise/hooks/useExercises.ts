@@ -1,10 +1,8 @@
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Exercise } from '@/core/exercise/type/exercise.type';
-import { Group } from '@/core/group/type/group.type';
-import { Workload } from '@/core/training/type/workload.type';
+import { useMemo, useState } from 'react';
+
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { useMemo, useState } from 'react';
 
 export default function useAthleteExerciseReportExercises(
   passedExerciseId?: string
