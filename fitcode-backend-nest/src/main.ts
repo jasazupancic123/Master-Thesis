@@ -19,7 +19,7 @@ import type {
 } from './config/environment-validation-schema';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-if (!['production', 'staging'].includes(nodeEnv))
+if (!['staging'].includes(nodeEnv))
   // in production and staging, the environment variables are set in other ways
   config({ quiet: true, path: `.env.${nodeEnv}` });
 
