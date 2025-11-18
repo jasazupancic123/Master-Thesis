@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import type { JSX } from 'react';
 import { useState } from 'react';
 
-import { deleteReportFromIndexDb } from './actions/index-db';
+import { deleteReportFromIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReportHeader from './athlete-exercise-report-header';
 import useAthleteChartData from './hooks/useChartData';
 import { theme } from '@/app/style';

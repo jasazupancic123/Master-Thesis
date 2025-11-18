@@ -25,12 +25,15 @@ import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import AddButton from '@/ui/add-button';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   cache: Map<string, Workload[]>;
 }
 
 export default function AthleteExerciseReports(props: Props) {
+  const { selectedInstitution } = useDashboard();
+
   const { cache } = props;
 
   const [reports, setReports] = useState<
@@ -49,6 +52,8 @@ export default function AthleteExerciseReports(props: Props) {
   );
 
   useEffect(() => {
+    if (!selectedInstitution) return;
+
     const setupReports = async () => {
       if (reports.length) return;
 
@@ -59,8 +64,12 @@ export default function AthleteExerciseReports(props: Props) {
       if (items) {
         const data: IndexDbAthleteExerciseReport[] = items.payload;
 
+        const filteredData = data.filter((item) => {
+          return item.institutionId === selectedInstitution.id;
+        });
+
         setReports(
-          data.map((item) => ({
+          filteredData.map((item) => ({
             id: item.id,
             element: (
               <AthleteExerciseReport
