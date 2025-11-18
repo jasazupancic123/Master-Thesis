@@ -6,6 +6,9 @@ export class GroupUtil {
     item.members = item.membersIds.map(
       (userId) => users.find(({ uid }) => uid === userId)!
     );
+    item.trainers = item.trainerIds.map(
+      (userId) => users.find(({ uid }) => uid === userId)!
+    );
 
     return item;
   }

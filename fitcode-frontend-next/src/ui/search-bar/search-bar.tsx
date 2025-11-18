@@ -46,6 +46,9 @@ export function SearchBar({
         placeholder={placeholder}
         value={value}
         onChange={handleSearchChange}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+        }}
       />
       {children}
     </Search>
