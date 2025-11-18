@@ -1,5 +1,6 @@
 'use client';
 
+import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { Circle } from '@mui/icons-material';
 import {
   Checkbox,
@@ -9,7 +10,8 @@ import {
   useTheme,
 } from '@mui/material';
 import { Box } from '@mui/material';
-import { useState } from 'react';
+import { endOfDay, startOfDay } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
@@ -18,13 +20,20 @@ import DashboardTrainingsList from './dashboard-trainings-list';
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import type { Institution } from '@/core/institution/type/institution.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Training } from '@/core/training/type/training.type';
+import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { FirestoreEntity } from '@/lib/firebase/type/firestore.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function DashboardTrainingPlan() {
   const theme = useTheme();
 
+  const { role } = useAuthenticatedAuth();
   const { groups } = useMain();
   const { trainings, selectedInstitution } = useDashboard();
 
@@ -40,6 +49,64 @@ export default function DashboardTrainingPlan() {
   const [filter, setFilter] = useState<DashboardTrainingPlanFilter>(
     DashboardTrainingPlanFilter.TRAININGS
   );
+
+  useEffect(() => {
+    if (!selectedInstitution || role !== UserRole.MANAGER) return;
+    const institutionId = selectedInstitution.id;
+
+    const unsub = onSnapshot(
+      query(
+        collection(
+          lib.firebase.firestore.db,
+          `institutions/${institutionId}/institution-members`
+        )
+      ),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) =>
+          lib.firebase.firestore.serialize(
+            doc.data() as FirestoreEntity<Institution>
+          )
+        );
+      },
+      (error) => {
+        console.error(
+          'Error occured while listening to institution members changes:',
+          error
+        );
+      }
+    );
+
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedInstitution || role !== UserRole.MANAGER) return;
+    const institutionId = selectedInstitution.id;
+
+    const unsub = onSnapshot(
+      query(
+        collection(lib.firebase.firestore.db, 'trainings'),
+        where('institutionId', '==', institutionId),
+        where('from', '>=', startOfDay(new Date())), // 00:00 today
+        where('from', '<', endOfDay(new Date())) // 23:59 today
+      ),
+      (snapshot) => {
+        const data: Training[] = snapshot.docs.map((doc) =>
+          lib.firebase.firestore.serialize(
+            doc.data() as FirestoreEntity<Training>
+          )
+        );
+      },
+      (error) => {
+        console.error(
+          'Error occured while listening to institution trainings changes:',
+          error
+        );
+      }
+    );
+
+    return () => unsub();
+  }, []);
 
   if (!selectedInstitution) return null;
 
