@@ -206,8 +206,11 @@ export default function ProfilePage() {
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
-            const url = await lib.firebase.storage.uploadFile(file, path);
+            const { url, base64 } =
+              await lib.firebase.storage.uploadFileWithBase64(file, path);
+
             handleChangeUser('photoURL', url);
+            handleChangeProfile('photoURLBase64', base64);
           }}
         />
 

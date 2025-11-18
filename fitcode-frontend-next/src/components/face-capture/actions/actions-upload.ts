@@ -47,17 +47,20 @@ export async function uploadFaceCaptures(state: {
         });
 
         const path = `user/${user.uid}/${file.name}`;
-        const url = await lib.firebase.storage.uploadFile(file, path);
+        const { base64 } = await lib.firebase.storage.uploadFileWithBase64(
+          file,
+          path
+        );
 
         switch (view) {
           case 'front':
-            updatedCustomClaims.faceFrontUrl = url;
+            updatedCustomClaims.faceFrontUrl = base64;
             break;
           case 'right':
-            updatedCustomClaims.faceRightUrl = url;
+            updatedCustomClaims.faceRightUrl = base64;
             break;
           case 'left':
-            updatedCustomClaims.faceLeftUrl = url;
+            updatedCustomClaims.faceLeftUrl = base64;
             break;
         }
       })
