@@ -24,6 +24,11 @@ export class TrainingReportService {
     training: Training,
     workloads: Workload[], // for the whole training
   ): TrainingReport {
+    workloads = workloads.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
+
     const prescribed = this.getPrescribedTrainingStats(training);
     const from = new Date(workloads[0]?.timestamp) || new Date();
     const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
@@ -203,8 +208,11 @@ export class TrainingReportService {
     prescribed: ExerciseSet,
     completed: ExerciseSet,
   ): number {
-    if (!prescribed[field]) return 1;
-    return prescribed[field] > 0 ? completed[field] / prescribed[field] : 1;
+    const pv = prescribed[field] ?? 0;
+    const cv = completed[field] ?? 0;
+
+    if (pv <= 0) return 0;
+    return cv / pv;
   }
 
   private getSetReport(set: ExerciseSet): SetReport {
@@ -284,23 +292,69 @@ export class TrainingReportService {
     const int = p.loadKg ? loadDiv : 0;
     const intR = p.loadKgR ? loadRDiv : 0;
 
-    const vol = p.reps ? repsDiv : p.time ? timeDiv : p.dist ? distDiv : 0;
-    const volR = p.repsR
+    function isNum(value: any): value is number {
+      return typeof value === 'number' && !isNaN(value);
+    }
+
+    const vol = isNum(p.reps)
+      ? repsDiv
+      : isNum(p.time)
+        ? timeDiv
+        : isNum(p.dist)
+          ? distDiv
+          : 0;
+
+    const volR = isNum(p.repsR)
       ? repsRDiv
-      : p.timeR
+      : isNum(p.timeR)
         ? timeRDiv
-        : p.distR
+        : isNum(p.distR)
           ? distRDiv
           : 0;
 
-    const rec = p.recTime ? 1 / recTimeDiv : p.recDist ? recDistDiv : 0;
-    const recR = p.recTimeR ? 1 / recTimeRDiv : p.recDistR ? recDistRDiv : 0;
+    const rec =
+      isNum(p.recTime) && recTimeDiv > 0
+        ? 1 / recTimeDiv
+        : isNum(p.recDist) && recDistDiv > 0
+          ? recDistDiv
+          : 0;
 
-    const w = // weight for averaging
-      1 /
-      [vol, volR, int, intR, tempoDiv, tempoRDiv, rec, recR]
-        .map((w) => w > 0)
-        .filter(Boolean).length;
+    const recR =
+      isNum(p.recTimeR) && recTimeRDiv > 0
+        ? 1 / recTimeRDiv
+        : isNum(p.recDistR) && recDistRDiv > 0
+          ? recDistRDiv
+          : 0;
+
+    // calculate realization
+    const prescriptions = [
+      vol,
+      volR,
+      int,
+      intR,
+      tempoDiv,
+      tempoRDiv,
+      rec,
+      recR,
+    ];
+
+    // weight for averaging
+    const safe = prescriptions.map((v) => (Number.isFinite(v) ? v : 0));
+    const count = safe.filter((w) => w > 0).length;
+    const w = count > 0 ? 1 / count : 0;
+
+    /* let realizationLog = '';
+    for (let i = 0, len = safe.length; i < len; i++) {
+      if (safe[i] > 0)
+        realizationLog += `${i === 0 ? '' : ' +'} ${w} * ${safe[i].toFixed(2)}`;
+    }
+
+    console.log(`
+      L: vol=${vol} int=${int} tempo=${tempoDiv} rec=${rec}
+      R: vol=${volR} int=${intR} tempo=${tempoRDiv} rec=${recR}
+      count: ${count} weight: ${w}
+      realization: ${realizationLog} == ${safe.reduce((sum, v) => sum + w * v, 0)}
+    `); */
 
     const setReport = this.getSetReport(workload);
     return {
@@ -313,33 +367,27 @@ export class TrainingReportService {
       dist: setReport.dist,
       recTime: setReport.recTime,
       recDist: setReport.recDist,
-      realization:
-        w * vol +
-        w * volR +
-        w * int +
-        w * intR +
-        w * tempoDiv +
-        w * tempoRDiv +
-        w * rec +
-        w * recR,
+      realization: safe.reduce((sum, v) => sum + w * v, 0),
     };
   }
 
   private getTempoTime(set: ExerciseSet): number {
+    if (!set) return 0;
     return (
-      (set.tempoEcc || 0) +
-      (set.tempoIso || 0) +
-      (set.tempoCon || 0) +
-      (set.tempoIdle || 0)
+      (set.tempoEcc ?? 0) +
+      (set.tempoIso ?? 0) +
+      (set.tempoCon ?? 0) +
+      (set.tempoIdle ?? 0)
     );
   }
 
   private getTempoRTime(set: ExerciseSet): number {
+    if (!set) return 0;
     return (
-      (set.tempoEccR || 0) +
-      (set.tempoIsoR || 0) +
-      (set.tempoConR || 0) +
-      (set.tempoIdleR || 0)
+      (set.tempoEccR ?? 0) +
+      (set.tempoIsoR ?? 0) +
+      (set.tempoConR ?? 0) +
+      (set.tempoIdleR ?? 0)
     );
   }
 }
