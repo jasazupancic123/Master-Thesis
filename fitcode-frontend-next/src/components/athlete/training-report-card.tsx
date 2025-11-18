@@ -40,7 +40,7 @@ export default function TrainingReportCard({ report }: Props) {
       total: report.prescribed.reps,
     },
     {
-      label: 'TUT',
+      label: 'Active Time',
       completed: report.tut,
       total: report.prescribed.tut,
       unit: 's',
