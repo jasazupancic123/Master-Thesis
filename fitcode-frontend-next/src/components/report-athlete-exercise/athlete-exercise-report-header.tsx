@@ -15,16 +15,18 @@ import {
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { updateReportInIndexDb } from './actions/index-db';
-import useAthleteExerciseReportAthletes from './hooks/useAthletes';
-import useAthleteExerciseReportData from './hooks/useData';
-import useAthleteExerciseReportExercises from './hooks/useExercises';
+import { updateReportInIndexDb } from './actions/actions-index-db';
+import useAthleteExerciseReportAthletes from './hooks/use-athletes';
+import useAthleteExerciseReportData from './hooks/use-data';
+import useAthleteExerciseReportExercises from './hooks/use-exercises';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import UserSelect from '@/ui/user-select';
 
 interface Props {
   id: string;
@@ -37,6 +39,8 @@ interface Props {
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
+  const { selectedInstitution } = useDashboard();
+
   const {
     id,
     reportType,
@@ -64,7 +68,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
     filteredExercises,
     searchExercisesText,
     setSearchExercisesText,
-  } = useAthleteExerciseReportExercises(passedExerciseId);
+  } = useAthleteExerciseReportExercises(selectedAthlete, passedExerciseId);
 
   useAthleteExerciseReportData(
     reportType,
@@ -93,51 +97,23 @@ export default function AthleteExerciseReportHeader(props: Props) {
         }}
         gap={2}
       >
-        <Box
-          ref={athleteAnchorElRef}
-          sx={{
-            position: 'relative',
+        <UserSelect
+          anchorElRef={athleteAnchorElRef}
+          open={openSelectAthleteMenu}
+          src={
+            reportType === 'single' && selectedAthlete
+              ? selectedAthlete?.photoURL || USER_AVATAR_IMG_URL
+              : undefined
+          }
+          icon={
+            reportType === 'comparison' ? (
+              <Groups sx={{ fontSize: 36 }} />
+            ) : undefined
+          }
+          onAvatarClick={() => {
+            setOpenSelectAthleteMenu((prev) => !prev);
           }}
-        >
-          <Avatar
-            src={
-              reportType === 'single' && selectedAthlete
-                ? selectedAthlete?.photoURL || USER_AVATAR_IMG_URL
-                : undefined
-            }
-            sx={{
-              width: 45,
-              height: 45,
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              setOpenSelectAthleteMenu((prev) => !prev);
-            }}
-          >
-            {reportType === 'comparison' && <Groups sx={{ fontSize: 36 }} />}
-          </Avatar>
-          <IconButton
-            sx={{
-              p: 0.25,
-              m: 0,
-              position: 'absolute',
-              bottom: -2,
-              right: 2,
-              zIndex: 10,
-              backgroundColor: theme.palette.background.default,
-              borderRadius: '50%',
-            }}
-            onClick={() => {
-              setOpenSelectAthleteMenu((prev) => !prev);
-            }}
-          >
-            {openSelectAthleteMenu ? (
-              <KeyboardArrowUpOutlined sx={{ fontSize: 16 }} />
-            ) : (
-              <KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />
-            )}
-          </IconButton>
-        </Box>
+        />
 
         <Menu
           anchorEl={athleteAnchorElRef.current}
@@ -194,7 +170,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                     <MenuItem
                       key={athlete.uid}
                       onClick={async () => {
-                        if (!selectedExercise) return;
+                        if (!selectedExercise || !selectedInstitution) return;
 
                         if (reportType === 'comparison') {
                           const isAlreadySelected = selectedAthletes.some(
@@ -217,6 +193,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise.id,
+                            institutionId: selectedInstitution.id,
                             userIds: newAthletes.map((a) => a.uid),
                           };
 
@@ -227,6 +204,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise.id,
+                            institutionId: selectedInstitution.id,
                             userId: athlete.uid,
                           };
 
@@ -274,11 +252,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
           alignItems="flex-start"
         >
           <Typography
-            maxWidth={
-              window !== undefined
-                ? Math.min(window.innerWidth * 0.45, 260)
-                : 260
-            }
+            maxWidth={230}
             fontWeight={600}
             fontSize={16}
             textAlign="center"

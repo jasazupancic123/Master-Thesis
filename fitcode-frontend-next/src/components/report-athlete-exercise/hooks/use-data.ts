@@ -31,9 +31,9 @@ export default function useAthleteExerciseReportData(
           exercise.id
         );
 
-    if (!averagePerTraining) {
-      return workloads;
-    }
+    if (workloads && workloads.length) cache.set(key, workloads);
+
+    if (!averagePerTraining) return workloads;
 
     const avgWorkloadsByTraining: Workload[] = [];
 

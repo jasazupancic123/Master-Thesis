@@ -33,6 +33,7 @@ export async function updateReportInIndexDb(
     updatedAt: new Date().getTime(),
   });
 }
+
 export async function deleteReportFromIndexDb(id: string) {
   const items = await lib.common.indexedDb.items.get(
     INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
