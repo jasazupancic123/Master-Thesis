@@ -5,7 +5,6 @@ import { Group } from '@/core/group/type/group.type';
 import { Training } from '@/core/training/type/training.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
 import {
@@ -19,13 +18,13 @@ import {
   Typography,
 } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
+import { useEffect, useState } from 'react';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   selectedAthlete: AuthUser | null;
   setSelectedAthlete: SetState<AuthUser | null>;
-  group: Group | null;
-  setGroup: SetState<Group | null>;
   selectedCycles: Cycle[];
   setSelectedCycles: SetState<Cycle[]>;
   selectedTraining: Training | null;
@@ -33,81 +32,46 @@ interface Props {
 }
 
 export default function AthleteExerciseDataGridHeader(props: Props) {
-  const { selectedInstitution, trainings } = useDashboard();
+  const { selectedInstitution } = useDashboard();
 
   const {
     selectedAthlete,
     setSelectedAthlete,
-    group,
-    setGroup,
     selectedCycles,
     setSelectedCycles,
     selectedTraining,
     setSelectedTraining,
   } = props;
 
-  const [searchAthlete, setSearchAthlete] = useState('');
-  const [openSelectAthleteMenu, setOpenAthleteMenu] = useState(false);
-
-  const [possibleTrainings, setPossibleTrainings] = useState<Training[]>([]);
-
-  const athleteAnchorElRef = useRef<HTMLElement | null>(null);
-  const cyclesAnchorElRef = useRef<HTMLElement | null>(null);
-  const trainingAnchorElRef = useRef<HTMLElement | null>(null);
-
-  const filteredAthletes = useMemo<AuthUser[]>(() => {
-    const allAthletes = selectedInstitution?.athletes || [];
-    if (searchAthlete.trim() === '') return allAthletes;
-
-    const lowerSearch = searchAthlete.toLowerCase();
-
-    return allAthletes.filter((athlete) =>
-      athlete.displayName?.toLowerCase().includes(lowerSearch)
-    );
-  }, [selectedInstitution, searchAthlete]);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
 
   useEffect(() => {
-    if (!selectedAthlete) return;
+    if (!selectedInstitution || !selectedAthlete) return;
 
-    const athleteGroup = selectedInstitution?.groups.find((g) =>
-      g.membersIds.includes(selectedAthlete.uid)
+    setCycles(
+      selectedInstitution.groups
+        .filter((g) => g.membersIds.includes(selectedAthlete.uid))
+        .flatMap((g) => g.cycles)
     );
-
-    setGroup(athleteGroup || null);
   }, [selectedAthlete]);
 
-  useEffect(() => {
-    if (!group) {
-      setSelectedCycles([]);
-      return;
-    }
-
-    if (!group.cycles || !group.cycles.length) {
-      setSelectedCycles([]);
-      return;
-    }
-
-    setSelectedCycles([
-      group.cycles.sort(
-        (a, b) => new Date(b.from).getTime() - new Date(a.from).getTime()
-      )[0],
-    ]);
-  }, [group]);
-
-  useEffect(() => {
-    if (!selectedAthlete) return;
-
-    const newPossibleTrainings = trainings
-      .filter(
-        (t) =>
-          selectedCycles.some((c) => c.id === t.cycleId) &&
-          t.membersIds.includes(selectedAthlete.uid)
-      )
-      .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
-
-    setPossibleTrainings(() => newPossibleTrainings);
-    setSelectedTraining(newPossibleTrainings[0] || null);
-  }, [selectedCycles]);
+  const {
+    athleteAnchorElRef,
+    cyclesAnchorElRef,
+    trainingAnchorElRef,
+    openSelectAthleteMenu,
+    setOpenAthleteMenu,
+    filteredAthletes,
+    possibleTrainings,
+    searchAthlete,
+    setSearchAthlete,
+  } = useAthleteExerciseReportDataGridHeader(
+    selectedAthlete,
+    cycles,
+    selectedCycles,
+    setSelectedCycles,
+    setSelectedTraining
+  );
 
   return (
     <Box
@@ -256,7 +220,7 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
             }
 
             const names = selected
-              .map((id) => group?.cycles?.find((c) => c.id === id)?.name ?? '')
+              .map((id) => cycles.find((c) => c.id === id)?.name ?? '')
               .filter(Boolean);
 
             return (
@@ -276,17 +240,17 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
             const value = e.target.value as string[];
 
             const newSelected =
-              group?.cycles?.filter((c) => value.includes(c.id)) ?? [];
+              cycles.filter((c) => value.includes(c.id)) ?? [];
 
             setSelectedCycles(newSelected);
           }}
         >
-          {!group?.cycles || !group?.cycles.length ? (
+          {!cycles || !cycles.length ? (
             <MenuItem disabled>
               <Typography sx={{ px: 1 }}>No cycles</Typography>
             </MenuItem>
           ) : (
-            group.cycles
+            cycles
               .sort(
                 (a, b) =>
                   new Date(b.from).getTime() - new Date(a.from).getTime()

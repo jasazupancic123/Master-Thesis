@@ -68,7 +68,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
     filteredExercises,
     searchExercisesText,
     setSearchExercisesText,
-  } = useAthleteExerciseReportExercises(passedExerciseId);
+  } = useAthleteExerciseReportExercises(selectedAthlete, passedExerciseId);
 
   useAthleteExerciseReportData(
     reportType,
