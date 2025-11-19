@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { AuthUser } from '@/core/auth/type/user.type';
 import { Cycle } from '@/core/group/type/cycle.type';
 import { Training } from '@/core/training/type/training.type';
-import { Group } from '@/core/group/type/group.type';
 import { DataGrid } from '@mui/x-data-grid';
 import useAthleteExerciseReportDataGridData from './hooks/use-rows';
 
@@ -18,7 +17,6 @@ export default function AthleteExerciseDataGrid(props: Props) {
   const { cache } = props;
 
   const [selectedAthlete, setSelectedAthlete] = useState<AuthUser | null>(null);
-  const [group, setGroup] = useState<Group | null>(null); // LATER CHANGE THIS TO SELECTED GROUP WHEN DASHBOARD WILL HAVE SIDEBAR
   const [selectedCycles, setSelectedCycles] = useState<Cycle[]>([]);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
@@ -48,8 +46,6 @@ export default function AthleteExerciseDataGrid(props: Props) {
       <AthleteExerciseDataGridHeader
         selectedAthlete={selectedAthlete}
         setSelectedAthlete={setSelectedAthlete}
-        group={group}
-        setGroup={setGroup}
         selectedCycles={selectedCycles}
         setSelectedCycles={setSelectedCycles}
         selectedTraining={selectedTraining}
