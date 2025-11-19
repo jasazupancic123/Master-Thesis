@@ -26,6 +26,7 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import { useDashboard } from '@/store/dashboard.provider';
+import UserSelect from '@/ui/user-select';
 
 interface Props {
   id: string;
@@ -96,51 +97,23 @@ export default function AthleteExerciseReportHeader(props: Props) {
         }}
         gap={2}
       >
-        <Box
-          ref={athleteAnchorElRef}
-          sx={{
-            position: 'relative',
+        <UserSelect
+          anchorElRef={athleteAnchorElRef}
+          open={openSelectAthleteMenu}
+          src={
+            reportType === 'single' && selectedAthlete
+              ? selectedAthlete?.photoURL || USER_AVATAR_IMG_URL
+              : undefined
+          }
+          icon={
+            reportType === 'comparison' ? (
+              <Groups sx={{ fontSize: 36 }} />
+            ) : undefined
+          }
+          onAvatarClick={() => {
+            setOpenSelectAthleteMenu((prev) => !prev);
           }}
-        >
-          <Avatar
-            src={
-              reportType === 'single' && selectedAthlete
-                ? selectedAthlete?.photoURL || USER_AVATAR_IMG_URL
-                : undefined
-            }
-            sx={{
-              width: 45,
-              height: 45,
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              setOpenSelectAthleteMenu((prev) => !prev);
-            }}
-          >
-            {reportType === 'comparison' && <Groups sx={{ fontSize: 36 }} />}
-          </Avatar>
-          <IconButton
-            sx={{
-              p: 0.25,
-              m: 0,
-              position: 'absolute',
-              bottom: -2,
-              right: 2,
-              zIndex: 10,
-              backgroundColor: theme.palette.background.default,
-              borderRadius: '50%',
-            }}
-            onClick={() => {
-              setOpenSelectAthleteMenu((prev) => !prev);
-            }}
-          >
-            {openSelectAthleteMenu ? (
-              <KeyboardArrowUpOutlined sx={{ fontSize: 16 }} />
-            ) : (
-              <KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />
-            )}
-          </IconButton>
-        </Box>
+        />
 
         <Menu
           anchorEl={athleteAnchorElRef.current}
