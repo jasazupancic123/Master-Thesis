@@ -9,9 +9,7 @@ import UserSelect from '@/ui/user-select';
 import {
   Avatar,
   Box,
-  Checkbox,
   FormControl,
-  Input,
   InputLabel,
   Menu,
   MenuItem,
@@ -290,7 +288,7 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {dayjs(selectedTraining.from).format('YYYY-MM-DD-A')}
+                {dayjs(selectedTraining.from).format('DD-MMM-A')}
               </Typography>
             );
           }}
@@ -314,7 +312,7 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
                 return (
                   <MenuItem key={training.id} value={training.id}>
                     <Typography>
-                      {dayjs(training.from).format('YYYY-MM-DD-A')}
+                      {dayjs(training.from).format('DD-MMM-A')}
                     </Typography>
                   </MenuItem>
                 );
