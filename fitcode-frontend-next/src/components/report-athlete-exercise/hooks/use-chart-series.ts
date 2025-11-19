@@ -18,7 +18,8 @@ export default function useAthleteChartSeries(
       color: string;
     }
   >,
-  getParamColor: (param: 'loadKg' | 'reps' | 'loadKgR' | 'repsR') => string
+  getParamColor: (param: 'loadKg' | 'reps' | 'loadKgR' | 'repsR') => string,
+  range: number[]
 ) {
   const { users } = useMain();
 
@@ -57,12 +58,14 @@ export default function useAthleteChartSeries(
       const newComparisonSeries = userIds.map((userId, idx) => {
         const userName = users.find((u) => u.uid === userId)?.displayName;
 
+        const filteredTrainingIds = trainingIds.slice(range[0] - 1, range[1]);
+
         return {
           id: userId,
           label: userName || `User ${idx + 1}`,
           data:
             selectedParam === 'loadKg'
-              ? trainingIds.map((trainingId) => {
+              ? filteredTrainingIds.map((trainingId) => {
                   const row = chartData.find(
                     (d) => d.trainingId === trainingId && d.userId === userId
                   );
@@ -70,7 +73,7 @@ export default function useAthleteChartSeries(
                   return row?.load ?? null;
                 })
               : selectedParam === 'reps'
-                ? trainingIds.map((trainingId) => {
+                ? filteredTrainingIds.map((trainingId) => {
                     const row = chartData.find(
                       (d) => d.trainingId === trainingId && d.userId === userId
                     );
@@ -78,7 +81,7 @@ export default function useAthleteChartSeries(
                     return row?.reps ?? null;
                   })
                 : selectedParam === 'loadKgR'
-                  ? trainingIds.map((trainingId) => {
+                  ? filteredTrainingIds.map((trainingId) => {
                       const row = chartData.find(
                         (d) =>
                           d.trainingId === trainingId && d.userId === userId
@@ -87,7 +90,7 @@ export default function useAthleteChartSeries(
                       return row?.loadR ?? null;
                     })
                   : selectedParam === 'repsR'
-                    ? trainingIds.map((trainingId) => {
+                    ? filteredTrainingIds.map((trainingId) => {
                         const row = chartData.find(
                           (d) =>
                             d.trainingId === trainingId && d.userId === userId
@@ -103,7 +106,7 @@ export default function useAthleteChartSeries(
 
       setComparisonSeries(newComparisonSeries);
     }
-  }, [selectedParams, comparisonParam, reportType]);
+  }, [selectedParams, comparisonParam, reportType, range]);
 
   return {
     singleModeSeries,

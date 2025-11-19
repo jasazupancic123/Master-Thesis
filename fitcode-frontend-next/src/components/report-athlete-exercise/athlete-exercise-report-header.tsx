@@ -252,11 +252,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
           alignItems="flex-start"
         >
           <Typography
-            maxWidth={
-              window !== undefined
-                ? Math.min(window.innerWidth * 0.45, 260)
-                : 260
-            }
+            maxWidth={230}
             fontWeight={600}
             fontSize={16}
             textAlign="center"

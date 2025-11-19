@@ -26,7 +26,6 @@ import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import AddButton from '@/ui/add-button';
 import { useDashboard } from '@/store/dashboard.provider';
-import AthleteExerciseDataGridHeader from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid-header';
 import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
 
 interface Props {
@@ -47,7 +46,7 @@ export default function AthleteExerciseReports(props: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 100, // ms to hold before drag
+        delay: 0, // ms to hold before drag
         tolerance: 5, // how much you can wobble while holding
       },
     })
@@ -190,7 +189,6 @@ export default function AthleteExerciseReports(props: Props) {
             justifyContent={flexWrap === 'wrap' ? 'center' : undefined}
             gap={2}
             sx={{
-              overflowX: 'auto',
               ...styledScrollbarSx(theme),
             }}
             flexWrap={flexWrap}
