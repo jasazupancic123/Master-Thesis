@@ -1,7 +1,6 @@
 import { theme } from '@/app/style';
 import { AuthUser } from '@/core/auth/type/user.type';
 import { Cycle } from '@/core/group/type/cycle.type';
-import { Group } from '@/core/group/type/group.type';
 import { Training } from '@/core/training/type/training.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { SetState } from '@/lib/common/type/state.type';
@@ -10,7 +9,9 @@ import UserSelect from '@/ui/user-select';
 import {
   Avatar,
   Box,
+  Checkbox,
   FormControl,
+  Input,
   InputLabel,
   Menu,
   MenuItem,
@@ -21,6 +22,7 @@ import dayjs from 'dayjs';
 import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
 import { useEffect, useState } from 'react';
 import { useDashboard } from '@/store/dashboard.provider';
+import { PercentageCalculation } from './enum/percentage-calculation.enum';
 
 interface Props {
   selectedAthlete: AuthUser | null;
@@ -29,6 +31,8 @@ interface Props {
   setSelectedCycles: SetState<Cycle[]>;
   selectedTraining: Training | null;
   setSelectedTraining: SetState<Training | null>;
+  selectedPercentageCalculation: PercentageCalculation;
+  setSelectedPercentageCalculation: SetState<PercentageCalculation>;
 }
 
 export default function AthleteExerciseDataGridHeader(props: Props) {
@@ -41,6 +45,8 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
     setSelectedCycles,
     selectedTraining,
     setSelectedTraining,
+    selectedPercentageCalculation,
+    setSelectedPercentageCalculation,
   } = props;
 
   const [cycles, setCycles] = useState<Cycle[]>([]);
@@ -59,6 +65,7 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
     athleteAnchorElRef,
     cyclesAnchorElRef,
     trainingAnchorElRef,
+    percentageCalculationAnchorElRef,
     openSelectAthleteMenu,
     setOpenAthleteMenu,
     filteredAthletes,
@@ -313,6 +320,43 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
                 );
               })
           )}
+        </Select>
+      </FormControl>
+      <FormControl sx={{ width: 200 }} size="small">
+        <InputLabel id="percentage-calculation-label">
+          Show % based on
+        </InputLabel>
+        <Select
+          ref={percentageCalculationAnchorElRef}
+          labelId="percentage-calculation-label"
+          value={selectedPercentageCalculation}
+          displayEmpty
+          renderValue={(_) => {
+            return (
+              <Typography
+                sx={{
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {selectedPercentageCalculation}
+              </Typography>
+            );
+          }}
+          onChange={(e) => {
+            const value = e.target.value as PercentageCalculation;
+            setSelectedPercentageCalculation(value);
+          }}
+        >
+          {Object.values(PercentageCalculation).map((calculation) => {
+            return (
+              <MenuItem key={calculation} value={calculation}>
+                <Typography>{calculation}</Typography>
+              </MenuItem>
+            );
+          })}
         </Select>
       </FormControl>
     </Box>

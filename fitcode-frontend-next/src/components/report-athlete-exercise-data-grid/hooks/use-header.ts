@@ -4,7 +4,6 @@ import { Group } from '@/core/group/type/group.type';
 import { Training } from '@/core/training/type/training.type';
 import { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { group } from 'console';
 import { useState, useRef, useMemo, useEffect } from 'react';
 
 export default function useAthleteExerciseReportDataGridHeader(
@@ -24,6 +23,7 @@ export default function useAthleteExerciseReportDataGridHeader(
   const athleteAnchorElRef = useRef<HTMLElement | null>(null);
   const cyclesAnchorElRef = useRef<HTMLElement | null>(null);
   const trainingAnchorElRef = useRef<HTMLElement | null>(null);
+  const percentageCalculationAnchorElRef = useRef<HTMLElement | null>(null);
 
   const filteredAthletes = useMemo<AuthUser[]>(() => {
     const allAthletes = selectedInstitution?.athletes || [];
@@ -68,6 +68,7 @@ export default function useAthleteExerciseReportDataGridHeader(
     athleteAnchorElRef,
     cyclesAnchorElRef,
     trainingAnchorElRef,
+    percentageCalculationAnchorElRef,
     openSelectAthleteMenu,
     setOpenAthleteMenu,
     filteredAthletes,

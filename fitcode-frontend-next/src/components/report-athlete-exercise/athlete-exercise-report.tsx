@@ -178,7 +178,6 @@ export default function AthleteExerciseReport(props: Props) {
                     showMark: true,
                     color: theme.palette.warning.main,
                   },
-
                   {
                     dataKey: 'load',
                     label: 'Load (kg)',

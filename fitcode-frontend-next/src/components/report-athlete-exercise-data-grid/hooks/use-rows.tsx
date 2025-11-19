@@ -10,11 +10,13 @@ import { Workload } from '@/core/training/type/workload.type';
 import { Box, Typography } from '@mui/material';
 import { Cycle } from '@/core/group/type/cycle.type';
 import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { PercentageCalculation } from '../enum/percentage-calculation.enum';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: AuthUser | null,
   selectedCycles: Cycle[],
   selectedTraining: Training | null,
+  selectedPercentageCalculation: PercentageCalculation,
   cache: Map<string, Workload[]>
 ) {
   const { selectedInstitution, trainings } = useDashboard();
@@ -23,6 +25,19 @@ export default function useAthleteExerciseReportDataGridData(
   const [rows, setRows] = useState<DataGridRowAthleteExercise[]>([]);
 
   const fontSize = 13;
+
+  const percentageGetter = (row: DataGridRowAthleteExercise) => {
+    const value = row.selectedTrainingReps;
+    const avg =
+      selectedPercentageCalculation === PercentageCalculation.CYCLE
+        ? row.cyclesAvgReps
+        : row.prescribedTrainingReps;
+
+    if (value == null || avg == null || avg === 0) return null;
+
+    const diff = ((value - avg) / avg) * 100;
+    return diff;
+  };
 
   const renderCellWithPercentChange = (
     value: number | undefined,
@@ -36,6 +51,7 @@ export default function useAthleteExerciseReportDataGridData(
         : null;
 
     const isHigher = percentChange !== null && percentChange > 0;
+    const isSame = percentChange === 0;
 
     const valueString = `${value !== undefined ? Math.round(value) : '-'}`;
 
@@ -49,9 +65,11 @@ export default function useAthleteExerciseReportDataGridData(
               lineHeight={1}
               fontSize={fontSize}
               sx={{
-                color: isHigher
-                  ? theme.palette.success.main
-                  : theme.palette.error.main,
+                color: isSame
+                  ? theme.palette.warning.main
+                  : isHigher
+                    ? theme.palette.success.main
+                    : theme.palette.error.main,
                 display: 'inline',
               }}
             >
@@ -120,8 +138,8 @@ export default function useAthleteExerciseReportDataGridData(
         // Cycles avgs per training
         const evaluatedTrainings: {
           id: string;
-          avgReps: number;
-          avgTonnage: number;
+          reps: number;
+          tonnage: number;
         }[] = [];
 
         for (const workload of cycleWorkloads) {
@@ -149,20 +167,20 @@ export default function useAthleteExerciseReportDataGridData(
 
           evaluatedTrainings.push({
             id: workload.trainingId,
-            avgReps: trainingTotalReps,
-            avgTonnage: trainingTotalTonnage,
+            reps: trainingTotalReps,
+            tonnage: trainingTotalTonnage,
           });
         }
 
         const cyclesAvgReps =
           evaluatedTrainings.length > 0
-            ? evaluatedTrainings.reduce((sum, t) => sum + t.avgReps, 0) /
+            ? evaluatedTrainings.reduce((sum, t) => sum + t.reps, 0) /
               evaluatedTrainings.length
             : undefined;
 
         const cyclesAvgTonnage =
           evaluatedTrainings.length > 0
-            ? evaluatedTrainings.reduce((sum, t) => sum + t.avgTonnage, 0) /
+            ? evaluatedTrainings.reduce((sum, t) => sum + t.tonnage, 0) /
               evaluatedTrainings.length
             : undefined;
 
@@ -173,6 +191,8 @@ export default function useAthleteExerciseReportDataGridData(
 
         let totalTrainingReps = 0;
         let totalTrainingLoad = 0;
+        let trainingTotalPrescribedTrainingReps = 0;
+        let trainingTotalPrescribedTrainingTonnage = 0;
 
         for (const w of trainingWorkloads) {
           totalTrainingReps +=
@@ -182,12 +202,30 @@ export default function useAthleteExerciseReportDataGridData(
             w.loadKg && w.loadKgR
               ? (w.loadKg + w.loadKgR) / 2
               : w.loadKg || w.loadKgR || 0;
+
+          trainingTotalPrescribedTrainingReps +=
+            w.prescribed.reps && w.prescribed.repsR
+              ? (w.prescribed.reps + w.prescribed.repsR) / 2
+              : w.prescribed.reps || w.prescribed.repsR || 0;
+
+          trainingTotalPrescribedTrainingTonnage +=
+            w.prescribed.loadKg && w.prescribed.loadKgR
+              ? (w.prescribed.loadKg + w.prescribed.loadKgR) / 2
+              : w.prescribed.loadKg || w.prescribed.loadKgR || 0;
         }
 
         const selectedTrainingReps =
           totalTrainingReps > 0 ? totalTrainingReps : undefined;
         const selectedTrainingTonnage =
           totalTrainingLoad > 0 ? totalTrainingLoad : undefined;
+        const prescribedTrainingReps =
+          trainingTotalPrescribedTrainingReps > 0
+            ? trainingTotalPrescribedTrainingReps
+            : undefined;
+        const prescribedTrainingTonnage =
+          trainingTotalPrescribedTrainingTonnage > 0
+            ? trainingTotalPrescribedTrainingTonnage
+            : undefined;
 
         rows.push({
           exerciseId: exercise.id,
@@ -196,6 +234,8 @@ export default function useAthleteExerciseReportDataGridData(
           cyclesAvgTonnage,
           selectedTrainingReps,
           selectedTrainingTonnage,
+          prescribedTrainingReps,
+          prescribedTrainingTonnage,
         });
       }
 
@@ -242,20 +282,21 @@ export default function useAthleteExerciseReportDataGridData(
       valueFormatter: (value?: number) =>
         value !== undefined ? Math.round(value) : '-',
     },
-
+    {
+      field: 'prescribedTrainingReps',
+      headerName: 'Prescribed reps',
+      flex: 0.7,
+      minWidth: 140,
+      valueFormatter: (value?: number) =>
+        value !== undefined ? Math.round(value) : '-',
+    },
     {
       field: 'selectedTrainingReps',
-      headerName: 'Session avg reps',
-      flex: 0.9,
-      minWidth: 170,
+      headerName: 'Session reps',
+      flex: 0.7,
+      minWidth: 140,
       valueGetter: (_value, row) => {
-        const value = row.selectedTrainingReps;
-        const cycleAvg = row.cyclesAvgReps;
-
-        if (value == null || cycleAvg == null || cycleAvg === 0) return null;
-
-        const diff = ((value - cycleAvg) / cycleAvg) * 100;
-        return diff;
+        return percentageGetter(row);
       },
       sortComparator: (v1, v2) => {
         if (v1 == null && v2 == null) return 0;
@@ -268,7 +309,9 @@ export default function useAthleteExerciseReportDataGridData(
 
         return renderCellWithPercentChange(
           row.selectedTrainingReps,
-          row.cyclesAvgReps
+          selectedPercentageCalculation === PercentageCalculation.CYCLE
+            ? row.cyclesAvgReps
+            : row.prescribedTrainingReps
         );
       },
     },
@@ -281,18 +324,20 @@ export default function useAthleteExerciseReportDataGridData(
         value !== undefined ? value.toFixed(1) : '-',
     },
     {
+      field: 'prescribedTrainingTonnage',
+      headerName: 'Prescribed tonnage',
+      flex: 0.9,
+      minWidth: 160,
+      valueFormatter: (value?: number) =>
+        value !== undefined ? value.toFixed(1) : '-',
+    },
+    {
       field: 'selectedTrainingTonnage',
-      headerName: 'Session avg tonnage',
+      headerName: 'Session tonnage',
       flex: 1,
       minWidth: 190,
       valueGetter: (_value, row) => {
-        const value = row.selectedTrainingTonnage;
-        const cycleAvg = row.cyclesAvgTonnage;
-
-        if (value == null || cycleAvg == null || cycleAvg === 0) return null;
-
-        const diff = ((value - cycleAvg) / cycleAvg) * 100;
-        return diff;
+        return percentageGetter(row);
       },
       sortComparator: (v1, v2) => {
         if (v1 == null && v2 == null) return 0;
@@ -305,7 +350,9 @@ export default function useAthleteExerciseReportDataGridData(
 
         return renderCellWithPercentChange(
           row.selectedTrainingTonnage,
-          row.cyclesAvgTonnage
+          selectedPercentageCalculation === PercentageCalculation.CYCLE
+            ? row.cyclesAvgTonnage
+            : row.prescribedTrainingTonnage
         );
       },
     },
