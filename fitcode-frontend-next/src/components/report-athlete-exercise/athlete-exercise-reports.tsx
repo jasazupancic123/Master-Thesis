@@ -26,6 +26,8 @@ import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import AddButton from '@/ui/add-button';
 import { useDashboard } from '@/store/dashboard.provider';
+import AthleteExerciseDataGridHeader from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid-header';
+import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
 
 interface Props {
   cache: Map<string, Workload[]>;
@@ -61,13 +63,13 @@ export default function AthleteExerciseReports(props: Props) {
         INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
       );
 
-      if (items) {
-        const data: IndexDbAthleteExerciseReport[] = items.payload;
+      const data: IndexDbAthleteExerciseReport[] = items?.payload;
 
-        const filteredData = data.filter((item) => {
-          return item.institutionId === selectedInstitution.id;
-        });
+      const filteredData = (data || []).filter((item) => {
+        return item.institutionId === selectedInstitution.id;
+      });
 
+      if (filteredData && filteredData.length) {
         setReports(
           filteredData.map((item) => ({
             id: item.id,
@@ -199,6 +201,7 @@ export default function AthleteExerciseReports(props: Props) {
           </Box>
         </SortableContext>
       </DndContext>
+      <AthleteExerciseDataGrid cache={cache} />
     </Box>
   );
 }

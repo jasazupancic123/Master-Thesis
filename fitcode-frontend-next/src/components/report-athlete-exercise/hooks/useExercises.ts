@@ -21,7 +21,7 @@ export default function useAthleteExerciseReportExercises(
         ])
       )
     ),
-  ];
+  ].filter((id, index, self) => index === self.findIndex((e) => e === id));
 
   const exercisesToSelect: Exercise[] = uniqueExerciseIds
     .map((id) => exercises.find((e) => e.id === id))
