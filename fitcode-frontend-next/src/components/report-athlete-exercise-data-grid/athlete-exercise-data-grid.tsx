@@ -1,14 +1,15 @@
-import { theme } from '@/app/style';
-import { Workload } from '@/core/training/type/workload.type';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import AthleteExerciseDataGridHeader from './athlete-exercise-data-grid-header';
-import { useState } from 'react';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Cycle } from '@/core/group/type/cycle.type';
-import { Training } from '@/core/training/type/training.type';
 import { DataGrid } from '@mui/x-data-grid';
-import useAthleteExerciseReportDataGridData from './hooks/use-rows';
+import { useState } from 'react';
+
+import AthleteExerciseDataGridHeader from './athlete-exercise-data-grid-header';
 import { PercentageCalculation } from './enum/percentage-calculation.enum';
+import useAthleteExerciseReportDataGridData from './hooks/use-rows';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { Workload } from '@/core/training/type/workload.type';
 
 interface Props {
   cache: Map<string, Workload[]>;

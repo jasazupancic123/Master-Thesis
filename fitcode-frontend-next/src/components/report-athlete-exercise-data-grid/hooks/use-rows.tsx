@@ -1,16 +1,17 @@
-import { theme } from '@/app/style';
-import { TrainingController } from '@/core/training/training.controller';
-import { GridColDef } from '@mui/x-data-grid';
-import { useState, useEffect } from 'react';
-import { DataGridRowAthleteExercise } from '../types/data-grid-row';
-import { useDashboard } from '@/store/dashboard.provider';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Training } from '@/core/training/type/training.type';
-import { Workload } from '@/core/training/type/workload.type';
 import { Box, Typography } from '@mui/material';
-import { Cycle } from '@/core/group/type/cycle.type';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { GridColDef } from '@mui/x-data-grid';
+import { useEffect, useState } from 'react';
+
 import { PercentageCalculation } from '../enum/percentage-calculation.enum';
+import type { DataGridRowAthleteExercise } from '../types/data-grid-row';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import { TrainingController } from '@/core/training/training.controller';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { Workload } from '@/core/training/type/workload.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: AuthUser | null,
@@ -33,7 +34,7 @@ export default function useAthleteExerciseReportDataGridData(
         ? row.cyclesAvgReps
         : row.prescribedTrainingReps;
 
-    if (value == null || avg == null || avg === 0) return null;
+    if (value === null || value === undefined || !avg) return null;
 
     const diff = ((value - avg) / avg) * 100;
     return diff;
@@ -299,9 +300,9 @@ export default function useAthleteExerciseReportDataGridData(
         return percentageGetter(row);
       },
       sortComparator: (v1, v2) => {
-        if (v1 == null && v2 == null) return 0;
-        if (v1 == null) return 1;
-        if (v2 == null) return -1;
+        if (v1 === null && v2 === null) return 0;
+        if (v1 === null) return 1;
+        if (v2 === null) return -1;
         return v1 - v2;
       },
       renderCell: (params) => {
@@ -340,9 +341,9 @@ export default function useAthleteExerciseReportDataGridData(
         return percentageGetter(row);
       },
       sortComparator: (v1, v2) => {
-        if (v1 == null && v2 == null) return 0;
-        if (v1 == null) return 1;
-        if (v2 == null) return -1;
+        if (v1 === null && v2 === null) return 0;
+        if (v1 === null) return 1;
+        if (v2 === null) return -1;
         return v1 - v2;
       },
       renderCell: (params) => {

@@ -1,6 +1,7 @@
-import { theme } from '@/app/style';
-import { Workload } from '@/core/training/type/workload.type';
 import { useEffect, useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { Workload } from '@/core/training/type/workload.type';
 
 export default function useAthleteExerciseReportParams(data: Workload[]) {
   const [possibleParams, setPossibleParams] = useState<
