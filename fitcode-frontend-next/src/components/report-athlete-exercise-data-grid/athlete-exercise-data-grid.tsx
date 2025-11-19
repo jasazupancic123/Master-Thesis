@@ -8,6 +8,7 @@ import { Cycle } from '@/core/group/type/cycle.type';
 import { Training } from '@/core/training/type/training.type';
 import { DataGrid } from '@mui/x-data-grid';
 import useAthleteExerciseReportDataGridData from './hooks/use-rows';
+import { PercentageCalculation } from './enum/percentage-calculation.enum';
 
 interface Props {
   cache: Map<string, Workload[]>;
@@ -21,11 +22,14 @@ export default function AthleteExerciseDataGrid(props: Props) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );
+  const [selectedPercentageCalculation, setSelectedPercentageCalculation] =
+    useState<PercentageCalculation>(PercentageCalculation.SESSION);
 
   const { isLoadingData, rows, columns } = useAthleteExerciseReportDataGridData(
     selectedAthlete,
     selectedCycles,
     selectedTraining,
+    selectedPercentageCalculation,
     cache
   );
 
@@ -50,6 +54,8 @@ export default function AthleteExerciseDataGrid(props: Props) {
         setSelectedCycles={setSelectedCycles}
         selectedTraining={selectedTraining}
         setSelectedTraining={setSelectedTraining}
+        selectedPercentageCalculation={selectedPercentageCalculation}
+        setSelectedPercentageCalculation={setSelectedPercentageCalculation}
       />
       {/* 👇 The actual datagrid */}
       <Box width="100%">
