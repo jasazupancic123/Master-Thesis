@@ -1,10 +1,11 @@
-import { theme } from '@/app/style';
 import {
-  KeyboardArrowUpOutlined,
   KeyboardArrowDownOutlined,
+  KeyboardArrowUpOutlined,
 } from '@mui/icons-material';
-import { Box, Avatar, IconButton } from '@mui/material';
-import { JSX, RefObject } from 'react';
+import { Avatar, Box, IconButton } from '@mui/material';
+import type { JSX, RefObject } from 'react';
+
+import { theme } from '@/app/style';
 
 interface Props {
   anchorElRef: RefObject<HTMLElement | null>;

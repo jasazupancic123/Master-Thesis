@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 
+import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { AuthUser } from '@/core/auth/type/user.type';
 
 export default function useAthleteExerciseReportExercises(
   selectedAthlete: AuthUser | null,

@@ -47,8 +47,6 @@ export default function useAthleteChartData(
         new Set(chartData.map((d) => d.trainingId))
       );
 
-      console.log(uniqueTrainingIds);
-
       setRange([1, uniqueTrainingIds.length]);
     }
   }, [reportType, chartData]);

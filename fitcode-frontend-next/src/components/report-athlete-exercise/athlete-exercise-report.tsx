@@ -18,14 +18,13 @@ import { useState } from 'react';
 import { deleteReportFromIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReportHeader from './athlete-exercise-report-header';
 import useAthleteChartData from './hooks/use-chart-data';
+import useAthleteChartSeries from './hooks/use-chart-series';
+import useAthleteExerciseReportParams from './hooks/use-params';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useScreenSize } from '@/store/screen-size.provider';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
-import useAthleteExerciseReportParams from './hooks/use-params';
-import useAthleteChartSeries from './hooks/use-chart-series';
 
 interface Props {
   id: string;
@@ -37,8 +36,6 @@ interface Props {
 }
 
 export default function AthleteExerciseReport(props: Props) {
-  const screenSize = useScreenSize();
-
   const {
     id,
     cache,

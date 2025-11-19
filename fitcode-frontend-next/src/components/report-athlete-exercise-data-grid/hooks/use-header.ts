@@ -1,10 +1,10 @@
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Cycle } from '@/core/group/type/cycle.type';
-import { Group } from '@/core/group/type/group.type';
-import { Training } from '@/core/training/type/training.type';
-import { SetState } from '@/lib/common/type/state.type';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useState, useRef, useMemo, useEffect } from 'react';
 
 export default function useAthleteExerciseReportDataGridHeader(
   selectedAthlete: AuthUser | null,

@@ -1,8 +1,9 @@
+import type { LineSeries } from '@mui/x-charts';
+import { useEffect, useState } from 'react';
+
+import type { AthleteExerciseReportChartData } from '../types/athlete-exercise-report-chart-data';
 import { theme } from '@/app/style';
 import { useMain } from '@/store/main.provider';
-import { LineSeries } from '@mui/x-charts';
-import { useEffect, useState } from 'react';
-import { AthleteExerciseReportChartData } from '../types/athlete-exercise-report-chart-data';
 
 export default function useAthleteChartSeries(
   reportType: 'single' | 'comparison',

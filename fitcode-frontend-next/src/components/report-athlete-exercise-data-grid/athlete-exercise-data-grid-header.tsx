@@ -1,11 +1,3 @@
-import { theme } from '@/app/style';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Cycle } from '@/core/group/type/cycle.type';
-import { Training } from '@/core/training/type/training.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { SetState } from '@/lib/common/type/state.type';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import UserSelect from '@/ui/user-select';
 import {
   Avatar,
   Box,
@@ -17,10 +9,19 @@ import {
   Typography,
 } from '@mui/material';
 import dayjs from 'dayjs';
-import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
 import { useEffect, useState } from 'react';
-import { useDashboard } from '@/store/dashboard.provider';
+
 import { PercentageCalculation } from './enum/percentage-calculation.enum';
+import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Training } from '@/core/training/type/training.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
+import { SearchBar } from '@/ui/search-bar/search-bar';
+import UserSelect from '@/ui/user-select';
 
 interface Props {
   selectedAthlete: AuthUser | null;
