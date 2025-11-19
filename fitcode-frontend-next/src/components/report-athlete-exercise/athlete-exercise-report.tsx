@@ -1,7 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Clear, DragIndicator, Groups, Person } from '@mui/icons-material';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import {
+  Box,
+  Checkbox,
+  IconButton,
+  Radio,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
 import type { JSX } from 'react';
@@ -9,13 +16,16 @@ import { useState } from 'react';
 
 import { deleteReportFromIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReportHeader from './athlete-exercise-report-header';
-import useAthleteChartData from './hooks/useChartData';
+import useAthleteChartData from './hooks/use-chart-data';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
+import useAthleteExerciseReportParams from './hooks/use-params';
+import { useMain } from '@/store/main.provider';
+import useAthleteChartSeries from './hooks/use-chart-series';
 
 interface Props {
   id: string;
@@ -29,8 +39,17 @@ interface Props {
 export default function AthleteExerciseReport(props: Props) {
   const screenSize = useScreenSize();
 
-  const { data, setData, chartData, trainingIds, comparisonSeries } =
-    useAthleteChartData();
+  const { data, setData, chartData } = useAthleteChartData();
+
+  const {
+    possibleParams,
+    selectedParams,
+    setSelectedParams,
+    comparisonParam,
+    setComparisonParam,
+    paramSeriesMap,
+    getParamColor,
+  } = useAthleteExerciseReportParams(data);
 
   const {
     id,
@@ -44,6 +63,17 @@ export default function AthleteExerciseReport(props: Props) {
   const [reportType, setReportType] = useState<'single' | 'comparison'>(
     passedUserIds && passedUserIds.length ? 'comparison' : 'single'
   );
+
+  const { singleModeSeries, comparisonSeries, trainingIds } =
+    useAthleteChartSeries(
+      reportType,
+      chartData,
+      selectedParams,
+      possibleParams,
+      comparisonParam,
+      paramSeriesMap,
+      getParamColor
+    );
 
   const [openGallery, setOpenGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
@@ -66,7 +96,9 @@ export default function AthleteExerciseReport(props: Props) {
       {...(!screenSize.isMobile ? attributes : {})}
       {...(!screenSize.isMobile ? listeners : {})}
       maxWidth={
-        window !== undefined ? Math.min(window.innerWidth * 0.95, 400) : 400
+        typeof window !== undefined
+          ? Math.min(window.innerWidth * 0.95, 400)
+          : 400
       }
       display="flex"
       flexDirection="column"
@@ -154,59 +186,81 @@ export default function AthleteExerciseReport(props: Props) {
         passedExerciseId={passedExerciseId}
       />
 
+      <Box
+        width={'100%'}
+        display="flex"
+        alignItems={'center'}
+        justifyContent="center"
+        sx={{ cursor: 'pointer' }}
+        gap={0.5}
+        flexWrap="wrap"
+        ml={4}
+      >
+        {possibleParams.map((param) => {
+          const paramName =
+            param === 'loadKg'
+              ? 'Load (kg)'
+              : param === 'reps'
+                ? 'Reps'
+                : param === 'loadKgR'
+                  ? 'Load R (kg)'
+                  : 'Reps R';
+
+          const isSelected = selectedParams.includes(param);
+
+          const color = getParamColor(param);
+
+          return (
+            <Box key={param} display="flex" alignItems="center" gap={0.5}>
+              {reportType === 'single' ? (
+                <Checkbox
+                  size="small"
+                  sx={{ color: `${color} !important`, p: 0 }}
+                  checked={selectedParams.includes(param)}
+                  onClick={() => {
+                    setSelectedParams((prev) => {
+                      if (isSelected) return prev.filter((p) => p !== param);
+                      else return [...prev, param];
+                    });
+                  }}
+                />
+              ) : (
+                <Radio
+                  size="small"
+                  sx={{ p: 0 }}
+                  checked={comparisonParam === param}
+                  onClick={() => {
+                    setComparisonParam(param);
+                  }}
+                />
+              )}
+              <Typography
+                fontSize={14}
+                sx={{
+                  color:
+                    reportType === 'single' && isSelected
+                      ? color
+                      : theme.palette.text.primary,
+                }}
+              >
+                {paramName}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
+
       {/* Chart */}
       <LineChart
         dataset={reportType === 'single' ? chartData : undefined}
         width={
-          window !== undefined ? Math.min(window.innerWidth * 0.95, 400) : 400
+          typeof window !== undefined
+            ? Math.min(window.innerWidth * 0.95, 400)
+            : 400
         }
         height={250}
-        series={
-          reportType === 'single'
-            ? chartData.some((d) => d.loadR !== undefined) ||
-              chartData.some((d) => d.repsR !== undefined)
-              ? [
-                  {
-                    dataKey: 'loadR',
-                    label: 'Load R(kg)',
-                    showMark: true,
-                    color: theme.palette.success.main,
-                  },
-                  {
-                    dataKey: 'repsR',
-                    label: 'Reps R',
-                    showMark: true,
-                    color: theme.palette.warning.main,
-                  },
-                  {
-                    dataKey: 'load',
-                    label: 'Load (kg)',
-                    showMark: true,
-                    color: theme.palette.primary.main,
-                  },
-                  {
-                    dataKey: 'reps',
-                    label: 'Reps',
-                    showMark: true,
-                    color: theme.palette.secondary.main,
-                  },
-                ]
-              : [
-                  {
-                    dataKey: 'load',
-                    label: 'Load (kg)',
-                    showMark: true,
-                    color: theme.palette.primary.main,
-                  },
-                  {
-                    dataKey: 'reps',
-                    label: 'Reps',
-                    showMark: true,
-                    color: theme.palette.secondary.main,
-                  },
-                ]
-            : comparisonSeries // one line per user
-        }
+        hideLegend={reportType === 'single'}
+        series={reportType === 'single' ? singleModeSeries : comparisonSeries}
         xAxis={
           reportType === 'single'
             ? [

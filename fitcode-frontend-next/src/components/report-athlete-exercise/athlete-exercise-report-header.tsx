@@ -16,9 +16,9 @@ import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { updateReportInIndexDb } from './actions/actions-index-db';
-import useAthleteExerciseReportAthletes from './hooks/useAthletes';
-import useAthleteExerciseReportData from './hooks/useData';
-import useAthleteExerciseReportExercises from './hooks/useExercises';
+import useAthleteExerciseReportAthletes from './hooks/use-athletes';
+import useAthleteExerciseReportData from './hooks/use-data';
+import useAthleteExerciseReportExercises from './hooks/use-exercises';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
