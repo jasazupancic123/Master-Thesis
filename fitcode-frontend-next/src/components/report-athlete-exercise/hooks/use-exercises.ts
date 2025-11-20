@@ -1,18 +1,26 @@
 import { useMemo, useState } from 'react';
 
+import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportExercises(
+  selectedAthlete: AuthUser | null,
   passedExerciseId?: string
 ) {
   const { exercises } = useMain();
   const { trainings } = useDashboard();
 
+  const athleteTrainings = selectedAthlete
+    ? trainings.filter((t) =>
+        t.membersIds.some((id) => id === selectedAthlete.uid)
+      )
+    : trainings;
+
   const uniqueExerciseIds = [
     ...new Set(
-      trainings.flatMap((t) =>
+      athleteTrainings.flatMap((t) =>
         t.components.flatMap((c) => [
           ...c.supersets.flatMap((s) => s.exercises.map((e) => e.id)),
           ...c.subgroups.flatMap((sg) =>
@@ -21,7 +29,7 @@ export default function useAthleteExerciseReportExercises(
         ])
       )
     ),
-  ];
+  ].filter((id, index, self) => index === self.findIndex((e) => e === id));
 
   const exercisesToSelect: Exercise[] = uniqueExerciseIds
     .map((id) => exercises.find((e) => e.id === id))
