@@ -1,6 +1,5 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type {
-  CreateTrainingComponent,
   TrainingComponent,
   UpdateTrainingComponent,
 } from './training-component.type';
@@ -32,10 +31,8 @@ export type Training = BaseEntity &
 
 export type CreateTraining = Pick<
   Training,
-  'groupId' | 'cycleId' | 'membersIds' | 'from'
-> & {
-  components: CreateTrainingComponent[];
-};
+  'groupId' | 'cycleId' | 'components' | 'membersIds' | 'from'
+>;
 
 export type UpdateTraining = {
   components: UpdateTrainingComponent[];

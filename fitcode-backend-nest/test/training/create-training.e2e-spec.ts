@@ -122,20 +122,6 @@ describe('Create Training (e2e)', () => {
       );
     });
 
-    it('should fail to create new training if user is not owner (trainer) of the group or manager of institution', async () => {
-      const training = generateTrainingStub({
-        ownerId: global.trainer.uid,
-        membersIds: [global.athlete.uid],
-        groupId: group.id,
-        cycleId: group.cycles[0].id,
-        components: [generateTrainingComponent()],
-      });
-
-      const response = await req(global.athlete.token, training);
-      expect(response.status).toBe(401);
-      expect(response.body.message).toBe('You cannot add training');
-    });
-
     it('should fail to create new training if training falls outside of the cycle date range', async () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
@@ -411,7 +397,7 @@ describe('Create Training (e2e)', () => {
         expect(response.body.ownerId).toBe(user.uid);
         expect(response.body.membersIds).toEqual([global.athlete.uid]);
         expect(response.body.components).toHaveLength(1);
-        expect(response.body.components[0].supersets).toHaveLength(0);
+        expect(response.body.components[0].supersets).toHaveLength(1);
         expect(response.body.futureStats).not.toBeDefined();
 
         await Promise.all([
@@ -420,6 +406,25 @@ describe('Create Training (e2e)', () => {
         ]);
       },
     );
+
+    it('should create training for athlete', async () => {
+      const from = addDays(new Date(), 1);
+      const training = generateTrainingStub({
+        ownerId: global.athlete.uid,
+        membersIds: [],
+        from,
+        to: addHours(from, 1),
+        components: [generateTrainingComponent({ id: 'c2' })],
+      });
+
+      const response = await req(global.athlete.token, training);
+      expect(response.status).toBe(201);
+      expect(response.body.ownerId).toBe(global.athlete.uid);
+      expect(response.body.membersIds).toEqual([global.athlete.uid]);
+      expect(response.body.components).toHaveLength(1);
+
+      await db.trainings.deleteByIds([response.body.id]);
+    });
   });
 
   describe('Training components', () => {

@@ -1,10 +1,12 @@
 'use client';
 
-import { Box } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Fab, Tooltip } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';
 import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
+import CreateTrainingModal from '@/components/athlete/create-training-modal';
 import TrainingReportCard from '@/components/athlete/training-report-card';
 import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
 import type { Training } from '@/core/training/type/training.type';
@@ -23,6 +25,8 @@ export default function TrainingPage() {
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
   );
+
+  const [openCreateTrainingModal, setOpenCreateTrainingModal] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -82,33 +86,53 @@ export default function TrainingPage() {
   };
 
   return (
-    <Box display="flex" flexDirection="column" width="100%">
-      <AthleteOptionsContainer
-        items={[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED]}
-        selectedItem={filter}
-        onClick={(type) => {
-          setFilter(type as CompletedPlanned);
-        }}
-        title="Trainings"
-      />
-      <Box
-        ref={containerRef}
-        sx={{
-          height: 'calc(100vh - 100px)',
-          overflowY: 'auto',
-          pb: 6,
-        }}
-      >
-        {filter === CompletedPlanned.PLANNED
-          ? filteredPlannedTrainings.map((training) => (
-              <AthleteTrainingCard key={training.id} training={training} />
-            ))
-          : reports.map((report, i) => (
-              <TrainingReportCard key={i} report={report} />
-            ))}
-
-        <Box ref={sentinelRef} height={'1px'} />
+    <>
+      <Box display="flex" flexDirection="column" width="100%">
+        <AthleteOptionsContainer
+          items={[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED]}
+          selectedItem={filter}
+          onClick={(type) => {
+            setFilter(type as CompletedPlanned);
+          }}
+          title="Trainings"
+        />
+        <Box
+          ref={containerRef}
+          sx={{
+            height: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+            pb: 6,
+          }}
+        >
+          {filter === CompletedPlanned.PLANNED
+            ? filteredPlannedTrainings.map((training) => (
+                <AthleteTrainingCard key={training.id} training={training} />
+              ))
+            : reports.map((report, i) => (
+                <TrainingReportCard key={i} report={report} />
+              ))}
+          <Box ref={sentinelRef} height={'1px'} />
+        </Box>
       </Box>
-    </Box>
+
+      <Fab
+        color="primary"
+        aria-label="add"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={() => setOpenCreateTrainingModal(true)}
+      >
+        <Tooltip title="Add Training">
+          <Add />
+        </Tooltip>
+      </Fab>
+
+      <CreateTrainingModal
+        open={openCreateTrainingModal}
+        setOpen={setOpenCreateTrainingModal}
+        onCreateTraining={(training) => {
+          setFilteredPlannedTrainings((prev) => [training, ...prev]);
+        }}
+      />
+    </>
   );
 }

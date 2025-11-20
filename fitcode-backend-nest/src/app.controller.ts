@@ -69,8 +69,8 @@ export class AppController {
         this.logger,
       ),
       measureAsync(
-        'exerciseService.findAllGlobal()',
-        () => this.exerciseService.findAllGlobalCached(user),
+        'exerciseService.findAllByUser()',
+        () => this.exerciseService.findAllByUser(user),
         this.logger,
       ),
       measureAsync(
@@ -108,14 +108,6 @@ export class AppController {
     const groups = groupsRes.result;
     const activeTraining = trainingRes.result;
     const exerciseAiPrescriptions = exerciseAiPrescriptionsRes.result;
-
-    const institutionExercises = await Promise.all(
-      institutions.map((inst) =>
-        this.exerciseService.findAllByInstitution(user, inst.id),
-      ),
-    );
-
-    institutionExercises.forEach((list) => exercises.push(...list));
 
     const protocols = (
       await Promise.all(
