@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
-import type { JSX } from 'react';
 import { useState } from 'react';
 
 import { deleteReportFromIndexDb } from './actions/actions-index-db';
@@ -23,16 +22,21 @@ import useAthleteExerciseReportParams from './hooks/use-params';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import SetDetailsModal from './modals/set-details-modal';
 import AthleteExerciseChartTooltip from './custom-tooltip';
+import { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 
 interface Props {
   id: string;
   cache: Map<string, Workload[]>;
-  setReports: SetState<{ id: string; element: JSX.Element }[]>;
-  passedUserId?: string;
-  passedUserIds?: string[];
-  passedExerciseId?: string;
+  setReports: SetState<AthleteExerciseReportType[]>;
+  reportType?: 'single' | 'comparison';
+  userId?: string;
+  userIds?: string[];
+  exerciseId?: string;
+  setActiveWorkloadsForTooltip: SetState<Workload[]>;
+  setActiveSetNumber: SetState<number | null>;
+  openWorkloadModal: boolean;
+  setOpenWorkloadModal: SetState<boolean>;
 }
 
 export default function AthleteExerciseReport(props: Props) {
@@ -40,19 +44,20 @@ export default function AthleteExerciseReport(props: Props) {
     id,
     cache,
     setReports,
-    passedUserId,
-    passedUserIds,
-    passedExerciseId,
+    reportType: passedReportType,
+    userId: passedUserId,
+    userIds: passedUserIds,
+    exerciseId: passedExerciseId,
+    setActiveWorkloadsForTooltip,
+    setActiveSetNumber,
+    openWorkloadModal,
+    setOpenWorkloadModal,
   } = props;
 
   const [reportType, setReportType] = useState<'single' | 'comparison'>(
-    passedUserIds && passedUserIds.length ? 'comparison' : 'single'
+    passedReportType || 'single'
   );
   const [groupByTraining, setGroupByTraining] = useState(false);
-  const [activeWorkloadsForTooltip, setActiveWorkloadsForTooltip] = useState<
-    Workload[]
-  >([]);
-  const [activeSetNumber, setActiveSetNumber] = useState<number | null>(null);
 
   const {
     data,
@@ -86,8 +91,6 @@ export default function AthleteExerciseReport(props: Props) {
       getParamColor,
       range
     );
-
-  const [openWorkloadModal, setOpenWorkloadModal] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -231,6 +234,7 @@ export default function AthleteExerciseReport(props: Props) {
           passedUserIds={passedUserIds}
           passedExerciseId={passedExerciseId}
           groupByTraining={groupByTraining}
+          setReports={setReports}
         />
 
         <Box
@@ -330,7 +334,6 @@ export default function AthleteExerciseReport(props: Props) {
             );
 
             setActiveWorkloadsForTooltip(workloads);
-
             setOpenWorkloadModal(true);
           }}
           hideLegend={reportType === 'single'}
@@ -419,15 +422,6 @@ export default function AthleteExerciseReport(props: Props) {
           }}
         />
       </Box>
-
-      <SetDetailsModal
-        open={openWorkloadModal}
-        setOpen={setOpenWorkloadModal}
-        workloads={activeWorkloadsForTooltip}
-        setWorkloads={setActiveWorkloadsForTooltip}
-        activeSetNumber={activeSetNumber}
-        setActiveSetNumber={setActiveSetNumber}
-      />
     </Box>
   );
 }

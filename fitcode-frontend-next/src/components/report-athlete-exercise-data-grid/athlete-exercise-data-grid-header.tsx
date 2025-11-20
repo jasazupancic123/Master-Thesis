@@ -9,62 +9,34 @@ import {
   Typography,
 } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
 
-import { PercentageCalculation } from './enum/percentage-calculation.enum';
 import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Training } from '@/core/training/type/training.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
 
 interface Props {
   selectedAthlete: AuthUser | null;
   setSelectedAthlete: SetState<AuthUser | null>;
-  selectedCycles: Cycle[];
-  setSelectedCycles: SetState<Cycle[]>;
   selectedTraining: Training | null;
   setSelectedTraining: SetState<Training | null>;
-  selectedPercentageCalculation: PercentageCalculation;
-  setSelectedPercentageCalculation: SetState<PercentageCalculation>;
 }
 
 export default function AthleteExerciseDataGridHeader(props: Props) {
-  const { selectedInstitution } = useDashboard();
-
   const {
     selectedAthlete,
     setSelectedAthlete,
-    selectedCycles,
-    setSelectedCycles,
     selectedTraining,
     setSelectedTraining,
-    selectedPercentageCalculation,
-    setSelectedPercentageCalculation,
   } = props;
-
-  const [cycles, setCycles] = useState<Cycle[]>([]);
-
-  useEffect(() => {
-    if (!selectedInstitution || !selectedAthlete) return;
-
-    setCycles(
-      selectedInstitution.groups
-        .filter((g) => g.membersIds.includes(selectedAthlete.uid))
-        .flatMap((g) => g.cycles)
-    );
-  }, [selectedAthlete]);
 
   const {
     athleteAnchorElRef,
-    cyclesAnchorElRef,
     trainingAnchorElRef,
-    percentageCalculationAnchorElRef,
     openSelectAthleteMenu,
     setOpenAthleteMenu,
     filteredAthletes,
@@ -73,9 +45,6 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
     setSearchAthlete,
   } = useAthleteExerciseReportDataGridHeader(
     selectedAthlete,
-    cycles,
-    selectedCycles,
-    setSelectedCycles,
     setSelectedTraining
   );
 
@@ -205,72 +174,6 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
       </Typography>
 
       <FormControl sx={{ width: 200 }} size="small">
-        <InputLabel id="cycles-label">Cycles</InputLabel>
-        <Select
-          labelId="cycles-label"
-          ref={cyclesAnchorElRef}
-          multiple
-          value={selectedCycles.map((c) => c.id)}
-          displayEmpty
-          renderValue={(selected) => {
-            if (!Array.isArray(selected) || selected.length === 0) {
-              return (
-                <Typography
-                  sx={{
-                    color: 'text.secondary',
-                  }}
-                >
-                  Cycles
-                </Typography>
-              );
-            }
-
-            const names = selected
-              .map((id) => cycles.find((c) => c.id === id)?.name ?? '')
-              .filter(Boolean);
-
-            return (
-              <Typography
-                sx={{
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {names.join(', ')}
-              </Typography>
-            );
-          }}
-          onChange={(e) => {
-            const value = e.target.value as string[];
-
-            const newSelected =
-              cycles.filter((c) => value.includes(c.id)) ?? [];
-
-            setSelectedCycles(newSelected);
-          }}
-        >
-          {!cycles || !cycles.length ? (
-            <MenuItem disabled>
-              <Typography sx={{ px: 1 }}>No cycles</Typography>
-            </MenuItem>
-          ) : (
-            cycles
-              .sort(
-                (a, b) =>
-                  new Date(b.from).getTime() - new Date(a.from).getTime()
-              )
-              .map((cycle: Cycle) => (
-                <MenuItem key={cycle.id} value={cycle.id}>
-                  <Typography>{cycle.name}</Typography>
-                </MenuItem>
-              ))
-          )}
-        </Select>
-      </FormControl>
-
-      <FormControl sx={{ width: 200 }} size="small">
         <InputLabel id="training-label">Session</InputLabel>
         <Select
           ref={trainingAnchorElRef}
@@ -319,43 +222,6 @@ export default function AthleteExerciseDataGridHeader(props: Props) {
                 );
               })
           )}
-        </Select>
-      </FormControl>
-      <FormControl sx={{ width: 200 }} size="small">
-        <InputLabel id="percentage-calculation-label">
-          Show % based on
-        </InputLabel>
-        <Select
-          ref={percentageCalculationAnchorElRef}
-          labelId="percentage-calculation-label"
-          value={selectedPercentageCalculation}
-          displayEmpty
-          renderValue={(_) => {
-            return (
-              <Typography
-                sx={{
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {selectedPercentageCalculation}
-              </Typography>
-            );
-          }}
-          onChange={(e) => {
-            const value = e.target.value as PercentageCalculation;
-            setSelectedPercentageCalculation(value);
-          }}
-        >
-          {Object.values(PercentageCalculation).map((calculation) => {
-            return (
-              <MenuItem key={calculation} value={calculation}>
-                <Typography>{calculation}</Typography>
-              </MenuItem>
-            );
-          })}
         </Select>
       </FormControl>
     </Box>

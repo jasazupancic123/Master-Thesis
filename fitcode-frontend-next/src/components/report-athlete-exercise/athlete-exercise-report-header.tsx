@@ -12,7 +12,7 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { updateReportInIndexDb } from './actions/actions-index-db';
@@ -27,6 +27,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
+import { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 
 interface Props {
   id: string;
@@ -38,6 +39,7 @@ interface Props {
   passedUserId?: string;
   passedUserIds?: string[];
   passedExerciseId?: string;
+  setReports: SetState<AthleteExerciseReportType[]>;
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
@@ -53,6 +55,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
     passedUserId,
     passedUserIds,
     passedExerciseId,
+    setReports,
   } = props;
 
   const {
@@ -90,6 +93,22 @@ export default function AthleteExerciseReportHeader(props: Props) {
 
   const athleteAnchorElRef = useRef<HTMLElement | null>(null);
   const exerciseAnchorElRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setReports((prevReports) =>
+      prevReports.map((report) => {
+        if (report.id !== id) return report;
+
+        return {
+          ...report,
+          userId: selectedAthlete?.uid,
+          userIds: selectedAthletes.map((a) => a.uid),
+          exerciseId: selectedExercise?.id,
+          type: reportType,
+        };
+      })
+    );
+  }, [selectedAthlete, selectedAthletes, selectedExercise, reportType]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" width="100%">
@@ -149,9 +168,6 @@ export default function AthleteExerciseReportHeader(props: Props) {
                 setSearchAthleteText(e.target.value);
               }}
               maxWidth="100%"
-              sx={{
-                width: 140,
-              }}
             />
 
             {/* Athlete list */}
@@ -201,6 +217,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                             exerciseId: selectedExercise.id,
                             institutionId: selectedInstitution.id,
                             userIds: newAthletes.map((a) => a.uid),
+                            type: 'comparison',
                           };
 
                           await updateReportInIndexDb(item);
@@ -212,6 +229,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                             exerciseId: selectedExercise.id,
                             institutionId: selectedInstitution.id,
                             userId: athlete.uid,
+                            type: 'single',
                           };
 
                           await updateReportInIndexDb(item);
@@ -349,9 +367,6 @@ export default function AthleteExerciseReportHeader(props: Props) {
                 setSearchExercisesText(e.target.value);
               }}
               maxWidth="100%"
-              sx={{
-                width: 140,
-              }}
             />
             {/* Athlete list */}
             <Box

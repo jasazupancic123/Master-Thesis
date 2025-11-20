@@ -4,4 +4,5 @@ export type IndexDbAthleteExerciseReport = {
   userId?: string;
   userIds?: string[];
   exerciseId: string;
+  type: 'single' | 'comparison';
 };
