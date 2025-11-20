@@ -23,7 +23,7 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
     origin: (requestOrigin, callback) => {
       if (!requestOrigin) return callback(null, true); // allow SSR or curl
       if (whitelist.includes(requestOrigin)) callback(null, true);
-      else callback(new Error('Not allowed by CORS'));
+      else callback(null, false);
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
