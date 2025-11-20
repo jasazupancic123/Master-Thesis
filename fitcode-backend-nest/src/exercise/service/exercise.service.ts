@@ -110,6 +110,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return await this.getAll(exerciseIds);
   }
 
+  async findByIdOrFail(exerciseId: string): Promise<Exercise | null> {
+    const exercise = await this.repository.findById(exerciseId);
+    if (!exercise) throw new NotFoundException('Exercise does not exist');
+    return exercise;
+  }
+
   async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
     // find exercise
     const exercise = await this.repository.findById(ref.exerciseId);
