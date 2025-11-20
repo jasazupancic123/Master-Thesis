@@ -313,7 +313,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     await this.validateOverlapAndMaxLimit(
       user,
-      group?.institutionId,
+      institutionId,
       { groupId, cycleId, trainingId: null }, // no trainingId for new training
       from,
       to,
