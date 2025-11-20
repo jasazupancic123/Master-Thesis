@@ -7,8 +7,8 @@ import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { lib } from '@/lib';
+import { useDashboard } from '@/store/dashboard.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
 
 export default function useAthleteExerciseReportDataGridData(

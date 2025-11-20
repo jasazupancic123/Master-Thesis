@@ -1,6 +1,7 @@
+import { Box, Typography } from '@mui/material';
+
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
-import { Box, Typography } from '@mui/material';
 
 interface Props {
   value1: number | undefined;
