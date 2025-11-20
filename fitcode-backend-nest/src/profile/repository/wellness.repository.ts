@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { startOfDay, subDays } from 'date-fns';
+import { addDays, endOfDay, startOfDay, subDays } from 'date-fns';
 
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -51,7 +51,7 @@ export class WellnessRepository extends FirestoreRepository<
   ): Promise<Wellness[]> {
     const {
       from = subDays(startOfDay(new Date()), 10), // default to 10 days ago
-      to = startOfDay(new Date()), // default to now
+      to = addDays(endOfDay(new Date()), 1), // default to now
     } = range || {};
 
     await this.parent.findManyOrCreate(institution.athleteIds);

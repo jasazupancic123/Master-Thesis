@@ -13,7 +13,9 @@ export default function useAthleteExerciseReportData(
   selectedUsers: AuthUser[],
   selectedExercise: Exercise | null,
   cache: Map<string, Workload[]>,
-  setData: SetState<Workload[]>
+  groupByTraining: boolean,
+  setData: SetState<Workload[]>,
+  setAllSetsData: SetState<Workload[]>
 ) {
   const { selectedInstitution } = useDashboard();
 
@@ -85,13 +87,24 @@ export default function useAthleteExerciseReportData(
 
         const key = `${selectedUser.uid}-${selectedExercise.id}`;
 
-        const workloads = await getAthleteExerciseWorkloads(
+        const allSetsData = await getAthleteExerciseWorkloads(
           selectedUser,
           selectedExercise,
           key
         );
 
+        let workloads: Workload[] = allSetsData;
+
+        if (groupByTraining)
+          workloads = await getAthleteExerciseWorkloads(
+            selectedUser,
+            selectedExercise,
+            key,
+            groupByTraining
+          );
+
         setData(workloads);
+        setAllSetsData(allSetsData);
       } else if (reportType === 'comparison') {
         if (selectedUsers.length === 0 || !selectedExercise) {
           setData([]);
@@ -114,6 +127,7 @@ export default function useAthleteExerciseReportData(
         }
 
         setData(allWorkloads);
+        setAllSetsData([]);
       }
     };
 
@@ -124,5 +138,6 @@ export default function useAthleteExerciseReportData(
     selectedUsers,
     selectedExercise,
     selectedInstitution,
+    groupByTraining,
   ]);
 }
