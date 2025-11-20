@@ -1,4 +1,4 @@
-export type DataGridRowAthleteExercise = {
+export type DataGridRowAthleteExerciseRow = {
   exerciseId: string;
   exerciseName: string;
   cyclesAvgReps: number | undefined; // per training, not per set

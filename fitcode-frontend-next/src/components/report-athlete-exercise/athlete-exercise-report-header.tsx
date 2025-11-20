@@ -32,7 +32,9 @@ interface Props {
   id: string;
   reportType: 'single' | 'comparison';
   setData: SetState<Workload[]>;
+  setAllSetsData: SetState<Workload[]>; // contains data for all sets
   cache: Map<string, Workload[]>;
+  groupByTraining: boolean;
   passedUserId?: string;
   passedUserIds?: string[];
   passedExerciseId?: string;
@@ -45,7 +47,9 @@ export default function AthleteExerciseReportHeader(props: Props) {
     id,
     reportType,
     setData,
+    setAllSetsData,
     cache,
+    groupByTraining,
     passedUserId,
     passedUserIds,
     passedExerciseId,
@@ -76,7 +80,9 @@ export default function AthleteExerciseReportHeader(props: Props) {
     selectedAthletes,
     selectedExercise,
     cache,
-    setData
+    groupByTraining,
+    setData,
+    setAllSetsData
   );
 
   const [openSelectAthleteMenu, setOpenSelectAthleteMenu] = useState(false);

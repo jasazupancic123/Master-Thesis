@@ -3,7 +3,7 @@ import type { GridColDef } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 
 import { PercentageCalculation } from '../enum/percentage-calculation.enum';
-import type { DataGridRowAthleteExercise } from '../types/data-grid-row';
+import type { DataGridRowAthleteExerciseRow } from '../types/data-grid-row';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Cycle } from '@/core/group/type/cycle.type';
@@ -12,6 +12,8 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { lib } from '@/lib';
+import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: AuthUser | null,
@@ -23,66 +25,20 @@ export default function useAthleteExerciseReportDataGridData(
   const { selectedInstitution, trainings } = useDashboard();
 
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [rows, setRows] = useState<DataGridRowAthleteExercise[]>([]);
+  const [rows, setRows] = useState<DataGridRowAthleteExerciseRow[]>([]);
 
   const fontSize = 13;
 
-  const percentageGetter = (row: DataGridRowAthleteExercise) => {
+  const percentageGetter = (row: DataGridRowAthleteExerciseRow) => {
     const value = row.selectedTrainingReps;
     const avg =
       selectedPercentageCalculation === PercentageCalculation.CYCLE
         ? row.cyclesAvgReps
         : row.prescribedTrainingReps;
 
-    if (value === null || value === undefined || !avg) return null;
+    if (value === undefined || avg === undefined) return null;
 
-    const diff = ((value - avg) / avg) * 100;
-    return diff;
-  };
-
-  const renderCellWithPercentChange = (
-    value: number | undefined,
-    cycleAvg: number | undefined
-  ) => {
-    if (value === undefined) return '-';
-
-    const percentChange =
-      cycleAvg && value
-        ? Math.round(((value - cycleAvg) / cycleAvg) * 100)
-        : null;
-
-    const isHigher = percentChange !== null && percentChange > 0;
-    const isSame = percentChange === 0;
-
-    const valueString = `${value !== undefined ? Math.round(value) : '-'}`;
-
-    return (
-      <Box display="flex" width="100%" height="100%" alignItems="center">
-        <Typography component="span" lineHeight={1} fontSize={fontSize}>
-          {valueString}
-          {percentChange !== null ? (
-            <Typography
-              component="span"
-              lineHeight={1}
-              fontSize={fontSize}
-              sx={{
-                color: isSame
-                  ? theme.palette.warning.main
-                  : isHigher
-                    ? theme.palette.success.main
-                    : theme.palette.error.main,
-                display: 'inline',
-              }}
-            >
-              ({isHigher ? '+' : ''}
-              {percentChange}%)
-            </Typography>
-          ) : (
-            ''
-          )}
-        </Typography>
-      </Box>
-    );
+    return lib.common.number.calculatePercentageDiff(value, avg);
   };
 
   useEffect(() => {
@@ -94,7 +50,7 @@ export default function useAthleteExerciseReportDataGridData(
     const setupDataGridRows = async () => {
       setIsLoadingData(true);
 
-      const rows = [] as DataGridRowAthleteExercise[];
+      const rows = [] as DataGridRowAthleteExerciseRow[];
 
       const athleteTrainings = trainings.filter((t) =>
         t.membersIds.includes(selectedAthlete.uid)
@@ -240,6 +196,8 @@ export default function useAthleteExerciseReportDataGridData(
         });
       }
 
+      console.log('rows', rows);
+
       const rowsWithValues = rows.filter(
         (r) =>
           r.cyclesAvgReps !== undefined ||
@@ -267,8 +225,8 @@ export default function useAthleteExerciseReportDataGridData(
     setupDataGridRows();
   }, [selectedAthlete, selectedCycles, selectedTraining, cache]);
 
-  // 👇 Columns definition for DataGrid
-  const columns: GridColDef<DataGridRowAthleteExercise>[] = [
+  // Columns definition for DataGrid
+  const columns: GridColDef<DataGridRowAthleteExerciseRow>[] = [
     {
       field: 'exerciseName',
       headerName: 'Exercise',
@@ -296,8 +254,22 @@ export default function useAthleteExerciseReportDataGridData(
       headerName: 'Session reps',
       flex: 0.7,
       minWidth: 140,
+      valueFormatter: (value?: number) =>
+        value === undefined || value === null ? '-' : `${value?.toFixed(2)}%`,
       valueGetter: (_value, row) => {
-        return percentageGetter(row);
+        const presc = row.selectedTrainingReps as number | undefined;
+        const comp =
+          selectedPercentageCalculation === PercentageCalculation.CYCLE
+            ? row.cyclesAvgReps
+            : row.prescribedTrainingReps;
+        if (presc === undefined || comp === undefined) return undefined;
+
+        const percentageDiff = lib.common.number.calculatePercentageDiff(
+          comp,
+          presc
+        );
+
+        return percentageDiff;
       },
       sortComparator: (v1, v2) => {
         if (v1 === null && v2 === null) return 0;
@@ -308,11 +280,17 @@ export default function useAthleteExerciseReportDataGridData(
       renderCell: (params) => {
         const { row } = params;
 
-        return renderCellWithPercentChange(
-          row.selectedTrainingReps,
-          selectedPercentageCalculation === PercentageCalculation.CYCLE
-            ? row.cyclesAvgReps
-            : row.prescribedTrainingReps
+        return (
+          <DataGridCellPercentageDiff
+            value1={row.selectedTrainingReps}
+            value2={
+              selectedPercentageCalculation === PercentageCalculation.CYCLE
+                ? row.cyclesAvgReps
+                : row.prescribedTrainingReps
+            }
+            fontSize={fontSize}
+            roundValue={true}
+          />
         );
       },
     },
@@ -337,23 +315,43 @@ export default function useAthleteExerciseReportDataGridData(
       headerName: 'Session tonnage',
       flex: 1,
       minWidth: 190,
-      valueGetter: (_value, row) => {
-        return percentageGetter(row);
-      },
+      valueFormatter: (value?: number) =>
+        value === undefined || value === null ? '-' : `${value?.toFixed(2)}%`,
+
       sortComparator: (v1, v2) => {
         if (v1 === null && v2 === null) return 0;
         if (v1 === null) return 1;
         if (v2 === null) return -1;
         return v1 - v2;
       },
+      valueGetter: (_value, row) => {
+        const presc = row.selectedTrainingTonnage as number | undefined;
+        const comp =
+          selectedPercentageCalculation === PercentageCalculation.CYCLE
+            ? row.cyclesAvgTonnage
+            : row.prescribedTrainingTonnage;
+        if (presc === undefined || comp === undefined) return undefined;
+
+        const percentageDiff = lib.common.number.calculatePercentageDiff(
+          comp,
+          presc
+        );
+
+        return percentageDiff;
+      },
       renderCell: (params) => {
         const { row } = params;
 
-        return renderCellWithPercentChange(
-          row.selectedTrainingTonnage,
-          selectedPercentageCalculation === PercentageCalculation.CYCLE
-            ? row.cyclesAvgTonnage
-            : row.prescribedTrainingTonnage
+        return (
+          <DataGridCellPercentageDiff
+            value1={row.selectedTrainingTonnage}
+            value2={
+              selectedPercentageCalculation === PercentageCalculation.CYCLE
+                ? row.cyclesAvgTonnage
+                : row.prescribedTrainingTonnage
+            }
+            fontSize={fontSize}
+          />
         );
       },
     },
