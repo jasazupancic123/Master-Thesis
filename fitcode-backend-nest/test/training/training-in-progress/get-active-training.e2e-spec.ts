@@ -145,11 +145,6 @@ describe('Get Active Training (e2e)', () => {
     };
 
     expect(resTraining.workloads).toHaveLength(1);
-    const firstSet =
-      resTraining.components[0].supersets[0].exercises[0].sets[0];
-
-    expect(firstSet.reps).toBe(13);
-    expect(firstSet.loadKg).toBe(37.5);
 
     // clean up
     await db.trainingComponentUserStatus.deleteAllByTraining(training.id);

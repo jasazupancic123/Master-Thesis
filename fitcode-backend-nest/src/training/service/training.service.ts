@@ -71,6 +71,11 @@ import {
   CreateTrainingDto,
 } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import {
+  TrainingAction,
+  TrainingActionPayload,
+  TrainingActionRef,
+} from '../dto/training-action.dto';
 import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -695,6 +700,61 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
+  async modifyTraining(
+    user: User,
+    trainingId: string,
+    action: TrainingAction,
+    ref: TrainingActionRef,
+    payload: TrainingActionPayload,
+  ): Promise<Training> {
+    const training = await this.findOneByIdOrFail(user, { trainingId });
+
+    if (training.institutionId) {
+      if (this.firebase.isAthlete(user))
+        ref.userId = user.uid; // athlete can only modify their own training
+      else this.validateCanEdit(user, training, training.institution);
+    }
+
+    // validate exercise if provided
+    if (ref.exerciseId) {
+      const exercise = await this.exerciseService.findByIdOrFail(
+        ref.exerciseId,
+      );
+
+      if (!this.exerciseService.canView(user, exercise, training.institution))
+        throw new BadRequestException('Invalid exercise');
+    }
+
+    this.validateIsDateInFuture(training.from);
+
+    let updated = training;
+    if (this.firebase.isAthlete(user)) {
+      if (!ref.componentId)
+        throw new BadRequestException('You must provide componentId');
+
+      // athlete modifies prescribed training, needs to be moved to a subgroup
+      updated = this.trainingPlanService.moveUserToVirtualSubgroup(
+        training,
+        ref.componentId,
+        ref.userId,
+      );
+
+      ref.subgroupId = ref.userId; // user has been moved to virtual subgroup named by their userId
+    }
+
+    const { components } = this.applyTrainingAction(
+      updated,
+      action,
+      ref,
+      payload,
+    );
+
+    await this.repository.update(training.id, { components });
+
+    return { ...training, components };
+  }
+
+  @LogMethod()
   async copyAndPeriodize(
     user: User,
     ref: TrainingComponentRef & SubgroupRef,
@@ -1198,10 +1258,10 @@ export class TrainingService implements Permission<Training, Institution> {
     try {
       await this.updateBodyweightSets(athleteId, athleteTraining);
       await this.updateRepMaxSets(athleteId, athleteTraining);
-      workloads = await this.updateTrainingWithWorkloads(
-        athleteId,
-        athleteTraining,
-      );
+      workloads = await this.workloadService.findAllByUserTraining({
+        userId: athleteId,
+        trainingId: training.id,
+      });
     } catch (e) {
       this.logger.error(e);
     }
@@ -1410,6 +1470,86 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (isOverlap)
       throw new BadRequestException('Training overlaps with other training');
+  }
+
+  private applyTrainingAction(
+    training: Training,
+    action: TrainingAction,
+    ref: TrainingActionRef,
+    payload: TrainingActionPayload,
+  ): Update<Training> {
+    switch (action) {
+      case TrainingAction.ADD_EXERCISE:
+        return this.addExercise(training, ref);
+      case TrainingAction.REMOVE_EXERCISE:
+        return this.removeExercise(training, ref);
+      case TrainingAction.ADD_SET:
+        return this.addSet(training, ref, payload);
+      case TrainingAction.REMOVE_SET:
+        return this.removeSet(training, ref);
+      default:
+        throw new BadRequestException(`Action ${action} not supported yet`);
+    }
+  }
+
+  private addExercise(training: Training, ref: TrainingActionRef) {
+    const { superset } =
+      this.trainingPlanService.validateTrainingActionSupersetRef(training, ref);
+
+    // if exercise already exists in superset, throw error
+    const exists = superset.exercises.find((e) => e.id === ref.exerciseId);
+    if (exists)
+      throw new BadRequestException('Exercise already exists in superset');
+
+    superset.exercises = [
+      ...superset.exercises,
+      { id: ref.exerciseId, sets: [] },
+    ];
+
+    return training;
+  }
+
+  private removeExercise(training: Training, ref: TrainingActionRef) {
+    const { superset, exerciseIndex } =
+      this.trainingPlanService.validateTrainingActionExerciseRef(training, ref);
+
+    superset.exercises.splice(exerciseIndex, 1);
+    return training;
+  }
+
+  private addSet(
+    training: Training,
+    ref: TrainingActionRef,
+    payload: TrainingActionPayload,
+  ) {
+    if (!payload.set) throw new BadRequestException('Set payload is required');
+
+    const { exercise } =
+      this.trainingPlanService.validateTrainingActionExerciseRef(training, ref);
+
+    exercise.sets.push(payload.set); // add set
+    exercise.sets = exercise.sets.map((s, i) => ({ ...s, setNumber: i + 1 })); // update set numbers
+
+    return training;
+  }
+
+  private removeSet(training: Training, ref: TrainingActionRef) {
+    const { exercise } =
+      this.trainingPlanService.validateTrainingActionExerciseRef(training, ref);
+
+    const { setNumber } = ref;
+    if (setNumber === undefined)
+      throw new BadRequestException(
+        'componentId, supersetIndex, exerciseId and setIndex required',
+      );
+
+    if (setNumber < 1 || setNumber > exercise.sets.length)
+      throw new NotFoundException('Set not found in exercise');
+
+    exercise.sets.splice(setNumber - 1, 1); // remove set
+    exercise.sets = exercise.sets.map((s, i) => ({ ...s, setNumber: i + 1 })); // update set numbers
+
+    return training;
   }
 
   private validateIsDateInCycle(from: Date, cycle: Cycle) {

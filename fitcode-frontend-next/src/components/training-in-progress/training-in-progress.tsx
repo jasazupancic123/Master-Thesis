@@ -1,11 +1,24 @@
-import { Circle } from '@mui/icons-material';
-import { Box, LinearProgress, Typography } from '@mui/material';
+import { Add, Circle } from '@mui/icons-material';
+import {
+  Box,
+  IconButton,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
@@ -26,18 +39,27 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import MyModal from '@/ui/modal';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
   const pathname = usePathname();
 
   const { user } = useAuthenticatedAuth();
-  const { activeTraining } = useMain();
+  const { activeTraining, exercises } = useMain();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
   const undoneExercisesContext = useUndoneExercises();
+
+  // add exercises modal
+  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
+  const [searchExercisesText, setSearchExercisesText] = useState('');
+  const filteredExercises = exercises.filter((exercise) =>
+    exercise.name.toLowerCase().includes(searchExercisesText.toLowerCase())
+  );
 
   const { trainingInProgress, clearTrainingState } = trainingContext;
 
@@ -374,6 +396,23 @@ export default function TrainingInProgress() {
                         </Box>
                       );
                     })}
+
+                    {/* Button to add new exercise */}
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => {
+                        setOpenAddExerciseModal(true);
+                      }}
+                      sx={{
+                        border: `1px solid ${theme.palette.primary.main}`,
+                        width: 30,
+                        height: 30,
+                        alignSelf: 'center',
+                      }}
+                    >
+                      <Add />
+                    </IconButton>
                   </Box>
                 </Box>
               );
@@ -381,6 +420,7 @@ export default function TrainingInProgress() {
           </Box>
         </>
       )}
+
       {trainingInProgress &&
       trainingInProgress.supersets &&
       trainingInProgress.supersets.length ? (
@@ -401,15 +441,85 @@ export default function TrainingInProgress() {
         setOpen={setOpenCancelTrainingModal}
         finish={false}
       />
+
       <FinishPauseTrainingModal
         open={openFinishTrainingModal}
         setOpen={setOpenFinishTrainingModal}
         finish={true}
       />
+
       <UndoneSetsErrorModal
         open={showUndoneSetsError}
         setOpen={setShowUndoneSetsError}
       />
+
+      <MyModal
+        isOpen={openAddExerciseModal}
+        setIsOpen={setOpenAddExerciseModal}
+      >
+        {/* Dropdown of all exercises with search */}
+        <Menu
+          open={openAddExerciseModal}
+          onClose={() => {
+            setOpenAddExerciseModal(false);
+          }}
+          transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          sx={{ top: 24 }}
+        >
+          {exercises.length === 0 ? (
+            <Typography sx={{ px: 1 }}>No exercises found</Typography>
+          ) : (
+            <Box display="flex" flexDirection="column" gap={1}>
+              <SearchBar
+                placeholder="Search Exercises"
+                value={searchExercisesText}
+                handleSearchChange={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSearchExercisesText(e.target.value);
+                }}
+                maxWidth="100%"
+              />
+              {/* Athlete list */}
+              <Box
+                display="flex"
+                flexDirection="column"
+                maxHeight={300}
+                sx={{ overflowY: 'auto' }}
+              >
+                {filteredExercises
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((exercise) => (
+                    <MenuItem
+                      key={exercise.id}
+                      onClick={async () => {
+                        await trainingInProgressContext.addExerciseToSuperset(
+                          exercise
+                        );
+
+                        setOpenAddExerciseModal(false);
+                      }}
+                    >
+                      <Box
+                        key={exercise.id}
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        sx={{
+                          p: 1,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Typography>{exercise.name}</Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+              </Box>
+            </Box>
+          )}
+        </Menu>
+      </MyModal>
     </Box>
   );
 }

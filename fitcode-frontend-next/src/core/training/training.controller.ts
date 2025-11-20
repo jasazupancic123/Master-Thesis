@@ -8,6 +8,7 @@ import type {
   Training,
   UpdateTraining,
 } from './type/training.type';
+import type { TrainingActionPayloadBody } from './type/training-action.type';
 import type { TrainingComponent } from './type/training-component.type';
 import type {
   CreateTrainingProtocol,
@@ -182,28 +183,24 @@ export class TrainingController extends BaseController {
   async completeTrainingComponent(
     trainingId: string,
     componentId: string,
-    athleteId?: string,
-    options?: FetchOptions
+    athleteId?: string
   ) {
     return this.api.post<{
       errors: ValidateError<Record<string, unknown>>;
-    }>(
-      `/${trainingId}/component/${componentId}/complete`,
-      { userId: athleteId },
-      options
+    }>(`/${trainingId}/component/${componentId}/complete`, {
+      userId: athleteId,
+    });
+  }
+
+  async pauseTrainingComponent(trainingId: string, componentId: string) {
+    return this.api.patch<void>(
+      `/${trainingId}/component/${componentId}/pause`,
+      {}
     );
   }
 
-  async pauseTrainingComponent(
-    trainingId: string,
-    componentId: string,
-    options?: FetchOptions
-  ) {
-    return this.api.patch<void>(
-      `/${trainingId}/component/${componentId}/pause`,
-      {},
-      options
-    );
+  async modifyTraining(trainingId: string, body: TrainingActionPayloadBody) {
+    return this.api.post<Training>(`/${trainingId}/modify`, body);
   }
 
   async findCompletedAthleteWorkloads(

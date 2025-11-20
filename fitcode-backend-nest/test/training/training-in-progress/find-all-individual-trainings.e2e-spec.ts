@@ -171,16 +171,6 @@ describe('Find All Individual Trainings (e2e)', () => {
     expect(user1Training.workloads).toHaveLength(1);
     expect(user2Training.workloads).toHaveLength(1);
 
-    const user1FirstSet =
-      user1Training.components[0].supersets[0].exercises[0].sets[0];
-    expect(user1FirstSet.reps).toBe(13);
-    expect(user1FirstSet.loadKg).toBe(37.5);
-
-    const user2FirstSet =
-      user2Training.components[0].supersets[0].exercises[0].sets[0];
-    expect(user2FirstSet.reps).toBe(26);
-    expect(user2FirstSet.loadKg).toBe(40);
-
     // clean up
     await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
     await db.workloads.deleteAll(training.id);
