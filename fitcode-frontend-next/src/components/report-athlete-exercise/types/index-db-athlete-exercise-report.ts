@@ -3,5 +3,6 @@ export type IndexDbAthleteExerciseReport = {
   institutionId: string;
   userId?: string;
   userIds?: string[];
-  exerciseId: string;
+  exerciseId?: string;
+  type: 'single' | 'comparison';
 };

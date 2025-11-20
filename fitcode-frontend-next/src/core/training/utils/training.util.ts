@@ -225,4 +225,13 @@ export class TrainingUtil {
         };
     }
   }
+
+  /**
+   * Returns past and today strainings
+   */
+  getPotentiallyCompletedTrainings(trainings: Training[]): Training[] {
+    return trainings.filter((t) =>
+      dayjs(t.from).isBefore(dayjs().add(1, 'day').startOf('day'))
+    );
+  }
 }
