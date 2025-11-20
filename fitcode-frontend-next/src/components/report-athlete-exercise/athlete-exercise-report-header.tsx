@@ -192,7 +192,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                     <MenuItem
                       key={athlete.uid}
                       onClick={async () => {
-                        if (!selectedExercise || !selectedInstitution) return;
+                        if (!selectedInstitution) return;
 
                         if (reportType === 'comparison') {
                           const isAlreadySelected = selectedAthletes.some(
@@ -214,7 +214,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
 
                           const item: IndexDbAthleteExerciseReport = {
                             id,
-                            exerciseId: selectedExercise.id,
+                            exerciseId: selectedExercise?.id,
                             institutionId: selectedInstitution.id,
                             userIds: newAthletes.map((a) => a.uid),
                             type: 'comparison',
@@ -226,7 +226,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                         } else {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
-                            exerciseId: selectedExercise.id,
+                            exerciseId: selectedExercise?.id,
                             institutionId: selectedInstitution.id,
                             userId: athlete.uid,
                             type: 'single',

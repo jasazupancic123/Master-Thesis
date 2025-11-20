@@ -7,7 +7,6 @@ import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
-import WellnessChart from '../reports/wellness-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
@@ -22,6 +21,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import WellnessReport from '../report-wellness/wellness-report';
 
 enum ReportTab {
   Realization = 'Realization',
@@ -71,6 +71,11 @@ export default function DashboardReports() {
 
       {tab === ReportTab.Exercise ? (
         <AthleteExerciseReports cache={cache} />
+      ) : tab === ReportTab.Wellness ? (
+        <WellnessReport
+          groupId={selectedGroup?.id}
+          selectedUserId={selectedUser?.uid}
+        />
       ) : (
         <>
           <Box
@@ -237,13 +242,6 @@ export default function DashboardReports() {
                 />
               )}
             </Box>
-          )}
-
-          {tab === ReportTab.Wellness && (
-            <WellnessChart
-              groupId={selectedGroup?.id}
-              selectedUserId={selectedUser?.uid}
-            />
           )}
         </>
       )}
