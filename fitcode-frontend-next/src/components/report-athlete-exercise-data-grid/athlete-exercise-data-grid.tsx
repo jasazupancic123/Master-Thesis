@@ -3,11 +3,9 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useState } from 'react';
 
 import AthleteExerciseDataGridHeader from './athlete-exercise-data-grid-header';
-import { PercentageCalculation } from './enum/percentage-calculation.enum';
 import useAthleteExerciseReportDataGridData from './hooks/use-rows';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Cycle } from '@/core/group/type/cycle.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { Workload } from '@/core/training/type/workload.type';
 
@@ -19,18 +17,13 @@ export default function AthleteExerciseDataGrid(props: Props) {
   const { cache } = props;
 
   const [selectedAthlete, setSelectedAthlete] = useState<AuthUser | null>(null);
-  const [selectedCycles, setSelectedCycles] = useState<Cycle[]>([]);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );
-  const [selectedPercentageCalculation, setSelectedPercentageCalculation] =
-    useState<PercentageCalculation>(PercentageCalculation.SESSION);
 
   const { isLoadingData, rows, columns } = useAthleteExerciseReportDataGridData(
     selectedAthlete,
-    selectedCycles,
     selectedTraining,
-    selectedPercentageCalculation,
     cache
   );
 
@@ -51,12 +44,8 @@ export default function AthleteExerciseDataGrid(props: Props) {
       <AthleteExerciseDataGridHeader
         selectedAthlete={selectedAthlete}
         setSelectedAthlete={setSelectedAthlete}
-        selectedCycles={selectedCycles}
-        setSelectedCycles={setSelectedCycles}
         selectedTraining={selectedTraining}
         setSelectedTraining={setSelectedTraining}
-        selectedPercentageCalculation={selectedPercentageCalculation}
-        setSelectedPercentageCalculation={setSelectedPercentageCalculation}
       />
       {/* 👇 The actual datagrid */}
       <Box width="100%">
