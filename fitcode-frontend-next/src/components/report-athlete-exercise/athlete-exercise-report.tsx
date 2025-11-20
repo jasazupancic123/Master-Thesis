@@ -16,14 +16,14 @@ import { useState } from 'react';
 
 import { deleteReportFromIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReportHeader from './athlete-exercise-report-header';
+import AthleteExerciseChartTooltip from './custom-tooltip';
 import useAthleteChartData from './hooks/use-chart-data';
 import useAthleteChartSeries from './hooks/use-chart-series';
 import useAthleteExerciseReportParams from './hooks/use-params';
+import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import AthleteExerciseChartTooltip from './custom-tooltip';
-import { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 
 interface Props {
   id: string;

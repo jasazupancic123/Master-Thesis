@@ -1,18 +1,20 @@
+import { Avatar, Box, Tab, Tabs, Typography } from '@mui/material';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+
 import { theme } from '@/app/style';
-import { Workload } from '@/core/training/type/workload.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { SetState } from '@/lib/common/type/state.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
-import { Avatar, Box, Tab, Tabs, Typography } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
 
 type DataGridWorkloadDetailsRow = {
   name: string;

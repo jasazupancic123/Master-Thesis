@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
+import WellnessReport from '../report-wellness/wellness-report';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
@@ -21,7 +22,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import WellnessReport from '../report-wellness/wellness-report';
 
 enum ReportTab {
   Realization = 'Realization',

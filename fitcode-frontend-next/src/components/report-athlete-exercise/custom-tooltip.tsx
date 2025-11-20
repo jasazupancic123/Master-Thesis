@@ -5,8 +5,9 @@ import {
   useSeries,
 } from '@mui/x-charts';
 import dayjs from 'dayjs';
+
 import { theme } from '@/app/style';
-import { Workload } from '@/core/training/type/workload.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
@@ -21,10 +22,10 @@ export default function AthleteExerciseChartTooltip(props: Props) {
 
   const { openWorkloadModal, data, reportType, groupByTraining } = props;
 
-  if (openWorkloadModal) return null;
-
   const axes = useAxesTooltip();
   const series = useSeries();
+
+  if (openWorkloadModal) return null;
 
   const lineSeries = series.line;
 
@@ -64,7 +65,7 @@ export default function AthleteExerciseChartTooltip(props: Props) {
     return label;
   };
 
-  const prettyValue = (value: number, label: string) => {
+  const prettyValue = (value: number) => {
     const isInt = value % 1 === 0;
 
     if (!isInt) return value.toFixed(2);
@@ -111,7 +112,7 @@ export default function AthleteExerciseChartTooltip(props: Props) {
                 variant="body2"
                 sx={{ lineHeight: 1.1, color: theme.palette.text.primary }}
               >
-                {prettyLabel(label)} <b>{prettyValue(value, label)}</b>
+                {prettyLabel(label)} <b>{prettyValue(value)}</b>
               </Typography>
             </Box>
           </Box>

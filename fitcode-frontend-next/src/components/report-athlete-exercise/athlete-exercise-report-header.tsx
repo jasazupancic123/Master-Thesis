@@ -19,6 +19,7 @@ import { updateReportInIndexDb } from './actions/actions-index-db';
 import useAthleteExerciseReportAthletes from './hooks/use-athletes';
 import useAthleteExerciseReportData from './hooks/use-data';
 import useAthleteExerciseReportExercises from './hooks/use-exercises';
+import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
@@ -27,7 +28,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
-import { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 
 interface Props {
   id: string;
