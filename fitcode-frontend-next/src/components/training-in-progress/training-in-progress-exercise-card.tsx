@@ -1,4 +1,4 @@
-import { Check, VideoLibrary } from '@mui/icons-material';
+import { Add, Check, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -286,6 +286,23 @@ export default function TrainingInProgressExerciseCard() {
               </Box>
             );
           })}
+
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={async () => {
+              await trainingInProgressContext.addSetToExercise();
+            }}
+            sx={{
+              border: `1px solid ${theme.palette.primary.main}`,
+              width: 20,
+              height: 20,
+              mb: 2.5,
+              ml: 1,
+            }}
+          >
+            <Add />
+          </IconButton>
         </Box>
 
         {setIndex !== undefined &&

@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -47,36 +48,42 @@ export class TrainingActionRef {
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   userId?: string; // if provided, move user to virtual subgroup
 
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   componentId?: string;
 
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   subgroupId?: string;
 
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   parentId?: string;
 
   @IsNumber()
   @Min(0)
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   supersetIndex?: number;
 
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   exerciseId?: string;
 
@@ -84,6 +91,7 @@ export class TrainingActionRef {
   @Min(1)
   @ApiPropertyOptional()
   @Expose()
+  @IsOptional()
   setNumber?: number;
 }
 
