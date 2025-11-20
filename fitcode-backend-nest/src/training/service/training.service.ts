@@ -1424,8 +1424,8 @@ export class TrainingService implements Permission<Training, Institution> {
         user,
         institutionId,
         {
-          groupId: ref.groupId,
-          cycleId: ref.cycleId,
+          ...(ref.groupId && { groupId: ref.groupId }),
+          ...(ref.cycleId && { cycleId: ref.cycleId }),
           from: startOfDay(from),
           to: endOfDay(from),
         },
