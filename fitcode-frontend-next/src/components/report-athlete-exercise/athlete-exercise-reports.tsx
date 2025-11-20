@@ -17,6 +17,7 @@ import type { JSX } from 'react';
 import { Fragment, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 
+import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
 import AthleteExerciseReport from './athlete-exercise-report';
 import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from './const/index-db-id.const';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
@@ -24,6 +25,7 @@ import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useDashboard } from '@/store/dashboard.provider';
 import AddButton from '@/ui/add-button';
 
 interface Props {
@@ -31,6 +33,8 @@ interface Props {
 }
 
 export default function AthleteExerciseReports(props: Props) {
+  const { selectedInstitution } = useDashboard();
+
   const { cache } = props;
 
   const [reports, setReports] = useState<
@@ -42,13 +46,15 @@ export default function AthleteExerciseReports(props: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 100, // ms to hold before drag
+        delay: 0, // ms to hold before drag
         tolerance: 5, // how much you can wobble while holding
       },
     })
   );
 
   useEffect(() => {
+    if (!selectedInstitution) return;
+
     const setupReports = async () => {
       if (reports.length) return;
 
@@ -56,11 +62,15 @@ export default function AthleteExerciseReports(props: Props) {
         INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
       );
 
-      if (items) {
-        const data: IndexDbAthleteExerciseReport[] = items.payload;
+      const data: IndexDbAthleteExerciseReport[] = items?.payload;
 
+      const filteredData = (data || []).filter((item) => {
+        return item.institutionId === selectedInstitution.id;
+      });
+
+      if (filteredData && filteredData.length) {
         setReports(
-          data.map((item) => ({
+          filteredData.map((item) => ({
             id: item.id,
             element: (
               <AthleteExerciseReport
@@ -179,7 +189,6 @@ export default function AthleteExerciseReports(props: Props) {
             justifyContent={flexWrap === 'wrap' ? 'center' : undefined}
             gap={2}
             sx={{
-              overflowX: 'auto',
               ...styledScrollbarSx(theme),
             }}
             flexWrap={flexWrap}
@@ -190,6 +199,7 @@ export default function AthleteExerciseReports(props: Props) {
           </Box>
         </SortableContext>
       </DndContext>
+      <AthleteExerciseDataGrid cache={cache} />
     </Box>
   );
 }
