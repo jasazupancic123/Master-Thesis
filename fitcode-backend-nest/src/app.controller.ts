@@ -1,6 +1,5 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { config } from 'dotenv';
 
 import { AppService } from './app.service';
 import { AuthService } from './auth/service/auth.service';
@@ -45,10 +44,16 @@ export class AppController {
     const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
     this.logger.log(`Warming up instance ... (${nodeEnv})`);
     console.log('ENV:', process.env);
+  }
 
-    if (!['staging'].includes(nodeEnv))
-      // in production and staging, the environment variables are set in other ways
-      config({ quiet: true, path: `.env.${nodeEnv}` });
+  /**
+   * Warmup handler for App Engine to keep instances warm.
+   */
+  @Get('_ah/start')
+  start(): void {
+    const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
+    this.logger.log(`Starting instance ... (${nodeEnv})`);
+    console.log('ENV:', process.env);
   }
 
   @Auth()
