@@ -290,6 +290,7 @@ async function handleCreateTraining(
     },
     async () =>
       await TrainingController.getInstance().create({
+        institutionId: group!.institutionId,
         groupId: group.id,
         cycleId: cycle!.id,
         components: selectedComponents,

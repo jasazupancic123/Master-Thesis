@@ -31,7 +31,7 @@ export type Training = BaseEntity &
 
 export type CreateTraining = Pick<
   Training,
-  'groupId' | 'cycleId' | 'components' | 'membersIds' | 'from'
+  'institutionId' | 'groupId' | 'cycleId' | 'components' | 'membersIds' | 'from'
 >;
 
 export type UpdateTraining = {

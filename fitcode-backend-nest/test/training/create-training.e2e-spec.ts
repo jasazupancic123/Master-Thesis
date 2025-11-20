@@ -65,7 +65,10 @@ describe('Create Training (e2e)', () => {
   });
 
   async function req(token: string, input: Partial<CreateTrainingDto>) {
-    return await testApp.http.post('/training', token, input);
+    return await testApp.http.post('/training', token, {
+      ...input,
+      institutionId: institution.id,
+    });
   }
 
   describe('Create training', () => {
@@ -73,6 +76,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: 'invalid-group-id',
       });
 
@@ -85,6 +89,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: 'invalid-cycle-id',
       });
@@ -111,6 +116,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
       });
@@ -126,6 +132,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
         date: addDays(new Date(), 100),
@@ -144,6 +151,7 @@ describe('Create Training (e2e)', () => {
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
         groupId: group.id,
+        institutionId: institution.id,
         cycleId: group.cycles[1].id,
         date: subDays(new Date(), 1),
         components: [generateTrainingComponent()],
@@ -162,6 +170,7 @@ describe('Create Training (e2e)', () => {
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: from,
@@ -170,6 +179,7 @@ describe('Create Training (e2e)', () => {
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           date: addHours(from, 1),
@@ -180,7 +190,7 @@ describe('Create Training (e2e)', () => {
       const trainingIds = (
         await Promise.all(
           trainings.map((t) =>
-            trainingService.create(global.trainer, {
+            trainingService.createForInstitution(global.trainer, {
               ...t,
               from,
             }),
@@ -191,6 +201,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
         date: addHours(from, 2),
@@ -214,11 +225,12 @@ describe('Create Training (e2e)', () => {
       'should fail to create new training there is an overlap with other trainings',
       async (from) => {
         const trainingId = (
-          await trainingService.create(
+          await trainingService.createForInstitution(
             global.trainer,
             generateTrainingStub({
               ownerId: global.trainer.uid,
               membersIds: [global.athlete.uid],
+              institutionId: institution.id,
               groupId: group.id,
               cycleId: group.cycles[1].id,
               from,
@@ -230,6 +242,7 @@ describe('Create Training (e2e)', () => {
         const training = generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           from: subMinutes(from, 20),
@@ -251,6 +264,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         ownerId: global.trainer.uid,
         membersIds: [global.athlete.uid],
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -452,11 +466,12 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to add components if user is not allowed to edit training', async () => {
-      const training = await trainingService.create(
+      const training = await trainingService.createForInstitution(
         global.trainer,
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -518,11 +533,12 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to add components if there are duplicate components', async () => {
-      const training = await trainingService.create(
+      const training = await trainingService.createForInstitution(
         global.trainer,
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -555,11 +571,12 @@ describe('Create Training (e2e)', () => {
 
     it('should successfully add training components', async () => {
       const d = addDays(new Date(), 2);
-      const training = await trainingService.create(
+      const training = await trainingService.createForInstitution(
         global.trainer,
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           from: getTime(d, 8, 0),
@@ -600,11 +617,12 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should successfully delete training component', async () => {
-      const training = await trainingService.create(
+      const training = await trainingService.createForInstitution(
         global.trainer,
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -637,11 +655,12 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should delete training when training has no more components', async () => {
-      const training = await trainingService.create(
+      const training = await trainingService.createForInstitution(
         global.trainer,
         generateTrainingStub({
           ownerId: global.trainer.uid,
           membersIds: [global.athlete.uid],
+          institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [

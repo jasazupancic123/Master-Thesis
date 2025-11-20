@@ -300,7 +300,7 @@ export class TrainingController {
     @Body()
     body: CreateTrainingDto,
   ) {
-    return await this.trainingService.create(user, body);
+    return await this.trainingService.createForInstitution(user, body);
   }
 
   @Auth()
