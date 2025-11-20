@@ -3,6 +3,7 @@ import Image from 'next/image';
 
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 
 interface Props {
   images: string[];
@@ -17,17 +18,16 @@ export default function ImagePickerSlider({
   currentIndex,
   width = 60,
 }: Props) {
-  const canJustifyCenter = images.length * width < window.innerWidth;
-
   return (
     <Box
       width="100%"
       display="flex"
       alignItems="center"
-      justifyContent={canJustifyCenter ? 'center' : undefined}
       sx={{
         overflowX: 'auto',
         px: 1,
+        mx: 'auto',
+        ...styledScrollbarSx(theme),
       }}
       gap={0.5}
     >
