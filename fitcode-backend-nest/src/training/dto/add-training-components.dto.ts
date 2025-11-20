@@ -2,12 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
-import { CreateTrainingComponentDto } from './create-training.dto';
+import { TrainingComponent } from '../entity/training-component.entity';
 
 export class AddTrainingComponentsDto {
   @ValidateNested({ each: true })
-  @Type(() => CreateTrainingComponentDto)
-  @ApiProperty({ type: [CreateTrainingComponentDto] })
+  @Type(() => TrainingComponent)
+  @ApiProperty({ type: [TrainingComponent] })
   @Expose()
-  components: CreateTrainingComponentDto[];
+  components: TrainingComponent[];
 }
