@@ -12,7 +12,7 @@ import MyModal from '@/ui/modal';
 import { Avatar, Box, Tab, Tabs, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type DataGridWorkloadDetailsRow = {
   name: string;
@@ -32,6 +32,7 @@ export default function SetDetailsModal(props: Props & ModalProps) {
   const screenSize = useScreenSize();
 
   const { users, exercises } = useMain();
+
   const {
     workloads,
     setWorkloads,
@@ -41,19 +42,32 @@ export default function SetDetailsModal(props: Props & ModalProps) {
     setOpen,
   } = props;
 
-  if (!workloads.length) return null;
+  const [tab, setTab] = useState<number>(
+    activeSetNumber !== null ? activeSetNumber : 1
+  );
+  const foundWorkload = workloads.find((w) => w.setNumber === activeSetNumber);
 
-  console.log('activeSetNumber', activeSetNumber);
-
-  const [tab, setTab] = useState<number>(activeSetNumber || 1);
-  const [workload, setWorkload] = useState<Workload>(
-    workloads.find((w) => w.setNumber === activeSetNumber) || workloads[0]
+  const [workload, setWorkload] = useState<Workload | undefined>(
+    foundWorkload ? foundWorkload : workloads[0]
   );
 
-  const exercise = exercises.find((ex) => ex.id === workload.exerciseId);
-  const user = users.find((u) => u.uid === workload.userId);
+  useEffect(() => {
+    if (activeSetNumber === null) return;
 
-  if (!exercise || !user) return null;
+    const foundWorkload = workloads.find(
+      (w) => w.setNumber === activeSetNumber
+    );
+
+    if (foundWorkload) {
+      setWorkload(foundWorkload);
+      setTab(activeSetNumber);
+    }
+  }, [activeSetNumber]);
+
+  const exercise = exercises.find((ex) => ex.id === workload?.exerciseId);
+  const user = users.find((u) => u.uid === workload?.userId);
+
+  if (!exercise || !user || !workload) return null;
 
   const prescribedCompletedPairs: DataGridWorkloadDetailsRow[] = [
     {
@@ -149,7 +163,7 @@ export default function SetDetailsModal(props: Props & ModalProps) {
       field: 'name',
       headerName: 'Parameter',
       flex: 1,
-      minWidth: 100,
+      minWidth: 134,
     },
     {
       field: 'prescribed',
@@ -255,7 +269,7 @@ export default function SetDetailsModal(props: Props & ModalProps) {
               }}
             >
               {user.displayName || 'Unknown User'},{' '}
-              {dayjs(workload.from).format('MMM DD. A')}
+              {dayjs(workload.from).format('MMM DD A')}
             </Typography>
             <Typography
               fontSize={14}

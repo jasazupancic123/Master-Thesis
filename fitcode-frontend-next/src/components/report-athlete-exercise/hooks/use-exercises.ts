@@ -4,6 +4,7 @@ import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import { core } from '@/core/core.service';
 
 export default function useAthleteExerciseReportExercises(
   selectedAthlete: AuthUser | null,
@@ -12,11 +13,13 @@ export default function useAthleteExerciseReportExercises(
   const { exercises } = useMain();
   const { trainings } = useDashboard();
 
-  const athleteTrainings = selectedAthlete
-    ? trainings.filter((t) =>
-        t.membersIds.some((id) => id === selectedAthlete.uid)
-      )
-    : trainings;
+  const athleteTrainings = core.training.getPotentiallyCompletedTrainings(
+    selectedAthlete
+      ? trainings.filter((t) =>
+          t.membersIds.some((id) => id === selectedAthlete.uid)
+        )
+      : trainings
+  );
 
   const uniqueExerciseIds = [
     ...new Set(
