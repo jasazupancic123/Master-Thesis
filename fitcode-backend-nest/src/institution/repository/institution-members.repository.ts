@@ -79,7 +79,7 @@ export class InstitutionMembersRepository extends FirestoreRepository<
 
   async save(data: Pick<InstitutionMember, 'role'>, ref: InstitutionMemberRef) {
     const query = this.firebase.buildCreateQuery<InstitutionMember>(
-      { id: ref.uid, institutionId: ref.institutionId, ...data },
+      { id: ref.uid, institutionId: ref.institutionId, role: data.role },
       { timestamps: true },
     );
 
