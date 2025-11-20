@@ -267,9 +267,16 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async create(user: User, input: CreateTrainingDto): Promise<Training> {
+  async createForInstitution(
+    user: User,
+    input: CreateTrainingDto,
+  ): Promise<Training> {
     // validate parent references
-    const { groupId, cycleId } = input;
+    const { institutionId, groupId, cycleId } = input;
+    const institution = await this.institutionService.findByIdOrFail({
+      institutionId,
+    });
+
     let group: Group | null = null;
     let cycle: Cycle | null = null;
 
@@ -327,7 +334,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const data: Create<Training> = {
       id: null,
-      institutionId: group?.institutionId,
+      institutionId: institution.id,
       groupId: group?.id,
       cycleId: input.cycleId,
       ownerId: user.uid,

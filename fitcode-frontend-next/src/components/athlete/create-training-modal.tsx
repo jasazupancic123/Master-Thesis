@@ -40,7 +40,8 @@ export default function CreateTrainingModal({
   setOpen,
   onCreateTraining,
 }: Props) {
-  const { exercises } = useMain();
+  const { exercises, institutions } = useMain();
+  const institutionId = institutions?.[0]?.id;
 
   const [component, setComponent] = useState(DEFAULT_COMPONENT);
   const [supersets, setSupersets] = useState([DEFAULT_SUPERSET]);
@@ -97,6 +98,11 @@ export default function CreateTrainingModal({
     });
   }
 
+  if (!institutionId) {
+    toast.error('No institution found');
+    return null;
+  }
+
   return (
     <MyModal
       isOpen={open}
@@ -109,6 +115,7 @@ export default function CreateTrainingModal({
 
         try {
           const training = await TrainingController.getInstance().create({
+            institutionId,
             from: new Date(),
             membersIds: [],
             components: [
