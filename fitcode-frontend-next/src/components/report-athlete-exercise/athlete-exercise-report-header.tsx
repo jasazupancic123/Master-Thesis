@@ -12,13 +12,14 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { updateReportInIndexDb } from './actions/actions-index-db';
 import useAthleteExerciseReportAthletes from './hooks/use-athletes';
 import useAthleteExerciseReportData from './hooks/use-data';
 import useAthleteExerciseReportExercises from './hooks/use-exercises';
+import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
@@ -32,10 +33,13 @@ interface Props {
   id: string;
   reportType: 'single' | 'comparison';
   setData: SetState<Workload[]>;
+  setAllSetsData: SetState<Workload[]>; // contains data for all sets
   cache: Map<string, Workload[]>;
+  groupByTraining: boolean;
   passedUserId?: string;
   passedUserIds?: string[];
   passedExerciseId?: string;
+  setReports: SetState<AthleteExerciseReportType[]>;
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
@@ -45,10 +49,13 @@ export default function AthleteExerciseReportHeader(props: Props) {
     id,
     reportType,
     setData,
+    setAllSetsData,
     cache,
+    groupByTraining,
     passedUserId,
     passedUserIds,
     passedExerciseId,
+    setReports,
   } = props;
 
   const {
@@ -76,7 +83,9 @@ export default function AthleteExerciseReportHeader(props: Props) {
     selectedAthletes,
     selectedExercise,
     cache,
-    setData
+    groupByTraining,
+    setData,
+    setAllSetsData
   );
 
   const [openSelectAthleteMenu, setOpenSelectAthleteMenu] = useState(false);
@@ -84,6 +93,22 @@ export default function AthleteExerciseReportHeader(props: Props) {
 
   const athleteAnchorElRef = useRef<HTMLElement | null>(null);
   const exerciseAnchorElRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setReports((prevReports) =>
+      prevReports.map((report) => {
+        if (report.id !== id) return report;
+
+        return {
+          ...report,
+          userId: selectedAthlete?.uid,
+          userIds: selectedAthletes.map((a) => a.uid),
+          exerciseId: selectedExercise?.id,
+          type: reportType,
+        };
+      })
+    );
+  }, [selectedAthlete, selectedAthletes, selectedExercise, reportType]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" width="100%">
@@ -143,9 +168,6 @@ export default function AthleteExerciseReportHeader(props: Props) {
                 setSearchAthleteText(e.target.value);
               }}
               maxWidth="100%"
-              sx={{
-                width: 140,
-              }}
             />
 
             {/* Athlete list */}
@@ -170,7 +192,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                     <MenuItem
                       key={athlete.uid}
                       onClick={async () => {
-                        if (!selectedExercise || !selectedInstitution) return;
+                        if (!selectedInstitution) return;
 
                         if (reportType === 'comparison') {
                           const isAlreadySelected = selectedAthletes.some(
@@ -192,9 +214,10 @@ export default function AthleteExerciseReportHeader(props: Props) {
 
                           const item: IndexDbAthleteExerciseReport = {
                             id,
-                            exerciseId: selectedExercise.id,
+                            exerciseId: selectedExercise?.id,
                             institutionId: selectedInstitution.id,
                             userIds: newAthletes.map((a) => a.uid),
+                            type: 'comparison',
                           };
 
                           await updateReportInIndexDb(item);
@@ -203,9 +226,10 @@ export default function AthleteExerciseReportHeader(props: Props) {
                         } else {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
-                            exerciseId: selectedExercise.id,
+                            exerciseId: selectedExercise?.id,
                             institutionId: selectedInstitution.id,
                             userId: athlete.uid,
+                            type: 'single',
                           };
 
                           await updateReportInIndexDb(item);
@@ -343,9 +367,6 @@ export default function AthleteExerciseReportHeader(props: Props) {
                 setSearchExercisesText(e.target.value);
               }}
               maxWidth="100%"
-              sx={{
-                width: 140,
-              }}
             />
             {/* Athlete list */}
             <Box

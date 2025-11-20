@@ -7,6 +7,7 @@ export default function useAthleteChartData(
   reportType: 'single' | 'comparison'
 ) {
   const [data, setData] = useState<Workload[]>([]);
+  const [allSetsData, setAllSetsData] = useState<Workload[]>([]); // contains data for all sets
   const [chartData, setChartData] = useState<AthleteExerciseReportChartData[]>(
     []
   );
@@ -58,6 +59,8 @@ export default function useAthleteChartData(
   return {
     data,
     setData,
+    allSetsData,
+    setAllSetsData,
     chartData,
     range,
     setRange,
