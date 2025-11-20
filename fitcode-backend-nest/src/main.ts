@@ -19,16 +19,9 @@ import type {
 } from './config/environment-validation-schema';
 
 const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-if (!['production', 'staging'].includes(nodeEnv)) {
+if (!['production', 'staging'].includes(nodeEnv))
   // in production and staging, the environment variables are set in other ways
-  console.log(`[main.ts] Loading .env file for environment: ${nodeEnv}`);
   config({ quiet: true, path: `.env.${nodeEnv}` });
-} else {
-  console.log(
-    `[main.ts] Running in ${nodeEnv} environment, skipping .env file loading`,
-  );
-  console.log('ENV:', process.env);
-}
 
 async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);

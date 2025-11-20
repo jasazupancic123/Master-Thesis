@@ -57,15 +57,6 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
-      - name: Generate .env.production
-        run: |
-          echo "NODE_ENV=production" > .env.production
-          echo "JWT_SECRET=${{ vars.JWT_SECRET }}" >> .env.production
-          echo "ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}" >> .env.production
-          echo "ADMIN_PASSWORD=${{ vars.ADMIN_PASSWORD }}" >> .env.production
-          echo "FRONTEND_URL=${{ vars.FRONTEND_URL }}" >> .env.production
-          echo "FRONTEND_WHITELIST=${{ vars.FRONTEND_WHITELIST }}" >> .env.production
-
       - name: Build backend
         run: npm run build
 
