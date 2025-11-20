@@ -66,10 +66,7 @@ import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
   MAX_NUM_TRAININGS_PER_DAY,
 } from '../constant/training-limits.constant';
-import {
-  CreateTrainingComponentDto,
-  CreateTrainingDto,
-} from '../dto/create-training.dto';
+import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import {
   TrainingAction,
@@ -293,8 +290,8 @@ export class TrainingService implements Permission<Training, Institution> {
     const inputComponents: TrainingComponent[] = input.components.map(
       (c, i) => ({
         mainSet: MainSet.BLOCK,
-        supersets: [],
-        subgroups: [],
+        supersets: c.supersets || [],
+        subgroups: c.subgroups || [],
         id: c.id,
         from: addMinutes(from, i * step),
         to: addMinutes(from, (i + 1) * step),
@@ -304,8 +301,9 @@ export class TrainingService implements Permission<Training, Institution> {
 
     const to = inputComponents[inputComponents.length - 1].to;
 
-    this.validateIsDateInCycle(from, cycle);
+    if (cycle) this.validateIsDateInCycle(from, cycle);
     this.validateIsDateInFuture(from);
+
     await this.validateOverlapAndMaxLimit(
       user,
       group?.institutionId,
@@ -314,12 +312,17 @@ export class TrainingService implements Permission<Training, Institution> {
       to,
     );
 
-    const membersIds = group ? group.membersIds : input.membersIds;
+    const membersIds = this.firebase.isAthlete(user)
+      ? [user.uid]
+      : group
+        ? group.membersIds
+        : input.membersIds;
 
+    const exercises = await this.exerciseService.findAllByUser(user);
     this.trainingPlanService.validateTrainingComponents(
       inputComponents,
       membersIds,
-      { exercises: [] },
+      { exercises },
     );
 
     const data: Create<Training> = {
@@ -338,8 +341,8 @@ export class TrainingService implements Permission<Training, Institution> {
         to: c.to,
         targetId: c.targetId,
         copiedFrom: c.copiedFrom,
-        subgroups: [],
-        supersets: [],
+        supersets: c.supersets || [],
+        subgroups: c.subgroups || [],
       })),
     };
 
@@ -619,7 +622,7 @@ export class TrainingService implements Permission<Training, Institution> {
   async addComponents(
     user: User,
     ref: TrainingRef,
-    input: CreateTrainingComponentDto[],
+    input: TrainingComponent[],
   ): Promise<Training> {
     const training = await this.findOneByIdOrFail(user, ref);
     this.validateCanEdit(user, training, training.institution);
@@ -638,8 +641,8 @@ export class TrainingService implements Permission<Training, Institution> {
         to: addMinutes(from, (i + 1) * step),
         mainSet: MainSet.BLOCK,
         targetId: c.targetId,
-        subgroups: [],
-        supersets: [],
+        subgroups: c.subgroups || [],
+        supersets: c.supersets || [],
       })),
     ];
 
@@ -1638,6 +1641,12 @@ export class TrainingService implements Permission<Training, Institution> {
       if (
         this.firebase.isTrainer(user) &&
         institution.trainerIds.includes(user.uid)
+      )
+        return true;
+
+      if (
+        this.firebase.isAthlete(user) &&
+        institution.athleteIds.includes(user.uid)
       )
         return true;
     }
