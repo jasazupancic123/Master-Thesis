@@ -91,36 +91,42 @@ export class TrainingExerciseSetUtil {
     return options;
   }
 
-  getLoadType(set: ExerciseSet): 'loadKg' | 'loadRm' | 'loadBw' | undefined {
+  getLoadType(set?: ExerciseSet): 'loadKg' | 'loadRm' | 'loadBw' | undefined {
+    if (!set) return undefined;
     if (set.loadRm !== undefined) return 'loadRm';
     if (set.loadBw !== undefined) return 'loadBw';
     if (set.loadKg !== undefined) return 'loadKg';
     return undefined;
   }
 
-  getVolType(set: ExerciseSet): 'dist' | 'time' | 'reps' | undefined {
+  getVolType(set?: ExerciseSet): 'dist' | 'time' | 'reps' | undefined {
+    if (!set) return undefined;
     if (set.dist !== undefined) return 'dist';
     if (set.time !== undefined) return 'time';
     if (set.reps !== undefined) return 'reps';
     return undefined;
   }
 
-  getEffType(set: ExerciseSet): 'eff' | 'tempoEcc' | undefined {
+  getEffType(set?: ExerciseSet): 'eff' | 'tempoEcc' | undefined {
+    if (!set) return undefined;
     if (set.eff !== undefined) return 'eff';
     if (set.tempoEcc !== undefined) return 'tempoEcc';
     return undefined;
   }
 
-  getRecType(set: ExerciseSet): 'recDist' | 'recTime' | undefined {
+  getRecType(set?: ExerciseSet): 'recDist' | 'recTime' | undefined {
+    if (!set) return undefined;
     if (set.recDist !== undefined) return 'recDist';
     if (set.recTime !== undefined) return 'recTime';
     return undefined;
   }
 
   getTempo(
-    set: ExerciseSet,
+    set?: ExerciseSet,
     removeIdle?: boolean
   ): [number, number, number, number] | [number, number, number] {
+    if (!set) return [2, 0, 0, 0];
+
     if (removeIdle)
       return [set.tempoEcc || 2, set.tempoIso || 0, set.tempoCon || 0];
 

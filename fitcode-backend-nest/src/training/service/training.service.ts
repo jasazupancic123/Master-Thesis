@@ -1496,6 +1496,11 @@ export class TrainingService implements Permission<Training, Institution> {
     const { superset } =
       this.trainingPlanService.validateTrainingActionSupersetRef(training, ref);
 
+    // if exercise already exists in superset, throw error
+    const exists = superset.exercises.find((e) => e.id === ref.exerciseId);
+    if (exists)
+      throw new BadRequestException('Exercise already exists in superset');
+
     superset.exercises = [
       ...superset.exercises,
       { id: ref.exerciseId, sets: [] },

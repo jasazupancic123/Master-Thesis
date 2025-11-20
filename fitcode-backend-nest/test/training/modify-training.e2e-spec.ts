@@ -113,9 +113,10 @@ describe('Modify Training (e2e)', () => {
   });
 
   it('should successfully add exercise to superset for coach', async () => {
+    const newExercise = await db.exercises.createTest({ id: 'e2' });
     const res = await req(global.trainer.token, training.id, {
       action: TrainingAction.ADD_EXERCISE,
-      ref: { componentId: 'c1', supersetIndex: 0, exerciseId: exercise.id },
+      ref: { componentId: 'c1', supersetIndex: 0, exerciseId: 'e2' },
       payload: {},
     });
 
@@ -129,12 +130,14 @@ describe('Modify Training (e2e)', () => {
     expect(superset.exercises.length).toBe(2);
 
     training = await clearAndResetTraining();
+    await db.exercises.delete(newExercise.id);
   });
 
   it('should successfully add exercise to superset for athlete', async () => {
+    const newExercise = await db.exercises.createTest({ id: 'e2' });
     const res = await req(global.athlete.token, training.id, {
       action: TrainingAction.ADD_EXERCISE,
-      ref: { componentId: 'c1', supersetIndex: 0, exerciseId: exercise.id },
+      ref: { componentId: 'c1', supersetIndex: 0, exerciseId: 'e2' },
       payload: {},
     });
 
@@ -150,6 +153,7 @@ describe('Modify Training (e2e)', () => {
     expect(athleteSubgroup.supersets[0].exercises.length).toBe(2);
 
     training = await clearAndResetTraining();
+    await db.exercises.delete(newExercise.id);
   });
 
   it('should successfully remove exercise from superset for coach', async () => {
