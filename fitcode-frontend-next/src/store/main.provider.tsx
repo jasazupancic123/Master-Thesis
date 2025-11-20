@@ -85,7 +85,9 @@ export default function MainProvider(props: MainProviderProps) {
       }
     }
 
-    fetchWellness().then((data) => setWellness(data));
+    fetchWellness().then((data) => {
+      setWellness(data);
+    });
   }, []);
 
   const value: IMainContext = {

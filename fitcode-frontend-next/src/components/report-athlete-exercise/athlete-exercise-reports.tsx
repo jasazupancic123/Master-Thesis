@@ -176,17 +176,16 @@ export default function AthleteExerciseReports(props: Props) {
                   type: 'single',
                 };
 
-            const item: IndexDbAthleteExerciseReport | undefined =
-              prevReport && prevReport.exerciseId
-                ? {
-                    id,
-                    exerciseId: prevReport.exerciseId,
-                    institutionId: selectedInstitution.id,
-                    userId: prevReport.userId,
-                    userIds: prevReport.userIds,
-                    type: prevReport.type,
-                  }
-                : undefined;
+            const item: IndexDbAthleteExerciseReport | undefined = prevReport
+              ? {
+                  id,
+                  exerciseId: prevReport.exerciseId,
+                  institutionId: selectedInstitution.id,
+                  userId: prevReport.userId,
+                  userIds: prevReport.userIds,
+                  type: prevReport.type,
+                }
+              : undefined;
 
             if (item) await updateReportInIndexDb(item);
 
