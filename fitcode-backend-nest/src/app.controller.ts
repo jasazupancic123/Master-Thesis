@@ -43,17 +43,6 @@ export class AppController {
   warmup(): void {
     const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
     this.logger.log(`Warming up instance ... (${nodeEnv})`);
-    console.log('ENV:', process.env);
-  }
-
-  /**
-   * Warmup handler for App Engine to keep instances warm.
-   */
-  @Get('_ah/start')
-  start(): void {
-    const nodeEnv = (process.env.NODE_ENV || 'dev') as NodeEnv;
-    this.logger.log(`Starting instance ... (${nodeEnv})`);
-    console.log('ENV:', process.env);
   }
 
   @Auth()
