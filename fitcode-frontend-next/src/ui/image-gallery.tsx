@@ -11,10 +11,16 @@ interface ImageGalleryProps {
   imagesL: string[] | RepImage[];
   imagesR: string[] | RepImage[];
   enableImagePickerSlider?: boolean;
+  imagePickerToBottom?: boolean;
 }
 
 export default function ImageGallery(props: ImageGalleryProps) {
-  const { imagesL, imagesR, enableImagePickerSlider = false } = props;
+  const {
+    imagesL,
+    imagesR,
+    enableImagePickerSlider = false,
+    imagePickerToBottom = false,
+  } = props;
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -56,7 +62,7 @@ export default function ImageGallery(props: ImageGalleryProps) {
     <Box
       width="100%"
       display="flex"
-      flexDirection="column"
+      flexDirection={imagePickerToBottom ? 'column-reverse' : 'column'}
       alignItems="center"
       gap={1}
     >

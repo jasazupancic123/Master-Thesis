@@ -10,4 +10,22 @@ export class NumberUtil {
 
   formatNumber = (value: number, maximumFractionDigits: number = 2) =>
     value.toLocaleString(undefined, { maximumFractionDigits });
+
+  calculatePercentageDiff(
+    value1: number | null | undefined,
+    value2: number | null | undefined
+  ): number | null {
+    if (
+      value1 === null ||
+      value1 === undefined ||
+      value2 === null ||
+      value2 === undefined
+    )
+      return null;
+
+    if (value2 === 0) return value1;
+
+    const diff = ((value1 - value2) / value2) * 100;
+    return diff;
+  }
 }
