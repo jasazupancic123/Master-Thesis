@@ -12,27 +12,31 @@ import {
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts';
 import dayjs from 'dayjs';
-import type { JSX } from 'react';
 import { useState } from 'react';
 
 import { deleteReportFromIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReportHeader from './athlete-exercise-report-header';
+import AthleteExerciseChartTooltip from './custom-tooltip';
 import useAthleteChartData from './hooks/use-chart-data';
 import useAthleteChartSeries from './hooks/use-chart-series';
 import useAthleteExerciseReportParams from './hooks/use-params';
+import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import ImageGallery from '@/ui/image-gallery';
-import MyModal from '@/ui/modal';
 
 interface Props {
   id: string;
   cache: Map<string, Workload[]>;
-  setReports: SetState<{ id: string; element: JSX.Element }[]>;
-  passedUserId?: string;
-  passedUserIds?: string[];
-  passedExerciseId?: string;
+  setReports: SetState<AthleteExerciseReportType[]>;
+  reportType?: 'single' | 'comparison';
+  userId?: string;
+  userIds?: string[];
+  exerciseId?: string;
+  setActiveWorkloadsForTooltip: SetState<Workload[]>;
+  setActiveSetNumber: SetState<number | null>;
+  openWorkloadModal: boolean;
+  setOpenWorkloadModal: SetState<boolean>;
 }
 
 export default function AthleteExerciseReport(props: Props) {
@@ -40,17 +44,31 @@ export default function AthleteExerciseReport(props: Props) {
     id,
     cache,
     setReports,
-    passedUserId,
-    passedUserIds,
-    passedExerciseId,
+    reportType: passedReportType,
+    userId: passedUserId,
+    userIds: passedUserIds,
+    exerciseId: passedExerciseId,
+    setActiveWorkloadsForTooltip,
+    setActiveSetNumber,
+    openWorkloadModal,
+    setOpenWorkloadModal,
   } = props;
 
   const [reportType, setReportType] = useState<'single' | 'comparison'>(
-    passedUserIds && passedUserIds.length ? 'comparison' : 'single'
+    passedReportType || 'single'
   );
+  const [groupByTraining, setGroupByTraining] = useState(false);
 
-  const { data, setData, chartData, range, max, handleChange } =
-    useAthleteChartData(reportType);
+  const {
+    data,
+    setData,
+    allSetsData,
+    setAllSetsData,
+    chartData,
+    range,
+    max,
+    handleChange,
+  } = useAthleteChartData(reportType);
 
   const {
     possibleParams,
@@ -73,9 +91,6 @@ export default function AthleteExerciseReport(props: Props) {
       getParamColor,
       range
     );
-
-  const [openGallery, setOpenGallery] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -118,73 +133,108 @@ export default function AthleteExerciseReport(props: Props) {
       >
         <Box
           display="flex"
-          justifyContent="flex-end"
-          alignItems="center"
+          flexDirection="column"
+          alignItems="flex-end"
+          justifyContent="center"
           sx={{
             position: 'absolute',
             top: 4,
             right: 4,
             p: 0.5,
           }}
-          gap={1}
+          gap={0.5}
         >
-          <Tooltip
-            title={
-              reportType === 'single'
-                ? 'Switch to comparison'
-                : 'Switch to single athlete'
-            }
+          <Box
+            display="flex"
+            justifyContent="flex-end"
+            alignItems="center"
+            gap={1}
           >
+            <Tooltip
+              title={
+                reportType === 'single'
+                  ? 'Switch to comparison'
+                  : 'Switch to single athlete'
+              }
+            >
+              <IconButton
+                sx={{
+                  p: 0,
+                  m: 0,
+                }}
+                onClick={() => {
+                  setReportType((prev) =>
+                    prev === 'single' ? 'comparison' : 'single'
+                  );
+                }}
+              >
+                {reportType === 'single' ? <Person /> : <Groups />}
+              </IconButton>
+            </Tooltip>
+
+            <Box
+              display="flex"
+              alignItems="center"
+              {...attributes}
+              {...listeners}
+              sx={{
+                touchAction: 'none', // important for mobile
+                cursor: 'grab',
+              }}
+            >
+              <DragIndicator />
+            </Box>
+
             <IconButton
               sx={{
                 p: 0,
                 m: 0,
               }}
-              onClick={() => {
-                setReportType((prev) =>
-                  prev === 'single' ? 'comparison' : 'single'
-                );
+              onClick={async () => {
+                setReports((prev) => prev.filter((p) => p.id !== id));
+                await deleteReportFromIndexDb(id);
               }}
             >
-              {reportType === 'single' ? <Person /> : <Groups />}
+              <Clear fontSize="small" />
             </IconButton>
-          </Tooltip>
-
-          <Box
-            display="flex"
-            alignItems="center"
-            {...attributes}
-            {...listeners}
-            sx={{
-              touchAction: 'none', // important for mobile
-              cursor: 'grab',
-            }}
-          >
-            <DragIndicator />
           </Box>
-
-          <IconButton
-            sx={{
-              p: 0,
-              m: 0,
-            }}
-            onClick={async () => {
-              setReports((prev) => prev.filter((p) => p.id !== id));
-              await deleteReportFromIndexDb(id);
-            }}
-          >
-            <Clear fontSize="small" />
-          </IconButton>
+          {reportType === 'single' && (
+            <Box
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+              gap={0.5}
+            >
+              <Typography
+                fontSize={12}
+                lineHeight={1}
+                sx={{ userSelect: 'none' }}
+              >
+                Group by Training
+              </Typography>
+              <Checkbox
+                size="small"
+                sx={{ p: 0 }}
+                checked={groupByTraining}
+                onChange={(_, checked) => {
+                  setGroupByTraining(checked);
+                }}
+              />
+            </Box>
+          )}
         </Box>
 
         <AthleteExerciseReportHeader
           id={id}
           reportType={reportType}
           setData={setData}
+          setAllSetsData={setAllSetsData}
           cache={cache}
           passedUserId={passedUserId}
           passedUserIds={passedUserIds}
           passedExerciseId={passedExerciseId}
+          groupByTraining={groupByTraining}
+          setReports={setReports}
         />
 
         <Box
@@ -264,6 +314,28 @@ export default function AthleteExerciseReport(props: Props) {
               : 400
           }
           height={250}
+          onMarkClick={(_, id) => {
+            const index = id.dataIndex;
+
+            if (index === undefined) return;
+
+            const workload = data[index];
+
+            if (!workload) return;
+
+            setActiveSetNumber(workload.setNumber);
+
+            const workloads = allSetsData.filter(
+              (w) =>
+                w.institutionId === workload.institutionId &&
+                w.trainingId === workload.trainingId &&
+                w.exerciseId === workload.exerciseId &&
+                w.userId === workload.userId
+            );
+
+            setActiveWorkloadsForTooltip(workloads);
+            setOpenWorkloadModal(true);
+          }}
           hideLegend={reportType === 'single'}
           series={reportType === 'single' ? singleModeSeries : comparisonSeries}
           xAxis={
@@ -302,17 +374,17 @@ export default function AthleteExerciseReport(props: Props) {
           }
           yAxis={[{ label: '', min: 0 }]}
           margin={{ top: 10, bottom: 0, left: 0, right: 10 }}
-          onMarkClick={(_, item) => {
-            // only for single mode
-            if (reportType !== 'single') return;
-
-            const workload = data[item.dataIndex || 0];
-            const photoURLs = workload?.photoURLs || [];
-            if (photoURLs.length > 0) {
-              setGalleryImages(photoURLs);
-              setOpenGallery(true);
-            }
+          slots={{
+            tooltip: () => (
+              <AthleteExerciseChartTooltip
+                data={data}
+                reportType={reportType}
+                groupByTraining={groupByTraining}
+                openWorkloadModal={openWorkloadModal}
+              />
+            ),
           }}
+          slotProps={{ tooltip: { trigger: 'axis' } }}
         />
       </Box>
 
@@ -350,14 +422,6 @@ export default function AthleteExerciseReport(props: Props) {
           }}
         />
       </Box>
-
-      <MyModal isOpen={openGallery} setIsOpen={setOpenGallery}>
-        <ImageGallery
-          imagesL={galleryImages}
-          imagesR={[]}
-          enableImagePickerSlider
-        />
-      </MyModal>
     </Box>
   );
 }

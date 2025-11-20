@@ -13,13 +13,15 @@ import {
 } from '@dnd-kit/sortable';
 import { GridView, ViewWeek } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
-import type { JSX } from 'react';
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 
 import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
+import { updateReportInIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReport from './athlete-exercise-report';
 import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from './const/index-db-id.const';
+import SetDetailsModal from './modals/set-details-modal';
+import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
@@ -37,9 +39,12 @@ export default function AthleteExerciseReports(props: Props) {
 
   const { cache } = props;
 
-  const [reports, setReports] = useState<
-    { id: string; element: JSX.Element }[]
+  const [reports, setReports] = useState<AthleteExerciseReportType[]>([]);
+  const [activeWorkloadsForTooltip, setActiveWorkloadsForTooltip] = useState<
+    Workload[]
   >([]);
+  const [activeSetNumber, setActiveSetNumber] = useState<number | null>(null);
+  const [openWorkloadModal, setOpenWorkloadModal] = useState(false);
 
   const [flexWrap, setFlexWrap] = useState<'wrap' | 'nowrap'>('wrap');
 
@@ -72,16 +77,10 @@ export default function AthleteExerciseReports(props: Props) {
         setReports(
           filteredData.map((item) => ({
             id: item.id,
-            element: (
-              <AthleteExerciseReport
-                id={item.id}
-                cache={cache}
-                setReports={setReports}
-                passedUserId={item.userId}
-                passedUserIds={!item.userId ? item.userIds : undefined}
-                passedExerciseId={item.exerciseId}
-              />
-            ),
+            userId: item.userId || '',
+            userIds: item.userIds || [],
+            exerciseId: item.exerciseId,
+            type: item.type,
           }))
         );
 
@@ -92,13 +91,10 @@ export default function AthleteExerciseReports(props: Props) {
       setReports([
         {
           id,
-          element: (
-            <AthleteExerciseReport
-              id={id}
-              cache={cache}
-              setReports={setReports}
-            />
-          ),
+          userId: undefined,
+          userIds: [],
+          exerciseId: undefined,
+          type: 'single',
         },
       ]);
     };
@@ -155,21 +151,45 @@ export default function AthleteExerciseReports(props: Props) {
       </Box>
       <Box>
         <AddButton
-          onClick={() => {
+          onClick={async () => {
+            if (!selectedInstitution) return;
+
             const id = v4();
-            setReports((prev) => [
-              ...prev,
-              {
-                id,
-                element: (
-                  <AthleteExerciseReport
-                    id={id}
-                    cache={cache}
-                    setReports={setReports}
-                  />
-                ),
-              },
-            ]);
+
+            const prevReport = reports.length
+              ? reports[reports.length - 1]
+              : null;
+
+            const newReport: AthleteExerciseReportType = prevReport
+              ? {
+                  id,
+                  userId: prevReport.userId,
+                  userIds: prevReport.userIds,
+                  exerciseId: prevReport.exerciseId,
+                  type: prevReport.type,
+                }
+              : {
+                  id,
+                  userId: undefined,
+                  userIds: [],
+                  exerciseId: undefined,
+                  type: 'single',
+                };
+
+            const item: IndexDbAthleteExerciseReport | undefined = prevReport
+              ? {
+                  id,
+                  exerciseId: prevReport.exerciseId,
+                  institutionId: selectedInstitution.id,
+                  userId: prevReport.userId,
+                  userIds: prevReport.userIds,
+                  type: prevReport.type,
+                }
+              : undefined;
+
+            if (item) await updateReportInIndexDb(item);
+
+            setReports((prev) => [...prev, newReport]);
           }}
         />
       </Box>
@@ -189,17 +209,41 @@ export default function AthleteExerciseReports(props: Props) {
             justifyContent={flexWrap === 'wrap' ? 'center' : undefined}
             gap={2}
             sx={{
+              overflowX: flexWrap === 'nowrap' ? 'auto' : undefined,
+              overflowY: 'hidden',
               ...styledScrollbarSx(theme),
             }}
             flexWrap={flexWrap}
           >
             {reports.map((report) => (
-              <Fragment key={report.id}>{report.element}</Fragment>
+              <AthleteExerciseReport
+                key={report.id}
+                id={report.id}
+                userId={report.userId}
+                userIds={report.userIds}
+                exerciseId={report.exerciseId}
+                reportType={report.type}
+                cache={cache}
+                setReports={setReports}
+                setActiveWorkloadsForTooltip={setActiveWorkloadsForTooltip}
+                setActiveSetNumber={setActiveSetNumber}
+                openWorkloadModal={openWorkloadModal}
+                setOpenWorkloadModal={setOpenWorkloadModal}
+              />
             ))}
           </Box>
         </SortableContext>
       </DndContext>
       <AthleteExerciseDataGrid cache={cache} />
+
+      <SetDetailsModal
+        open={openWorkloadModal}
+        setOpen={setOpenWorkloadModal}
+        workloads={activeWorkloadsForTooltip}
+        setWorkloads={setActiveWorkloadsForTooltip}
+        activeSetNumber={activeSetNumber}
+        setActiveSetNumber={setActiveSetNumber}
+      />
     </Box>
   );
 }
