@@ -40,6 +40,7 @@ import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { TrainingActionPayloadDto } from './dto/training-action.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
 import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
@@ -49,6 +50,7 @@ import {
 } from './entity/training-protocol.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
 import { TrainingService } from './service/training.service';
+import { SmartWallTraining } from './type/smart-wall.type';
 
 @ApiTags('Training')
 @Controller('training')
@@ -207,12 +209,12 @@ export class TrainingController {
   })
   async findAllByInstitutionToday(
     @RequestUser() user: User,
-  ): Promise<Training[]> {
+  ): Promise<SmartWallTraining[]> {
     const institution = await this.institutionService.findByOwnerId(user.uid);
     if (!institution)
       throw new NotFoundException('Institution not found for manager');
 
-    return await this.trainingService.findAll(
+    const trainings = await this.trainingService.findAll(
       user,
       institution.id,
       {
@@ -223,6 +225,23 @@ export class TrainingController {
       {},
       false,
     );
+
+    const result: SmartWallTraining[] = [];
+    for (const training of trainings) {
+      result.push({
+        trainingId: training.id,
+        users: training.membersIds.map((uid) => ({
+          uid,
+          exercises: training.components.flatMap((component) =>
+            component.supersets.flatMap((superset) =>
+              superset.exercises.map((exercise) => exercise),
+            ),
+          ),
+        })),
+      });
+    }
+
+    return result;
   }
 
   @Post('institution/:institutionId/protocol')
@@ -452,7 +471,7 @@ export class TrainingController {
   }
 
   /**
-   * Only allows updating training component status, does not finalize reports.
+   * Only allows updating training component status, does not finalize reports.x
    */
   @Patch(':trainingId/component/:cId/pause')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
@@ -463,6 +482,26 @@ export class TrainingController {
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
     return await this.trainingService.pauseComponent(user, ref);
+  }
+
+  /**
+   * Allowes athlete to modify their own training prescription -
+   * they can add exercises
+   */
+  @Post(':trainingId/modify')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async modifyTraining(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() { action, ref, payload }: TrainingActionPayloadDto,
+  ) {
+    return await this.trainingService.modifyTraining(
+      user,
+      trainingId,
+      action,
+      ref,
+      payload,
+    );
   }
 
   @Post(':trainingId/component')
