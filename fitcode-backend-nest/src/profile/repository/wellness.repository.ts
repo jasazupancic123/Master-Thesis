@@ -68,7 +68,15 @@ export class WellnessRepository extends FirestoreRepository<
     ref: WellnessRef,
   ): Promise<string> {
     const query = this.firebase.buildCreateQuery<Wellness>(
-      { ...input, date: startOfDay(ref.date), userId: ref.uid },
+      {
+        comment: input.comment,
+        height: input.height,
+        weight: input.weight,
+        fatigue: input.fatigue,
+        sleep: input.sleep,
+        date: startOfDay(ref.date),
+        userId: ref.uid,
+      },
       { timestamps: true },
     );
 

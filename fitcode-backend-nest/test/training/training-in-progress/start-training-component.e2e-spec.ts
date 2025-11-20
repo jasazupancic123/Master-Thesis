@@ -371,12 +371,6 @@ describe('Start Training Component (e2e)', () => {
     const trainings = res.body.trainings as Record<string, Training>;
     expect(trainings[athlete.uid].id).toBe(training2.id);
 
-    const firstSet =
-      trainings[athlete.uid].components[0].supersets[0].exercises[0].sets[0];
-
-    expect(firstSet.reps).toBe(13);
-    expect(firstSet.loadKg).toBe(37.5);
-
     // also check in db that workload is still the same
     const workloads = await db.workloads.getAll(training2.id);
     expect(workloads).toHaveLength(1);

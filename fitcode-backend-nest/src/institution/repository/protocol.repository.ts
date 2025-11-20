@@ -66,8 +66,12 @@ export class ProtocolRepository extends FirestoreRepository<
   async save(data: Create<TrainingProtocol>, ref: InstitutionRef) {
     const id = this.firebase.firestore.collection('_').doc().id;
     const query = this.firebase.buildCreateQuery<TrainingProtocol>({
-      ...data,
       id,
+      institutionId: ref.institutionId,
+      componentId: data.componentId,
+      name: data.name,
+      description: data.description,
+      supersets: data.supersets,
     });
 
     await this.doc({ ...ref, protocolId: id }).set(query);

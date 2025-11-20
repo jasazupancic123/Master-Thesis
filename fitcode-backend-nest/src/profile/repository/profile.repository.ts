@@ -109,9 +109,20 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
   }
 
   async save(input: Create<Profile>) {
-    const query = this.firebase.buildCreateQuery<Profile>(input, {
-      timestamps: true,
-    });
+    const query = this.firebase.buildCreateQuery<Profile>(
+      {
+        uid: input.uid,
+        email: input.email,
+        height: input.height,
+        weight: input.weight,
+        gender: input.gender,
+        birthDate: input.birthDate,
+        level: input.level,
+        photoURLBase64: input.photoURLBase64,
+        sport: input.sport,
+      },
+      { timestamps: true },
+    );
 
     await this.doc(input.uid).set(query);
     return input.uid;

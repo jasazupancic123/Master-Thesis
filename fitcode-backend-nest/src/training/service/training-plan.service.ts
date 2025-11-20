@@ -29,6 +29,7 @@ import {
   MAX_NUM_EXERCISES_IN_CIRCUIT_SUPERSET,
   MAX_NUM_SUPERSETS,
 } from '../constant/training-limits.constant';
+import { TrainingActionRef } from '../dto/training-action.dto';
 import { ExerciseParamField, ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
@@ -103,13 +104,9 @@ export class TrainingPlanService {
       s.membersIds.includes(athleteId),
     );
 
-    if (subgroups.length === 1) {
+    if (subgroups.length === 1)
       // root subgroup OR direct child of main group
-      const subgroup = subgroups[0];
-      if (subgroup.parentId === trainingComponent.id) return subgroup.supersets; // direct child of main group
-      if (!subgroup.parentId) return subgroup.supersets; // root subgroup
-      return subgroup.supersets; // case of child subgroup without correct parent
-    }
+      return subgroups[0].supersets;
 
     if (subgroups.length === 2) {
       // 2 subgroups - root and child
@@ -254,6 +251,15 @@ export class TrainingPlanService {
     return found;
   }
 
+  findSubgroupOrFail(
+    component: TrainingComponent,
+    subgroupId: string,
+  ): Subgroup {
+    const found = component.subgroups.find((s) => s.id === subgroupId);
+    if (!found) throw new NotFoundException(`Subgroup not found`);
+    return found;
+  }
+
   validateTrainingComponents(
     newTrainingComponents: UpdateTrainingComponentWithoutTime[], // with warmup and cooldown
     trainingMemberIds: string[],
@@ -297,6 +303,115 @@ export class TrainingPlanService {
       );
 
     return validTrainingComponents;
+  }
+
+  moveUserToVirtualSubgroup(
+    training: Training,
+    componentId: string,
+    athleteId: string,
+  ): Training {
+    // 1. if user is in main group, create virtual subgroup with parent "default"
+    // 2. if user is in regular subgroup, create virtual subgroup with the subgroup's parent
+    // 3. if user is in virtual subgroup, do nothing
+
+    // find user subgroups
+    const trainingComponent = this.findComponentOrFail(training, componentId);
+    const subgroups = trainingComponent.subgroups.filter((s) =>
+      s.membersIds.includes(athleteId),
+    );
+
+    const newSubgroup: Subgroup = {
+      id: athleteId,
+      name: 'Athlete Subgroup',
+      membersIds: [athleteId],
+      supersets: structuredClone(
+        this.getSupersetsByAthlete(athleteId, trainingComponent),
+      ),
+    };
+
+    if (subgroups.length === 0)
+      // 1st case (user in main group) - create virtual subgroup with parent "default"
+      trainingComponent.subgroups = [
+        ...trainingComponent.subgroups,
+        { ...newSubgroup, parentId: MAIN_GROUP_PARENT_ID },
+      ];
+    else if (subgroups.length === 1) {
+      // root subgroup OR direct child of main group
+      const subgroup = subgroups[0];
+      if (!subgroup.parentId)
+        // 2nd case (user is in regular subgroup) - create virtual subgroup with the subgroup's parent
+        trainingComponent.subgroups = [
+          ...trainingComponent.subgroups,
+          { ...newSubgroup, parentId: subgroup.id },
+        ];
+
+      // 3rd case (user already in virtual subgroup)
+    }
+
+    // 3rd case (user already in virtual subgroup)
+    return training;
+  }
+
+  validateTrainingActionComponentRef(
+    training: Training,
+    ref: TrainingActionRef,
+  ): { component: TrainingComponent } {
+    const { componentId } = ref;
+
+    if (!componentId)
+      throw new BadRequestException(
+        'You have to provide component id for this action',
+      );
+
+    const component = this.findComponentOrFail(training, componentId);
+    return { component };
+  }
+
+  validateTrainingActionSupersetRef(
+    training: Training,
+    ref: TrainingActionRef,
+  ): { component: TrainingComponent; superset: Superset } {
+    const { subgroupId, supersetIndex } = ref;
+    const { component } = this.validateTrainingActionComponentRef(
+      training,
+      ref,
+    );
+
+    if (supersetIndex === undefined)
+      throw new BadRequestException(
+        'You have to provide superset index for this action',
+      );
+
+    const supersets = subgroupId
+      ? this.findSubgroupOrFail(component, subgroupId).supersets
+      : component.supersets;
+
+    const superset = supersets[supersetIndex];
+    if (!superset) throw new NotFoundException('Superset not found');
+
+    return { component, superset };
+  }
+
+  validateTrainingActionExerciseRef(
+    training: Training,
+    ref: TrainingActionRef,
+  ): { superset: Superset; exercise: TrainingExercise; exerciseIndex: number } {
+    const { exerciseId } = ref;
+    const { superset } = this.validateTrainingActionSupersetRef(training, ref);
+
+    if (!exerciseId)
+      throw new BadRequestException(
+        'You have to provide exercise id for this action',
+      );
+
+    const exerciseIndex = superset.exercises.findIndex(
+      (e) => e.id === ref.exerciseId,
+    );
+    if (exerciseIndex === -1)
+      throw new NotFoundException('Exercise not found in superset');
+
+    const exercise = superset.exercises[exerciseIndex];
+    return { superset, exercise, exerciseIndex };
   }
 
   validateSupersets(
