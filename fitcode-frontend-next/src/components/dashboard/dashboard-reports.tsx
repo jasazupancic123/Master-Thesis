@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
-import WellnessReport from '../report-wellness/wellness-report';
+import WellnessReports from '../report-wellness/wellness-reports';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
@@ -72,7 +72,7 @@ export default function DashboardReports() {
       {tab === ReportTab.Exercise ? (
         <AthleteExerciseReports cache={cache} />
       ) : tab === ReportTab.Wellness ? (
-        <WellnessReport
+        <WellnessReports
           groupId={selectedGroup?.id}
           selectedUserId={selectedUser?.uid}
         />
