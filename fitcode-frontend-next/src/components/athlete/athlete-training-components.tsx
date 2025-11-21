@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
@@ -24,7 +25,6 @@ import {
   useTraining,
 } from '@/store/training.provider';
 import MyModal from '@/ui/modal';
-import { useRef } from 'react';
 
 interface Props {
   training: Training;

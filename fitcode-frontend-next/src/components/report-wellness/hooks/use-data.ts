@@ -1,10 +1,10 @@
-import { theme } from '@/app/style';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { WellnessZScore } from '@/core/profile/type/wellness.type';
-import { useMain } from '@/store/main.provider';
 import dayjs from 'dayjs';
-import { MetricConfig } from '../types/wellness-metrics.type';
-import { WellnessChartRow } from '../types/wellness-chart-row';
+
+import type { WellnessChartRow } from '../types/wellness-chart-row';
+import type { MetricConfig } from '../types/wellness-metrics.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import { useMain } from '@/store/main.provider';
 
 export default function useWellnessReportData(
   members: AuthUser[],
@@ -43,7 +43,7 @@ export default function useWellnessReportData(
 
   const last10DaysValues = last10DaysWellness
     .map((w) => w[metricConfig.key])
-    .filter((v) => v != null && v !== undefined) as number[];
+    .filter((v) => v !== null && v !== undefined) as number[];
 
   const last10DayAvgValue =
     last10DaysValues.reduce((acc, val) => acc + val, 0) /
@@ -51,7 +51,7 @@ export default function useWellnessReportData(
 
   const todayValues = rows
     .map((r) => r.value)
-    .filter((v): v is number => v != null && v !== undefined);
+    .filter((v): v is number => v !== null && v !== undefined);
 
   const avgValue =
     todayValues.reduce((acc, val) => acc + val, 0) /

@@ -1,11 +1,12 @@
-import { BarChart } from '@mui/x-charts';
-import { MetricConfig } from './types/wellness-metrics.type';
-import { theme } from '@/app/style';
-import { WellnessZScore } from '@/core/profile/type/wellness.type';
-import { AuthUser } from '@/core/auth/type/user.type';
 import { Box, Typography } from '@mui/material';
-import useWellnessReportData from './hooks/use-data';
+import { BarChart } from '@mui/x-charts';
+
 import useWellnessChartUtils from './hooks/use-chart-utils';
+import useWellnessReportData from './hooks/use-data';
+import type { MetricConfig } from './types/wellness-metrics.type';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -22,8 +23,6 @@ export default function WellnessBarChart(props: Props) {
 
   const { todaysWellness, metricConfig, width, height, members } = props;
 
-  if (!todaysWellness.length) return null;
-
   const { rows, avgValue, last10DayAvgValue } = useWellnessReportData(
     members,
     todaysWellness,
@@ -37,6 +36,8 @@ export default function WellnessBarChart(props: Props) {
 
   const barCount = rows.length;
   const chartWidth = Math.max(width, barCount * MIN_BAR_WIDTH);
+
+  if (!todaysWellness.length) return null;
 
   return (
     <Box

@@ -11,6 +11,7 @@ import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
+import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 import useDashboardGroupView from './hooks/use-group-view';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -22,7 +23,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 
 enum ReportTab {
   Realization = 'Realization',
