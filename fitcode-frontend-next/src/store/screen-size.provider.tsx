@@ -59,8 +59,7 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   const xl = useMediaQuery('(min-width:1535px)');
 
   const isTouchDevice =
-    typeof window !== undefined &&
-    window !== undefined &&
+    typeof window !== 'undefined' &&
     window.matchMedia('(pointer: coarse)').matches;
 
   return (

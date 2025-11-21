@@ -8,15 +8,15 @@ export class WellnessZScore extends Wellness {
   @IsNumber()
   @ApiProperty()
   @Expose()
-  sleepZScore?: number;
+  zScoreSleep?: number;
 
   @IsNumber()
   @ApiProperty()
   @Expose()
-  fatigueZScore?: number;
+  zScoreFatigue?: number;
 
   @IsNumber()
   @ApiProperty()
   @Expose()
-  sorenessZScore?: number;
+  zScoreSoreness?: number;
 }

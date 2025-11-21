@@ -40,7 +40,7 @@ export default function WellnessReports(props: Props) {
   ];
 
   const barChartWidth =
-    typeof window !== undefined && window !== undefined
+    typeof window !== 'undefined'
       ? screenSize.xs || screenSize.sm
         ? Math.min(450, window.innerWidth * 0.85)
         : Math.min(window.innerWidth, MAX_WIDTH_NUMERIC) * 0.4
