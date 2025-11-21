@@ -118,7 +118,7 @@ export default function AthleteExerciseReport(props: Props) {
   return (
     <Box
       maxWidth={
-        typeof window !== undefined
+        typeof window !== 'undefined'
           ? Math.min(window.innerWidth * 0.95, 400)
           : 400
       }
@@ -321,7 +321,7 @@ export default function AthleteExerciseReport(props: Props) {
               : undefined
           }
           width={
-            typeof window !== undefined
+            typeof window !== 'undefined'
               ? Math.min(window.innerWidth * 0.95, 400)
               : 400
           }
