@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
+import { v4 } from 'uuid';
+
 import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
-import { AthleteExerciseReportType } from '@/components/report-athlete-exercise/types/athlete-exercise-report-type';
-import { IndexDbAthleteExerciseReport } from '@/components/report-athlete-exercise/types/index-db-athlete-exercise-report';
+import type { AthleteExerciseReportType } from '@/components/report-athlete-exercise/types/athlete-exercise-report-type';
+import type { IndexDbAthleteExerciseReport } from '@/components/report-athlete-exercise/types/index-db-athlete-exercise-report';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useState, useEffect } from 'react';
-import { v4 } from 'uuid';
 
 export default function useAthleteExerciseReports() {
   const { selectedInstitution } = useDashboard();

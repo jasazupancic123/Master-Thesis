@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import type { DataGridRowAthleteExerciseRow } from '../types/data-grid-row';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -10,14 +11,13 @@ import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
-import { core } from '@/core/core.service';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: AuthUser | null,
   selectedTraining: Training | null,
   cache: Map<string, Workload[]>
 ) {
-  const { selectedInstitution, trainings } = useDashboard();
+  const { selectedInstitution } = useDashboard();
 
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [rows, setRows] = useState<DataGridRowAthleteExerciseRow[]>([]);

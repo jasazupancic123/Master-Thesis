@@ -13,23 +13,21 @@ import {
 } from '@dnd-kit/sortable';
 import { GridView, ViewWeek } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { v4 } from 'uuid';
 
 import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
 import { updateReportInIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReport from './athlete-exercise-report';
-import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from './const/index-db-id.const';
 import SetDetailsModal from './modals/set-details-modal';
 import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import AddButton from '@/ui/add-button';
-import { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   reports: AthleteExerciseReportType[];

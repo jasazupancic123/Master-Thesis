@@ -1,15 +1,15 @@
+import { Avatar, Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import { Avatar, Box, Grid2, Typography } from '@mui/material';
-import { MetricConfig } from './types/wellness-metrics.type';
-import WellnessBarChart from './wellness-bar-chart';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions.constant';
+import type { MetricConfig } from './types/wellness-metrics.type';
+import WellnessBarChart from './wellness-bar-chart';
 import { theme } from '@/app/style';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 type Props = {
   groupId?: string;
