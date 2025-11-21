@@ -12,9 +12,9 @@ export interface Wellness {
 }
 
 export interface WellnessZScore extends Wellness {
-  sleepZScore?: number;
-  fatigueZScore?: number;
-  sorenessZScore?: number;
+  zScoreSleep?: number;
+  zScoreFatigue?: number;
+  zScoreSoreness?: number;
 }
 
 export interface WellnessChartData {

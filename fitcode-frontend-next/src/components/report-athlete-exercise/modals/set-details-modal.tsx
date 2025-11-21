@@ -323,6 +323,9 @@ export default function SetDetailsModal(props: Props & ModalProps) {
           initialState={{
             pagination: { paginationModel: { page: 0, pageSize: 25 } },
           }}
+          sx={{
+            width: '100%',
+          }}
         />
 
         {/* Gallery */}
@@ -330,7 +333,6 @@ export default function SetDetailsModal(props: Props & ModalProps) {
           imagesL={workload?.photoURLs || []}
           imagesR={[]}
           enableImagePickerSlider
-          imagePickerToBottom
         />
       </Box>
     </MyModal>

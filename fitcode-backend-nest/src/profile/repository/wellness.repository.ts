@@ -74,6 +74,7 @@ export class WellnessRepository extends FirestoreRepository<
         weight: input.weight,
         fatigue: input.fatigue,
         sleep: input.sleep,
+        soreness: input.soreness,
         date: startOfDay(ref.date),
         userId: ref.uid,
       },

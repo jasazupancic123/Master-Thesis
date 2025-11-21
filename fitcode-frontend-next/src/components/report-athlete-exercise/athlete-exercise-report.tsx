@@ -39,6 +39,9 @@ interface Props {
   setOpenWorkloadModal: SetState<boolean>;
 }
 
+export const LOAD_Y_AXIS_ID = 'yAxisLoad';
+export const REPS_Y_AXIS_ID = 'yAxisReps';
+
 export default function AthleteExerciseReport(props: Props) {
   const {
     id,
@@ -103,10 +106,19 @@ export default function AthleteExerciseReport(props: Props) {
     transition,
   };
 
+  const prettyLabel = (label: string) => {
+    if (!label) return '';
+    if (label === 'loadKg') return 'Load (kg)';
+    if (label === 'reps') return 'Reps';
+    if (label === 'loadKgR') return 'Load R (kg)';
+    if (label === 'repsR') return 'Reps R';
+    return label;
+  };
+
   return (
     <Box
       maxWidth={
-        typeof window !== undefined
+        typeof window !== 'undefined'
           ? Math.min(window.innerWidth * 0.95, 400)
           : 400
       }
@@ -309,13 +321,13 @@ export default function AthleteExerciseReport(props: Props) {
               : undefined
           }
           width={
-            typeof window !== undefined
+            typeof window !== 'undefined'
               ? Math.min(window.innerWidth * 0.95, 400)
               : 400
           }
           height={250}
-          onMarkClick={(_, id) => {
-            const index = id.dataIndex;
+          onAxisClick={(_, id) => {
+            const index = id?.dataIndex;
 
             if (index === undefined) return;
 
@@ -372,8 +384,41 @@ export default function AthleteExerciseReport(props: Props) {
                   },
                 ]
           }
-          yAxis={[{ label: '', min: 0 }]}
-          margin={{ top: 10, bottom: 0, left: 0, right: 10 }}
+          yAxis={[
+            {
+              id: LOAD_Y_AXIS_ID,
+              label:
+                reportType === 'single'
+                  ? 'Load (kg)'
+                  : prettyLabel(comparisonParam || ''),
+              min: 0,
+              position: 'left',
+              max:
+                Math.max(
+                  ...chartData.map((d) => d.load ?? 0),
+                  ...chartData.map((d) => d.loadR ?? 0)
+                ) * 1.1,
+            },
+            reportType === 'single'
+              ? {
+                  id: REPS_Y_AXIS_ID,
+                  label: 'Reps',
+                  min: 0,
+                  position: 'right',
+                  max:
+                    Math.max(
+                      ...chartData.map((d) => d.reps ?? 0),
+                      ...chartData.map((d) => d.repsR ?? 0)
+                    ) * 1.1,
+                }
+              : {},
+          ]}
+          margin={{
+            top: 10,
+            bottom: 0,
+            left: reportType === 'single' ? 10 : 2,
+            right: 10,
+          }}
           slots={{
             tooltip: () => (
               <AthleteExerciseChartTooltip
@@ -385,6 +430,9 @@ export default function AthleteExerciseReport(props: Props) {
             ),
           }}
           slotProps={{ tooltip: { trigger: 'axis' } }}
+          sx={{
+            cursor: 'pointer',
+          }}
         />
       </Box>
 

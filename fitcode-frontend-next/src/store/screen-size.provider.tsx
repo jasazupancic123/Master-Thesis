@@ -22,6 +22,7 @@ interface Props {
   md: boolean;
   lg: boolean;
   xl: boolean;
+  isTouchDevice: boolean;
 }
 
 const ScreenSizeContext = createContext<Props | undefined>(undefined);
@@ -51,11 +52,15 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
   );
   const isLaptop = useMediaQuery('(min-width:1024px) and (max-width:1700px)');
 
-  const xs = useMediaQuery('(max-width:600px)');
-  const sm = useMediaQuery('(min-width:600px) and (max-width:900px)');
-  const md = useMediaQuery('(min-width:900px) and (max-width:1200px)');
-  const lg = useMediaQuery('(min-width:1200px) and (max-width:1536)');
-  const xl = useMediaQuery('(min-width:1536)');
+  const xs = useMediaQuery('(max-width:599px)');
+  const sm = useMediaQuery('(min-width:599px) and (max-width:899px)');
+  const md = useMediaQuery('(min-width:899px) and (max-width:1199px)');
+  const lg = useMediaQuery('(min-width:1199px) and (max-width:1535px)');
+  const xl = useMediaQuery('(min-width:1535px)');
+
+  const isTouchDevice =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(pointer: coarse)').matches;
 
   return (
     <ScreenSizeContext.Provider
@@ -78,6 +83,7 @@ export const ScreenSizeProvider = ({ children }: React.PropsWithChildren) => {
         md,
         lg,
         xl,
+        isTouchDevice,
       }}
     >
       {children}

@@ -84,7 +84,7 @@ export default function ExercieseControlSelected(props: Props) {
                 selectedExercise={selectedExercise}
                 completedSet={completedSet}
                 width={
-                  window !== undefined
+                  typeof window !== 'undefined'
                     ? Math.min(window.innerWidth * 0.95, 360) // max 360px
                     : 320
                 }

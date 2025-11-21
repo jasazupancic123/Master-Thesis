@@ -5,12 +5,13 @@ import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
-import WellnessReport from '../report-wellness/wellness-report';
+import WellnessReports from '../report-wellness/wellness-reports';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
+import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 import useDashboardGroupView from './hooks/use-group-view';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -42,11 +43,14 @@ export default function DashboardReports() {
     null
   );
 
-  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
-
   useEffect(() => {
     setSelectedUser(null);
   }, [selectedGroup]);
+
+  const { athleteExerciseReports, setAthleteExercisesReports } =
+    useAthleteExerciseReports();
+
+  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
 
   return (
     <DashboardPageContainer>
@@ -70,9 +74,13 @@ export default function DashboardReports() {
       </Tabs>
 
       {tab === ReportTab.Exercise ? (
-        <AthleteExerciseReports cache={cache} />
+        <AthleteExerciseReports
+          reports={athleteExerciseReports}
+          setReports={setAthleteExercisesReports}
+          cache={cache}
+        />
       ) : tab === ReportTab.Wellness ? (
-        <WellnessReport
+        <WellnessReports
           groupId={selectedGroup?.id}
           selectedUserId={selectedUser?.uid}
         />
