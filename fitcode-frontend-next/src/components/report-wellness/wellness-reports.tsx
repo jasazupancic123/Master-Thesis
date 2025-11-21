@@ -8,9 +8,8 @@ import WellnessBarChart from './wellness-bar-chart';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions.constant';
 import { theme } from '@/app/style';
-import { WellnessZScore } from '@/core/profile/type/wellness.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 
 type Props = {
   groupId?: string;
@@ -87,7 +86,7 @@ export default function WellnessReports(props: Props) {
               color: theme.palette.warning.main,
             }}
           >
-            +1SD
+            -1SD
           </Typography>
           {', '}
           <Typography
@@ -96,7 +95,7 @@ export default function WellnessReports(props: Props) {
               color: theme.palette.error.main,
             }}
           >
-            +2SD
+            -2SD
           </Typography>
           {', '}
           <Typography
@@ -185,6 +184,7 @@ export default function WellnessReports(props: Props) {
                 mx: 'auto',
                 overflowY: 'auto',
                 maxHeight: 348,
+                ...styledScrollbarSx(theme),
               }}
               gap={2}
             >

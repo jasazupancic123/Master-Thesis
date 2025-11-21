@@ -24,6 +24,7 @@ import {
   useTraining,
 } from '@/store/training.provider';
 import MyModal from '@/ui/modal';
+import { useRef } from 'react';
 
 interface Props {
   training: Training;
@@ -56,6 +57,8 @@ export default function AthleteTrainingComponents(props: Props) {
   const { setTrainingInProgress } = useTraining();
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
+
+  const hasPlayedAudioRef = useRef(false);
 
   return (
     <Box
@@ -367,7 +370,12 @@ export default function AthleteTrainingComponents(props: Props) {
 
           setModal(false);
 
-          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
+          if (hasPlayedAudioRef.current === false) {
+            lib.common.audio.playSound(
+              '/sounds/training-in-progress-start.mp3'
+            );
+            hasPlayedAudioRef.current = true;
+          }
 
           router.push(
             `/trainings/${training.id}/components/${selectedComponent.id}`

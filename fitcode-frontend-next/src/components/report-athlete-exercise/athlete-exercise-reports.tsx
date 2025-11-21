@@ -29,17 +29,19 @@ import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useDashboard } from '@/store/dashboard.provider';
 import AddButton from '@/ui/add-button';
+import { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
+  reports: AthleteExerciseReportType[];
+  setReports: SetState<AthleteExerciseReportType[]>;
   cache: Map<string, Workload[]>;
 }
 
 export default function AthleteExerciseReports(props: Props) {
   const { selectedInstitution } = useDashboard();
 
-  const { cache } = props;
+  const { reports, setReports, cache } = props;
 
-  const [reports, setReports] = useState<AthleteExerciseReportType[]>([]);
   const [activeWorkloadsForTooltip, setActiveWorkloadsForTooltip] = useState<
     Workload[]
   >([]);
@@ -56,51 +58,6 @@ export default function AthleteExerciseReports(props: Props) {
       },
     })
   );
-
-  useEffect(() => {
-    if (!selectedInstitution) return;
-
-    const setupReports = async () => {
-      if (reports.length) return;
-
-      const items = await lib.common.indexedDb.items.get(
-        INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
-      );
-
-      const data: IndexDbAthleteExerciseReport[] = items?.payload;
-
-      const filteredData = (data || []).filter((item) => {
-        return item.institutionId === selectedInstitution.id;
-      });
-
-      if (filteredData && filteredData.length) {
-        setReports(
-          filteredData.map((item) => ({
-            id: item.id,
-            userId: item.userId || '',
-            userIds: item.userIds || [],
-            exerciseId: item.exerciseId,
-            type: item.type,
-          }))
-        );
-
-        return;
-      }
-
-      const id = v4();
-      setReports([
-        {
-          id,
-          userId: undefined,
-          userIds: [],
-          exerciseId: undefined,
-          type: 'single',
-        },
-      ]);
-    };
-
-    setupReports();
-  }, []);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
