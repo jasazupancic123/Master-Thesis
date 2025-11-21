@@ -1144,7 +1144,7 @@ export default function MobileMovementValidation(
                   hideLabels={true}
                   aiRecordingView
                   sx={{
-                    width: `calc(100% - ${window !== undefined ? Math.max(160, window.innerWidth / 5) : 160}px)`,
+                    width: `calc(100% - ${typeof window !== 'undefined' ? Math.max(160, window.innerWidth / 5) : 160}px)`,
                     backgroundColor: theme.palette.background.default,
                     opacity: 0.8,
                   }}
