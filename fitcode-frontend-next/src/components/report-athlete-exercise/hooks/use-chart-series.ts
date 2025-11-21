@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { AthleteExerciseReportChartData } from '../types/athlete-exercise-report-chart-data';
 import { theme } from '@/app/style';
 import { useMain } from '@/store/main.provider';
+import { LOAD_Y_AXIS_ID, REPS_Y_AXIS_ID } from '../athlete-exercise-report';
 
 export default function useAthleteChartSeries(
   reportType: 'single' | 'comparison',
@@ -44,8 +45,16 @@ export default function useAthleteChartSeries(
         .filter((p) => possibleParams.includes(p))
         .map((param) => {
           const cfg = paramSeriesMap[param];
+
+          const yAxisId = ['reps', 'repsR'].includes(param)
+            ? REPS_Y_AXIS_ID
+            : LOAD_Y_AXIS_ID;
+
+          console.log('yAxisId', yAxisId, param);
+
           return {
             dataKey: cfg.dataKey,
+            yAxisId: yAxisId,
             label: cfg.label,
             showMark: true,
             color: getParamColor(param),

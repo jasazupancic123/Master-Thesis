@@ -22,6 +22,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 
 enum ReportTab {
   Realization = 'Realization',
@@ -42,11 +43,14 @@ export default function DashboardReports() {
     null
   );
 
-  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
-
   useEffect(() => {
     setSelectedUser(null);
   }, [selectedGroup]);
+
+  const { athleteExerciseReports, setAthleteExercisesReports } =
+    useAthleteExerciseReports();
+
+  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
 
   return (
     <DashboardPageContainer>
@@ -70,7 +74,11 @@ export default function DashboardReports() {
       </Tabs>
 
       {tab === ReportTab.Exercise ? (
-        <AthleteExerciseReports cache={cache} />
+        <AthleteExerciseReports
+          reports={athleteExerciseReports}
+          setReports={setAthleteExercisesReports}
+          cache={cache}
+        />
       ) : tab === ReportTab.Wellness ? (
         <WellnessReports
           groupId={selectedGroup?.id}

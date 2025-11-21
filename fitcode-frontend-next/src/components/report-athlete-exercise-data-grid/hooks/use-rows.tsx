@@ -10,6 +10,7 @@ import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
+import { core } from '@/core/core.service';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: AuthUser | null,
@@ -24,7 +25,7 @@ export default function useAthleteExerciseReportDataGridData(
   const fontSize = 13;
 
   useEffect(() => {
-    if (!selectedAthlete || !selectedInstitution) {
+    if (!selectedAthlete || !selectedInstitution || !selectedTraining) {
       setRows([]);
       return;
     }
@@ -34,27 +35,18 @@ export default function useAthleteExerciseReportDataGridData(
 
       const rows = [] as DataGridRowAthleteExerciseRow[];
 
-      const athleteTrainings = trainings.filter((t) =>
-        t.membersIds.includes(selectedAthlete.uid)
-      );
+      const possibleExercises: TrainingExercise[] = selectedTraining.components
+        .map((c) => core.training.getAthleteSupersets(selectedAthlete.uid, c))
+        .flatMap((supersets) =>
+          supersets.flatMap((superset) => superset.exercises)
+        );
 
-      const uniquePossibleExercises: TrainingExercise[] = [
-        ...new Set(
-          athleteTrainings.flatMap((t) =>
-            t.components.flatMap((c) => [
-              ...c.supersets.flatMap((s) => s.exercises.map((e) => e)),
-              ...c.subgroups
-                .filter((s) => s.membersIds.includes(selectedAthlete.uid))
-                .flatMap((sg) =>
-                  sg.supersets.flatMap((ss) => ss.exercises.map((e) => e))
-                ),
-            ])
-          )
-        ),
-      ].filter(
-        (exercise, index, self) =>
-          index === self.findIndex((e) => e.id === exercise.id)
-      );
+      const uniquePossibleExercises: TrainingExercise[] = [];
+
+      for (const exercise of possibleExercises) {
+        if (!uniquePossibleExercises.find((e) => e.id === exercise.id))
+          uniquePossibleExercises.push(exercise);
+      }
 
       for (const exercise of uniquePossibleExercises) {
         const key = `${selectedAthlete.uid}-${exercise.id}`;
