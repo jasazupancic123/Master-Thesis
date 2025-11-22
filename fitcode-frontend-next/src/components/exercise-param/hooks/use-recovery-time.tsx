@@ -61,8 +61,6 @@ export default function useRecoveryTime(
       activeTraining.workloads
     );
 
-    console.log('lastCompletedWorkload', lastCompletedWorkload);
-
     if (!lastCompletedWorkload) {
       setValue(initValue as number);
       return;
