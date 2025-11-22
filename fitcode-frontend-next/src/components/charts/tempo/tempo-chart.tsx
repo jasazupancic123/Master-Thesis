@@ -8,7 +8,7 @@ import {
   useXScale,
   useYScale,
 } from '@mui/x-charts';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { theme } from '@/app/style';
 import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
@@ -155,6 +155,10 @@ export default function TempoChart({
       left: completedSet.repsL,
       right: completedSet.repsR,
     };
+
+  useEffect(() => {
+    maxValueRef.current = 0; // resets on reps change
+  }, [currentRepsRef.current]);
 
   if (!currentRepsRef.current) return null;
 

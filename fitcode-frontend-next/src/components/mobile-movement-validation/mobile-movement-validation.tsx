@@ -437,6 +437,8 @@ export default function MobileMovementValidation(
       poseLandmarker,
       videoRef,
       setError,
+      looserConstraints:
+        POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
       predictWebcam: async () =>
         await predictWebcam({
           statusRef,
@@ -735,6 +737,8 @@ export default function MobileMovementValidation(
   }, [canvasRef]);
 
   const reloadModel = async () => {
+    if (POSE_DETECTION_CONSTANTS.DISABLE_MODEL_RELOAD) return;
+
     if (reloadingModelRef.current === true) return;
 
     if (
