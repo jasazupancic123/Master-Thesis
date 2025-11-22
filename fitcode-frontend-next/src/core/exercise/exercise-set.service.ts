@@ -34,13 +34,16 @@ export class ExerciseSetService {
     id: {
       trainingId: string;
       componentId: string;
+      exerciseId?: string;
     },
     workloads: Workload[]
   ): Workload | undefined {
     const lastCompletedWorkload = workloads
       .filter(
         (w) =>
-          w.trainingId === id.trainingId && w.componentId === id.componentId
+          w.trainingId === id.trainingId &&
+          w.componentId === id.componentId &&
+          (id.exerciseId ? w.exerciseId === id.exerciseId : true)
       )
       .sort(
         (a, b) =>

@@ -56,11 +56,19 @@ export default function useRecoveryTime(
       {
         trainingId: trainingInProgress.training.id,
         componentId: trainingInProgress.selectedComponent.id,
+        exerciseId: selectedExercise.id,
       },
       activeTraining.workloads
     );
 
-    const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
+    console.log('lastCompletedWorkload', lastCompletedWorkload);
+
+    if (!lastCompletedWorkload) {
+      setValue(initValue as number);
+      return;
+    }
+
+    const lastSetCompletedAt = lastCompletedWorkload.timestamp;
 
     // here update every second and every second decrease value by 1 until 0
     const intervalId: NodeJS.Timeout = setInterval(() => {
