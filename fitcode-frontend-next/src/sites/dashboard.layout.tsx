@@ -3,9 +3,19 @@
 import { Box, Container } from '@mui/material';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import {
+  DASHBOARD_SIDEBAR_WIDTH,
+  MAX_WIDTH_DASHBOARD,
+} from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import DashboardSidebar from '@/components/dashboard/dashboard-sidebar';
+import { useScreenSize } from '@/store/screen-size.provider';
+import DashboardMobileDrawer from '@/components/dashboard/dashboard-mobile-drawer';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
+  const screenSize = useScreenSize();
+
+  const isSmall = screenSize.isMobile || screenSize.isTablet;
+
   return (
     <Box>
       <Container
@@ -21,16 +31,22 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
           width: '100%',
         }}
       >
-        <Box width="100%" display="flex" flexDirection="column">
-          <DashboardHeader />
+        <Box width="100%" display="flex">
+          {!isSmall && <DashboardSidebar />}
+          <Box
+            minWidth={`${isSmall ? 0 : DASHBOARD_SIDEBAR_WIDTH} !important`}
+          />
 
           <Box
-            width="100%"
+            width={'100%'}
+            maxWidth={MAX_WIDTH_DASHBOARD}
             display="flex"
-            maxWidth={MAX_WIDTH}
-            sx={{ mx: 'auto' }}
+            flexDirection="column"
+            sx={{ position: 'relative', mx: 'auto', px: 1 }}
           >
-            <Box sx={{ flex: 1, overflow: 'hidden' }}>{children}</Box>
+            {isSmall && <DashboardMobileDrawer />}
+            <DashboardHeader />
+            <Box sx={{ overflow: 'hidden' }}>{children}</Box>
           </Box>
         </Box>
       </Container>

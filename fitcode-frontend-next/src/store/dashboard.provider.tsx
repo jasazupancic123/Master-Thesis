@@ -39,6 +39,8 @@ export interface IDashboardContext {
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
+  selectedGroup: Group | null;
+  setSelectedGroup: SetState<Group | null>;
   trainings: Training[];
   setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
@@ -100,7 +102,17 @@ export function DashboardProvider(props: Props) {
       return institution;
     });
 
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
   const [trainings, setTrainings] = useState<Training[]>([]);
+
+  useEffect(() => {
+    if (!selectedInstitution) return;
+
+    if (selectedGroup) return;
+
+    setSelectedGroup(selectedInstitution.groups[0] || null);
+  }, [selectedInstitution]);
 
   useEffect(() => {
     setTrainings(propsTrainings);
@@ -139,6 +151,8 @@ export function DashboardProvider(props: Props) {
     setInstitutions,
     selectedInstitution,
     setSelectedInstitution,
+    selectedGroup,
+    setSelectedGroup,
     trainings,
     setTrainings,
     detectedChanges,

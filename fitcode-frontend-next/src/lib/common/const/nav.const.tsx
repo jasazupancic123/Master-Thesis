@@ -21,7 +21,7 @@ export function linkPngIcon(
   href: string,
   id?: string,
   src?: string,
-  dimension: number = 24
+  dimension: number = 16
 ): ILink {
   const icon = (
     <Box
@@ -148,7 +148,7 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
 export const DASHBOARD_MAIN = '/dashboard';
 
 const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
-const DASHBOARD_ICONS_DIMENSION = 28;
+const DASHBOARD_ICONS_DIMENSION = 18;
 
 export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
   'Training Plan',
@@ -183,7 +183,7 @@ export const LINK_DASHBOARD_SETTINGS = linkPngIcon(
 );
 
 export const LINK_DASHBOARD_GROUPS = linkPngIcon(
-  'Groups',
+  'Planning',
   '/dashboard/groups',
   'dashboard-groups',
   `${DASHBOARD_ICONS_FOLDER}/groups.png`,

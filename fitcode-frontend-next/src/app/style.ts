@@ -11,6 +11,7 @@ declare module '@mui/material/styles' {
     lightText: string;
     textBackground: string;
     divider: string;
+    selectedBackground: string;
   }
 }
 
@@ -37,6 +38,7 @@ export const theme = createTheme({
       lightText: '#D5D5D5',
       textBackground: '#5C5555',
       divider: '#272727',
+      selectedBackground: '#414141',
     },
     error: {
       main: '#ff6859',
