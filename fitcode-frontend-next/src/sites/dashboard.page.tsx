@@ -3,9 +3,13 @@
 import { Typography } from '@mui/material';
 import { Box } from '@mui/material';
 
+import ExercisesPage from './exercises.page';
+import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
+import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import DashboardInstitution from '@/components/dashboard/dashboard-institution';
+import DashboardMembers from '@/components/dashboard/dashboard-members';
+import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import {
   INSTITUTION_PAGE_ID,
   LINK_DASHBOARD_ADD_INSTITUTION,
@@ -16,12 +20,8 @@ import {
   LINK_DASHBOARD_SCHEDULE,
   LINK_DASHBOARD_SETTINGS,
 } from '@/lib/common/const/nav.const';
-import DashboardReports from '@/components/dashboard/dashboard-reports';
-import DashboardMembers from '@/components/dashboard/dashboard-members';
-import DashboardGroups from '@/components/dashboard/dashboard-groups';
-import ExercisesPage from './exercises.page';
-import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
-import DashboardInstitution from '@/components/dashboard/dashboard-institution';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardPage() {
   const { profile } = useMain();

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
@@ -21,7 +22,6 @@ import { lib } from '@/lib';
 import { LINK_DASHBOARD_PLANNING } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;

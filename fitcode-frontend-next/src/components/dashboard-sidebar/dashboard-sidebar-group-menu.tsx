@@ -1,24 +1,26 @@
-import { Group } from '@/core/group/type/group.type';
+import { Add, Delete, Edit } from '@mui/icons-material';
+import {
+  Box,
+  Divider,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import type { RefObject } from 'react';
+import { useEffect, useState } from 'react';
+
+import AddGroupModal from '../dashboard/modals/add-group-modal';
+import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
+import EditGroupModal from '../dashboard/modals/edit-group-modal';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
+import type { Group } from '@/core/group/type/group.type';
 import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { Add, Edit, Delete } from '@mui/icons-material';
-import {
-  Menu,
-  Box,
-  Typography,
-  MenuItem,
-  Divider,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import { RefObject, useEffect, useState } from 'react';
-import EditGroupModal from '../dashboard/modals/edit-group-modal';
-import AddGroupModal from '../dashboard/modals/add-group-modal';
-import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
-import { SetState } from '@/lib/common/type/state.type';
-import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
 
 interface Props {
   achorElRef: RefObject<HTMLDivElement | null>;

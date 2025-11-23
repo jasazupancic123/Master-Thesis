@@ -1,8 +1,5 @@
 'use client';
 
-import { theme } from '@/app/style';
-import { Group } from '@/core/group/type/group.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import {
   KeyboardArrowDownOutlined,
   KeyboardArrowUpOutlined,
@@ -17,9 +14,13 @@ import {
   Typography,
 } from '@mui/material';
 import { useRef, useState } from 'react';
-import ProfileCard from '@/ui/profile-card';
-import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
+
 import DashboardSidebarGroupMenu from './dashboard-sidebar-group-menu';
+import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
+import { theme } from '@/app/style';
+import type { Group } from '@/core/group/type/group.type';
+import { useDashboard } from '@/store/dashboard.provider';
+import ProfileCard from '@/ui/profile-card';
 
 export default function DashboardSidebarMobile() {
   const { selectedInstitution, selectedGroup, setSelectedGroup } =

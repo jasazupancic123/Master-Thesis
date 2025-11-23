@@ -10,17 +10,15 @@ import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
 import DashboardTrainingsList from './dashboard-trainings-list';
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
+import useDashboardScheduleSnapshots from './hooks/use-snapshots';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import useDashboardScheduleSnapshots from './hooks/use-snapshots';
 
 export default function DashboardSchedule() {
   const theme = useTheme();
 
-  const { groups } = useMain();
-  const { trainings, selectedInstitution, selectedGroup } = useDashboard();
+  const { selectedInstitution } = useDashboard();
 
   const { completedTrainings, upcomingTrainings } = useTrainingPlan();
 

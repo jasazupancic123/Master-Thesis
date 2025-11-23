@@ -11,16 +11,16 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { GroupController } from '@/core/group/group.controller';
+import { lib } from '@/lib';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
-import { lib } from '@/lib';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();

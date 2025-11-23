@@ -12,8 +12,8 @@ import {
 import useInstitutionMembers from '../hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
 
 interface Props {
   registerRole: UserRole;

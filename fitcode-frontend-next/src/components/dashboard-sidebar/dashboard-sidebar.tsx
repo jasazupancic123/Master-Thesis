@@ -1,18 +1,19 @@
-import { theme } from '@/app/style';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
 import {
   KeyboardArrowDownOutlined,
   KeyboardArrowUpOutlined,
 } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useRef, useState } from 'react';
+
 import { DASHBOARD_SIDEBAR_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import ProfileCard from '@/ui/profile-card';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
-import { lib } from '@/lib';
 import DashboardSidebarGroupMenu from './dashboard-sidebar-group-menu';
+import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
+import { theme } from '@/app/style';
+import { lib } from '@/lib';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import ProfileCard from '@/ui/profile-card';
 
 export default function DashboardSidebar() {
   const { role } = useAuthenticatedAuth();
