@@ -36,32 +36,32 @@ import {
 } from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { AddTrainingComponentsDto } from '../dto/add-training-components.dto';
-import { CreateTrainingDto } from '../dto/create-training.dto';
-import { FilterTrainingQueryDto } from '../dto/filter-training-query.dto';
-import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { TrainingActionPayloadDto } from '../dto/training-action.dto';
-import { UpdateTrainingDto } from '../dto/update-training.dto';
-import { Training } from '../entity/training.entity';
-import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
+import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CreateTrainingDto } from './dto/create-training.dto';
+import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
+import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { TrainingActionPayloadDto } from './dto/training-action.dto';
+import { UpdateTrainingDto } from './dto/update-training.dto';
+import { Training } from './entity/training.entity';
+import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
 import {
   CreateTrainingProtocolDto,
   UpdateTrainingProtocolDto,
-} from '../entity/training-protocol.entity';
-import { CreateWorkload, Workload } from '../entity/workload.entity';
-import { ActiveTrainingService } from '../service/active-training.service';
-import { TrainingService } from '../service/training.service';
-import { TrainingProtocolService } from '../service/training-protocol.service';
-import { TrainingReportService } from '../service/training-report.service';
-import { SmartWallTraining } from '../type/smart-wall.type';
+} from './entity/training-protocol.entity';
+import { CreateWorkload, Workload } from './entity/workload.entity';
+import { ActiveTrainingService } from './service/active-training.service';
+import { TrainingService } from './service/training.service';
+import { TrainingProtocolService } from './service/training-protocol.service';
+import { TrainingReportService } from './service/training-report.service';
+import { SmartWallTraining } from './type/smart-wall.type';
 
 @ApiTags('Training')
 @Controller('training')
 export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
-    private readonly trainingService: TrainingService,
     private readonly institutionService: InstitutionService,
+    private readonly trainingService: TrainingService,
     private readonly activeTrainingService: ActiveTrainingService,
     private readonly trainingProtocolService: TrainingProtocolService,
     private readonly trainingReportService: TrainingReportService,

@@ -33,6 +33,6 @@ import { ProtocolService } from './service/protocol.service';
     MemberService,
     ProtocolService,
   ],
-  exports: [InstitutionService, ProtocolService, GroupService],
+  exports: [InstitutionService, ProtocolService, GroupService, MemberService],
 })
 export class InstitutionModule {}

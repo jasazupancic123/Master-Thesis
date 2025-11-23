@@ -53,7 +53,6 @@ import { DeleteGroupOrCycleEvent } from '@src/institution/event/delete-group.eve
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { ProtocolService } from '@src/institution/service/protocol.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
 import { ProfileService } from '@src/profile/service/profile.service';
 import { WorkloadService } from '@src/training/service/workload.service';
@@ -78,7 +77,6 @@ import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { TrainingPlanService } from './training-plan.service';
-import { TrainingReportService } from './training-report.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -97,10 +95,8 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly workloadService: WorkloadService,
     private readonly groupService: GroupService,
     private readonly institutionService: InstitutionService,
-    private readonly protocolService: ProtocolService,
     private readonly exerciseService: ExerciseService,
     private readonly exerciseParamService: ExerciseParamService,
-    private readonly trainingReportService: TrainingReportService,
   ) {}
 
   async findOneById(
