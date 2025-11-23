@@ -8,18 +8,16 @@ import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useAthleteExerciseReports() {
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroup } = useDashboard();
 
   const [athleteExerciseReports, setAthleteExercisesReports] = useState<
     AthleteExerciseReportType[]
   >([]);
 
   useEffect(() => {
-    if (!selectedInstitution) return;
+    if (!selectedGroup) return;
 
     const setupReports = async () => {
-      if (athleteExerciseReports.length) return;
-
       const items = await lib.common.indexedDb.items.get(
         INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
       );
@@ -27,7 +25,7 @@ export default function useAthleteExerciseReports() {
       const data: IndexDbAthleteExerciseReport[] = items?.payload;
 
       const filteredData = (data || []).filter((item) => {
-        return item.institutionId === selectedInstitution.id;
+        return item.groupId === selectedGroup.id;
       });
 
       if (filteredData && filteredData.length) {
@@ -57,7 +55,7 @@ export default function useAthleteExerciseReports() {
     };
 
     setupReports();
-  }, [selectedInstitution]);
+  }, [selectedGroup]);
 
   return {
     athleteExerciseReports,

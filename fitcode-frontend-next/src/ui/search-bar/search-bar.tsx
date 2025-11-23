@@ -37,7 +37,7 @@ export function SearchBar({
         <SearchIcon
           sx={{
             color: theme.palette.text.primary + ' !important',
-            zIndex: 1000,
+            zIndex: 70,
           }}
         />
       </SearchIconWrapper>

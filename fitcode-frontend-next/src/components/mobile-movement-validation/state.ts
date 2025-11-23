@@ -63,8 +63,15 @@ export async function enableCam(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
   setError: SetState<string | null>;
   predictWebcam: () => Promise<void>;
+  looserConstraints?: boolean;
 }) {
-  const { poseLandmarker, videoRef, predictWebcam, setError } = state;
+  const {
+    poseLandmarker,
+    videoRef,
+    predictWebcam,
+    setError,
+    looserConstraints,
+  } = state;
 
   if (!poseLandmarker) return;
 
@@ -72,13 +79,15 @@ export async function enableCam(state: {
   if (videoRef !== null && videoRef.current !== null) {
     await navigator.mediaDevices
       .getUserMedia({
-        video: {
-          facingMode: { exact: 'user' }, // front cam
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          aspectRatio: { ideal: 9 / 16 }, // you want portrait
-          frameRate: { ideal: 30, max: 60 },
-        },
+        video: looserConstraints
+          ? { facingMode: 'user', frameRate: { ideal: 30, max: 60 } }
+          : {
+              facingMode: { exact: 'user' }, // front cam
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              aspectRatio: { ideal: 9 / 16 }, // you want portrait
+              frameRate: { ideal: 30, max: 60 },
+            },
         audio: false,
       })
       .then((stream) => {

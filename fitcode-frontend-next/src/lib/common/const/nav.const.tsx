@@ -21,7 +21,7 @@ export function linkPngIcon(
   href: string,
   id?: string,
   src?: string,
-  dimension: number = 24
+  dimension: number = 16
 ): ILink {
   const icon = (
     <Box
@@ -148,10 +148,10 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
 export const DASHBOARD_MAIN = '/dashboard';
 
 const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
-const DASHBOARD_ICONS_DIMENSION = 28;
+const DASHBOARD_ICONS_DIMENSION = 18;
 
-export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
-  'Training Plan',
+export const LINK_DASHBOARD_SCHEDULE = linkPngIcon(
+  'Schedule',
   '/dashboard',
   'dashboard-training-plan',
   `${DASHBOARD_ICONS_FOLDER}/training-plan.png`,
@@ -182,8 +182,8 @@ export const LINK_DASHBOARD_SETTINGS = linkPngIcon(
   DASHBOARD_ICONS_DIMENSION
 );
 
-export const LINK_DASHBOARD_GROUPS = linkPngIcon(
-  'Groups',
+export const LINK_DASHBOARD_PLANNING = linkPngIcon(
+  'Planning',
   '/dashboard/groups',
   'dashboard-groups',
   `${DASHBOARD_ICONS_FOLDER}/groups.png`,
@@ -204,17 +204,20 @@ export const LINK_DASHBOARD_ADD_INSTITUTION = link(
   <Add sx={{ fontSize: DASHBOARD_ICONS_DIMENSION }} />,
   <Add
     sx={{ fontSize: DASHBOARD_ICONS_DIMENSION, color: 'background.default' }}
-  />
+  />,
+  'dashboard-add-institution'
 );
+
+export const INSTITUTION_PAGE_ID = 'institution-page';
 
 export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
   const links = [
-    LINK_DASHBOARD_TRAINING_PLAN,
+    LINK_DASHBOARD_SCHEDULE,
     LINK_DASHBOARD_REPORTS,
     LINK_DASHBOARD_MEMBERS,
     LINK_DASHBOARD_EXERCISES,
     LINK_DASHBOARD_SETTINGS,
-    LINK_DASHBOARD_GROUPS,
+    LINK_DASHBOARD_PLANNING,
   ];
 
   if (role === UserRole.ADMIN) links.push(LINK_DASHBOARD_ADD_INSTITUTION);
