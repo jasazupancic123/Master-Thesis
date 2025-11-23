@@ -119,7 +119,7 @@ describe('Upsert Set (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       db.trainings.clear(),
-      db.groups.delete(group.id),
+      db.groups.delete({ institutionId: institution.id, groupId: group.id }),
       db.institutions.remove(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),

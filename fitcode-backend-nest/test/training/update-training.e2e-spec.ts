@@ -119,7 +119,7 @@ describe('Update Training (e2e)', () => {
 
       for (const response of responses) {
         expect(response.status).toBe(401);
-        expect(response.body.message).toBe(`You cannot view this training`);
+        expect(response.body.message).toBe(`You cannot view this institution`);
       }
     });
 

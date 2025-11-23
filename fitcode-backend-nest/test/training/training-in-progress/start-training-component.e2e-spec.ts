@@ -113,7 +113,7 @@ describe('Start Training Component (e2e)', () => {
     );
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if trainer cannot access this training', async () => {
@@ -125,7 +125,7 @@ describe('Start Training Component (e2e)', () => {
     );
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if athlete cannot access this training', async () => {

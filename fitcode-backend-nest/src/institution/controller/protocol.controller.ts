@@ -9,11 +9,11 @@ import { User } from '@src/common/type/firebase-auth.type';
 import { InstitutionService } from '../service/institution.service';
 
 @ApiTags('Protocol')
-@Controller(':institutionId/protocol')
+@Controller('institution/:institutionId/protocol')
 export class ProtocolController {
   constructor(private readonly institutionService: InstitutionService) {}
 
-  @Get(':institutionId/protocol')
+  @Get()
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async findAllByInstitution(
     @RequestUser() user: User,

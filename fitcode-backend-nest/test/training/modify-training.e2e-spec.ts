@@ -86,7 +86,7 @@ describe('Modify Training (e2e)', () => {
     });
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
     await testApp.auth.deleteUser(user.uid);
   });
 

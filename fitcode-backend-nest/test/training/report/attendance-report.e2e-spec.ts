@@ -46,8 +46,8 @@ describe('Attendance Report', () => {
 
   async function req(token: string, groupId: string, componentId?: string) {
     const url = componentId
-      ? `/training/report/group?groupId=${groupId}&componentId=${componentId}`
-      : `/training/report/group?groupId=${groupId}`;
+      ? `/training/report/group?institutionId=${institution.id}&groupId=${groupId}&componentId=${componentId}`
+      : `/training/report/group?institutionId=${institution.id}&groupId=${groupId}`;
 
     return testApp.http.get(url, token);
   }
