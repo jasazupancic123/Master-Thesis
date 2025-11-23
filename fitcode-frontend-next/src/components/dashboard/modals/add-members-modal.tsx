@@ -20,7 +20,6 @@ interface Props extends ModalProps {
   title?: string;
   placeholder?: string;
   addTrainers?: boolean;
-  group: Group | null;
   users: AuthUser[];
   disableMaxWidth?: boolean;
   enableFirstShowUsers?: boolean; // to show first 5 users when search is empty
@@ -28,7 +27,6 @@ interface Props extends ModalProps {
 }
 
 export function AddMembersModal({
-  group,
   users,
   addTrainers,
   title,
@@ -39,15 +37,16 @@ export function AddMembersModal({
   open,
   setOpen,
 }: Props) {
-  const { addGroupMember, removeGroupMember, updateGroup } = useDashboard();
+  const { selectedGroup, addGroupMember, removeGroupMember, updateGroup } =
+    useDashboard();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[] | null>(null);
 
   const isUserIncluded = (user: AuthUser) => {
-    if (addTrainers) return group?.trainerIds.includes(user.uid);
+    if (addTrainers) return selectedGroup?.trainerIds.includes(user.uid);
 
-    return group?.membersIds.includes(user.uid);
+    return selectedGroup?.membersIds.includes(user.uid);
   };
 
   useEffect(() => {
@@ -152,18 +151,19 @@ export function AddMembersModal({
                           },
                         }}
                         onClick={async () => {
-                          if (!group) return;
+                          if (!selectedGroup) return;
 
                           if (addTrainers) {
                             const updatedGroup: Group = {
-                              ...group,
-                              trainerIds: group.trainerIds.filter(
+                              ...selectedGroup,
+                              trainerIds: selectedGroup.trainerIds.filter(
                                 (id) => id !== user.uid
                               ),
                             };
 
                             await updateGroup(updatedGroup.id, updatedGroup);
-                          } else await removeGroupMember(user.uid, group.id);
+                          } else
+                            await removeGroupMember(user.uid, selectedGroup.id);
                         }}
                       >
                         <Typography variant="body2" color="white">
@@ -181,16 +181,19 @@ export function AddMembersModal({
                           },
                         }}
                         onClick={async () => {
-                          if (!group) return;
+                          if (!selectedGroup) return;
 
                           if (addTrainers) {
                             const updatedGroup: Group = {
-                              ...group,
-                              trainerIds: [group.trainerIds, user.uid].flat(),
+                              ...selectedGroup,
+                              trainerIds: [
+                                selectedGroup.trainerIds,
+                                user.uid,
+                              ].flat(),
                             };
 
                             await updateGroup(updatedGroup.id, updatedGroup);
-                          } else await addGroupMember(user, group.id);
+                          } else await addGroupMember(user, selectedGroup.id);
                         }}
                       >
                         <Typography

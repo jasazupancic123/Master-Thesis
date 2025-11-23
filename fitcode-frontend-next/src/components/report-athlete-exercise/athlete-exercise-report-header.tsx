@@ -43,7 +43,7 @@ interface Props {
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroup } = useDashboard();
 
   const {
     id,
@@ -192,7 +192,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                     <MenuItem
                       key={athlete.uid}
                       onClick={async () => {
-                        if (!selectedInstitution) return;
+                        if (!selectedGroup) return;
 
                         if (reportType === 'comparison') {
                           const isAlreadySelected = selectedAthletes.some(
@@ -215,7 +215,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise?.id,
-                            institutionId: selectedInstitution.id,
+                            groupId: selectedGroup.id,
                             userIds: newAthletes.map((a) => a.uid),
                             type: 'comparison',
                           };
@@ -227,7 +227,7 @@ export default function AthleteExerciseReportHeader(props: Props) {
                           const item: IndexDbAthleteExerciseReport = {
                             id,
                             exerciseId: selectedExercise?.id,
-                            institutionId: selectedInstitution.id,
+                            groupId: selectedGroup.id,
                             userId: athlete.uid,
                             type: 'single',
                           };

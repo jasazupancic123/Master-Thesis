@@ -1,32 +1,40 @@
-import { Box, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { core } from '@/core/core.service';
 import { GroupController } from '@/core/group/group.controller';
-import type { Group } from '@/core/group/type/group.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
+import { AuthUser } from '@/core/auth/type/user.type';
 
-interface Props extends ModalProps {
-  setSelectedGroup: SetState<Group | null>;
-}
-
-export default function AddGroupModal(props: Props) {
+export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
 
   const { users, setGroups } = useMain();
-  const { selectedInstitution, setSelectedInstitution, setDetectedChanges } =
-    useDashboard();
+  const {
+    selectedInstitution,
+    setSelectedInstitution,
+    setDetectedChanges,
+    setSelectedGroup,
+  } = useDashboard();
 
-  const { open, setOpen, setSelectedGroup } = props;
+  const { open, setOpen } = props;
 
   const [groupName, setGroupName] = useState('');
+  const [owner, setOwner] = useState<AuthUser | null>(null);
   const [allTrainers, _setAllTrainers] = useState(
     (users || []).filter((user) =>
       selectedInstitution?.trainerIds.includes(user.uid)
@@ -45,16 +53,12 @@ export default function AddGroupModal(props: Props) {
       }}
       cancelText="Close"
       onConfirm={async () => {
-        const owner = allTrainers.find(
-          (trainer) => trainer.uid === selectedInstitution.trainerIds[0]
-        );
-
         if (!owner) return toast.error('Please select an owner for the group.');
 
         const input = {
           name: groupName,
           membersIds: [],
-          trainerIds: [selectedInstitution.trainerIds[0]],
+          trainerIds: [owner.uid],
           institutionId: selectedInstitution.id,
         };
 
@@ -66,7 +70,7 @@ export default function AddGroupModal(props: Props) {
 
             setSelectedInstitution({
               ...selectedInstitution,
-              groups: [...selectedInstitution.groups, group],
+              groups: [...(selectedInstitution.groups || []), group],
             });
 
             setGroups((prev) => [...prev, group]);
@@ -85,14 +89,37 @@ export default function AddGroupModal(props: Props) {
       <Box display="flex" justifyContent="center" alignItems="center" p={1}>
         <Typography variant="h6">Add Group</Typography>
       </Box>
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <TextField
+          id="outlined-basic"
+          label="Group Name"
+          variant="outlined"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+        />
 
-      <TextField
-        id="outlined-basic"
-        label="Group name"
-        variant="outlined"
-        value={groupName}
-        onChange={(e) => setGroupName(e.target.value)}
-      />
+        <FormControl size="small">
+          <InputLabel id="owner-select-label">Owner</InputLabel>
+          <Select
+            labelId="owner-select-label"
+            value={owner?.uid || ''}
+            onChange={(e) => {
+              const trainerId = e.target.value;
+              const selectedTrainer = allTrainers.find(
+                (trainer) => trainer.uid === trainerId
+              );
+              setOwner(selectedTrainer || null);
+            }}
+            sx={{ mb: 2, minWidth: 200 }}
+          >
+            {allTrainers.map((trainer) => (
+              <MenuItem key={trainer.uid} value={trainer.uid}>
+                <Typography>{trainer.displayName}</Typography>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
     </MyModal>
   );
 }

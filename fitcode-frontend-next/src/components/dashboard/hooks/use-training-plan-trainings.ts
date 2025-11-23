@@ -1,19 +1,16 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import type { Group } from '@/core/group/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 
-export default function useTrainingPlan(
-  trainings: Training[],
-  groups: Group[]
-) {
-  const { user } = useAuthenticatedAuth();
-  const [selectedGroups, setSelectedGroups] = useState<Group[]>(groups);
+export default function useTrainingPlan() {
+  const { trainings } = useDashboard();
+
+  console.log('trainings in useTrainingPlan', trainings);
+
   const [completedTrainings, setCompletedTrainings] = useState<Training[]>([]);
   const [upcomingTrainings, setUpcomingTrainings] = useState<Training[]>([]);
-  const [onlyMySessions, setOnlyMySessions] = useState<boolean>(false);
 
   useEffect(() => {
     const completed: Training[] = [];
@@ -26,19 +23,12 @@ export default function useTrainingPlan(
       else completed.push(t);
     });
 
-    const filterFn = (t: Training) =>
-      onlyMySessions ? t.ownerId === user.uid : true;
-
-    setCompletedTrainings(completed.filter(filterFn));
-    setUpcomingTrainings(upcoming.filter(filterFn));
-  }, [trainings, onlyMySessions]);
+    setCompletedTrainings(completed);
+    setUpcomingTrainings(upcoming);
+  }, [trainings]);
 
   return {
     completedTrainings,
     upcomingTrainings,
-    selectedGroups,
-    setSelectedGroups,
-    onlyMySessions,
-    setOnlyMySessions,
   };
 }

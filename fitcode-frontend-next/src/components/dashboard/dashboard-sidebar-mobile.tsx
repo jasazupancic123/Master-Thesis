@@ -2,20 +2,13 @@
 
 import { theme } from '@/app/style';
 import { Group } from '@/core/group/type/group.type';
-import { DASHBOARD_VIEWS } from '@/lib/common/const/nav.const';
-import { ILink } from '@/lib/common/type/link.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import {
   KeyboardArrowDownOutlined,
-  KeyboardArrowDownTwoTone,
   KeyboardArrowUpOutlined,
-  KeyboardArrowUpTwoTone,
   Menu as MenuIcon,
-  MoreVert,
 } from '@mui/icons-material';
 import {
-  Avatar,
   Box,
   Drawer,
   IconButton,
@@ -23,49 +16,31 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import ProfileCard from '@/ui/profile-card';
 import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
-import Image from 'next/image';
-import { lib } from '@/lib';
+import DashboardSidebarGroupMenu from './dashboard-sidebar-group-menu';
 
-export default function DashboardMobileDrawer() {
-  const router = useRouter();
-  const { user, role } = useAuthenticatedAuth();
-
-  const {
-    filter,
-    setFilter,
-    selectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
-  } = useDashboard();
+export default function DashboardSidebarMobile() {
+  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+    useDashboard();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const anchorElRef = useRef<HTMLDivElement>(null);
-  const [openMenu, setOpenMenu] = useState(false);
-
-  const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
     null
   );
+  const [openGroupsMenu, setOpenGroupsMenu] = useState(false);
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
+
+  const anchorElGroupsRef = useRef<HTMLDivElement>(null);
 
   if (!selectedInstitution) return null;
 
   const shortGroupName = selectedGroup ? selectedGroup.name.slice(0, 3) : '';
 
-  const handleChangeView = (val: ILink) => {
-    setFilter(val);
-    router.push(val.href);
-    setDrawerOpen(false);
-  };
-
   const handleChangeGroup = (group: Group) => {
     setSelectedGroup(group);
-    setOpenMenu(false);
+    setOpenGroupsMenu(false);
   };
 
   const DRAWER_WIDTH = 170;
@@ -82,7 +57,7 @@ export default function DashboardMobileDrawer() {
           left: 8,
           backgroundColor: theme.palette.background.default,
           boxShadow: 1,
-          zIndex: 99,
+          zIndex: 10,
         }}
       >
         <MenuIcon />
@@ -93,7 +68,7 @@ export default function DashboardMobileDrawer() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         ModalProps={{ keepMounted: true }} // better perf on mobile
-        sx={{ zIndex: 100 }}
+        sx={{ zIndex: 90 }}
       >
         <Box
           role="presentation"
@@ -130,8 +105,8 @@ export default function DashboardMobileDrawer() {
                 fontWeight={800}
                 lineHeight={1.2}
                 textAlign="start"
-                ref={anchorElRef}
-                onClick={() => setOpenMenu((prev) => !prev)}
+                ref={anchorElGroupsRef}
+                onClick={() => setOpenGroupsMenu((prev) => !prev)}
                 sx={{
                   cursor: 'pointer',
                   textTransform: 'uppercase',
@@ -154,10 +129,10 @@ export default function DashboardMobileDrawer() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setOpenMenu((prev) => !prev);
+                    setOpenGroupsMenu((prev) => !prev);
                   }}
                 >
-                  {openMenu ? (
+                  {openGroupsMenu ? (
                     <KeyboardArrowUpOutlined sx={{ fontSize: 16 }} />
                   ) : (
                     <KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />
@@ -188,9 +163,9 @@ export default function DashboardMobileDrawer() {
 
             {/* Group menu (same as sidebar) */}
             <Menu
-              anchorEl={anchorElRef.current}
-              open={openMenu}
-              onClose={() => setOpenMenu(false)}
+              anchorEl={anchorElGroupsRef.current}
+              open={openGroupsMenu}
+              onClose={() => setOpenGroupsMenu(false)}
               transformOrigin={{
                 vertical: 'top',
                 horizontal: 'left',
@@ -201,7 +176,7 @@ export default function DashboardMobileDrawer() {
               }}
               sx={{ mt: 2, top: 30 }}
             >
-              {!selectedInstitution.groups.length ? (
+              {!(selectedInstitution.groups || []).length ? (
                 <Typography sx={{ px: 1 }}>No groups</Typography>
               ) : (
                 selectedInstitution.groups
@@ -227,18 +202,6 @@ export default function DashboardMobileDrawer() {
           alignItems="center"
           gap={2}
         >
-          {selectedInstitution.imageUrl && (
-            <Image
-              src={selectedInstitution.imageUrl}
-              alt="Institution"
-              unoptimized={lib.common.env.unoptimizeImages()}
-              width={DRAWER_WIDTH * 0.3}
-              height={0}
-              layout="intrinsic"
-              style={{ objectFit: 'cover' }}
-            />
-          )}
-
           <ProfileCard
             anchorEl={anchorProfileEl}
             open={openProfileMenu}
@@ -247,6 +210,11 @@ export default function DashboardMobileDrawer() {
           />
         </Box>
       </Drawer>
+      <DashboardSidebarGroupMenu
+        achorElRef={anchorElGroupsRef}
+        openGroupsMenu={openGroupsMenu}
+        setOpenGroupsMenu={setOpenGroupsMenu}
+      />
     </>
   );
 }

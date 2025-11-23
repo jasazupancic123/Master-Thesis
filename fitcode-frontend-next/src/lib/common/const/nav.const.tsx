@@ -151,7 +151,7 @@ const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
 const DASHBOARD_ICONS_DIMENSION = 18;
 
 export const LINK_DASHBOARD_TRAINING_PLAN = linkPngIcon(
-  'Training Plan',
+  'Schedule',
   '/dashboard',
   'dashboard-training-plan',
   `${DASHBOARD_ICONS_FOLDER}/training-plan.png`,
@@ -206,6 +206,8 @@ export const LINK_DASHBOARD_ADD_INSTITUTION = link(
     sx={{ fontSize: DASHBOARD_ICONS_DIMENSION, color: 'background.default' }}
   />
 );
+
+export const INSTITUTION_PAGE_ID = 'institution-page';
 
 export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
   const links = [
