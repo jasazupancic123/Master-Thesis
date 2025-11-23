@@ -10,7 +10,7 @@ import { User } from '@src/common/type/firebase-auth.type';
 import { InstitutionService } from '../service/institution.service';
 
 @ApiTags('Institution Members')
-@Controller(':institutionId/member')
+@Controller('institution/:institutionId/member')
 export class MemberController {
   constructor(private readonly institutionService: InstitutionService) {}
 

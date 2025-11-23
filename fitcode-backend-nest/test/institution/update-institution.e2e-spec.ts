@@ -3,7 +3,7 @@ import { addDays, isAfter, isBefore, startOfDay, subDays } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
 import { GroupService } from '@src/institution/service/group.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import {
@@ -50,7 +50,7 @@ describe('Update Institution (e2e)', () => {
     userId: string,
   ) {
     return await testApp.http.patch(
-      `/institution/${institutionId}/athlete`,
+      `/institution/${institutionId}/member/athlete`,
       token,
       { userId },
     );
@@ -62,7 +62,7 @@ describe('Update Institution (e2e)', () => {
     userId: string,
   ) {
     return await testApp.http.patch(
-      `/institution/${institutionId}/trainer`,
+      `/institution/${institutionId}/member/trainer`,
       token,
       { userId },
     );
@@ -74,7 +74,7 @@ describe('Update Institution (e2e)', () => {
     userId: string,
   ) {
     return await testApp.http.delete(
-      `/institution/${institutionId}/athlete`,
+      `/institution/${institutionId}/member/athlete`,
       token,
       { userId },
     );
@@ -86,7 +86,7 @@ describe('Update Institution (e2e)', () => {
     userId: string,
   ) {
     return await testApp.http.delete(
-      `/institution/${institutionId}/trainer`,
+      `/institution/${institutionId}/member/trainer`,
       token,
       { userId },
     );
@@ -114,7 +114,7 @@ describe('Update Institution (e2e)', () => {
       );
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('You cannot edit this institution');
+      expect(response.body.message).toBe('You cannot view this institution');
 
       await testApp.auth.deleteUsers([otherManager.uid]);
     });
@@ -234,7 +234,7 @@ describe('Update Institution (e2e)', () => {
         serviceSpy.mockClear();
       }
 
-      const groups = await db.groups.findAll();
+      const groups = await db.groups.getAllByInstitution({ institutionId });
       expect(groups).toHaveLength(3);
       for (const group of groups) {
         expect(group.membersIds).toHaveLength(2);
@@ -250,7 +250,9 @@ describe('Update Institution (e2e)', () => {
       }
 
       // delete created groups and trainings
-      for (const groupId of existingGroups) await db.groups.delete(groupId);
+      for (const groupId of existingGroups)
+        await db.groups.delete({ institutionId, groupId });
+
       for (const training of trainings) await db.trainings.delete(training.id);
     });
 
@@ -328,7 +330,7 @@ describe('Update Institution (e2e)', () => {
       expect(found.athleteIds).toHaveLength(1);
       expect(found.athleteIds).not.toContain(userId);
 
-      const groups = await db.groups.findAll();
+      const groups = await db.groups.getAllByInstitution({ institutionId });
       expect(groups).toHaveLength(3);
       for (const group of groups) {
         expect(group.membersIds).toHaveLength(1);
@@ -356,7 +358,12 @@ describe('Update Institution (e2e)', () => {
       }
 
       // delete created groups and trainings
-      for (const groupId of existingGroups) await db.groups.delete(groupId);
+      for (const groupId of existingGroups)
+        await db.groups.delete({
+          institutionId,
+          groupId,
+        });
+
       for (const training of trainings) await db.trainings.delete(training.id);
     });
 

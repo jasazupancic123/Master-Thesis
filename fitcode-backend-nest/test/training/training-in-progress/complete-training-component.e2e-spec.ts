@@ -89,13 +89,13 @@ describe('Complete Training Component (e2e)', () => {
   it('should throw error if manager cannot access this training', async () => {
     const res = await req(institution2.manager.token, training1.id, 'c1');
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if trainer cannot access this training', async () => {
     const res = await req(institution2.trainers[0].token, training1.id, 'c1');
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if athlete cannot access this training', async () => {

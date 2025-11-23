@@ -54,9 +54,12 @@ describe('Update Training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
-    await db.groups.delete(group.id);
     await db.trainings.delete(trainingId);
+    await db.institutions.remove(institution.id);
+    await db.groups.delete({
+      institutionId: institution.id,
+      groupId: group.id,
+    });
     await testApp.close();
   });
 
@@ -83,7 +86,7 @@ describe('Update Training (e2e)', () => {
     );
 
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe('You cannot view this training');
+    expect(response.body.message).toBe('You cannot view this institution');
 
     await db.institutions.remove(institution2.id);
   });

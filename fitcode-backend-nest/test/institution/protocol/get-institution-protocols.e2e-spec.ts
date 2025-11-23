@@ -34,9 +34,7 @@ describe('Get Institution Protocols E2E', () => {
 
     const res = await req(trainer.token, institution.id);
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe(
-      'You do not have permission to view training protocols',
-    );
+    expect(res.body.message).toBe('You cannot view this institution');
 
     // cleanup
     await db.institutions.remove(newInstitution.id);

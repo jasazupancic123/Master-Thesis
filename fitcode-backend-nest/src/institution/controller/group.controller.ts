@@ -23,7 +23,7 @@ import { GroupService } from '../service/group.service';
 import { InstitutionService } from '../service/institution.service';
 
 @ApiTags('Group')
-@Controller(':institutionId/group')
+@Controller('institution/:institutionId/group')
 export class GroupController {
   constructor(
     private readonly institutionService: InstitutionService,

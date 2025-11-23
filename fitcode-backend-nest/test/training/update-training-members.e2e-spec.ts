@@ -103,7 +103,7 @@ describe('Update Group (e2e)', () => {
 
   it('should fail if member is not an athlete', async () => {
     const response = await testApp.http.patch(
-      `/group/${groupId}/member`,
+      `/institution/${institutionId}/group/${groupId}/member`,
       global.trainer.token,
       { userId: global.manager.uid },
     );

@@ -1,21 +1,24 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addMonths } from 'date-fns';
 
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import type { TestInstitution } from '@src/common/type/entity.type';
 import { generateCycleStub } from '@src/institution/mock/cycle.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 describe('Add / Remove Group Cycle (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
+
+  let institution: TestInstitution;
   let groupId: string;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
 
-    const institution = await db.institutions.createTest();
+    institution = await db.institutions.createTest();
     groupId = await db.groups.save(
       generateGroupStub({
         institutionId: institution.id,
@@ -35,9 +38,10 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       ['athlete', global.athlete.token],
     ])('should fail if user is %s', async (_, token) => {
       const response = await testApp.http.post(
-        `/group/${groupId}/cycle`,
+        `/institution/${institution.id}/group/${groupId}/cycle`,
         token,
       );
+
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('Forbidden resource');
     });
@@ -45,14 +49,12 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     it('should fail if user cannot edit group', async () => {
       const otherTrainer = await testApp.auth.createTrainer();
       const response = await testApp.http.post(
-        `/group/${groupId}/cycle`,
+        `/institution/${institution.id}/group/${groupId}/cycle`,
         otherTrainer.token,
       );
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not allowed to view this group',
-      );
+      expect(response.body.message).toBe('You cannot view this institution');
 
       await testApp.auth.deleteUsers([otherTrainer.uid]);
     });
@@ -60,7 +62,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     it('should fail if cycle already exists in group', async () => {
       const cycleId = 'existing-cycle-id';
       const response = await testApp.http.post(
-        `/group/${groupId}/cycle`,
+        `/institution/${institution.id}/group/${groupId}/cycle`,
         global.trainer.token,
         generateCycleStub({ id: cycleId }),
       );
@@ -76,7 +78,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       });
 
       const response = await testApp.http.post(
-        `/group/${groupId}/cycle`,
+        `/institution/${institution.id}/group/${groupId}/cycle`,
         global.trainer.token,
         overlappingCycle,
       );
@@ -95,21 +97,26 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       });
 
       const response = await testApp.http.post(
-        `/group/${groupId}/cycle`,
+        `/institution/${institution.id}/group/${groupId}/cycle`,
         global.trainer.token,
         newCycle,
       );
 
       expect(response.status).toBe(201);
 
-      const group = await db.groups.findById(groupId);
+      const group = await db.groups.findById({
+        institutionId: institution.id,
+        groupId,
+      });
+
       expect(group.cycles.length).toBe(2);
       expect(group.cycles[1].name).toBe(newCycle.name);
 
       // delete the added cycle for further tests
-      await db.groups.update(groupId, {
-        cycles: group.cycles.filter((cycle) => cycle.id !== newCycle.id),
-      });
+      await db.groups.update(
+        { institutionId: institution.id, groupId },
+        { cycles: group.cycles.filter((cycle) => cycle.id !== newCycle.id) },
+      );
     });
   });
 
@@ -119,7 +126,7 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       ['athlete', global.athlete.token],
     ])('should fail if user is %s', async (_, token) => {
       const response = await testApp.http.delete(
-        `/group/${groupId}/cycle/existing-cycle-id`,
+        `/institution/${institution.id}/group/${groupId}/cycle/existing-cycle-id`,
         token,
       );
 
@@ -130,38 +137,41 @@ describe('Add / Remove Group Cycle (e2e)', () => {
     it('should fail if user cannot edit group', async () => {
       const otherTrainer = await testApp.auth.createTrainer();
       const response = await testApp.http.delete(
-        `/group/${groupId}/cycle/existing-cycle-id`,
+        `/institution/${institution.id}/group/${groupId}/cycle/existing-cycle-id`,
         otherTrainer.token,
       );
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not allowed to view this group',
-      );
+      expect(response.body.message).toBe('You cannot view this institution');
 
       await testApp.auth.deleteUsers([otherTrainer.uid]);
     });
 
     it('should successfully remove cycle from group', async () => {
       const response = await testApp.http.delete(
-        `/group/${groupId}/cycle/existing-cycle-id`,
+        `/institution/${institution.id}/group/${groupId}/cycle/existing-cycle-id`,
         global.trainer.token,
       );
 
       expect(response.status).toBe(200);
 
-      const group = await db.groups.findById(groupId);
+      const group = await db.groups.findById({
+        institutionId: institution.id,
+        groupId,
+      });
+
       expect(group.cycles.length).toBe(0);
 
-      await db.groups.update(groupId, {
-        cycles: [generateCycleStub({ id: 'existing-cycle-id' })],
-      });
+      await db.groups.update(
+        { institutionId: institution.id, groupId },
+        { cycles: [generateCycleStub({ id: 'existing-cycle-id' })] },
+      );
     });
 
     it('should successfully remove cycle and all trainings', async () => {
       const cycleId = 'existing-cycle-id';
       const otherGroupId = await db.groups.save(
-        generateGroupStub({ institutionId: groupId }),
+        generateGroupStub({ institutionId: institution.id }),
       );
 
       // create 5 trainings for groupId and 5 for otherGroupId
@@ -190,13 +200,16 @@ describe('Add / Remove Group Cycle (e2e)', () => {
       expect(otherGroupTrainingsBefore.length).toBe(5);
 
       const response = await testApp.http.delete(
-        `/group/${groupId}/cycle/${cycleId}`,
+        `/institution/${institution.id}/group/${groupId}/cycle/${cycleId}`,
         global.trainer.token,
       );
 
       expect(response.status).toBe(200);
 
-      const groups = await db.groups.findAll();
+      const groups = await db.groups.getAllByInstitution({
+        institutionId: institution.id,
+      });
+
       expect(groups.length).toBe(2); // otherGroupId should still exist
 
       const trainingsAfterDelete = await db.trainings.findAll();
