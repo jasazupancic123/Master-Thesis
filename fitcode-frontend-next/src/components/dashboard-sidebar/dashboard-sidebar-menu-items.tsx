@@ -17,14 +17,12 @@ import {
   Typography,
 } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { ILink } from '@/lib/common/type/link.type';
 import { useMain } from '@/store/main.provider';
 import { useRef, useState } from 'react';
 import { KeyboardArrowDown } from '@mui/icons-material';
 
 export default function DashboardSidebarMenuItems() {
-  const router = useRouter();
   const { role } = useAuthenticatedAuth();
 
   const { institutions } = useMain();

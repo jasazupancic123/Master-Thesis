@@ -21,6 +21,7 @@ import { lib } from '@/lib';
 import { LINK_DASHBOARD_PLANNING } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;
@@ -100,11 +101,33 @@ export function DashboardProvider(props: Props) {
   const [trainings, setTrainings] = useState<Training[]>([]);
 
   useEffect(() => {
-    const group = selectedInstitution?.groups?.find((g) =>
-      groups.some((sg) => sg.id === g.id)
-    );
+    if (!selectedInstitution) return;
 
-    setSelectedGroup(group || null);
+    const setupSelectedGroup = async () => {
+      const lastSelectedGroupId = await lib.common.indexedDb.items.get(
+        INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID
+      );
+
+      if (lastSelectedGroupId?.payload) {
+        const groupId = lastSelectedGroupId.payload as string;
+
+        const group = selectedInstitution.groups?.find((g) => g.id === groupId);
+
+        if (group) {
+          setSelectedGroup(group);
+          return;
+        }
+      }
+
+      // Fallback to first group
+      const group = selectedInstitution.groups?.find((g) =>
+        groups.some((sg) => sg.id === g.id)
+      );
+
+      setSelectedGroup(group || null);
+    };
+
+    setupSelectedGroup();
   }, []);
 
   useEffect(() => {

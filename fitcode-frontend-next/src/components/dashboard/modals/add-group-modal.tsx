@@ -19,6 +19,8 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
 import { AuthUser } from '@/core/auth/type/user.type';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
+import { lib } from '@/lib';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
@@ -79,6 +81,13 @@ export default function AddGroupModal(props: ModalProps) {
             setOpen(false);
             setGroupName('');
             setDetectedChanges(false);
+
+            lib.common.indexedDb.items.put({
+              id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,
+              payload: group.id,
+              updatedAt: new Date().getTime(),
+            });
+
             toast.success('Group created successfully.');
           },
           undefined,

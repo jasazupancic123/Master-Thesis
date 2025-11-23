@@ -21,13 +21,11 @@ export default function DashboardSidebar() {
 
   const [openGroupsMenu, setOpenGroupsMenu] = useState(false);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
-  const [openInstitutionsMenu, setOpenInstitutionsMenu] = useState(false);
   const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
     null
   );
 
   const anchorElGroupsRef = useRef<HTMLDivElement>(null);
-  const anchorElInstitutionsRef = useRef<HTMLDivElement>(null);
 
   if (!selectedInstitution) return null;
 

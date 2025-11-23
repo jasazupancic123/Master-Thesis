@@ -68,7 +68,7 @@ export default function DashboardMembers() {
           sx={{ overflowX: 'auto' }}
         ></Box>
       </Box>
-      <DashboardGroupsMembers />;
+      <DashboardGroupsMembers />
     </DashboardPageContainer>
   );
 }
