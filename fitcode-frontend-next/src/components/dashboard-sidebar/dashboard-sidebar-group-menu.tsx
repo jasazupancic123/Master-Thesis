@@ -14,10 +14,11 @@ import {
   Tooltip,
 } from '@mui/material';
 import { RefObject, useEffect, useState } from 'react';
-import EditGroupModal from './modals/edit-group-modal';
-import AddGroupModal from './modals/add-group-modal';
-import DeleteGroupModal from './modals/delete-group-modal';
+import EditGroupModal from '../dashboard/modals/edit-group-modal';
+import AddGroupModal from '../dashboard/modals/add-group-modal';
+import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
 import { SetState } from '@/lib/common/type/state.type';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
 
 interface Props {
   achorElRef: RefObject<HTMLDivElement | null>;
@@ -33,12 +34,12 @@ export default function DashboardSidebarGroupMenu(props: Props) {
 
   const { achorElRef, openGroupsMenu, setOpenGroupsMenu } = props;
 
-  const [institutionAndTrainerGroups, setInstitutionAndTrainerGroups] =
-    useState<Group[]>([]);
-
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
   const [openEditGroupModal, setOpenEditGroupModal] = useState(false);
   const [openDeleteGroupModal, setOpenDeleteGroupModal] = useState(false);
+
+  const [institutionAndTrainerGroups, setInstitutionAndTrainerGroups] =
+    useState<Group[]>([]);
 
   useEffect(() => {
     if (!selectedInstitution) return;
@@ -112,9 +113,15 @@ export default function DashboardSidebarGroupMenu(props: Props) {
                     <MenuItem
                       key={group.id}
                       value={group.id}
-                      onClick={() => {
+                      onClick={async () => {
                         setSelectedGroup(group);
                         setOpenGroupsMenu(false);
+
+                        await lib.common.indexedDb.items.put({
+                          id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,
+                          payload: group.id,
+                          updatedAt: new Date().getTime(),
+                        });
                       }}
                     >
                       <Typography>{group.name}</Typography>

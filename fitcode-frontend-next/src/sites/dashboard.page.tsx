@@ -21,6 +21,7 @@ import DashboardMembers from '@/components/dashboard/dashboard-members';
 import DashboardGroups from '@/components/dashboard/dashboard-groups';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
+import DashboardInstitution from '@/components/dashboard/dashboard-institution';
 
 export default function DashboardPage() {
   const { profile } = useMain();
@@ -51,7 +52,7 @@ export default function DashboardPage() {
         return <DashboardAddInstitution />;
       }
       case INSTITUTION_PAGE_ID: {
-        return <Typography>Institution Page</Typography>;
+        return <DashboardInstitution />;
       }
       default:
         return <DashboardSchedule />;

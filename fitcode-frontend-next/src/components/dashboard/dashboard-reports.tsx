@@ -21,8 +21,8 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 enum ReportTab {
-  Exercise = 'Exercise',
   Wellness = 'Wellness',
+  Exercise = 'Exercise',
   Realization = 'Realization',
 }
 
@@ -45,7 +45,7 @@ export default function DashboardReports() {
   const { athleteExerciseReports, setAthleteExercisesReports } =
     useAthleteExerciseReports();
 
-  const [tab, setTab] = useState<ReportTab>(ReportTab.Exercise);
+  const [tab, setTab] = useState<ReportTab>(ReportTab.Wellness);
 
   return (
     <DashboardPageContainer>

@@ -11,101 +11,114 @@ import {
 
 import useInstitutionMembers from '../hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../hooks/use-register-member-form.hook';
-import type { Group } from '@/core/group/type/group.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
-import type { SetState } from '@/lib/common/type/state.type';
 import MyModal from '@/ui/modal';
+import { ModalProps } from '@/lib/common/type/modal-props.type';
 
 interface Props {
   registerRole: UserRole;
-  group: Group | null;
-  setGroup: SetState<Group | null>;
 }
 
-export default function RegisterUsersDashboard(props: Props) {
+export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
   const { formData, setFormField } = useRegisterMemberForm();
 
-  const { registerRole, group, setGroup } = props;
+  const { open, setOpen, registerRole } = props;
 
   const {
-    openModal,
-    setOpenModal,
+    openUserAlreadyExistsModal,
+    setOpenUserAlreadyExistsModal,
     existingUser,
     setExistingUser,
     isUploadingMembers,
     registerUser,
     addUser,
-  } = useInstitutionMembers(group, setGroup);
+  } = useInstitutionMembers();
 
   return (
     <>
-      <Box maxWidth={400} mx="auto">
-        <Typography
-          variant="h5"
-          gutterBottom
-          mb={2}
-          textAlign="center"
-          width="100%"
-        >
-          Register {registerRole[0].toUpperCase() + registerRole.slice(1)}
-        </Typography>
+      <MyModal
+        isOpen={open}
+        setIsOpen={(open) => setOpen(open)}
+        onConfirm={undefined}
+        onCancel={() => setOpen(false)}
+        cancelText="Close"
+      >
+        <Box maxWidth={400} mx="auto">
+          <Typography
+            variant="h5"
+            gutterBottom
+            mb={2}
+            textAlign="center"
+            width="100%"
+          >
+            Register {registerRole[0].toUpperCase() + registerRole.slice(1)}
+          </Typography>
 
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            await registerUser(registerRole, formData);
-          }}
-        >
-          <Stack spacing={2}>
-            <TextField
-              label="Display Name"
-              name="displayName"
-              value={formData.displayName}
-              onChange={(e) => setFormField('displayName', e.target.value)}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormField('email', e.target.value)}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormField('password', e.target.value)}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormField('confirmPassword', e.target.value)}
-              fullWidth
-              required
-            />
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await registerUser(registerRole, formData);
+              setOpen(false);
+            }}
+          >
+            <Stack spacing={2}>
+              <TextField
+                label="Display Name"
+                name="displayName"
+                value={formData.displayName}
+                onChange={(e) => setFormField('displayName', e.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormField('email', e.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormField('password', e.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormField('confirmPassword', e.target.value)
+                }
+                fullWidth
+                required
+              />
 
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Register
-            </Button>
-          </Stack>
-        </form>
-      </Box>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+              >
+                Register
+              </Button>
+            </Stack>
+          </form>
+        </Box>
+      </MyModal>
 
       <MyModal
-        isOpen={openModal}
-        setIsOpen={(open) => setOpenModal(open)}
+        isOpen={openUserAlreadyExistsModal}
+        setIsOpen={(open) => setOpenUserAlreadyExistsModal(open)}
         onConfirm={() => addUser(existingUser)}
         onCancel={() => {
-          setOpenModal(false);
+          setOpenUserAlreadyExistsModal(false);
           setExistingUser(null);
         }}
       >

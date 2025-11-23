@@ -63,7 +63,7 @@ export default function DeleteGroupModal(props: ModalProps) {
         );
       }}
     >
-      <Box display="flex" justifyContent="center" alignItems="center" p={1}>
+      <Box display="flex" justifyContent="center" alignItems="center">
         <Typography variant="h6" textAlign="center">
           Delete <b>{selectedGroup.name}</b>?
         </Typography>
