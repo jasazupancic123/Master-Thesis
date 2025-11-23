@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { endOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
@@ -31,7 +32,8 @@ import { WorkloadService } from './workload.service';
 @Injectable()
 export class TrainingReportService {
   constructor(
-    private readonly trainingService: TrainingService,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly institutionService: InstitutionService,
     private readonly groupService: GroupService,
