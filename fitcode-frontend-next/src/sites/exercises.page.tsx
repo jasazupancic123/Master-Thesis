@@ -16,6 +16,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
+import ExerciseChips from '@/components/exercise-chips/exercise-chips';
+import ExerciseModal from '@/components/exercise-modal/exercise-modal';
+import ExerciseFilter from '@/components/exercises-list/exercise-filter';
+import ExercisesList from '@/components/exercises-list/exercises-list';
+import { Components } from '@/core/exercise/constant/components.constant';
 import {
   handleAddExercise,
   handleAiPrescriptionsJsonFileUpload,
@@ -28,11 +33,6 @@ import {
   handleUpsertManyExercises,
   handleUpsertMuscleValues,
 } from '@/core/exercise/exercise-page-state';
-import ExerciseChips from '@/components/exercise-chips/exercise-chips';
-import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import ExerciseFilter from '@/components/exercises-list/exercise-filter';
-import ExercisesList from '@/components/exercises-list/exercises-list';
-import { Components } from '@/core/exercise/constant/components.constant';
 import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,

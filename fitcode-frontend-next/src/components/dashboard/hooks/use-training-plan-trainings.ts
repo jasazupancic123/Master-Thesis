@@ -7,8 +7,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 export default function useTrainingPlan() {
   const { trainings } = useDashboard();
 
-  console.log('trainings in useTrainingPlan', trainings);
-
   const [completedTrainings, setCompletedTrainings] = useState<Training[]>([]);
   const [upcomingTrainings, setUpcomingTrainings] = useState<Training[]>([]);
 

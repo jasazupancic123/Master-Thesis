@@ -3,13 +3,13 @@
 import { Box, Container } from '@mui/material';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
+import DashboardSidebar from '@/components/dashboard-sidebar/dashboard-sidebar';
+import DashboardSidebarMobile from '@/components/dashboard-sidebar/dashboard-sidebar-mobile';
 import {
   DASHBOARD_SIDEBAR_WIDTH,
   MAX_WIDTH_DASHBOARD,
 } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import DashboardSidebar from '@/components/dashboard-sidebar/dashboard-sidebar';
 import { useScreenSize } from '@/store/screen-size.provider';
-import DashboardSidebarMobile from '@/components/dashboard-sidebar/dashboard-sidebar-mobile';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
   const screenSize = useScreenSize();

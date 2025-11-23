@@ -1,16 +1,17 @@
 'use client';
 
-import { core } from '@/core/core.service';
-import { GroupController } from '@/core/group/group.controller';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import MyModal from '@/ui/modal';
 import { TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+
+import { core } from '@/core/core.service';
+import { GroupController } from '@/core/group/group.controller';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import MyModal from '@/ui/modal';
 
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();

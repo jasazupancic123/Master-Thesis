@@ -1,11 +1,11 @@
-import ProfileHeaderMenu, {
-  ProfileHeaderMenuProps,
-} from '@/components/profile-header-menu/profile-header-menu';
+import { MoreVert } from '@mui/icons-material';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+
+import type { ProfileHeaderMenuProps } from '@/components/profile-header-menu/profile-header-menu';
+import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
 import { DASHBOARD_SIDEBAR_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { MoreVert } from '@mui/icons-material';
-import { Box, Avatar, Typography, IconButton } from '@mui/material';
 
 export default function ProfileCard(props: ProfileHeaderMenuProps) {
   const { user } = useAuthenticatedAuth();

@@ -9,8 +9,8 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import type { FirestoreEntity } from '@/lib/firebase/type/firestore.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useDashboardScheduleSnapshots() {
   const { role } = useAuthenticatedAuth();

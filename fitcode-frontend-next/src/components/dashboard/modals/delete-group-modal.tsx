@@ -1,18 +1,18 @@
-import { core } from '@/core/core.service';
+import { Box, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
 import { GroupController } from '@/core/group/group.controller';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { Box, Typography, TextField } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 
 export default function DeleteGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { users, groups, setGroups } = useMain();
+  const { groups, setGroups } = useMain();
   const {
     selectedInstitution,
     setSelectedInstitution,

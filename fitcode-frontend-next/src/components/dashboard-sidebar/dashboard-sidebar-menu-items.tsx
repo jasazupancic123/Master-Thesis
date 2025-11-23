@@ -1,11 +1,4 @@
-import { theme } from '@/app/style';
-import { lib } from '@/lib';
-import {
-  DASHBOARD_VIEWS,
-  INSTITUTION_PAGE_ID,
-} from '@/lib/common/const/nav.const';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
+import { KeyboardArrowDown } from '@mui/icons-material';
 import {
   alpha,
   Avatar,
@@ -17,10 +10,18 @@ import {
   Typography,
 } from '@mui/material';
 import Image from 'next/image';
-import { ILink } from '@/lib/common/type/link.type';
-import { useMain } from '@/store/main.provider';
 import { useRef, useState } from 'react';
-import { KeyboardArrowDown } from '@mui/icons-material';
+
+import { theme } from '@/app/style';
+import { lib } from '@/lib';
+import {
+  DASHBOARD_VIEWS,
+  INSTITUTION_PAGE_ID,
+} from '@/lib/common/const/nav.const';
+import type { ILink } from '@/lib/common/type/link.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardSidebarMenuItems() {
   const { role } = useAuthenticatedAuth();

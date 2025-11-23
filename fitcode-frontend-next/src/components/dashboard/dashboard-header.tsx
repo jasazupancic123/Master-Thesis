@@ -7,10 +7,7 @@ import Link from 'next/link';
 import useDashboardHeaderUtils from './hooks/use-utils';
 import EditInstitutionModal from './modals/edit-institution-modal';
 import ProfileHeaderMenu from '@/components/profile-header-menu/profile-header-menu';
-import {
-  MAX_WIDTH,
-  MAX_WIDTH_DASHBOARD,
-} from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { LINK_DASHBOARD_SCHEDULE } from '@/lib/common/const/nav.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import Logo from '@/ui/logo';
