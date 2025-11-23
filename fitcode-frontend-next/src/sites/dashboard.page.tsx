@@ -3,7 +3,7 @@
 import { Typography } from '@mui/material';
 import { Box } from '@mui/material';
 
-import DashboardTrainingPlan from '@/components/dashboard/dashboard-training-plan';
+import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -52,10 +52,9 @@ export default function DashboardPage() {
           flexDirection: 'column',
           height: '100%',
           width: '100%',
-          mb: 5,
         }}
       >
-        <DashboardTrainingPlan />
+        <DashboardSchedule />
       </Box>
     </>
   );

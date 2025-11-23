@@ -9,7 +9,7 @@ import {
 } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import DashboardSidebar from '@/components/dashboard/dashboard-sidebar';
 import { useScreenSize } from '@/store/screen-size.provider';
-import DashboardMobileDrawer from '@/components/dashboard/dashboard-mobile-drawer';
+import DashboardSidebarMobile from '@/components/dashboard/dashboard-sidebar-mobile';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
   const screenSize = useScreenSize();
@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
             flexDirection="column"
             sx={{ position: 'relative', mx: 'auto', px: 1 }}
           >
-            {isSmall && <DashboardMobileDrawer />}
+            {isSmall && <DashboardSidebarMobile />}
             <DashboardHeader />
             <Box sx={{ overflow: 'hidden' }}>{children}</Box>
           </Box>

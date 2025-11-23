@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Tab, Tabs, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
@@ -8,26 +8,22 @@ import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-
 import WellnessReports from '../report-wellness/wellness-reports';
 import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
 import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
-import useDashboardGroupView from './hooks/use-group-view';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 enum ReportTab {
-  Realization = 'Realization',
-  Wellness = 'Wellness',
   Exercise = 'Exercise',
+  Wellness = 'Wellness',
+  Realization = 'Realization',
 }
 
 const cache = new Map<string, Workload[]>(); // LATER PUT THIS EVEN ONE HIGHER, SO IT CAN BE SHARED BETWEEN MULTIPLE REPORTS
@@ -35,9 +31,8 @@ const cache = new Map<string, Workload[]>(); // LATER PUT THIS EVEN ONE HIGHER, 
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
-  const { groups } = useMain();
   const { selectedInstitution } = useDashboard();
-  const { selectedGroup, setSelectedGroup } = useDashboardGroupView();
+  const { selectedGroup } = useDashboard();
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
@@ -50,7 +45,7 @@ export default function DashboardReports() {
   const { athleteExerciseReports, setAthleteExercisesReports } =
     useAthleteExerciseReports();
 
-  const [tab, setTab] = useState<ReportTab>(ReportTab.Realization);
+  const [tab, setTab] = useState<ReportTab>(ReportTab.Exercise);
 
   return (
     <DashboardPageContainer>
@@ -95,78 +90,6 @@ export default function DashboardReports() {
             alignItems="center"
             gap={2}
           >
-            <Box
-              key="groups-list-container"
-              width="100%"
-              maxWidth={MAX_WIDTH}
-              display="flex"
-              gap={0.5}
-              alignItems="center"
-              sx={{
-                position: 'relative',
-                px: 8,
-                pl: screenSize.isMobile ? 0 : undefined,
-              }}
-            >
-              <Box
-                key="groups-list"
-                display="flex"
-                alignItems="center"
-                gap={1.5}
-                sx={{
-                  overflowX: 'auto',
-                  ...styledScrollbarSx(theme),
-                  mx: 'auto',
-                }}
-              >
-                {groups.map((group) => {
-                  const isSelected = selectedGroup?.id === group.id;
-
-                  return (
-                    <Tooltip key={group.id} title={group.name} arrow>
-                      <Box
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        onClick={() => {
-                          setSelectedGroup(group);
-                        }}
-                        sx={{
-                          px: 2,
-                          py: 0.5,
-                          backgroundColor: isSelected
-                            ? theme.palette.primary.main
-                            : theme.palette.background.default,
-                          border: isSelected
-                            ? `1px solid ${theme.palette.primary.main}`
-                            : `1px solid ${theme.palette.text.primary}`,
-                          borderRadius: 1,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Typography
-                          textAlign="center"
-                          fontWeight={600}
-                          width={80}
-                          sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            color: isSelected
-                              ? theme.palette.text.secondary
-                              : theme.palette.text.primary,
-                            userSelect: 'none',
-                          }}
-                        >
-                          {group.name}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  );
-                })}
-              </Box>
-            </Box>
-
             <Box
               width="100%"
               display="flex"

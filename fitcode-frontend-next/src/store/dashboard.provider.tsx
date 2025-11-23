@@ -72,12 +72,12 @@ export function DashboardProvider(props: Props) {
     users,
     setUsers,
     setProfiles,
+    groups,
     setGroups,
     institutions: propsInstitutions,
   } = useMain();
 
   const pathname = usePathname();
-  const { groups } = useMain();
 
   const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
   const [detectedChanges, setDetectedChanges] = useState(false);
@@ -107,12 +107,12 @@ export function DashboardProvider(props: Props) {
   const [trainings, setTrainings] = useState<Training[]>([]);
 
   useEffect(() => {
-    if (!selectedInstitution) return;
+    const group = selectedInstitution?.groups?.find((g) =>
+      groups.some((sg) => sg.id === g.id)
+    );
 
-    if (selectedGroup) return;
-
-    setSelectedGroup(selectedInstitution.groups[0] || null);
-  }, [selectedInstitution]);
+    setSelectedGroup(group || null);
+  }, []);
 
   useEffect(() => {
     setTrainings(propsTrainings);
@@ -129,20 +129,6 @@ export function DashboardProvider(props: Props) {
 
     setFilter(matched || LINK_DASHBOARD_TRAINING_PLAN);
   }, [pathname, role]);
-
-  // reset selected group when institution changes
-  useEffect(() => {
-    if (!selectedInstitution || selectedInstitution.groups) return;
-    const filtered = groups.filter(
-      (g) => g.institutionId === selectedInstitution.id
-    );
-
-    for (const group of filtered) core.group.mapMembers(group, users);
-
-    setSelectedInstitution(
-      (prev) => ({ ...prev, groups: filtered }) as Institution
-    );
-  }, [selectedInstitution]);
 
   const value: IDashboardContext = {
     filter,
@@ -196,6 +182,7 @@ export function DashboardProvider(props: Props) {
 
       function mapper(group: Group): Group {
         if (group.id !== groupId) return group;
+
         let newGroup: Group = {
           ...group,
           name: input.name ?? group.name,
@@ -211,6 +198,7 @@ export function DashboardProvider(props: Props) {
         setSelectedInstitution((prev) =>
           prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
         );
+        setSelectedGroup((prev) => (prev ? mapper(prev) : prev));
         setGroups((prev) => prev.map(mapper));
       };
 
@@ -262,6 +250,16 @@ export function DashboardProvider(props: Props) {
                 athletes: prev.athletes.map(mapper),
                 trainers: prev.trainers.map(mapper),
                 owner: mapper(prev.owner),
+              }
+            : prev
+        );
+
+        setSelectedGroup((prev) =>
+          prev
+            ? {
+                ...prev,
+                members: prev.members?.map(mapper),
+                trainers: prev.trainers?.map(mapper),
               }
             : prev
         );
@@ -360,21 +358,22 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    addGroupMember: async (user: AuthUser, groupId: string) => {
-      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-      if (!selectedInstitution || !group) return;
+    addGroupMember: async (user: AuthUser) => {
+      if (!selectedInstitution || !selectedGroup) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(group),
+        group: structuredClone(selectedGroup),
       };
 
       const apply = () => {
         const newGroup: Group = {
-          ...group,
-          members: group.members ? [...group.members, user] : [user],
-          membersIds: group.membersIds
-            ? [...group.membersIds, user.uid]
+          ...selectedGroup,
+          members: selectedGroup.members
+            ? [...selectedGroup.members, user]
+            : [user],
+          membersIds: selectedGroup.membersIds
+            ? [...selectedGroup.membersIds, user.uid]
             : [user.uid],
         };
 
@@ -385,6 +384,7 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setSelectedGroup(newGroup);
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -397,7 +397,7 @@ export function DashboardProvider(props: Props) {
       };
 
       const action = () =>
-        GroupController.getInstance().addMember(group.id, {
+        GroupController.getInstance().addMember(selectedGroup.id, {
           userId: user.uid,
         });
 
@@ -408,20 +408,19 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    removeGroupMember: async (userId: string, groupId: string) => {
-      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-      if (!selectedInstitution || !group) return;
+    removeGroupMember: async (userId: string) => {
+      if (!selectedInstitution || !selectedGroup) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(group),
+        group: structuredClone(selectedGroup),
       };
 
       const apply = () => {
         const newGroup: Group = {
-          ...group,
-          members: group.members?.filter((m) => m.uid !== userId),
-          membersIds: group.membersIds?.filter((id) => id !== userId),
+          ...selectedGroup,
+          members: selectedGroup.members?.filter((m) => m.uid !== userId),
+          membersIds: selectedGroup.membersIds?.filter((id) => id !== userId),
         };
 
         setProfiles((prev) => prev.filter((m) => m.uid !== userId));
@@ -431,6 +430,7 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setSelectedGroup(newGroup);
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -443,7 +443,7 @@ export function DashboardProvider(props: Props) {
       };
 
       const action = () =>
-        GroupController.getInstance().removeMember(group.id, {
+        GroupController.getInstance().removeMember(selectedGroup.id, {
           userId,
         });
 
