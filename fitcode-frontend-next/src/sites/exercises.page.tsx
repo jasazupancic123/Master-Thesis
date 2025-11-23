@@ -4,7 +4,6 @@ import { Download, Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import {
   Button,
-  Grid2,
   Pagination,
   SpeedDial,
   SpeedDialAction,
@@ -28,7 +27,7 @@ import {
   handleUpsertAiPrescriptions,
   handleUpsertManyExercises,
   handleUpsertMuscleValues,
-} from '@/app/(trainer)/dashboard/exercises/state';
+} from '@/core/exercise/exercise-page-state';
 import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal/exercise-modal';
 import ExerciseFilter from '@/components/exercises-list/exercise-filter';
