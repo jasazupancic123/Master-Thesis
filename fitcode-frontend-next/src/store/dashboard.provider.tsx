@@ -1,6 +1,5 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -19,11 +18,7 @@ import type {
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
-import {
-  DASHBOARD_VIEWS,
-  LINK_DASHBOARD_GROUPS,
-  LINK_DASHBOARD_TRAINING_PLAN,
-} from '@/lib/common/const/nav.const';
+import { LINK_DASHBOARD_PLANNING } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
@@ -67,7 +62,7 @@ export const useDashboard = () => useContext(DashboardContext)!;
 export function DashboardProvider(props: Props) {
   const { children, institutionId, trainings: propsTrainings } = props;
 
-  const { role, user } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
   const {
     users,
     setUsers,
@@ -77,9 +72,7 @@ export function DashboardProvider(props: Props) {
     institutions: propsInstitutions,
   } = useMain();
 
-  const pathname = usePathname();
-
-  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
+  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_PLANNING);
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   const [institutions, setInstitutions] = useState<Institution[]>(() =>
@@ -117,18 +110,6 @@ export function DashboardProvider(props: Props) {
   useEffect(() => {
     setTrainings(propsTrainings);
   }, [propsTrainings]);
-
-  // update filter based on url
-  useEffect(() => {
-    if (!pathname || !role) return;
-
-    const lastItemInUrl = pathname.split('/').pop();
-    const links = DASHBOARD_VIEWS(role);
-    const matched =
-      lastItemInUrl && links.find((link) => link?.href.endsWith(lastItemInUrl));
-
-    setFilter(matched || LINK_DASHBOARD_TRAINING_PLAN);
-  }, [pathname, role]);
 
   const value: IDashboardContext = {
     filter,

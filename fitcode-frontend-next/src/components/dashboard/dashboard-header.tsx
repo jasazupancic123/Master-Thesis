@@ -11,7 +11,7 @@ import {
   MAX_WIDTH,
   MAX_WIDTH_DASHBOARD,
 } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { LINK_DASHBOARD_TRAINING_PLAN } from '@/lib/common/const/nav.const';
+import { LINK_DASHBOARD_SCHEDULE } from '@/lib/common/const/nav.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import Logo from '@/ui/logo';
 
@@ -72,12 +72,12 @@ export default function DashboardHeader() {
       >
         <MenuItem
           onClick={() => {
-            setFilter(LINK_DASHBOARD_TRAINING_PLAN);
+            setFilter(LINK_DASHBOARD_SCHEDULE);
             setOpenInstitutionsMenu(false);
             setAnchorInstitutionsEl(null);
           }}
         >
-          <Link href={LINK_DASHBOARD_TRAINING_PLAN.href} passHref>
+          <Link href={LINK_DASHBOARD_SCHEDULE.href} passHref>
             <Typography>Dashboard</Typography>
           </Link>
         </MenuItem>

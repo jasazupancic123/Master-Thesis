@@ -101,7 +101,6 @@ export default function DashboardSidebarMenuItems() {
               alignItems="center"
               onClick={() => {
                 setFilter(item);
-                router.push(item.href);
               }}
               gap={1}
               sx={{
