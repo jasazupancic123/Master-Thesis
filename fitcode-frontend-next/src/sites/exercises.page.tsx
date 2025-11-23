@@ -4,7 +4,6 @@ import { Download, Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import {
   Button,
-  Grid2,
   Pagination,
   SpeedDial,
   SpeedDialAction,
@@ -17,6 +16,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
+import ExerciseChips from '@/components/exercise-chips/exercise-chips';
+import ExerciseModal from '@/components/exercise-modal/exercise-modal';
+import ExerciseFilter from '@/components/exercises-list/exercise-filter';
+import ExercisesList from '@/components/exercises-list/exercises-list';
+import { Components } from '@/core/exercise/constant/components.constant';
 import {
   handleAddExercise,
   handleAiPrescriptionsJsonFileUpload,
@@ -28,12 +32,7 @@ import {
   handleUpsertAiPrescriptions,
   handleUpsertManyExercises,
   handleUpsertMuscleValues,
-} from '@/app/(trainer)/dashboard/exercises/state';
-import ExerciseChips from '@/components/exercise-chips/exercise-chips';
-import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import ExerciseFilter from '@/components/exercises-list/exercise-filter';
-import ExercisesList from '@/components/exercises-list/exercises-list';
-import { Components } from '@/core/exercise/constant/components.constant';
+} from '@/core/exercise/exercise-page-state';
 import type { Component } from '@/core/exercise/type/component.type';
 import type {
   CreateExerciseMuscleValues,
@@ -107,6 +106,7 @@ export default function ExercisesPage() {
     pages: 1,
     total: 0,
   });
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
   // modals
   const [exercise, setExercise] = useState<Partial<Exercise>>(DEFAULT_EXERCISE);
@@ -126,6 +126,8 @@ export default function ExercisesPage() {
     importAiPrescriptions: false,
     confirmDelete: false,
   });
+
+  const isSmallSize = screenSize.isMobile || screenSize.isTablet;
 
   const actions = [
     {
@@ -209,7 +211,7 @@ export default function ExercisesPage() {
   }, [allExercises]);
 
   return (
-    <Box p={2} pt={0} px={screenSize.isMobile ? 0 : undefined}>
+    <Box p={2} pt={0} px={isSmallSize ? 0 : undefined}>
       <Box
         width="100%"
         display="flex"
@@ -237,9 +239,7 @@ export default function ExercisesPage() {
       <Box
         width="100%"
         display="flex"
-        flexDirection={
-          screenSize.isSmallerThanLaptop ? 'column-reverse' : 'row'
-        }
+        flexDirection={isSmallSize ? 'column-reverse' : 'row'}
         justifyContent="center"
       >
         <Box width="25%" />
@@ -254,11 +254,9 @@ export default function ExercisesPage() {
           />
         </Box>
         <Box
-          width={screenSize.isSmallerThanLaptop ? '100%' : '25%'}
+          width={isSmallSize ? '100%' : '25%'}
           display="flex"
-          justifyContent={
-            screenSize.isSmallerThanLaptop ? 'center' : 'flex-start'
-          }
+          justifyContent={isSmallSize ? 'center' : 'flex-start'}
           alignItems="center"
         >
           <Link href={LINK_METHODOLOGIES.href} passHref>
@@ -269,59 +267,71 @@ export default function ExercisesPage() {
         </Box>
       </Box>
 
-      <Grid2 container alignItems="center" spacing={2} sx={{ m: 2 }}>
-        {/* Left empty space (desktop only) */}
-        <Grid2
-          size={{ xs: screenSize.isMobile ? 6 : 4 }}
-          container
-          order={1}
-          justifyContent={{ xs: 'flex-end', md: 'flex-start' }}
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection={isSmallSize ? 'column' : 'row'}
+        alignItems="center"
+        sx={{ pb: 1 }}
+      >
+        <Box
+          width={isSmallSize ? '100%' : '25%'}
+          display="flex"
+          justifyContent={isSmallSize ? 'center' : 'flex-start'}
           alignItems="center"
+          gap={isSmallSize ? 1 : 0}
         >
           {(lib.firebase.auth.isAdmin(role) ||
             lib.firebase.auth.isManager(role)) && (
-            <Box position="relative">
-              <SpeedDial
-                ariaLabel="Exercise Actions"
-                icon={<SpeedDialIcon />}
-                direction={screenSize.isMobile ? 'down' : 'right'}
-                FabProps={{ size: 'small', color: 'primary' }}
-                sx={{
-                  '& .MuiSpeedDial-fab': {
-                    width: 40,
-                    height: 40,
-                    minHeight: 0,
-                  },
-                  '& .MuiSpeedDialAction-fab': {
-                    width: 32,
-                    height: 32,
-                    minHeight: 0,
-                  },
-                }}
-              >
-                {actions.map((action) => (
-                  <SpeedDialAction
-                    key={action.name}
-                    icon={action.icon}
-                    onClick={action.onClick}
-                    slotProps={{
-                      tooltip: { title: action.name },
-                      fab: { size: 'small', color: 'primary' },
-                    }}
-                    sx={{ bgcolor: theme.palette.primary.main }}
-                  />
-                ))}
-              </SpeedDial>
-            </Box>
+            <SpeedDial
+              ariaLabel="Exercise Actions"
+              icon={<SpeedDialIcon />}
+              direction="right"
+              FabProps={{ size: 'small', color: 'primary' }}
+              open={speedDialOpen}
+              onOpen={() => setSpeedDialOpen(true)}
+              onClose={() => setSpeedDialOpen(false)}
+              sx={{
+                zIndex: 10,
+                '& .MuiSpeedDial-fab': {
+                  width: 40,
+                  height: 40,
+                  minHeight: 0,
+                },
+                '& .MuiSpeedDialAction-fab': {
+                  width: 32,
+                  height: 32,
+                  minHeight: 0,
+                },
+              }}
+            >
+              {actions.map((action) => (
+                <SpeedDialAction
+                  key={action.name}
+                  icon={action.icon}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick();
+                    setSpeedDialOpen(false); // close after action
+                  }}
+                  slotProps={{
+                    tooltip: { title: action.name },
+                    fab: { size: 'small', color: 'primary' },
+                  }}
+                  sx={{
+                    bgcolor: theme.palette.primary.main,
+                  }}
+                />
+              ))}
+            </SpeedDial>
           )}
-        </Grid2>
+        </Box>
 
-        {/* Pagination */}
-        <Grid2
-          size={{ xs: screenSize.isMobile ? 12 : 4 }}
-          container
+        <Box
+          width={isSmallSize ? '100%' : '50%'}
+          display="flex"
           justifyContent="center"
-          order={screenSize.isMobile ? 3 : 2}
+          alignItems="center"
         >
           <Pagination
             size="small"
@@ -330,39 +340,34 @@ export default function ExercisesPage() {
             page={pagination.page}
             onChange={(_, page) => setPagination({ ...pagination, page })}
           />
-        </Grid2>
+        </Box>
 
-        {/* Filters & Results */}
-        <Grid2
-          order={screenSize.isMobile ? 2 : 3}
-          size={{ xs: screenSize.isMobile ? 6 : 4 }}
-          container
-          justifyContent={screenSize.isMobile ? 'flex-start' : 'flex-end'}
+        <Box
+          width={isSmallSize ? '100%' : '25%'}
+          display="flex"
+          justifyContent={isSmallSize ? 'center' : 'flex-end'}
           alignItems="center"
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            alignItems: 'center',
+          }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              alignItems: 'center',
-            }}
-          >
-            {!screenSize.isMobile && (
-              <Typography variant="body2" color="text.primary">
-                {pagination.total} results
-              </Typography>
-            )}
+          {!screenSize.isMobile && (
+            <Typography variant="body2" color="text.primary">
+              {pagination.total} results
+            </Typography>
+          )}
 
-            <ExerciseFilter
-              filters={filters}
-              setFilters={setFilters}
-              open={openFilters}
-              setOpen={setOpenFilters}
-            />
-          </Box>
-        </Grid2>
-      </Grid2>
+          <ExerciseFilter
+            filters={filters}
+            setFilters={setFilters}
+            open={openFilters}
+            setOpen={setOpenFilters}
+          />
+        </Box>
+      </Box>
 
       <ExercisesList
         exercises={filteredExercises}
@@ -449,7 +454,7 @@ export default function ExercisesPage() {
       <MyModal
         isOpen={modal.import}
         setIsOpen={(open) => setModal((prev) => ({ ...prev, import: open }))}
-        width={screenSize.isMobile ? undefined : 500}
+        width={isSmallSize ? undefined : 500}
         onConfirm={() => {
           handleUpsertManyExercises(
             { exercises: importedExercises },
@@ -473,7 +478,7 @@ export default function ExercisesPage() {
         setIsOpen={(open) =>
           setModal((prev) => ({ ...prev, muscleValues: open }))
         }
-        width={screenSize.isMobile ? undefined : 500}
+        width={isSmallSize ? undefined : 500}
         onConfirm={() => {
           handleUpsertMuscleValues(
             { exercises: importedMuscleValueExercises },
@@ -499,7 +504,7 @@ export default function ExercisesPage() {
         setIsOpen={(open) =>
           setModal((prev) => ({ ...prev, importAiPrescriptions: open }))
         }
-        width={screenSize.isMobile ? undefined : 500}
+        width={isSmallSize ? undefined : 500}
         onConfirm={() => {
           // Handle importing Ai Prescriptions here
           handleUpsertAiPrescriptions(importedAiPrescriptions, {

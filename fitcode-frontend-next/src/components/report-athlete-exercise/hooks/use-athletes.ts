@@ -9,7 +9,7 @@ export default function useAthleteExerciseReportAthletes(
   passedUserIds?: string[]
 ) {
   const { users } = useMain();
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroup } = useDashboard();
 
   const [selectedAthlete, setSelectedAthlete] = useState<AuthUser | null>(
     passedUserId ? users.find((u) => u.uid === passedUserId) || null : null
@@ -20,14 +20,14 @@ export default function useAthleteExerciseReportAthletes(
   const [searchAthleteText, setSearchAthleteText] = useState('');
 
   const filteredAthletes = useMemo<AuthUser[]>(() => {
-    const allAthletes = selectedInstitution?.athletes || [];
+    const allAthletes = selectedGroup?.members || [];
     if (searchAthleteText.trim() === '') return allAthletes;
 
     const lowerSearch = searchAthleteText.toLowerCase();
     return allAthletes.filter((athlete) =>
       athlete.displayName?.toLowerCase().includes(lowerSearch)
     );
-  }, [selectedInstitution, searchAthleteText]);
+  }, [selectedGroup, searchAthleteText]);
 
   return {
     selectedAthlete,

@@ -37,8 +37,6 @@ export default function WellnessBarChart(props: Props) {
   const barCount = rows.length;
   const chartWidth = Math.max(width, barCount * MIN_BAR_WIDTH);
 
-  if (!todaysWellness.length) return null;
-
   return (
     <Box
       display="flex"

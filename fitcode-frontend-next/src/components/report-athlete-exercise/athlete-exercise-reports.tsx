@@ -36,7 +36,7 @@ interface Props {
 }
 
 export default function AthleteExerciseReports(props: Props) {
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroup } = useDashboard();
 
   const { reports, setReports, cache } = props;
 
@@ -107,7 +107,7 @@ export default function AthleteExerciseReports(props: Props) {
       <Box>
         <AddButton
           onClick={async () => {
-            if (!selectedInstitution) return;
+            if (!selectedGroup) return;
 
             const id = v4();
 
@@ -135,7 +135,7 @@ export default function AthleteExerciseReports(props: Props) {
               ? {
                   id,
                   exerciseId: prevReport.exerciseId,
-                  institutionId: selectedInstitution.id,
+                  groupId: selectedGroup.id,
                   userId: prevReport.userId,
                   userIds: prevReport.userIds,
                   type: prevReport.type,
