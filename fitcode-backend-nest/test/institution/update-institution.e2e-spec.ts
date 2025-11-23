@@ -3,8 +3,8 @@ import { addDays, isAfter, isBefore, startOfDay, subDays } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import { GroupService } from '@src/group/group.service';
 import { generateGroupStub } from '@src/group/mock/group.stub';
+import { GroupService } from '@src/institution/service/group.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import {
   generateSubgroup,

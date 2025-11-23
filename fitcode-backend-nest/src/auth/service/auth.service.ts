@@ -140,6 +140,16 @@ export class AuthService {
     }
   }
 
+  async findAllByInstitution(institution: Institution): Promise<User[]> {
+    return await this.firebase.authUsers({
+      ids: [
+        institution.ownerId,
+        ...institution.trainerIds,
+        ...institution.athleteIds,
+      ],
+    });
+  }
+
   async findAll(user: User, filter?: FilterUserQueryDto): Promise<User[]> {
     const allUsers = await this.firebase.authUsers(filter);
     if (this.firebase.isAdmin(user)) return allUsers;

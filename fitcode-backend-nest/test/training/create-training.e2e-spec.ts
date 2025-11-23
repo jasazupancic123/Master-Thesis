@@ -8,7 +8,7 @@ import { getTime } from '@src/common/utils/date.util';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { MAX_NUM_COMPONENTS_IN_TRAINING } from '@src/training/constant/training-limits.constant';
 import type { CreateTrainingDto } from '@src/training/dto/create-training.dto';

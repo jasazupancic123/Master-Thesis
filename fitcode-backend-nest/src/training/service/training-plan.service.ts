@@ -8,18 +8,14 @@ import {
 } from '@nestjs/common';
 import { addMinutes, getHours, setHours, setMinutes } from 'date-fns';
 
-import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
-import { Institution } from '@src//institution/entity/institution.entity';
 import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
-import { User } from '@src/common/type/firebase-auth.type';
 import { ComponentRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseAttributeService } from '@src/exercise/service/exercise-attribute.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
-import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { MAIN_GROUP_PARENT_ID } from '../constant/main-group-parent-id.constant';
 import {
@@ -51,21 +47,11 @@ import {
 export class TrainingPlanService {
   constructor(
     private readonly common: CommonService,
-    private readonly institutionService: InstitutionService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
     private readonly exerciseParamService: ExerciseParamService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
   ) {}
-
-  async getInstitution(exercise: Exercise): Promise<Institution | null> {
-    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
-      return await this.institutionService.findById({
-        institutionId: exercise.ownerId,
-      });
-
-    return null;
-  }
 
   getStartTime(period: TrainingPeriod, date = new Date()): Date {
     switch (period) {
@@ -80,14 +66,6 @@ export class TrainingPlanService {
     const hours = getHours(date);
     if (hours < AM_PM_HOUR_DIVIDER) return TrainingPeriod.AM;
     return TrainingPeriod.PM;
-  }
-
-  async validateCanViewExercise(user: User, exercise: Exercise) {
-    const institution = await this.getInstitution(exercise);
-    if (!this.exerciseService.canView(user, exercise, institution))
-      throw new BadRequestException(
-        `You cannot view exercise ${exercise.name}`,
-      );
   }
 
   getSupersetsByAthlete(

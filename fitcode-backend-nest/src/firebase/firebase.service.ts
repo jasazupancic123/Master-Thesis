@@ -222,9 +222,18 @@ export class FirebaseService implements OnApplicationBootstrap {
     if (filter?.emails)
       for (const email of filter.emails) identifiers.push({ email });
 
-    const users = identifiers.length
-      ? ((await this.auth.getUsers(identifiers)).users as User[])
-      : ((await this.auth.listUsers()).users as User[]);
+    const users =
+      identifiers.length && identifiers.length < 100
+        ? ((await this.auth.getUsers(identifiers)).users as User[])
+        : identifiers.length
+          ? ((await this.auth.listUsers()).users as User[]).filter((user) =>
+              identifiers.some(
+                (identifier) =>
+                  ('uid' in identifier && identifier.uid === user.uid) ||
+                  ('email' in identifier && identifier.email === user.email),
+              ),
+            )
+          : ((await this.auth.listUsers()).users as User[]);
 
     return users.map(this.cleanUser) as User[];
   }

@@ -18,6 +18,7 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionMember } from '@src/institution/entity/institution-member.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { MemberService } from '@src/institution/service/member.service';
 
 import { ImportProfileDto } from '../dto/import-profiles.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
@@ -34,75 +35,54 @@ export class ProfileService implements Permission<Profile, Institution> {
     private readonly authService: Wrapper<AuthService>,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
+    @Inject(forwardRef(() => MemberService))
+    private readonly memberService: Wrapper<MemberService>,
   ) {}
 
   async findOneById(uid: string): Promise<Profile> {
     return await this.repository.findOneOrCreate(uid);
   }
 
-  async findAll(user: User): Promise<Profile[]> {
-    // if manager or trainer, return all profiles for institution they belong to, for athlete only his profile
-    switch (user.customClaims?.role[0]) {
-      case UserRole.ADMIN:
-        return [];
-      case UserRole.MANAGER: {
-        const institution = await this.institutionService.findByOwnerId(
-          user.uid,
-        );
+  async findAllByManager(user: User): Promise<Profile[]> {
+    if (!this.firebase.isManager(user)) throw new UnauthorizedException();
 
-        if (!institution) return [];
-        return await this.repository.findAllByInstitution(institution);
-      }
-      case UserRole.TRAINER: {
-        const institutions = await this.institutionService.findAll(user);
-        const profiles: Profile[] = [];
+    const institution = await this.institutionService.findByOwnerId(user.uid);
+    if (!institution)
+      throw new BadRequestException('User does not own any institution');
 
-        for (const institution of institutions) {
-          const institutionProfiles =
-            await this.repository.findAllByInstitution(institution);
-          profiles.push(...institutionProfiles);
-        }
-
-        return profiles;
-      }
-      case UserRole.ATHLETE:
-        return [await this.findOneById(user.uid)];
-      default:
-        throw new BadRequestException('User has no role assigned');
-    }
+    return await this.repository.findAllByInstitution(institution);
   }
 
-  /**
-   * Returns all profiles the user has access to, merge with auth users.
-   */
-  async findAllMerged(user: User): Promise<AuthProfileMerged[]> {
-    const profiles = await this.findAll(user);
-    const authUsers = await this.firebase.authUsers({
-      ids: profiles.map((p) => p.uid),
-    });
+  async findAllByInstitution(
+    institution: Institution,
+  ): Promise<AuthProfileMerged[]> {
+    const users = await this.authService.findAllByInstitution(institution);
+    const profiles = await this.repository.findAllByInstitution(institution);
 
-    return profiles
-      .map((profile) => {
-        const authUser = authUsers.find((u) => u.uid === profile.uid);
-        if (!authUser) return null;
+    return users
+      .map((user) => {
+        const profile = profiles.find((p) => p.uid === user.uid);
+        if (!profile) return null;
 
-        return {
-          uid: profile.uid,
-          email: profile.email,
-          role: authUser.customClaims?.role?.[0],
+        const merged: AuthProfileMerged = {
+          uid: user.uid,
+          email: user.email!,
+          role: user.customClaims?.role?.[0],
           faceEmbedding: [],
-          height: profile.height,
-          weight: profile.weight,
-          displayName: authUser.displayName || '',
-          photoURL: authUser.photoURL || '',
-          photoURLBase64: profile.photoURLBase64 || '',
+          height: profile.height || 0,
+          weight: profile.weight || 0,
+          displayName: user.displayName || '',
+          photoURL: user.photoURL,
+          sport: profile.sport,
+          level: profile.level,
+          gender: profile.gender,
+          birthDate: profile.birthDate,
+          photoURLBase64: profile.photoURLBase64,
         };
+
+        return merged;
       })
       .filter(Boolean);
-  }
-
-  async findAllByInstitution(institution: Institution) {
-    return await this.repository.findAllByInstitution(institution);
   }
 
   async importProfiles(user: User, input: ImportProfileDto[]) {
@@ -150,7 +130,7 @@ export class ProfileService implements Permission<Profile, Institution> {
     const institutionOperations: BatchWriteOperation<InstitutionMember>[] =
       successfulUsers
         .map(({ uid, role }) =>
-          this.institutionService.buildAddMembersOperation(
+          this.memberService.buildAddMembersOperation(
             { institutionId: institution.id },
             [{ id: uid, role }],
           ),

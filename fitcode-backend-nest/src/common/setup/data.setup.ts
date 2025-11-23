@@ -7,7 +7,7 @@ import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { GroupService } from '@src/group/group.service';
+import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { SportLevel } from '@src/profile/enum/sport-level.enum';
 import { ProfileRepository } from '@src/profile/repository/profile.repository';

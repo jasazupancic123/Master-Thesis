@@ -2,7 +2,7 @@ import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import {
   TrainingAction,

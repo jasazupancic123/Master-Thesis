@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
@@ -18,52 +17,59 @@ import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionMemberRef,
   InstitutionRef,
-  TrainingProtocolRef,
 } from '@src/common/type/firestore.type';
-import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { Profile } from '@src/profile/entity/profile.entity';
-import { ProfileService } from '@src/profile/service/profile.service';
+import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
 import { TrainingProtocol } from '@src/training/entity/training-protocol.entity';
 
-import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMemberDto } from '../dto/update-institution-members.dto';
-import { Institution } from '../entity/institution.entity';
+import { Group } from '../entity/group.entity';
+import { InitInstitution, Institution } from '../entity/institution.entity';
 import { InstitutionMember } from '../entity/institution-member.entity';
-import { UpdateInstitutionAthleteEvent } from '../event/update-institution-athlete.event';
+import { GroupRepository } from '../repository/group.repository';
 import { InstitutionRepository } from '../repository/institution.repository';
 import { InstitutionMembersRepository } from '../repository/institution-members.repository';
 import { ProtocolRepository } from '../repository/protocol.repository';
+import { MemberService } from './member.service';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {
   constructor(
     private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
-    private readonly eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
     private readonly repository: InstitutionRepository,
-    private readonly profileService: ProfileService,
+    private readonly groupRepository: GroupRepository,
     private readonly membersRepository: InstitutionMembersRepository,
     private readonly protocolRepository: ProtocolRepository,
+    private readonly memberService: MemberService,
   ) {}
 
-  async findById(ref: InstitutionRef): Promise<Institution | null> {
-    return await this.repository.findById(ref.institutionId);
+  async findById(
+    user: User,
+    institutionId: string,
+  ): Promise<Institution | null> {
+    const institution = await this.repository.findById(institutionId);
+    if (!institution) return null;
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException('You cannot view this institution');
+
+    return institution;
   }
 
   async findByOwnerId(ownerId: string): Promise<Institution | null> {
-    return (
-      await this.repository.findAll((q) => q.where('ownerId', '==', ownerId))
-    )?.[0];
+    return (await this.repository.findOneByManager(ownerId))?.[0];
   }
 
-  async findByIdOrFail(ref: InstitutionRef): Promise<Institution> {
-    const institution = await this.findById(ref);
+  async findByIdOrFail(
+    user: User,
+    institutionId: string,
+  ): Promise<Institution> {
+    const institution = await this.findById(user, institutionId);
     if (!institution) throw new NotFoundException('Institution not found');
     return institution;
   }
@@ -71,15 +77,57 @@ export class InstitutionService implements Permission<Institution> {
   async findAll(user: User): Promise<Institution[]> {
     switch (this.firebase.getRole(user)) {
       case UserRole.ADMIN:
-        return await this.repository.findAllByAdmin();
+        return await this.repository.findAll();
       case UserRole.MANAGER:
-        return await this.repository.findAllByManager(user.uid);
+        return await this.repository.findOneByManager(user.uid);
       case UserRole.TRAINER:
       case UserRole.ATHLETE:
         return await this.repository.findAllByMember(user.uid);
       default:
         return [];
     }
+  }
+
+  @LogMethod()
+  async findAllGroups(user: User, institutionId: string): Promise<Group[]> {
+    await this.findByIdOrFail(user, institutionId);
+    const ref: InstitutionRef = { institutionId };
+    return await this.groupRepository.getAllByInstitution(ref);
+  }
+
+  @LogMethod()
+  async findAllMembers(
+    user: User,
+    institutionId: string,
+  ): Promise<AuthProfileMerged[]> {
+    const institution = await this.findByIdOrFail(user, institutionId);
+    return await this.memberService.findAllByInstitution(institution);
+  }
+
+  @LogMethod()
+  async findAllProtocols(
+    user: User,
+    institutionId: string,
+  ): Promise<TrainingProtocol[]> {
+    const institution = await this.findByIdOrFail(user, institutionId);
+    if (!this.canView(user, institution))
+      throw new UnauthorizedException('You cannot view this institution');
+
+    const ref: InstitutionRef = { institutionId };
+    return await this.protocolRepository.getAllByInstitution(ref);
+  }
+
+  @LogMethod()
+  async init(user: User, institutionId: string): Promise<InitInstitution> {
+    // used for initializing institution-related data
+    const ref: InstitutionRef = { institutionId };
+    const institution = await this.findByIdOrFail(user, institutionId);
+
+    const users = await this.memberService.findAllByInstitution(institution);
+    const groups = await this.groupRepository.getAllByInstitution(ref);
+    const protocols = await this.protocolRepository.getAllByInstitution(ref);
+
+    return { ...institution, groups, users, protocols };
   }
 
   @LogMethod()
@@ -120,90 +168,18 @@ export class InstitutionService implements Permission<Institution> {
     };
   }
 
-  async checkCanEditProtocols(user: User, institutionId: string) {
-    const institution = await this.findByIdOrFail({ institutionId });
-
-    const isManagerAllowed =
-      this.firebase.isManager(user) && institution.ownerId === user.uid;
-
-    const isTrainerAllowed =
-      this.firebase.isTrainer(user) &&
-      institution.trainerIds.includes(user.uid);
-
-    if (!isManagerAllowed && !isTrainerAllowed)
-      throw new UnauthorizedException(
-        'You do not have permission to edit training protocols',
-      );
-  }
-
-  @LogMethod()
-  async getProtocols(
-    user: User,
-    ref: InstitutionRef,
-  ): Promise<TrainingProtocol[]> {
-    const institution = await this.findByIdOrFail(ref);
-
-    if (!this.canView(user, institution))
-      throw new UnauthorizedException(
-        'You do not have permission to view training protocols',
-      );
-
-    return await this.protocolRepository.getAllByInstitution(ref);
-  }
-
-  async getProtocol(
-    user: User,
-    ref: TrainingProtocolRef,
-  ): Promise<TrainingProtocol> {
-    const institution = await this.findByIdOrFail(ref);
-
-    if (!this.canView(user, institution))
-      throw new UnauthorizedException(
-        'You do not have permission to view this training protocol',
-      );
-
-    return await this.protocolRepository.findById(ref);
-  }
-
-  async createTrainingProtocol(
-    ref: InstitutionRef,
-    input: TrainingProtocol,
-  ): Promise<string> {
-    const { institutionId } = ref;
-    return await this.protocolRepository.save(
-      { ...input, institutionId },
-      { institutionId },
-    );
-  }
-
-  async updateTrainingProtocol(
-    ref: TrainingProtocolRef,
-    input: Partial<TrainingProtocol>,
-  ) {
-    await this.protocolRepository.update(ref, input);
-  }
-
-  async deleteTrainingProtocol(ref: TrainingProtocolRef) {
-    await this.protocolRepository.delete(ref);
-  }
-
   @LogMethod()
   async update(
     user: User,
     ref: InstitutionRef,
     input: UpdateInstitutionDto,
   ): Promise<Institution> {
-    const institution = await this.findByIdOrFail(ref);
+    const institution = await this.findByIdOrFail(user, ref.institutionId);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
     await this.repository.update(ref.institutionId, input);
     return { ...institution, ...this.commonService.object.clean(input) };
-  }
-
-  async findMembers(ref: InstitutionRef): Promise<Profile[]> {
-    const institution = await this.findByIdOrFail(ref);
-    return await this.profileService.findAllByInstitution(institution);
   }
 
   @LogMethod()
@@ -212,55 +188,11 @@ export class InstitutionService implements Permission<Institution> {
     ref: InstitutionRef,
     input: UpdateInstitutionMemberDto,
   ) {
-    const { add, trainer } = input;
-
-    const institution = await this.findByIdOrFail(ref);
+    const institution = await this.findByIdOrFail(user, ref.institutionId);
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
-    const member = await this.authService.findOneBy('id', input.userId);
-    if (!member) throw new BadRequestException('Member does not exist');
-
-    const memberRef: InstitutionMemberRef = {
-      institutionId: institution.id,
-      uid: member.uid,
-    };
-
-    if (trainer) {
-      if (!this.firebase.isTrainer(member))
-        throw new BadRequestException(
-          'Member must be a trainer to be added as a trainer',
-        );
-
-      // updating trainer
-      if (!add) await this.membersRepository.removeMember(memberRef);
-      else
-        await this.membersRepository.addMember(
-          { role: UserRole.TRAINER },
-          memberRef,
-        );
-    } else {
-      // updating athlete
-      const operations: BatchOperation<InstitutionMember>[] = add
-        ? this.membersRepository.getAddMembersOperation(ref, [
-            { id: member.uid, role: UserRole.ATHLETE },
-          ])
-        : this.membersRepository.getRemoveMembersOperation(ref, [member.uid]);
-
-      // remove athlete in all groups & trainings
-      if (!add)
-        await this.eventEmitter.emitAsync(
-          INSTITUTION_ATHLETE_EVENT,
-          new UpdateInstitutionAthleteEvent({
-            operations,
-            institutionId: institution.id,
-            userId: member.uid,
-            add,
-          }),
-        );
-
-      await this.firebase.paginateBatches(operations);
-    }
+    await this.memberService.addOrRemove(institution, input);
   }
 
   async addMember(
@@ -270,37 +202,29 @@ export class InstitutionService implements Permission<Institution> {
     await this.membersRepository.addMember(data, ref);
   }
 
-  buildAddMembersOperation(
-    ref: InstitutionRef,
-    data: Create<Omit<InstitutionMember, 'institutionId'>>[],
-  ): BatchWriteOperation<InstitutionMember>[] {
-    return this.membersRepository.getAddMembersOperation(ref, data);
-  }
-
   canView(user: User, institution: Institution) {
-    // app admin
     if (this.firebase.isAdmin(user)) return true;
-
-    // institution owner
     if (institution.ownerId === user.uid) return true;
-
-    // institution trainer
     if (institution.trainerIds.includes(user.uid)) return true;
-
-    // institution athlete
     if (institution.athleteIds.includes(user.uid)) return true;
-
     return false;
   }
 
   canEdit(user: User, institution: Institution) {
-    // app admin
     if (this.firebase.isAdmin(user)) return true;
-
-    // institution owner
     if (this.firebase.isManager(user) && institution.ownerId === user.uid)
       return true;
 
     return false;
+  }
+
+  canEditExtended(user: User, institution: Institution) {
+    if (
+      this.firebase.isTrainer(user) &&
+      institution.trainerIds.includes(user.uid)
+    )
+      return true;
+
+    return this.canEdit(user, institution);
   }
 }

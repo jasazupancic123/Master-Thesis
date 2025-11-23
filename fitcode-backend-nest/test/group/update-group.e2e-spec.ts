@@ -3,10 +3,10 @@ import { addDays } from 'date-fns';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import type { BatchUpdateOneGroupDto } from '@src/group/dto/update-group.dto';
-import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
+import type { Group } from '@src/institution/entity/group.entity';
+import { generateCycleStub } from '@src/institution/mock/cycle.stub';
+import { GroupService } from '@src/institution/service/group.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Update Group (e2e)', () => {

@@ -1,8 +1,8 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { addMonths } from 'date-fns';
 
-import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateCycleStub } from '@src/institution/mock/cycle.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
