@@ -43,18 +43,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
-  async findAllByUser(user: User) {
-    const institutions = await this.institutionService.findAll(user);
-    const exercises: Exercise[] = await this.findAllGlobalCached(user);
-    const institutionExercises = await Promise.all(
-      institutions.map((inst) => this.findAllByInstitution(user, inst.id)),
-    );
-
-    institutionExercises.forEach((list) => exercises.push(...list));
-    return exercises;
+  async findAll(user: User, institutionId: string) {
+    return [
+      ...(await this.findAllGlobal(user)),
+      ...(await this.findAllByInstitution(user, institutionId)),
+    ];
   }
 
-  async findAllGlobalCached(user: User) {
+  async findAllGlobal(user: User, filter?: Record<string, string>) {
     const cached =
       await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
 
@@ -66,10 +62,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       return exercises;
     }
 
-    return await this.findAllGlobal(user);
-  }
-
-  async findAllGlobal(user: User, filter?: Record<string, string>) {
     return await this.findAllBy('ownerId', GLOBAL_EXERCISE_OWNER, user, filter);
   }
 
@@ -133,9 +125,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (!exercise) return null;
 
     if (exercise.institutionId)
-      exercise.institution = await this.institutionService.findById({
-        institutionId: exercise.institutionId,
-      });
+      exercise.institution = await this.institutionService.findById(
+        user,
+        exercise.institutionId,
+      );
 
     // authorize
     if (

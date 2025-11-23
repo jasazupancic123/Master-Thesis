@@ -3,7 +3,7 @@ import { TestApp } from '@test/common/utils/app.util';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import type { Training } from '@src/training/entity/training.entity';

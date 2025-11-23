@@ -74,12 +74,10 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     );
   }
 
-  async findAllByAdmin() {
-    return await this.findAll();
-  }
-
-  async findAllByManager(managerId: string) {
-    return await this.findAll((q) => q.where('ownerId', '==', managerId));
+  async findOneByManager(managerId: string) {
+    return await this.findAll((q) =>
+      q.where('ownerId', '==', managerId).limit(1),
+    );
   }
 
   async findAllByMember(memberId: string): Promise<Institution[]> {
