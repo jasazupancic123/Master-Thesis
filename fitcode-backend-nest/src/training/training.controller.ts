@@ -20,7 +20,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { endOfDay, startOfDay } from 'date-fns';
+import { endOfDay, isBefore, startOfDay } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
@@ -183,13 +183,19 @@ export class TrainingController {
         to: endOfDay(new Date()),
       },
       {},
-      false,
+      true,
     );
 
     const result: SmartWallTraining[] = [];
     for (const training of trainings) {
+      const groupName = training.group?.name || 'Unnamed Group';
+      const period = isBefore(training.from, new Date().setHours(12, 0, 0, 0))
+        ? 'AM'
+        : 'PM';
+
       result.push({
         trainingId: training.id,
+        name: `${groupName} - ${period}`,
         users: training.membersIds.map((uid) => ({
           uid,
           exercises: training.components.flatMap((component) =>
