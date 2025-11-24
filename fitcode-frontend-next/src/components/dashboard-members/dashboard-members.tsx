@@ -1,5 +1,8 @@
 'use client';
 
+import { closestCenter, DndContext, DragOverlay } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
+import { FileUploadOutlined } from '@mui/icons-material';
 import {
   alpha,
   Box,
@@ -10,187 +13,60 @@ import {
   Typography,
 } from '@mui/material';
 
-import DashboardPageContainer from './dashboard-page-container';
-import { useDashboard } from '@/store/dashboard.provider';
-import { theme } from '@/app/style';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
-import { useEffect, useState } from 'react';
 import DashboardGroupCard from './dashboard-group-card';
-import {
-  closestCenter,
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
 import DashboardInstitutionMember from './dashboard-institution-member';
-import { SortableContext } from '@dnd-kit/sortable';
-import { Group } from '@/core/group/type/group.type';
-import toast from 'react-hot-toast';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { lib } from '@/lib';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import AddButton from '@/ui/add-button';
-import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
+import DashboardPageContainer from '../dashboard/dashboard-page-container';
+import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
+import { theme } from '@/app/style';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { FileUploadOutlined } from '@mui/icons-material';
-import MyModal from '@/ui/modal';
-import FileUpload from '@/ui/file-upload';
-import useInstitutionMembers from './hooks/use-institution-members.hook';
+import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
-import { useMain } from '@/store/main.provider';
-import { AuthUser } from '@/core/auth/type/user.type';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import AddButton from '@/ui/add-button';
+import FileUpload from '@/ui/file-upload';
+import MyModal from '@/ui/modal';
+import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
+import useDashboardMembersDrag from './hooks/use-members-drag.hook';
+import useDashboardMembers from './hooks/use-members.hook';
+import useCsvMembersUpload from './hooks/use-csv-members-upload.hook';
+import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
 
-  const { users } = useMain();
-  const { selectedInstitution, selectedGroups, addGroupMember, updateGroup } =
-    useDashboard();
+  const { selectedInstitution, selectedGroups } = useDashboard();
 
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers } =
     useInstitutionMembers();
 
-  const [search, setSearch] = useState('');
+  const { setCsvUserEmails } = useCsvMembersUpload();
 
-  const [allInstitutionMembers, setAllInstitutionMembers] = useState(
-    (selectedInstitution?.trainers || []).concat(
-      selectedInstitution?.athletes || []
-    )
-  );
+  const {
+    search,
+    setSearch,
+    filteredMembers,
+    allInstitutionMembers,
+    hoveredUser,
+    setHoveredUser,
+    openRegisterAthletesModal,
+    setOpenRegisterAthletesModal,
+    openRegisterTrainersModal,
+    setOpenRegisterTrainersModal,
+    openAddMemberViaCsvModal,
+    setOpenAddMemberViaCsvModal,
+  } = useDashboardMembers();
 
-  useEffect(() => {
-    if (!selectedInstitution || !csvUserEmails.length) return;
-
-    const newUsers = [] as AuthUser[];
-    for (const email of csvUserEmails) {
-      if (!email) continue;
-
-      const user = users.find((user) => user.email === email.toLowerCase());
-      if (!user) continue;
-      newUsers.push(user);
-    }
-
-    const athletes = newUsers
-      .filter((user) => user.customClaims.role.includes(UserRole.ATHLETE))
-      .filter((user) => !selectedInstitution?.athleteIds?.includes(user.uid));
-
-    const trainers = newUsers
-      .filter((user) => user.customClaims.role.includes(UserRole.TRAINER))
-      .filter((user) => !selectedInstitution?.trainerIds?.includes(user.uid));
-
-    if (!trainers.length && !athletes.length) {
-      toast.error('No new users to add');
-
-      setCsvUserEmails([]);
-      setIsUploadingMembers(false);
-      return;
-    }
-
-    toast.success('Successfully added users');
-    setCsvUserEmails([]);
-    setIsUploadingMembers(false);
-  }, [users]);
-
-  useEffect(() => {
-    setAllInstitutionMembers(
-      (selectedInstitution?.trainers || []).concat(
-        selectedInstitution?.athletes || []
-      )
-    );
-  }, [selectedInstitution]);
-
-  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
-  const [filteredMembers, setFilteredMembers] = useState(allInstitutionMembers);
-
-  const [hoveredUser, setHoveredUser] = useState<{
-    userId: string | null;
-    groupId: string | null;
-  }>({ userId: null, groupId: null });
-  const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [openRegisterAthletesModal, setOpenRegisterAthletesModal] =
-    useState(false);
-  const [openRegisterTrainersModal, setOpenRegisterTrainersModal] =
-    useState(false);
-  const [openAddMemberViaCsvModal, setOpenAddMemberViaCsvModal] =
-    useState(false);
-
-  useEffect(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
-    setFilteredMembers(
-      allInstitutionMembers.filter((member) => {
-        const name = (member.displayName ?? '').toLowerCase();
-        return name.includes(normalizedSearch);
-      })
-    );
-  }, [allInstitutionMembers, search]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 0, tolerance: 5 } })
-  );
-
-  const onUserDragStart = (event: DragStartEvent) => {
-    setIsDragging(true);
-    setActiveMemberId(event.active.id as string);
-  };
-
-  const onUserDragEnd = async (event: DragEndEvent) => {
-    setIsDragging(false);
-
-    const { active, over } = event;
-
-    const userId = active.id as string;
-    const groupId = over?.id as string;
-
-    if (!groupId) return;
-
-    const user = allInstitutionMembers.find((u) => u.uid === userId);
-    const group = selectedGroups.find((g) => g.id === groupId);
-
-    if (!user || !group) return;
-
-    const isMemberInGroup = group.trainerIds
-      .concat(group.membersIds)
-      .includes(user.uid);
-
-    if (isMemberInGroup) {
-      toast.error(`${user.displayName} is already in ${group.name}`);
-      setActiveMemberId(null);
-      return;
-    }
-
-    const isTrainer = selectedInstitution?.trainers.some(
-      (t) => t.uid === user.uid
-    );
-
-    if (isTrainer) {
-      const updatedGroup: Group = {
-        ...group,
-        trainerIds: [group.trainerIds, user.uid].flat(),
-      };
-
-      await updateGroup(updatedGroup.id, updatedGroup);
-
-      toast.success('Trainer added successfully to group');
-      return;
-    }
-
-    await addGroupMember(user, groupId);
-
-    toast.success('User added successfully to group');
-
-    setActiveMemberId(null);
-  };
+  const {
+    onUserDragStart,
+    onUserDragEnd,
+    sensors,
+    activeMemberId,
+    isDragging,
+  } = useDashboardMembersDrag(allInstitutionMembers);
 
   if (!selectedInstitution) return null;
 
@@ -204,6 +80,7 @@ export default function DashboardMembers() {
       >
         <Box
           width="100%"
+          maxWidth={MAX_WIDTH_DASHBOARD_ITEM}
           display="flex"
           flexDirection="column"
           sx={{
@@ -211,7 +88,7 @@ export default function DashboardMembers() {
             px: 2,
             borderRadius: 2,
             background: `linear-gradient(135deg, ${theme.palette.background.dark} 0%, ${alpha(theme.palette.background.light, 0.5)} 100%, ${theme.palette.background.light} 100%)`,
-            mx: 'auto',
+            overflowX: 'hidden',
           }}
           gap={2}
         >
@@ -257,11 +134,11 @@ export default function DashboardMembers() {
           </Box>
           <Box
             width="100%"
-            maxWidth={MAX_WIDTH_DASHBOARD_ITEM}
             display="flex"
             alignItems="flex-start"
             sx={{
-              overflowX: 'auto',
+              mx: 'auto',
+              overflowX: 'visible',
               overflowY: 'hidden',
               pb: 1,
               ...styledScrollbarSx(theme),

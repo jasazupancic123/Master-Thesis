@@ -9,5 +9,5 @@ export default function DashboardHeader() {
 
   const isMobileSidebar = screenSize.isMobile || screenSize.isTablet;
 
-  return <Box width="100%" height={isMobileSidebar ? 40 : 0}></Box>;
+  return <Box width="100vw" height={isMobileSidebar ? 40 : 0}></Box>;
 }

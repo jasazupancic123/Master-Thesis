@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
+import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '@/components/dashboard/constant/dashboard.const';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
@@ -19,14 +20,9 @@ import type {
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
-import {
-  DASHBOARD_VIEWS,
-  LINK_DASHBOARD_PLANNING,
-  LINK_DASHBOARD_SCHEDULE,
-} from '@/lib/common/const/nav.const';
+import { DASHBOARD_VIEWS } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '@/components/dashboard/constant/dashboard.const';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;
@@ -102,7 +98,7 @@ export function DashboardProvider(props: Props) {
     });
 
   const [selectedGroups, setSelectedGroups] = useState<Group[]>(
-    selectedInstitution?.groups.filter((g) =>
+    (selectedInstitution?.groups || []).filter((g) =>
       groups.some((sg) => sg.id === g.id)
     ) || []
   );
@@ -211,7 +207,7 @@ export function DashboardProvider(props: Props) {
       const apply = () => {
         // apply optimistic update
         setSelectedInstitution((prev) =>
-          prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
+          prev ? { ...prev, groups: (prev.groups || []).map(mapper) } : prev
         );
         setSelectedGroups((prev) => prev.map(mapper));
         setGroups((prev) => prev.map(mapper));
@@ -322,7 +318,9 @@ export function DashboardProvider(props: Props) {
           prev
             ? {
                 ...prev,
-                groups: prev.groups.filter((group) => group.id !== groupId),
+                groups: (prev.groups || []).filter(
+                  (group) => group.id !== groupId
+                ),
               }
             : prev
         );
@@ -352,7 +350,7 @@ export function DashboardProvider(props: Props) {
 
       const apply = () => {
         setSelectedInstitution((prev) =>
-          prev ? { ...prev, groups: [...prev.groups, data] } : prev
+          prev ? { ...prev, groups: [...(prev.groups || []), data] } : prev
         );
       };
 
@@ -395,12 +393,16 @@ export function DashboardProvider(props: Props) {
         };
 
         setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
-        setSelectedInstitution((prev) => ({
-          ...prev!,
-          groups: prev!.groups.map((g) =>
-            g.id === newGroup.id ? newGroup : g
-          ),
-        }));
+        setSelectedInstitution((prev) =>
+          !prev
+            ? prev
+            : {
+                ...prev,
+                groups: (prev.groups || []).map((g) =>
+                  g.id === newGroup.id ? newGroup : g
+                ),
+              }
+        );
         setSelectedGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -447,12 +449,16 @@ export function DashboardProvider(props: Props) {
         };
 
         setProfiles((prev) => prev.filter((m) => m.uid !== userId));
-        setSelectedInstitution((prev) => ({
-          ...prev!,
-          groups: prev!.groups.map((g) =>
-            g.id === newGroup.id ? newGroup : g
-          ),
-        }));
+        setSelectedInstitution((prev) =>
+          !prev
+            ? prev
+            : {
+                ...prev,
+                groups: (prev.groups || []).map((g) =>
+                  g.id === newGroup.id ? newGroup : g
+                ),
+              }
+        );
         setSelectedGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );

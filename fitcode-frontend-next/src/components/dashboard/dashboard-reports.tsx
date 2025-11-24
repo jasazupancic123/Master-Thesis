@@ -13,11 +13,11 @@ import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 import { theme } from '@/app/style';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { lib } from '@/lib';
 
 enum ReportTab {
   Wellness = 'Wellness',

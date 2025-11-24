@@ -11,11 +11,11 @@ import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import ProfileCard from '@/ui/profile-card';
 import Logo from '@/ui/logo';
-import { SetState } from '@/lib/common/type/state.type';
+import ProfileCard from '@/ui/profile-card';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;
@@ -39,7 +39,7 @@ export default function DashboardSidebar(props: Props) {
   if (!selectedInstitution) return null;
 
   const shortGroupName =
-    selectedGroups.length === 1 ? selectedGroups[0]?.name.slice(0, 3) : 'All';
+    selectedGroups.length === 1 ? selectedGroups[0]?.name.slice(0, 4) : 'All';
 
   return (
     <>

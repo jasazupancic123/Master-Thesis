@@ -8,46 +8,56 @@ import DashboardSidebarMobile from '@/components/dashboard-sidebar/dashboard-sid
 import {
   DASHBOARD_SIDEBAR_WIDTH,
   MAX_WIDTH_DASHBOARD,
+  MAX_WIDTH_DASHBOARD_ITEM,
 } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardLayout({ children }: React.PropsWithChildren) {
   const screenSize = useScreenSize();
-
   const isSmall = screenSize.isMobile || screenSize.isTablet;
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', minHeight: '100vh' }}>
       <Container
         component="main"
         maxWidth={false}
         disableGutters
         sx={{
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           p: 0,
-          pb: 2,
-          mx: 0,
+          m: 0,
           width: '100%',
         }}
       >
-        <Box width="100%" display="flex">
-          {!isSmall && <DashboardSidebar />}
+        {/* Desktop sidebar in the normal flow */}
+        {!isSmall && (
           <Box
-            minWidth={`${isSmall ? 0 : DASHBOARD_SIDEBAR_WIDTH} !important`}
-          />
-
-          <Box
-            width={'100%'}
-            maxWidth={MAX_WIDTH_DASHBOARD}
-            display="flex"
-            flexDirection="column"
-            sx={{ position: 'relative', mx: 'auto', px: 1 }}
+            component="aside"
+            sx={{
+              width: DASHBOARD_SIDEBAR_WIDTH,
+              flexShrink: 0,
+            }}
           >
-            {isSmall && <DashboardSidebarMobile />}
-            <DashboardHeader />
-            <Box sx={{ overflow: 'hidden' }}>{children}</Box>
+            <DashboardSidebar />
           </Box>
+        )}
+
+        {/* Main content */}
+        <Box
+          component="section"
+          sx={{
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            px: 1,
+            overflowX: 'hidden',
+          }}
+        >
+          {isSmall && <DashboardSidebarMobile />}
+          <DashboardHeader />
+          <Box sx={{ overflowX: 'hidden' }}>{children}</Box>
         </Box>
       </Container>
     </Box>

@@ -13,7 +13,7 @@ export interface Institution extends BaseEntity {
   owner: AuthUser;
   trainers: AuthUser[];
   athletes: AuthUser[];
-  groups: Group[];
+  groups?: Group[];
 }
 
 export type CreateInstitution = Pick<

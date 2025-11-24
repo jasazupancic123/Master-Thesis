@@ -1,4 +1,4 @@
-import { Add, Check, VideoLibrary } from '@mui/icons-material';
+import { Check, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';

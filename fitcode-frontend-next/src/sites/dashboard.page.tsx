@@ -6,8 +6,9 @@ import { Box } from '@mui/material';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
 import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import DashboardHome from '@/components/dashboard/dashboard-home';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
-import DashboardMembers from '@/components/dashboard/dashboard-members';
+import DashboardMembers from '@/components/dashboard-members/dashboard-members';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import {
@@ -23,7 +24,7 @@ import {
 } from '@/lib/common/const/nav.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import DashboardHome from '@/components/dashboard/dashboard-home';
+import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 
 export default function DashboardPage() {
   const { profile } = useMain();
@@ -99,11 +100,14 @@ export default function DashboardPage() {
   return (
     <>
       <Box
+        width="100%"
+        maxWidth={MAX_WIDTH_DASHBOARD_ITEM}
+        height="100%"
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
-          width: '100%',
+          overflowX: 'hidden',
+          mx: 'auto',
         }}
       >
         {renderContent()}
