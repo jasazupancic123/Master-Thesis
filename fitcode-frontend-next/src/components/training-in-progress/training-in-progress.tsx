@@ -398,7 +398,7 @@ export default function TrainingInProgress() {
                     })}
 
                     {/* Button to add new exercise */}
-                    <IconButton
+                    {/* <IconButton
                       size="small"
                       color="primary"
                       onClick={() => {
@@ -412,7 +412,7 @@ export default function TrainingInProgress() {
                       }}
                     >
                       <Add />
-                    </IconButton>
+                    </IconButton> */}
                   </Box>
                 </Box>
               );

@@ -115,7 +115,7 @@ export default function TrainingPage() {
         </Box>
       </Box>
 
-      <Fab
+      {/* <Fab
         color="primary"
         aria-label="add"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
@@ -124,7 +124,7 @@ export default function TrainingPage() {
         <Tooltip title="Add Training">
           <Add />
         </Tooltip>
-      </Fab>
+      </Fab> */}
 
       <CreateTrainingModal
         open={openCreateTrainingModal}
