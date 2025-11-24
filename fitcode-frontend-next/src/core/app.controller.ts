@@ -1,4 +1,8 @@
 import { BaseController } from './base.controller';
+import type { ExerciseAiPrescription } from './exercise-ai-prescriptions/type/exercise-detection-data';
+import type { Profile } from './profile/type/user.type';
+import type { ActiveTraining } from './training/type/training.type';
+import type { FetchOptions } from '@/lib/common/type/api.type';
 
 export class AppController extends BaseController {
   private static instance: AppController;
@@ -10,5 +14,14 @@ export class AppController extends BaseController {
   static getInstance() {
     if (!this.instance) this.instance = new AppController();
     return this.instance;
+  }
+
+  async init(options?: FetchOptions) {
+    return this.api.get<{
+      profile: Profile;
+      exerciseAiPrescriptions: ExerciseAiPrescription[];
+      activeTraining: ActiveTraining | null;
+      globalExercisesRevision: number;
+    }>('/init', options);
   }
 }

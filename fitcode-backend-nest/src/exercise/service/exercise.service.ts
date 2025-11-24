@@ -356,6 +356,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     // validate attributes
     this.exerciseAttributeService.validate({ ...exercise, ...input });
 
+    await this.repository.update(exercise.id, input);
     await this.incrementExerciseRevisions(user, exercise.institutionId);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
@@ -376,13 +377,15 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   private async incrementExerciseRevisions(user: User, institutionId?: string) {
-    if (this.firebase.isAdmin(user))
-      // increment global exercises revision
-      await this.firebase.firestore
+    if (this.firebase.isAdmin(user)) {
+      const doc = this.firebase.firestore
         .collection(FirestoreCollection.META)
-        .doc('exercises')
-        .update({ revision: FieldValue.increment(1) });
-    else if (institutionId)
+        .doc('exercises');
+
+      const snapshot = await doc.get();
+      if (!snapshot.exists) await doc.set({ revision: 1 });
+      else await doc.update({ revision: FieldValue.increment(1) });
+    } else if (institutionId)
       await this.institutionService.incrementExerciseRevisions(institutionId);
   }
 

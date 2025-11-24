@@ -26,6 +26,8 @@ import type { TrainingReport } from '@/core/training/type/training-report.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
 
 export interface MainProviderProps extends React.PropsWithChildren {
+  profile: Profile;
+  globalExercisesRevision: number;
   institutions: Institution[];
   activeTraining: ActiveTraining | null;
   exerciseAiPrescriptions: ExerciseAiPrescription[];
@@ -36,7 +38,6 @@ export interface MainProviderProps extends React.PropsWithChildren {
 }
 
 export interface IMainContext extends MainProviderProps {
-  profile: Profile;
   users: AuthUser[];
   profiles: Profile[];
   exercises: Exercise[];
@@ -113,18 +114,23 @@ export default function MainProvider(props: MainProviderProps) {
     if (!institutionId) return;
 
     async function fetchExercises() {
-      const serverRevision = props.institution.exercisesRevision || 0;
-
-      console.log('server revision', serverRevision);
+      const serverGlobalRevision = props.globalExercisesRevision;
+      const serverInstitutionRevision =
+        props.institution.exercisesRevision || 0;
 
       try {
         const cachedExercises = await core.exercise.getCached(institutionId);
-        const cachedRevision = await core.exercise.getRevision(institutionId);
-
-        console.log('cached revision', cachedRevision);
-
         if (cachedExercises) setExercises(cachedExercises);
-        if (serverRevision && cachedRevision === serverRevision) {
+
+        const cachedGlobalRevision =
+          await core.exercise.getCachedGlobalRevision();
+        const cachedInstitutionRevision =
+          await core.exercise.getCachedInstitutionRevision(institutionId);
+
+        if (
+          cachedGlobalRevision === serverGlobalRevision &&
+          cachedInstitutionRevision === serverInstitutionRevision
+        ) {
           console.log('Exercises are up to date, no need to fetch');
           return;
         }
@@ -133,8 +139,15 @@ export default function MainProvider(props: MainProviderProps) {
           await ExerciseController.getInstance().findAll(institutionId);
 
         setExercises(exercises);
-        await core.exercise.saveToCache(institutionId, exercises);
-        await core.exercise.saveRevision(institutionId, serverRevision);
+
+        await Promise.all([
+          core.exercise.saveToCache(institutionId, exercises),
+          core.exercise.saveGlobalRevisionToCache(serverGlobalRevision),
+          core.exercise.saveInstitutionRevisionToCache(
+            institutionId,
+            serverInstitutionRevision
+          ),
+        ]);
       } catch (e) {
         console.error('Failed to fetch exercises', e);
         toast.error('Failed to fetch exercises');
@@ -158,19 +171,20 @@ export default function MainProvider(props: MainProviderProps) {
     setUsers,
     exercises,
     setExercises,
-    institutions: props.institutions,
     groups,
     setGroups,
-    wellness: props.wellness,
     activeTraining,
     setActiveTraining,
     exerciseAiPrescriptions,
     setExerciseAiPrescriptions,
     protocols,
     setProtocols,
+    institutions: props.institutions,
     institution: props.institution,
+    wellness: props.wellness,
     trainings: props.trainings,
     reports: props.reports,
+    globalExercisesRevision: props.globalExercisesRevision,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

@@ -27,17 +27,23 @@ export default async function InitTrainerProvider({
     const institutionId = institutions[0]?.id;
     if (!institutionId) throw new Error('No institution found');
 
-    const [institution, exerciseAiPrescriptions, wellness] = await Promise.all([
+    const [main, institution, wellness] = await Promise.all([
+      controller.app.init({ session }),
       controller.institution.init(institutionId, { session }),
-      controller.exerciseAiPrescriptions.findAll({ session }),
-      controller.profile.getWellnessByInstitution(institutionId, { session }),
+      lib.firebase.auth.isAdmin(profile.customClaims.role[0])
+        ? []
+        : controller.profile.getWellnessByInstitution(institutionId, {
+            session,
+          }),
     ]);
 
     const data: MainProviderProps = {
+      profile: main.profile,
       institutions,
       institution,
-      activeTraining: null,
-      exerciseAiPrescriptions,
+      activeTraining: main.activeTraining,
+      exerciseAiPrescriptions: main.exerciseAiPrescriptions,
+      globalExercisesRevision: main.globalExercisesRevision,
       wellness,
       trainings: [],
       reports: [],
