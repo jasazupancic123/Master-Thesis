@@ -17,24 +17,32 @@ import { lib } from '@/lib';
 import {
   DASHBOARD_VIEWS,
   INSTITUTION_PAGE_ID,
+  LINK_DASHBOARD_PLANNING,
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import { SetState } from '@/lib/common/type/state.type';
 
-export default function DashboardSidebarMenuItems() {
+interface Props {
+  setDrawerOpen?: SetState<boolean>;
+}
+
+export default function DashboardSidebarMenuItems(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { institutions } = useMain();
+  const { institutions, groups } = useMain();
 
   const {
     filter,
     setFilter,
     selectedInstitution,
     setSelectedInstitution,
-    setSelectedGroup,
+    setSelectedGroups,
   } = useDashboard();
+
+  const { setDrawerOpen } = props;
 
   const anchorElRef = useRef<HTMLDivElement | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
@@ -71,7 +79,7 @@ export default function DashboardSidebarMenuItems() {
       flexDirection="column"
       alignItems="flex-start"
       gap={1}
-      mt={2}
+      mt={4}
       sx={{
         cursor: 'pointer',
       }}
@@ -100,6 +108,7 @@ export default function DashboardSidebarMenuItems() {
               alignItems="center"
               onClick={() => {
                 setFilter(item);
+                if (setDrawerOpen) setDrawerOpen(false);
               }}
               gap={1}
               sx={{
@@ -138,7 +147,6 @@ export default function DashboardSidebarMenuItems() {
           </Box>
         );
       })}
-
       <Menu
         anchorEl={anchorElRef.current}
         open={openMenu && lib.firebase.auth.isAdmin(role)}
@@ -159,10 +167,10 @@ export default function DashboardSidebarMenuItems() {
             key={institution.id}
             onClick={() => {
               setSelectedInstitution(institution);
-              setSelectedGroup(
-                institution.groups && institution.groups.length
-                  ? institution.groups[0]
-                  : null
+              setSelectedGroups(
+                institution.groups.filter((group) =>
+                  groups.some((g) => g.id === group.id)
+                )
               );
               setOpenMenu(false);
             }}

@@ -19,9 +19,14 @@ import type {
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
-import { LINK_DASHBOARD_PLANNING } from '@/lib/common/const/nav.const';
+import {
+  DASHBOARD_VIEWS,
+  LINK_DASHBOARD_PLANNING,
+  LINK_DASHBOARD_SCHEDULE,
+} from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '@/components/dashboard/constant/dashboard.const';
 
 interface Props extends React.PropsWithChildren {
   institutionId: string;
@@ -35,8 +40,8 @@ export interface IDashboardContext {
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
-  selectedGroup: Group | null;
-  setSelectedGroup: SetState<Group | null>;
+  selectedGroups: Group[];
+  setSelectedGroups: SetState<Group[]>;
   trainings: Training[];
   setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
@@ -63,7 +68,7 @@ export const useDashboard = () => useContext(DashboardContext)!;
 export function DashboardProvider(props: Props) {
   const { children, institutionId, trainings: propsTrainings } = props;
 
-  const { user } = useAuthenticatedAuth();
+  const { user, role } = useAuthenticatedAuth();
   const {
     users,
     setUsers,
@@ -73,7 +78,7 @@ export function DashboardProvider(props: Props) {
     institutions: propsInstitutions,
   } = useMain();
 
-  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_PLANNING);
+  const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   const [institutions, setInstitutions] = useState<Institution[]>(() =>
@@ -96,7 +101,11 @@ export function DashboardProvider(props: Props) {
       return institution;
     });
 
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [selectedGroups, setSelectedGroups] = useState<Group[]>(
+    selectedInstitution?.groups.filter((g) =>
+      groups.some((sg) => sg.id === g.id)
+    ) || []
+  );
 
   const [trainings, setTrainings] = useState<Training[]>([]);
 
@@ -111,10 +120,12 @@ export function DashboardProvider(props: Props) {
       if (lastSelectedGroupId?.payload) {
         const groupId = lastSelectedGroupId.payload as string;
 
+        if (groupId === DASHBOARD_ALL_GROUPS_SELECTED_ID) return;
+
         const group = selectedInstitution.groups?.find((g) => g.id === groupId);
 
         if (group) {
-          setSelectedGroup(group);
+          setSelectedGroups([group]);
           return;
         }
       }
@@ -124,7 +135,7 @@ export function DashboardProvider(props: Props) {
         groups.some((sg) => sg.id === g.id)
       );
 
-      setSelectedGroup(group || null);
+      setSelectedGroups(group ? [group] : []);
     };
 
     setupSelectedGroup();
@@ -141,8 +152,8 @@ export function DashboardProvider(props: Props) {
     setInstitutions,
     selectedInstitution,
     setSelectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
+    selectedGroups,
+    setSelectedGroups,
     trainings,
     setTrainings,
     detectedChanges,
@@ -202,7 +213,7 @@ export function DashboardProvider(props: Props) {
         setSelectedInstitution((prev) =>
           prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
         );
-        setSelectedGroup((prev) => (prev ? mapper(prev) : prev));
+        setSelectedGroups((prev) => prev.map(mapper));
         setGroups((prev) => prev.map(mapper));
       };
 
@@ -258,14 +269,12 @@ export function DashboardProvider(props: Props) {
             : prev
         );
 
-        setSelectedGroup((prev) =>
-          prev
-            ? {
-                ...prev,
-                members: prev.members?.map(mapper),
-                trainers: prev.trainers?.map(mapper),
-              }
-            : prev
+        setSelectedGroups((prev) =>
+          prev.map((group) => ({
+            ...group,
+            members: group.members?.map(mapper),
+            trainers: group.trainers?.map(mapper),
+          }))
         );
       };
 
@@ -362,13 +371,17 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    addGroupMember: async (user: AuthUser) => {
-      if (!selectedInstitution || !selectedGroup) return;
+    addGroupMember: async (user: AuthUser, groupId: string) => {
+      if (!selectedInstitution) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(selectedGroup),
+        selectedGroups: structuredClone(selectedGroups),
       };
+
+      const selectedGroup = selectedGroups.find((g) => g.id === groupId);
+
+      if (!selectedGroup) return;
 
       const apply = () => {
         const newGroup: Group = {
@@ -388,7 +401,9 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
-        setSelectedGroup(newGroup);
+        setSelectedGroups((prev) =>
+          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
+        );
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -412,13 +427,17 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    removeGroupMember: async (userId: string) => {
-      if (!selectedInstitution || !selectedGroup) return;
+    removeGroupMember: async (userId: string, groupId: string) => {
+      if (!selectedInstitution) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(selectedGroup),
+        selectedGroups: structuredClone(selectedGroups),
       };
+
+      const selectedGroup = selectedGroups.find((g) => g.id === groupId);
+
+      if (!selectedGroup) return;
 
       const apply = () => {
         const newGroup: Group = {
@@ -434,7 +453,9 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
-        setSelectedGroup(newGroup);
+        setSelectedGroups((prev) =>
+          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
+        );
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );

@@ -10,24 +10,18 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { lib } from '@/lib';
 
-type Props = {
-  groupId?: string;
-  selectedUserId?: string;
-};
-
-export default function WellnessReports(props: Props) {
+export default function WellnessReports() {
   const screenSize = useScreenSize();
 
   const { wellness } = useMain();
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroups } = useDashboard();
 
-  const { groupId, selectedUserId } = props;
-
-  const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-  const members = selectedUserId
-    ? (group?.members || []).filter((m) => m.uid === selectedUserId)
-    : group?.members || [];
+  const members = lib.common.generic.getUnique(
+    selectedGroups.flatMap((g) => g.members || []),
+    'uid'
+  );
 
   const todaysWellness = wellness.filter((w) => {
     return dayjs(w.date).isSame(dayjs(), 'day');
@@ -66,9 +60,6 @@ export default function WellnessReports(props: Props) {
         alignItems="center"
         gap={0.25}
       >
-        <Typography variant="h6" lineHeight={1}>
-          Daily Wellness Analysis
-        </Typography>
         <Typography component="span" textAlign="center" lineHeight={1}>
           Historical data comparison{' ('}
           <Typography
@@ -153,13 +144,16 @@ export default function WellnessReports(props: Props) {
             <Box
               width={barChartWidth * 1.1}
               sx={{
-                backgroundColor: theme.palette.background.paper,
-                borderTopRightRadius: 8,
-                borderTopLeftRadius: 8,
+                border: `1px solid ${theme.palette.divider}`,
+                borderBottom: 'none',
+                borderRadius: 2,
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
               }}
             >
               <Typography
                 variant="h6"
+                fontSize={12}
                 textAlign="center"
                 lineHeight={1}
                 sx={{
