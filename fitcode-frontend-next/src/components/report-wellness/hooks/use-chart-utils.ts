@@ -19,38 +19,11 @@ export default function useWellnessChartUtils(
     return theme.palette.success.main;
   });
 
-  // helper somewhere in the file (outside the component)
-  const wrapLabel = (value: string, maxCharsPerLine = 10) => {
-    if (!value) return '';
-
-    const words = value.split(' ');
-    const lines: string[] = [];
-    let current = '';
-
-    for (const word of words) {
-      const tentative = current ? `${current} ${word}` : word;
-
-      if (tentative.length > maxCharsPerLine) {
-        if (current) lines.push(current);
-        // If a single word is longer than maxCharsPerLine, just push it as its own line
-        current = word;
-      } else {
-        current = tentative;
-      }
-    }
-
-    if (current) lines.push(current);
-
-    // MUI X Charts understands '\n' in tick labels and renders them as multiple lines
-    return lines.join('\n');
-  };
-
   const containersWidth = width * 1.1;
 
   return {
     colorMapValues,
     colorMapColors,
-    wrapLabel,
     containersWidth,
   };
 }

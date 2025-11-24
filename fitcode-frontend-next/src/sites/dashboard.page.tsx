@@ -6,14 +6,17 @@ import { Box } from '@mui/material';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
 import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import DashboardHome from '@/components/dashboard/dashboard-home';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
-import DashboardMembers from '@/components/dashboard/dashboard-members';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
+import DashboardMembers from '@/components/dashboard-members/dashboard-members';
+import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import {
   INSTITUTION_PAGE_ID,
   LINK_DASHBOARD_ADD_INSTITUTION,
   LINK_DASHBOARD_EXERCISES,
+  LINK_DASHBOARD_HOME,
   LINK_DASHBOARD_MEMBERS,
   LINK_DASHBOARD_PLANNING,
   LINK_DASHBOARD_REPORTS,
@@ -30,6 +33,9 @@ export default function DashboardPage() {
 
   const renderContent = () => {
     switch (filter.id) {
+      case LINK_DASHBOARD_HOME.id: {
+        return <DashboardHome />;
+      }
       case LINK_DASHBOARD_SCHEDULE.id: {
         return <DashboardSchedule />;
       }
@@ -94,11 +100,14 @@ export default function DashboardPage() {
   return (
     <>
       <Box
+        width="100%"
+        maxWidth={MAX_WIDTH_DASHBOARD_ITEM}
+        height="100%"
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
-          width: '100%',
+          overflowX: 'hidden',
+          mx: 'auto',
         }}
       >
         {renderContent()}
