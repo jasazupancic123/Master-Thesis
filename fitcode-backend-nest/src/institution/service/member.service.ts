@@ -33,7 +33,8 @@ export class MemberService {
     private readonly repository: InstitutionMembersRepository,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
-    private readonly profileService: ProfileService,
+    @Inject(forwardRef(() => ProfileService))
+    private readonly profileService: Wrapper<ProfileService>,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

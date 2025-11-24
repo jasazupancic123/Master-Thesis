@@ -34,17 +34,38 @@ export class ExerciseUtil {
     });
   }
 
-  async getRevision(institutionId: string): Promise<number | null> {
+  async getCachedInstitutionRevision(
+    institutionId: string
+  ): Promise<number | null> {
     const cached = await lib.common.indexedDb.items.get(
       `exercises-revision-${institutionId}`
     );
 
-    return cached?.payload ? ++cached.payload : null;
+    return cached?.payload ? +cached.payload : null;
   }
 
-  async saveRevision(institutionId: string, revision: number): Promise<void> {
+  async getCachedGlobalRevision(): Promise<number | null> {
+    const cached = await lib.common.indexedDb.items.get(
+      `exercises-global-revision`
+    );
+
+    return cached?.payload ? +cached.payload : null;
+  }
+
+  async saveInstitutionRevisionToCache(
+    institutionId: string,
+    revision: number
+  ): Promise<void> {
     await lib.common.indexedDb.items.put({
       id: `exercises-revision-${institutionId}`,
+      payload: revision.toString(),
+      updatedAt: Date.now(),
+    });
+  }
+
+  async saveGlobalRevisionToCache(revision: number): Promise<void> {
+    await lib.common.indexedDb.items.put({
+      id: `exercises-global-revision`,
       payload: revision.toString(),
       updatedAt: Date.now(),
     });

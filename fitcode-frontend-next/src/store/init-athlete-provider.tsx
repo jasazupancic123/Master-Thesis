@@ -29,17 +29,10 @@ export default async function InitAthleteProvider({
     const institutionId = institutions[0]?.id;
     if (!institutionId) throw new Error('No institution found');
 
-    const [
-      institution,
-      activeTraining,
-      reports,
-      exerciseAiPrescriptions,
-      trainings,
-    ] = await Promise.all([
+    const [main, institution, reports, trainings] = await Promise.all([
+      controller.app.init({ session }),
       controller.institution.init(institutionId, { session }),
-      controller.training.getActiveTrainingByAthlete({ session }),
       controller.training.findReports(institutionId!, { session }),
-      controller.exerciseAiPrescriptions.findAll({ session }),
       controller.training.findAll(
         {
           institutionId,
@@ -52,10 +45,12 @@ export default async function InitAthleteProvider({
     ]);
 
     const data: MainProviderProps = {
+      profile: main.profile,
       institutions,
       institution,
-      activeTraining,
-      exerciseAiPrescriptions,
+      activeTraining: main.activeTraining,
+      exerciseAiPrescriptions: main.exerciseAiPrescriptions,
+      globalExercisesRevision: main.globalExercisesRevision,
       wellness: [],
       trainings: trainings.sort(
         (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()

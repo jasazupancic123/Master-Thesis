@@ -310,19 +310,20 @@ export class DataSetup extends BaseSetup {
 
   private async isInit() {
     const localDevCollection = this.firebase.firestore.collection(
-      FirestoreCollection.LOCAL_DEV,
+      FirestoreCollection.META,
     );
 
     return (
-      (await localDevCollection.get()).docs?.[0]?.data()?.inserted || false
+      (await localDevCollection.doc('local-dev').get()).data()?.inserted ||
+      false
     );
   }
 
   private async setInit() {
     const localDevCollection = this.firebase.firestore.collection(
-      FirestoreCollection.LOCAL_DEV,
+      FirestoreCollection.META,
     );
 
-    await localDevCollection.add({ inserted: true });
+    await localDevCollection.doc('local-dev').set({ inserted: true });
   }
 }
