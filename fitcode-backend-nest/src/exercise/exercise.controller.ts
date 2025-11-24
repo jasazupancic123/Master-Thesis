@@ -42,13 +42,8 @@ export class ExerciseController {
   async findAll(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Query() query?: Record<string, string>,
   ) {
-    return this.exerciseService.findAllByInstitution(
-      user,
-      institutionId,
-      query,
-    );
+    return await this.exerciseService.findAll(user, institutionId);
   }
 
   @Post()

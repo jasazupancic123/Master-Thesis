@@ -130,6 +130,10 @@ export class InstitutionService implements Permission<Institution> {
     return { ...institution, groups, users, protocols };
   }
 
+  async incrementExerciseRevisions(institutionId: string) {
+    await this.repository.incrementExerciseRevisions(institutionId);
+  }
+
   @LogMethod()
   async create(user: User, input: CreateInstitutionDto): Promise<Institution> {
     if (!this.firebase.isAdmin(user))

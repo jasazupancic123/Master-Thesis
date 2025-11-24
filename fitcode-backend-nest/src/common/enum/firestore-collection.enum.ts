@@ -2,6 +2,7 @@ export enum FirestoreCollection {
   // system
   MIGRATION = 'migrations',
   LOCAL_DEV = 'local-dev',
+  META = 'meta',
 
   // root
   EXERCISE = 'exercises',

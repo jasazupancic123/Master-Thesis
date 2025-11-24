@@ -4,9 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
@@ -37,12 +39,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly cacheManagerService: CacheManagerService,
     private readonly repository: ExerciseRepository,
     private readonly common: CommonService,
-    private readonly firebaseService: FirebaseService,
+    private readonly firebase: FirebaseService,
     private readonly institutionService: InstitutionService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseParamService: ExerciseParamService,
   ) {}
 
+  @LogMethod()
   async findAll(user: User, institutionId: string) {
     return [
       ...(await this.findAllGlobal(user)),
@@ -56,7 +59,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     if (cached) {
       let exercises = cached.filter((e) => e.ownerId === GLOBAL_EXERCISE_OWNER);
-      if (!this.firebaseService.isAdmin(user))
+      if (!this.firebase.isAdmin(user))
         exercises = exercises.filter((e) => !e.disabled);
 
       return exercises;
@@ -100,7 +103,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       .where(key, '==', userOrInstitutionId);
 
     // if admin, return all exercises, else only non-disabled
-    if (!this.firebaseService.isAdmin(user))
+    if (!this.firebase.isAdmin(user))
       query = query.where('disabled', '==', false);
 
     if (filter && !this.common.object.isEmpty(filter))
@@ -150,8 +153,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   @LogMethod()
   async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
-    const isAdmin = this.firebaseService.isAdmin(user);
-    const isManager = this.firebaseService.isManager(user);
+    const isAdmin = this.firebase.isAdmin(user);
+    const isManager = this.firebase.isManager(user);
 
     const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
     const institution = isManager
@@ -189,6 +192,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     };
 
     await this.repository.save(create);
+    await this.incrementExerciseRevisions(user, institution?.id);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return { ...create, createdAt: new Date(), updatedAt: new Date() };
@@ -199,8 +203,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
    */
   async upsertMany(user: User, exercises: CreateExerciseDto[]) {
     // validate components
-    const isAdmin = this.firebaseService.isAdmin(user);
-    const isManager = this.firebaseService.isManager(user);
+    const isAdmin = this.firebase.isAdmin(user);
+    const isManager = this.firebase.isManager(user);
     const ownerId = isAdmin ? GLOBAL_EXERCISE_OWNER : user.uid;
 
     const institution = isManager
@@ -254,7 +258,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       throw new BadRequestException(JSON.stringify(errors));
 
     const result: Exercise[] = [];
-    const batch = this.firebaseService.firestore.batch();
+    const batch = this.firebase.firestore.batch();
 
     for (const e of exercisesToCreate) {
       const slug = this.repository.slug(e.name, institution?.id);
@@ -283,7 +287,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         params: e.params || [],
       };
 
-      const query = this.firebaseService.buildCreateQuery<Exercise>(item, {
+      const query = this.firebase.buildCreateQuery<Exercise>(item, {
         timestamps: true,
       });
 
@@ -297,6 +301,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     }
 
     await batch.commit();
+    await this.incrementExerciseRevisions(user, institution?.id);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return result;
@@ -307,7 +312,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     user: User,
     exercises: CreateExerciseMuscleValueDto[],
   ) {
-    const isManager = this.firebaseService.isManager(user);
+    const isManager = this.firebase.isManager(user);
     const institution = isManager
       ? await this.institutionService.findByOwnerId(user.uid)
       : null;
@@ -320,7 +325,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const operations: BatchUpdateOperation<Exercise>[] = exercises.map((e) => {
       const id = this.common.string.slug(e.name);
       const ref = this.repository.collection().doc(id);
-      const query = this.firebaseService.buildUpdateQuery({
+      const query = this.firebase.buildUpdateQuery({
         id: ref.id,
         muscleValues: e.muscleValues,
       });
@@ -328,8 +333,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       return { ref, data: query, operation: 'update' };
     });
 
+    await this.incrementExerciseRevisions(user, institution?.id);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
-    await this.firebaseService.paginateBatches(operations);
+    await this.firebase.paginateBatches(operations);
   }
 
   @LogMethod()
@@ -350,8 +356,9 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     // validate attributes
     this.exerciseAttributeService.validate({ ...exercise, ...input });
 
-    await this.repository.update(exercise.id, input);
+    await this.incrementExerciseRevisions(user, exercise.institutionId);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
+
     return { ...exercise, ...this.common.object.clean(input) };
   }
 
@@ -364,7 +371,19 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       );
 
     await this.repository.delete(ref.exerciseId);
+    await this.incrementExerciseRevisions(user, exercise.institutionId);
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
+  }
+
+  private async incrementExerciseRevisions(user: User, institutionId?: string) {
+    if (this.firebase.isAdmin(user))
+      // increment global exercises revision
+      await this.firebase.firestore
+        .collection(FirestoreCollection.META)
+        .doc('exercises')
+        .update({ revision: FieldValue.increment(1) });
+    else if (institutionId)
+      await this.institutionService.incrementExerciseRevisions(institutionId);
   }
 
   canView(user: User, exercise: Exercise, institution?: Institution) {
@@ -381,17 +400,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   canEdit(user: User, _exercise: Exercise, institution?: Institution) {
-    if (this.firebaseService.isAdmin(user)) return true;
+    if (this.firebase.isAdmin(user)) return true;
 
     if (institution) {
-      if (
-        this.firebaseService.isManager(user) &&
-        user.uid === institution.ownerId
-      )
+      if (this.firebase.isManager(user) && user.uid === institution.ownerId)
         return true;
 
       if (
-        this.firebaseService.isTrainer(user) &&
+        this.firebase.isTrainer(user) &&
         institution.trainerIds.includes(user.uid)
       )
         return true;
@@ -401,11 +417,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   canAdd(user: User, institution?: Institution) {
-    if (this.firebaseService.isAdmin(user)) return true;
-    if (
-      this.firebaseService.isManager(user) &&
-      institution?.ownerId === user.uid
-    )
+    if (this.firebase.isAdmin(user)) return true;
+    if (this.firebase.isManager(user) && institution?.ownerId === user.uid)
       return true;
 
     return false;
