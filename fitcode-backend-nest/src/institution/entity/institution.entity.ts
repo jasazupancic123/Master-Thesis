@@ -32,7 +32,7 @@ export class Institution extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   @IsOptional()
-  exercisesRevision?: number;
+  exerciseRevisions?: number;
 
   // virtual, must be populated
   trainerIds: string[];

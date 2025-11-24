@@ -65,14 +65,11 @@ export class InstitutionController extends BaseController {
   }
 
   async findAllGroupsByInstitution(institutionId: string) {
-    return this.api.get<Group[]>(`/institution/${institutionId}/group`);
+    return this.api.get<Group[]>(`/${institutionId}/group`);
   }
 
   async createGroup(body: CreateGroup) {
-    return this.api.post<Group>(
-      `/institution/${body.institutionId}/group`,
-      body
-    );
+    return this.api.post<Group>(`/${body.institutionId}/group`, body);
   }
 
   async updateGroup(
@@ -80,28 +77,20 @@ export class InstitutionController extends BaseController {
     groupId: string,
     body: UpdateGroup
   ): Promise<Group> {
-    return this.api.patch<Group>(
-      `/institution/${institutionId}/group/${groupId}`,
-      body
-    );
+    return this.api.patch<Group>(`/${institutionId}/group/${groupId}`, body);
   }
 
   async batchUpdateGroups(institutionId: string, body: BatchUpdateGroups) {
-    return this.api.patch<void>(
-      `/institution/${institutionId}/group/update/batch`,
-      body
-    );
+    return this.api.patch<void>(`/${institutionId}/group/update/batch`, body);
   }
 
   async deleteGroup(institutionId: string, groupId: string) {
-    return this.api.delete<void>(
-      `/institution/${institutionId}/group/${groupId}`
-    );
+    return this.api.delete<void>(`/${institutionId}/group/${groupId}`);
   }
 
   async addGroupMember(institutionId: string, groupId: string, body: UserId) {
     return this.api.patch<void>(
-      `/institution/${institutionId}/group/${groupId}/member`,
+      `/${institutionId}/group/${groupId}/member`,
       body
     );
   }
@@ -111,22 +100,21 @@ export class InstitutionController extends BaseController {
     groupId: string,
     body: UserId
   ) {
-    return this.api.delete<void>(
-      `/institution/${institutionId}/group/${groupId}/member`,
-      { body }
-    );
+    return this.api.delete<void>(`/${institutionId}/group/${groupId}/member`, {
+      body,
+    });
   }
 
   async addCycle(institutionId: string, groupId: string, cycle: Cycle) {
     return this.api.post<void>(
-      `/institution/${institutionId}/group/${groupId}/cycle`,
+      `/${institutionId}/group/${groupId}/cycle`,
       cycle
     );
   }
 
   async removeCycle(institutionId: string, groupId: string, cycleId: string) {
     return this.api.delete<void>(
-      `/institution/${institutionId}/group/${groupId}/cycle/${cycleId}`
+      `/${institutionId}/group/${groupId}/cycle/${cycleId}`
     );
   }
 

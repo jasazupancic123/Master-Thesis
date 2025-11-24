@@ -116,7 +116,7 @@ export default function MainProvider(props: MainProviderProps) {
     async function fetchExercises() {
       const serverGlobalRevision = props.globalExercisesRevision;
       const serverInstitutionRevision =
-        props.institution.exercisesRevision || 0;
+        props.institution.exerciseRevisions || 0;
 
       try {
         const cachedExercises = await core.exercise.getCached(institutionId);
@@ -134,6 +134,8 @@ export default function MainProvider(props: MainProviderProps) {
           console.log('Exercises are up to date, no need to fetch');
           return;
         }
+
+        console.log('Fetching updated exercises from server');
 
         const exercises =
           await ExerciseController.getInstance().findAll(institutionId);
