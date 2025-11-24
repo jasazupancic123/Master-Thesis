@@ -287,7 +287,7 @@ export default function TrainingInProgressExerciseCard() {
             );
           })}
 
-          <IconButton
+          {/* <IconButton
             size="small"
             color="primary"
             onClick={async () => {
@@ -302,7 +302,7 @@ export default function TrainingInProgressExerciseCard() {
             }}
           >
             <Add />
-          </IconButton>
+          </IconButton> */}
         </Box>
 
         {setIndex !== undefined &&
