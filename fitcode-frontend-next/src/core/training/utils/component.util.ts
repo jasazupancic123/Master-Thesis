@@ -8,7 +8,7 @@ import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Target } from '@/core/exercise/type/target.type';
-import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Cycle } from '@/core/institution/type/cycle.type';
 
 export class TrainingComponentUtil {
   stub(id: string, data?: Partial<TrainingComponent>): TrainingComponent {

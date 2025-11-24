@@ -19,7 +19,7 @@ import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-e
 import RegisterUsersDashboard from '@/components/dashboard/modals/dashboard-register-users-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';

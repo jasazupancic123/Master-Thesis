@@ -3,8 +3,8 @@ import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
 
 import type { SliderCyclesProviderReturnType } from '@/components/trainer-group-year-view/context/cycles.provider';
-import type { GroupController } from '@/core/group/group.controller';
-import type { Cycle } from '@/core/group/type/cycle.type';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import type { Cycle } from '@/core/institution/type/cycle.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import type { IGroupCtx } from '@/store/group.provider';
 import type { IMainContext } from '@/store/main.provider';
@@ -13,7 +13,6 @@ type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
 export async function handleAddCycle(
   input: {
-    controller: GroupController;
     router: AppRouterInstance;
     addCycleInput: AddCycleInput;
   },
@@ -23,7 +22,7 @@ export async function handleAddCycle(
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
-  const { controller, router, addCycleInput } = input;
+  const { router, addCycleInput } = input;
 
   const { useMain, useGroup, useSliderCycles } = context;
 
@@ -58,7 +57,12 @@ export async function handleAddCycle(
 
   handleApiRequest(
     router,
-    () => controller.addCycle(selectedGroup.id, newCycle),
+    () =>
+      InstitutionController.getInstance().addCycle(
+        selectedGroup.institutionId,
+        selectedGroup.id,
+        newCycle
+      ),
     () => {
       const newCycles = [...selectedGroup.cycles, newCycle];
 
@@ -80,22 +84,16 @@ export async function handleAddCycle(
 }
 
 export async function handleDeleteCycle(
-  input: {
-    router: AppRouterInstance;
-    controller: GroupController;
-  },
+  input: { router: AppRouterInstance },
   context: {
     useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
-  const { router, controller } = input;
-
+  const { router } = input;
   const { useMain, useGroup, useSliderCycles } = context;
-
   const { setGroups } = useMain;
-
   const {
     selectedGroup,
     setSelectedGroup,
@@ -111,7 +109,12 @@ export async function handleDeleteCycle(
 
   handleApiRequest(
     router,
-    () => controller.removeCycle(selectedGroup.id, editCycle.id),
+    () =>
+      InstitutionController.getInstance().removeCycle(
+        selectedGroup.institutionId,
+        selectedGroup.id,
+        editCycle.id
+      ),
     () => {
       if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
 

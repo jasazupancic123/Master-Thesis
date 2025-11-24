@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 
 export default function useFilteredTrainingsList(

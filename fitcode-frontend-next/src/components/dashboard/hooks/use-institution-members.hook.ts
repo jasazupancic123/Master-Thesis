@@ -7,7 +7,7 @@ import useRegisterMemberForm from './use-register-member-form.hook';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
