@@ -33,8 +33,8 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.fatigue ?? null,
           yesterday: yesterdayWellness?.fatigue ?? null,
-          zScore: todayWellness?.fatigueZScore ?? null,
-          zScoreYesterday: yesterdayWellness?.fatigueZScore ?? null,
+          zScore: todayWellness?.zScoreFatigue ?? null,
+          zScoreYesterday: yesterdayWellness?.zScoreFatigue ?? null,
         };
       }
       if (data.metric === WellnessChartDataType.SORENESS) {
@@ -42,8 +42,8 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.soreness ?? null,
           yesterday: yesterdayWellness?.soreness ?? null,
-          zScore: todayWellness?.sorenessZScore ?? null,
-          zScoreYesterday: yesterdayWellness?.sorenessZScore ?? null,
+          zScore: todayWellness?.zScoreSoreness ?? null,
+          zScoreYesterday: yesterdayWellness?.zScoreSoreness ?? null,
         };
       }
       if (data.metric === WellnessChartDataType.SLEEP) {
@@ -51,8 +51,8 @@ export default function setupChartData(
           ...data,
           today: todayWellness?.sleep ?? null,
           yesterday: yesterdayWellness?.sleep ?? null,
-          zScore: todayWellness?.sleepZScore ?? null,
-          zScoreYesterday: yesterdayWellness?.sleepZScore ?? null,
+          zScore: todayWellness?.zScoreSleep ?? null,
+          zScoreYesterday: yesterdayWellness?.zScoreSleep ?? null,
         };
       }
       return data;

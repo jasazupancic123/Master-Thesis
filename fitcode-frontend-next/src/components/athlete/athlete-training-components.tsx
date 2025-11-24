@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
@@ -56,6 +57,8 @@ export default function AthleteTrainingComponents(props: Props) {
   const { setTrainingInProgress } = useTraining();
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
+
+  const hasPlayedAudioRef = useRef(false);
 
   return (
     <Box
@@ -367,7 +370,12 @@ export default function AthleteTrainingComponents(props: Props) {
 
           setModal(false);
 
-          lib.common.audio.playSound('/sounds/training-in-progress-start.mp3');
+          if (hasPlayedAudioRef.current === false) {
+            lib.common.audio.playSound(
+              '/sounds/training-in-progress-start.mp3'
+            );
+            hasPlayedAudioRef.current = true;
+          }
 
           router.push(
             `/trainings/${training.id}/components/${selectedComponent.id}`

@@ -16,16 +16,14 @@ import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
 import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
-import RegisterUsersDashboard from '@/components/dashboard/modals/dashboard-register-users-modal';
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import RegisterUsersDashboardModal from '@/components/dashboard/modals/dashboard-register-users-modal';
+import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Group } from '@/core/institution/type/group.type';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { InputType } from '@/lib/common/const/input-type.const';
-import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -35,13 +33,7 @@ import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
-interface Props {
-  selectedView: AthletesTrainers;
-  group: Group | null;
-  setGroup: SetState<Group | null>;
-}
-
-export default function DashboardInstitution(props: Props) {
+export default function DashboardInstitution() {
   const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
   const { users } = useMain();
@@ -56,11 +48,9 @@ export default function DashboardInstitution(props: Props) {
     onHoverUser,
   } = useDashboardUserEdit();
 
-  const { selectedView, group, setGroup } = props;
-
   const { selectedInstitution } = useDashboard();
   const { removeUser, uploadUsers, isUploadingMembers, setIsUploadingMembers } =
-    useInstitutionMembers(group, setGroup);
+    useInstitutionMembers();
 
   const [search, setSearch] = useState('');
   const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
@@ -70,6 +60,10 @@ export default function DashboardInstitution(props: Props) {
 
   const [loading, setLoading] = useState(true);
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
+
+  const [selectedView, setSelectedView] = useState<AthletesTrainers>(
+    AthletesTrainers.ATHLETES
+  );
 
   useEffect(() => {
     const current =
@@ -123,10 +117,63 @@ export default function DashboardInstitution(props: Props) {
       flexDirection="column"
       justifyContent="center"
       width="100%"
-      maxWidth={MAX_WIDTH}
-      sx={{ backgroundColor: theme.palette.background.default }}
-      gap={4}
+      maxWidth={MAX_WIDTH_DASHBOARD}
+      sx={{ backgroundColor: theme.palette.background.default, mt: 2 }}
+      gap={2}
     >
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent="center"
+        gap={1}
+        alignItems="center"
+      >
+        {/* Athletes / Trainers selector */}
+        {Object.values(AthletesTrainers).map((type) => {
+          const isSelected = selectedView === type;
+
+          return (
+            <Box
+              key={type}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              onClick={() => {
+                setSelectedView(type);
+              }}
+              sx={{
+                px: 2,
+                py: 0.5,
+                backgroundColor: isSelected
+                  ? theme.palette.primary.main
+                  : theme.palette.background.default,
+                border: isSelected
+                  ? `1px solid ${theme.palette.primary.main}`
+                  : `1px solid ${theme.palette.text.primary}`,
+                borderRadius: 1,
+                cursor: 'pointer',
+              }}
+            >
+              <Typography
+                textAlign="center"
+                fontWeight={600}
+                width={80}
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  color: isSelected
+                    ? theme.palette.text.secondary
+                    : theme.palette.text.primary,
+                  userSelect: 'none',
+                }}
+              >
+                {type.charAt(0)?.toUpperCase() + type.slice(1)?.toLowerCase()}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
       <Box
         width="100%"
         display="flex"
@@ -282,23 +329,15 @@ export default function DashboardInstitution(props: Props) {
         )}
       </Box>
 
-      <MyModal
-        isOpen={openAddMemberModal}
-        setIsOpen={(open) => setOpenAddMemberModal(open)}
-        onConfirm={undefined}
-        onCancel={() => setOpenAddMemberModal(false)}
-        cancelText="Close"
-      >
-        <RegisterUsersDashboard
-          registerRole={
-            selectedView === AthletesTrainers.ATHLETES
-              ? UserRole.ATHLETE
-              : UserRole.TRAINER
-          }
-          group={group}
-          setGroup={setGroup}
-        />
-      </MyModal>
+      <RegisterUsersDashboardModal
+        open={openAddMemberModal}
+        setOpen={setOpenAddMemberModal}
+        registerRole={
+          selectedView === AthletesTrainers.ATHLETES
+            ? UserRole.ATHLETE
+            : UserRole.TRAINER
+        }
+      />
 
       <MyModal
         isOpen={openAddMemberViaCsvModal}

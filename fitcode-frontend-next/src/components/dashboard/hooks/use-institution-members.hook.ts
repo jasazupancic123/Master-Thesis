@@ -7,7 +7,6 @@ import useRegisterMemberForm from './use-register-member-form.hook';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import type { Group } from '@/core/institution/type/group.type';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { Gender } from '@/core/profile/enum/gender.enum';
 import { SportLevel } from '@/core/profile/enum/sport-level.enum';
@@ -15,25 +14,28 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { ProfileController } from '@/core/profile/profile.controller';
 import type { ImportProfile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
-export default function useInstitutionMembers(
-  group: Group | null,
-  setGroup: SetState<Group | null>
-) {
-  const { users, profiles, setProfiles, setUsers } = useMain();
+export default function useInstitutionMembers() {
+  const { users, profiles, setProfiles, setUsers, groups, setGroups } =
+    useMain();
   const { isFormEmpty, setFormData, formData, resetForm } =
     useRegisterMemberForm();
 
-  const { selectedInstitution, setSelectedInstitution } = useDashboard();
+  const {
+    selectedInstitution,
+    setSelectedInstitution,
+    selectedGroup,
+    setSelectedGroup,
+  } = useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
+  const [openUserAlreadyExistsModal, setOpenUserAlreadyExistsModal] =
+    useState(false);
 
   useEffect(() => {
     if (isFormEmpty()) return setIsUploadingMembers(false);
@@ -98,7 +100,8 @@ export default function useInstitutionMembers(
 
     const prevState = {
       institution: structuredClone(selectedInstitution),
-      group: group ? structuredClone(group) : null,
+      selectedGroup: selectedGroup ? structuredClone(selectedGroup) : null,
+      groups: structuredClone(groups || []),
       users: structuredClone(users || []),
       profiles: structuredClone(profiles || []),
     };
@@ -135,7 +138,20 @@ export default function useInstitutionMembers(
             athleteIds: prev!.athleteIds?.filter((id) => id !== userId),
           }));
 
-        setGroup((prev) =>
+        setGroups((prev) =>
+          prev.map((group) => {
+            if (!group.membersIds.includes(userId)) return group;
+            return {
+              ...group,
+              membersIds: group.membersIds.filter((id) => id !== userId),
+              members: (group.members || []).filter(
+                (member) => member.uid !== userId
+              ),
+            };
+          })
+        );
+
+        setSelectedGroup((prev) =>
           !prev
             ? prev
             : {
@@ -149,7 +165,8 @@ export default function useInstitutionMembers(
       },
       (snapshot) => {
         setSelectedInstitution(snapshot.institution);
-        setGroup(snapshot.group);
+        setSelectedGroup(snapshot.selectedGroup);
+        setGroups(snapshot.groups);
         setUsers(snapshot.users);
         setProfiles(snapshot.profiles);
       },
@@ -189,7 +206,7 @@ export default function useInstitutionMembers(
     const existingUser = users?.find((user) => user.email === email);
     if (existingUser) {
       setExistingUser(existingUser);
-      setOpenModal(true);
+      setIsUploadingMembers(true);
       return;
     }
 
@@ -367,8 +384,8 @@ export default function useInstitutionMembers(
     setExistingUser,
     isUploadingMembers,
     setIsUploadingMembers,
-    openModal,
-    setOpenModal,
+    openUserAlreadyExistsModal,
+    setOpenUserAlreadyExistsModal,
     registerUser,
     addUser,
     removeUser,

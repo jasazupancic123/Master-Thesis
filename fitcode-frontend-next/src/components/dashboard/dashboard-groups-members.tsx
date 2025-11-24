@@ -17,22 +17,16 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
-interface Props {
-  group: Group | null;
-}
-
-export default function DashboardGroupsMembers(props: Props) {
+export default function DashboardGroupsMembers() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
   const { users } = useMain();
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, removeGroupMember, updateGroup } =
+  const { selectedGroup, selectedInstitution, removeGroupMember, updateGroup } =
     useDashboard();
   const { setFilteredUsers, hoveredUser, toggleUser, onHoverUser } =
     useDashboardUserEdit();
-
-  const { group } = props;
 
   const [filteredMembers, setFilteredMembers] = useState<AuthUser[]>([]);
   const [search, setSearch] = useState('');
@@ -41,30 +35,32 @@ export default function DashboardGroupsMembers(props: Props) {
   const [openAddTrainersModal, setOpenAddTrainersModal] = useState(false);
 
   useEffect(() => {
-    if (!group) {
+    if (!selectedGroup) {
       setFilteredMembers([]);
       return;
     }
 
     if (!search) {
-      setFilteredMembers((group.trainers || []).concat(group.members || []));
+      setFilteredMembers(
+        (selectedGroup.trainers || []).concat(selectedGroup.members || [])
+      );
       return;
     }
 
     // add trainers array to goreup and map them on map
-    const filtered = (group.trainers || [])
-      .concat(group.members || [])
+    const filtered = (selectedGroup.trainers || [])
+      .concat(selectedGroup.members || [])
       .filter((user) => {
         if (!user.displayName) return false;
         return user.displayName.toLowerCase().includes(search.toLowerCase());
       });
 
     setFilteredMembers(filtered);
-  }, [users, selectedInstitution, group, search]);
+  }, [users, selectedInstitution, selectedGroup, search]);
 
   useEffect(() => {
     setSearch('');
-  }, [selectedInstitution, group]);
+  }, [selectedInstitution, selectedGroup]);
 
   return (
     <Box
@@ -86,8 +82,9 @@ export default function DashboardGroupsMembers(props: Props) {
           placeholder={'Search members'}
           value={search}
           handleSearchChange={(e) => {
-            if (!group) return;
-            const filtered = (group.members || []).filter((user) => {
+            if (!selectedGroup) return;
+
+            const filtered = (selectedGroup.members || []).filter((user) => {
               if (!user.displayName) return false;
               return user.displayName
                 .toLowerCase()
@@ -142,7 +139,7 @@ export default function DashboardGroupsMembers(props: Props) {
             px: 2,
           }}
         >
-          {!group ? (
+          {!selectedGroup ? (
             <Typography>No groups yet</Typography>
           ) : (
             <>
@@ -171,14 +168,14 @@ export default function DashboardGroupsMembers(props: Props) {
                           onClick={async (e) => {
                             e.stopPropagation();
 
-                            const isTrainer = group.trainerIds?.some(
+                            const isTrainer = selectedGroup.trainerIds?.some(
                               (id) => id === user.uid
                             );
 
                             if (isTrainer) {
                               const updatedGroup: Group = {
-                                ...group,
-                                trainerIds: group.trainerIds?.filter(
+                                ...selectedGroup,
+                                trainerIds: selectedGroup.trainerIds?.filter(
                                   (id) => id !== user.uid
                                 ),
                               };
@@ -187,7 +184,7 @@ export default function DashboardGroupsMembers(props: Props) {
                               return;
                             }
 
-                            await removeGroupMember(user.uid, group.id);
+                            await removeGroupMember(user.uid, selectedGroup.id);
                           }}
                           sx={{
                             position: 'absolute',
@@ -268,7 +265,6 @@ export default function DashboardGroupsMembers(props: Props) {
 
       <AddMembersModal
         users={selectedInstitution?.athletes || []}
-        group={group}
         enableFirstShowUsers
         enableScroll
         open={openAddMemberModal}
@@ -278,7 +274,6 @@ export default function DashboardGroupsMembers(props: Props) {
       <AddMembersModal
         addTrainers
         users={selectedInstitution?.trainers || []}
-        group={group}
         enableFirstShowUsers
         enableScroll
         open={openAddTrainersModal}

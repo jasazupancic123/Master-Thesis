@@ -384,15 +384,7 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
   },
   {
     id: 'bicep-rowing-exercises-sa',
-    exerciseIds: [
-      'biceps-curl-sa-db',
-      'bent-over-row-bb',
-      'bent-over-row-db',
-      'gorilla-row-kb',
-      'incline-bench-db-row',
-      'renegade-rows-db',
-      'upright-rows-bb',
-    ],
+    exerciseIds: ['biceps-curl-sa-db'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       leftSide: {
@@ -412,6 +404,32 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
         conditions: [
           {
             keypointId: KeypointId.RIGHT_WRIST,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.POSITIVE,
+            duration: 750, // ms
+            distance: 0.05, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    id: 'rowing-exercises',
+    exerciseIds: [
+      'bent-over-row-bb',
+      'bent-over-row-db',
+      'gorilla-row-kb',
+      'incline-bench-db-row',
+      'renegade-rows-db',
+      'upright-rows-bb',
+    ],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_WRIST,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_WRIST,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.POSITIVE,
             duration: 750, // ms

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import type { DataGridRowAthleteExerciseRow } from '../types/data-grid-row';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -16,7 +17,7 @@ export default function useAthleteExerciseReportDataGridData(
   selectedTraining: Training | null,
   cache: Map<string, Workload[]>
 ) {
-  const { selectedInstitution, trainings } = useDashboard();
+  const { selectedInstitution } = useDashboard();
 
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [rows, setRows] = useState<DataGridRowAthleteExerciseRow[]>([]);
@@ -24,7 +25,7 @@ export default function useAthleteExerciseReportDataGridData(
   const fontSize = 13;
 
   useEffect(() => {
-    if (!selectedAthlete || !selectedInstitution) {
+    if (!selectedAthlete || !selectedInstitution || !selectedTraining) {
       setRows([]);
       return;
     }
@@ -34,27 +35,18 @@ export default function useAthleteExerciseReportDataGridData(
 
       const rows = [] as DataGridRowAthleteExerciseRow[];
 
-      const athleteTrainings = trainings.filter((t) =>
-        t.membersIds.includes(selectedAthlete.uid)
-      );
+      const possibleExercises: TrainingExercise[] = selectedTraining.components
+        .map((c) => core.training.getAthleteSupersets(selectedAthlete.uid, c))
+        .flatMap((supersets) =>
+          supersets.flatMap((superset) => superset.exercises)
+        );
 
-      const uniquePossibleExercises: TrainingExercise[] = [
-        ...new Set(
-          athleteTrainings.flatMap((t) =>
-            t.components.flatMap((c) => [
-              ...c.supersets.flatMap((s) => s.exercises.map((e) => e)),
-              ...c.subgroups
-                .filter((s) => s.membersIds.includes(selectedAthlete.uid))
-                .flatMap((sg) =>
-                  sg.supersets.flatMap((ss) => ss.exercises.map((e) => e))
-                ),
-            ])
-          )
-        ),
-      ].filter(
-        (exercise, index, self) =>
-          index === self.findIndex((e) => e.id === exercise.id)
-      );
+      const uniquePossibleExercises: TrainingExercise[] = [];
+
+      for (const exercise of possibleExercises) {
+        if (!uniquePossibleExercises.find((e) => e.id === exercise.id))
+          uniquePossibleExercises.push(exercise);
+      }
 
       for (const exercise of uniquePossibleExercises) {
         const key = `${selectedAthlete.uid}-${exercise.id}`;

@@ -58,7 +58,7 @@ export default function DashboardGroups() {
       <AthleteOptionsContainer
         items={[EMPTY_STRING, EMPTY_STRING]}
         selectedItem={'none'}
-        onClick={(type) => {}}
+        onClick={(_) => {}}
         title="Groups"
         disabled
       />

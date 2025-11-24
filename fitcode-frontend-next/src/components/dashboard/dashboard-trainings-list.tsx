@@ -10,12 +10,10 @@ import { redirect } from 'next/navigation';
 import { Fragment } from 'react';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
-import useFilteredTrainingsList from './hooks/use-filtered-trainings-list';
 import { theme } from '@/app/style';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
-import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useMain } from '@/store/main.provider';
@@ -23,7 +21,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   trainings: Training[];
-  selectedGroups: Group[];
   filter: DashboardTrainingPlanFilter;
   upcoming?: boolean; // if true, then completed trainings were passed, if false, then upcoming
 }
@@ -32,11 +29,7 @@ export default function DashboardTrainingsList(props: Props) {
   const screenSize = useScreenSize();
   const { groups } = useMain();
 
-  const { trainings, selectedGroups, filter, upcoming } = props;
-  const { filteredTrainings } = useFilteredTrainingsList(
-    trainings,
-    selectedGroups
-  );
+  const { trainings, filter, upcoming } = props;
 
   const enabledComponents: (Component | undefined)[] =
     filter === DashboardTrainingPlanFilter.GAMES
@@ -50,7 +43,7 @@ export default function DashboardTrainingsList(props: Props) {
   return (
     <Box
       width="100%"
-      height={screenSize.isMobile ? '70vh' : '50vh'}
+      height={screenSize.isMobile ? '70vh' : '60vh'}
       display="flex"
       flexDirection="column"
       sx={{
@@ -60,7 +53,7 @@ export default function DashboardTrainingsList(props: Props) {
       }}
       gap={2}
     >
-      {filteredTrainings.map((training) => {
+      {trainings.map((training) => {
         const group = groups.find((g) => g.id === training.groupId);
         if (!group) return null;
 

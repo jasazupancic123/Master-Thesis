@@ -1,6 +1,6 @@
 export type IndexDbAthleteExerciseReport = {
   id: string;
-  institutionId: string;
+  groupId: string;
   userId?: string;
   userIds?: string[];
   exerciseId?: string;
