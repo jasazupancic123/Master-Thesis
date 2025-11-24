@@ -4,9 +4,9 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { Box, Drawer, IconButton } from '@mui/material';
 import { useState } from 'react';
 
+import DashboardSidebar from './dashboard-sidebar';
 import { theme } from '@/app/style';
 import { useDashboard } from '@/store/dashboard.provider';
-import DashboardSidebar from './dashboard-sidebar';
 
 export default function DashboardSidebarMobile() {
   const { selectedInstitution } = useDashboard();

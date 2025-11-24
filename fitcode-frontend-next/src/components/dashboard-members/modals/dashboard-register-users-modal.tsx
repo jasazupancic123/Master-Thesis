@@ -9,10 +9,8 @@ import {
   Typography,
 } from '@mui/material';
 
-import useInstitutionMembers from '../hooks/use-institution-members.hook';
-import useRegisterMemberForm, {
-  DEFAULT_FORM_DATA,
-} from '../hooks/use-register-member-form.hook';
+import useInstitutionMembers from '../../dashboard/hooks/use-institution-members.hook';
+import useRegisterMemberForm from '../../dashboard/hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';

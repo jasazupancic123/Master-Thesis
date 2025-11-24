@@ -17,13 +17,12 @@ import { lib } from '@/lib';
 import {
   DASHBOARD_VIEWS,
   INSTITUTION_PAGE_ID,
-  LINK_DASHBOARD_PLANNING,
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;
@@ -147,6 +146,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
           </Box>
         );
       })}
+
       <Menu
         anchorEl={anchorElRef.current}
         open={openMenu && lib.firebase.auth.isAdmin(role)}
@@ -168,7 +168,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
             onClick={() => {
               setSelectedInstitution(institution);
               setSelectedGroups(
-                institution.groups.filter((group) =>
+                (institution.groups || []).filter((group) =>
                   groups.some((g) => g.id === group.id)
                 )
               );

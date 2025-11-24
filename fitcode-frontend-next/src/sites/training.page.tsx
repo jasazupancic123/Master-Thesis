@@ -1,7 +1,6 @@
 'use client';
 
-import { Add } from '@mui/icons-material';
-import { Box, Fab, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';

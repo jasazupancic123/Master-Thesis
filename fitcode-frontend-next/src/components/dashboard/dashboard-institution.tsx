@@ -4,11 +4,12 @@ import { Edit, Remove } from '@mui/icons-material';
 import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import EditInstitutionModal from './modals/edit-institution-modal';
 import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
 import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
-import RegisterUsersDashboardModal from '@/components/dashboard/modals/dashboard-register-users-modal';
+import RegisterUsersDashboardModal from '@/components/dashboard-members/modals/dashboard-register-users-modal';
 import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
@@ -19,7 +20,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import EditInstitutionModal from './modals/edit-institution-modal';
 
 export default function DashboardInstitution() {
   const screenSize = useScreenSize();
@@ -40,7 +40,6 @@ export default function DashboardInstitution() {
   const { removeUser } = useInstitutionMembers();
 
   const [search, setSearch] = useState('');
-  const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
   const [openEditInstitutionModal, setOpenEditInstitutionModal] =
@@ -267,16 +266,6 @@ export default function DashboardInstitution() {
           })
         )}
       </Box>
-
-      <RegisterUsersDashboardModal
-        open={openAddMemberModal}
-        setOpen={setOpenAddMemberModal}
-        registerRole={
-          selectedView === AthletesTrainers.ATHLETES
-            ? UserRole.ATHLETE
-            : UserRole.TRAINER
-        }
-      />
 
       {selectedInstitution && (
         <EditInstitutionModal

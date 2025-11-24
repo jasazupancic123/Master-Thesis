@@ -1,9 +1,3 @@
-import { theme } from '@/app/style';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Group } from '@/core/group/type/group.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { Remove } from '@mui/icons-material';
 import {
   alpha,
@@ -13,6 +7,13 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Group } from '@/core/group/type/group.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   title: string;

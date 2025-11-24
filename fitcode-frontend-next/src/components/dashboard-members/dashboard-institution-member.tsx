@@ -1,9 +1,10 @@
-import { theme } from '@/app/style';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useSortable } from '@dnd-kit/sortable';
 import { Avatar, Box, Typography } from '@mui/material';
+
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   member: AuthUser;
@@ -23,10 +24,6 @@ export default function DashboardInstitutionMember(props: Props) {
 
   return (
     <Box
-      key={member.uid}
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       width={50}
       minWidth={50}
       maxWidth={50}
@@ -36,15 +33,27 @@ export default function DashboardInstitutionMember(props: Props) {
       alignItems="center"
       gap={0.5}
       sx={{
-        cursor: 'grab',
-        touchAction: 'none',
+        touchAction: 'pan-x',
         position: 'relative',
       }}
     >
-      <Avatar
-        src={member.photoURL || USER_AVATAR_IMG_URL}
-        sx={{ width: 50, height: 50 }}
-      />
+      <Box
+        key={member.uid}
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        sx={{
+          cursor: 'grab',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Avatar
+          src={member.photoURL || USER_AVATAR_IMG_URL}
+          sx={{ width: 50, height: 50 }}
+        />
+      </Box>
 
       {isTrainer && (
         <Box

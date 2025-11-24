@@ -1,6 +1,7 @@
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import DashboardPageContainer from './dashboard-page-container';
 import { Box, Typography } from '@mui/material';
+
+import DashboardPageContainer from './dashboard-page-container';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export default function DashboardHome() {
   const { user } = useAuthenticatedAuth();

@@ -1,10 +1,11 @@
-import { theme } from '@/app/style';
-import { Group } from '@/core/group/type/group.type';
-import { alpha, Box, Typography } from '@mui/material';
-import DashboardGroupCardUsers from './dashboard-group-card-users';
 import { useDroppable } from '@dnd-kit/core';
-import { SetState } from '@/lib/common/type/state.type';
+import { alpha, Box, Typography } from '@mui/material';
+
+import DashboardGroupCardUsers from './dashboard-group-card-users';
+import { theme } from '@/app/style';
+import type { Group } from '@/core/group/type/group.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   group: Group;
@@ -22,8 +23,8 @@ export default function DashboardGroupCard(props: Props) {
   return (
     <Box
       ref={setNodeRef}
-      width={396}
-      maxHeight={600}
+      width={380}
+      maxHeight={500}
       display="flex"
       flexDirection="column"
       justifyContent="flex-start"

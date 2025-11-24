@@ -22,7 +22,7 @@ export default function DashboardSchedule() {
 
   const { completedTrainings, upcomingTrainings } = useTrainingPlan();
 
-  useDashboardScheduleSnapshots();
+  useDashboardScheduleSnapshots(); // IMPORTANT!
 
   const [filter, setFilter] = useState<DashboardTrainingPlanFilter>(
     DashboardTrainingPlanFilter.TRAININGS

@@ -11,18 +11,18 @@ import {
 import type { RefObject } from 'react';
 import { useEffect, useState } from 'react';
 
+import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '../dashboard/constant/dashboard.const';
 import AddGroupModal from '../dashboard/modals/add-group-modal';
 import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
 import EditGroupModal from '../dashboard/modals/edit-group-modal';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
+import { theme } from '@/app/style';
 import type { Group } from '@/core/group/type/group.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { theme } from '@/app/style';
-import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '../dashboard/constant/dashboard.const';
 
 interface Props {
   achorElRef: RefObject<HTMLDivElement | null>;

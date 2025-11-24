@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { core } from '@/core/core.service';
-import { lib } from '@/lib';
 
 export default function useAthleteExerciseReportAthletes(
   passedUserId?: string,
