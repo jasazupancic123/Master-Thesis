@@ -231,18 +231,23 @@ export function onDragEndExerciseToExistingSuperset(
 
   if (!supersetWithExercise) return;
 
+  const index = destination.index;
+
   // onDragEnd inside the same superset
   if (supersetWithExercise === supersetWithNewExercise) {
-    // Get y coordinates of all exercises in the superset
-    const sortedExercises = supersetWithExercise.exercises
-      .map((e) => ({
-        exercise: e,
-        y:
-          document.getElementById(e.id)?.getBoundingClientRect().top ??
-          Infinity, // Default to Infinity if not found
-      }))
-      .sort((a, b) => a.y - b.y) // Sort by y coordinate
-      .map((item) => item.exercise); // Extract only exercises
+    const exerciseIndex = supersetWithExercise.exercises.findIndex(
+      (e) => e.id === draggableId
+    );
+
+    if (exerciseIndex === undefined || exerciseIndex === -1) return;
+
+    const [movedExercise] = supersetWithExercise.exercises.splice(
+      exerciseIndex,
+      1
+    );
+
+    const sortedExercises = [...supersetWithExercise.exercises];
+    sortedExercises.splice(index, 0, movedExercise);
 
     return supersetsCopy.map((superset) =>
       superset === supersetWithExercise
@@ -265,16 +270,9 @@ export function onDragEndExerciseToExistingSuperset(
   if (exerciseIndex === undefined || exerciseIndex === -1) return;
 
   const exercise = supersetWithExercise.exercises[exerciseIndex];
-  supersetWithNewExercise.exercises.push(exercise);
 
-  const newExercises = supersetWithNewExercise.exercises;
-  const sortedExercises = newExercises
-    .map((e) => ({
-      exercise: e,
-      y: document.getElementById(e.id)?.getBoundingClientRect().top ?? Infinity, // Default to Infinity if not found
-    }))
-    .sort((a, b) => a.y - b.y) // Sort by y coordinate
-    .map((item) => item.exercise); // Extract only exercises
+  const sortedExercises = [...supersetWithNewExercise.exercises];
+  sortedExercises.splice(index, 0, exercise);
 
   supersetWithNewExercise.exercises = sortedExercises;
   const oldFinalSupersetExercises = supersetWithExercise.exercises.filter(

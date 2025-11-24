@@ -24,13 +24,36 @@ export class AuthGuard implements CanActivate {
     if (!required) return true;
 
     const req = context.switchToHttp().getRequest<Request & { user: User }>();
-    if (!req.cookies) return false;
 
-    const session = req.cookies[SESSION_COOKIE_NAME];
-    if (!session) return false;
+    // 1) Try Bearer token (ID token authentication)
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = await this.firebase.auth.verifyIdToken(token, false);
+        req.user = await this.firebase.findUserById(decoded.uid);
+        return true;
+      } catch {
+        // fall through to cookie auth
+      }
+    }
 
-    const decoded = await this.firebase.auth.verifySessionCookie(session, true);
-    req.user = await this.firebase.findUserById(decoded.uid);
-    return true;
+    // 2) Try Session cookie authentication
+    const session = req.cookies?.[SESSION_COOKIE_NAME];
+    if (session) {
+      try {
+        const decoded = await this.firebase.auth.verifySessionCookie(
+          session,
+          true, // check revoked for sessions
+        );
+
+        req.user = await this.firebase.findUserById(decoded.uid);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    return false;
   }
 }

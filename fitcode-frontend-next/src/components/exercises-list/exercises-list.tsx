@@ -67,6 +67,7 @@ export default function ExercisesList({
                   ? '45%'
                   : '40%'
           }
+          minWidth={addExerciseForm ? 200 : undefined}
           sx={{
             cursor: 'pointer',
             border: `2px solid ${selectedExerciseIds?.includes(exercise.id) ? theme.palette.primary.main : 'transparent'}`,

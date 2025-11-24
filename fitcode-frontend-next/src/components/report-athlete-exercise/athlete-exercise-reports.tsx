@@ -13,33 +13,33 @@ import {
 } from '@dnd-kit/sortable';
 import { GridView, ViewWeek } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { v4 } from 'uuid';
 
 import AthleteExerciseDataGrid from '../report-athlete-exercise-data-grid/athlete-exercise-data-grid';
 import { updateReportInIndexDb } from './actions/actions-index-db';
 import AthleteExerciseReport from './athlete-exercise-report';
-import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from './const/index-db-id.const';
 import SetDetailsModal from './modals/set-details-modal';
 import type { AthleteExerciseReportType } from './types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from './types/index-db-athlete-exercise-report';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import AddButton from '@/ui/add-button';
 
 interface Props {
+  reports: AthleteExerciseReportType[];
+  setReports: SetState<AthleteExerciseReportType[]>;
   cache: Map<string, Workload[]>;
 }
 
 export default function AthleteExerciseReports(props: Props) {
-  const { selectedInstitution } = useDashboard();
+  const { selectedGroup } = useDashboard();
 
-  const { cache } = props;
+  const { reports, setReports, cache } = props;
 
-  const [reports, setReports] = useState<AthleteExerciseReportType[]>([]);
   const [activeWorkloadsForTooltip, setActiveWorkloadsForTooltip] = useState<
     Workload[]
   >([]);
@@ -56,51 +56,6 @@ export default function AthleteExerciseReports(props: Props) {
       },
     })
   );
-
-  useEffect(() => {
-    if (!selectedInstitution) return;
-
-    const setupReports = async () => {
-      if (reports.length) return;
-
-      const items = await lib.common.indexedDb.items.get(
-        INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID
-      );
-
-      const data: IndexDbAthleteExerciseReport[] = items?.payload;
-
-      const filteredData = (data || []).filter((item) => {
-        return item.institutionId === selectedInstitution.id;
-      });
-
-      if (filteredData && filteredData.length) {
-        setReports(
-          filteredData.map((item) => ({
-            id: item.id,
-            userId: item.userId || '',
-            userIds: item.userIds || [],
-            exerciseId: item.exerciseId,
-            type: item.type,
-          }))
-        );
-
-        return;
-      }
-
-      const id = v4();
-      setReports([
-        {
-          id,
-          userId: undefined,
-          userIds: [],
-          exerciseId: undefined,
-          type: 'single',
-        },
-      ]);
-    };
-
-    setupReports();
-  }, []);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -152,7 +107,7 @@ export default function AthleteExerciseReports(props: Props) {
       <Box>
         <AddButton
           onClick={async () => {
-            if (!selectedInstitution) return;
+            if (!selectedGroup) return;
 
             const id = v4();
 
@@ -180,7 +135,7 @@ export default function AthleteExerciseReports(props: Props) {
               ? {
                   id,
                   exerciseId: prevReport.exerciseId,
-                  institutionId: selectedInstitution.id,
+                  groupId: selectedGroup.id,
                   userId: prevReport.userId,
                   userIds: prevReport.userIds,
                   type: prevReport.type,

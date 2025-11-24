@@ -7,7 +7,7 @@ import { LINK_PROFILE } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 
-interface ProfileHeaderMenuProps {
+export interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;
   open: boolean;
   setOpen: SetState<boolean>;

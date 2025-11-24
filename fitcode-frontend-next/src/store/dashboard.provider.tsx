@@ -1,11 +1,11 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
+import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
@@ -18,11 +18,7 @@ import type {
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
-import {
-  DASHBOARD_VIEWS,
-  LINK_DASHBOARD_GROUPS,
-  LINK_DASHBOARD_TRAINING_PLAN,
-} from '@/lib/common/const/nav.const';
+import { LINK_DASHBOARD_PLANNING } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
 
@@ -38,6 +34,8 @@ export interface IDashboardContext {
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
+  selectedGroup: Group | null;
+  setSelectedGroup: SetState<Group | null>;
   trainings: Training[];
   setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
@@ -64,19 +62,17 @@ export const useDashboard = () => useContext(DashboardContext)!;
 export function DashboardProvider(props: Props) {
   const { children, institutionId, trainings: propsTrainings } = props;
 
-  const { role, user } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
   const {
     users,
     setUsers,
     setProfiles,
+    groups,
     setGroups,
     institutions: propsInstitutions,
   } = useMain();
 
-  const pathname = usePathname();
-  const { groups } = useMain();
-
-  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_GROUPS);
+  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_PLANNING);
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   const [institutions, setInstitutions] = useState<Institution[]>(() =>
@@ -99,37 +95,43 @@ export function DashboardProvider(props: Props) {
       return institution;
     });
 
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
   const [trainings, setTrainings] = useState<Training[]>([]);
+
+  useEffect(() => {
+    if (!selectedInstitution) return;
+
+    const setupSelectedGroup = async () => {
+      const lastSelectedGroupId = await lib.common.indexedDb.items.get(
+        INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID
+      );
+
+      if (lastSelectedGroupId?.payload) {
+        const groupId = lastSelectedGroupId.payload as string;
+
+        const group = selectedInstitution.groups?.find((g) => g.id === groupId);
+
+        if (group) {
+          setSelectedGroup(group);
+          return;
+        }
+      }
+
+      // Fallback to first group
+      const group = selectedInstitution.groups?.find((g) =>
+        groups.some((sg) => sg.id === g.id)
+      );
+
+      setSelectedGroup(group || null);
+    };
+
+    setupSelectedGroup();
+  }, []);
 
   useEffect(() => {
     setTrainings(propsTrainings);
   }, [propsTrainings]);
-
-  // update filter based on url
-  useEffect(() => {
-    if (!pathname || !role) return;
-
-    const lastItemInUrl = pathname.split('/').pop();
-    const links = DASHBOARD_VIEWS(role);
-    const matched =
-      lastItemInUrl && links.find((link) => link?.href.endsWith(lastItemInUrl));
-
-    setFilter(matched || LINK_DASHBOARD_TRAINING_PLAN);
-  }, [pathname, role]);
-
-  // reset selected group when institution changes
-  useEffect(() => {
-    if (!selectedInstitution || selectedInstitution.groups) return;
-    const filtered = groups.filter(
-      (g) => g.institutionId === selectedInstitution.id
-    );
-
-    for (const group of filtered) core.group.mapMembers(group, users);
-
-    setSelectedInstitution(
-      (prev) => ({ ...prev, groups: filtered }) as Institution
-    );
-  }, [selectedInstitution]);
 
   const value: IDashboardContext = {
     filter,
@@ -138,6 +140,8 @@ export function DashboardProvider(props: Props) {
     setInstitutions,
     selectedInstitution,
     setSelectedInstitution,
+    selectedGroup,
+    setSelectedGroup,
     trainings,
     setTrainings,
     detectedChanges,
@@ -181,6 +185,7 @@ export function DashboardProvider(props: Props) {
 
       function mapper(group: Group): Group {
         if (group.id !== groupId) return group;
+
         let newGroup: Group = {
           ...group,
           name: input.name ?? group.name,
@@ -196,6 +201,7 @@ export function DashboardProvider(props: Props) {
         setSelectedInstitution((prev) =>
           prev ? { ...prev, groups: prev.groups.map(mapper) } : prev
         );
+        setSelectedGroup((prev) => (prev ? mapper(prev) : prev));
         setGroups((prev) => prev.map(mapper));
       };
 
@@ -252,6 +258,16 @@ export function DashboardProvider(props: Props) {
                 athletes: prev.athletes.map(mapper),
                 trainers: prev.trainers.map(mapper),
                 owner: mapper(prev.owner),
+              }
+            : prev
+        );
+
+        setSelectedGroup((prev) =>
+          prev
+            ? {
+                ...prev,
+                members: prev.members?.map(mapper),
+                trainers: prev.trainers?.map(mapper),
               }
             : prev
         );
@@ -352,21 +368,22 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    addGroupMember: async (user: AuthUser, groupId: string) => {
-      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-      if (!selectedInstitution || !group) return;
+    addGroupMember: async (user: AuthUser) => {
+      if (!selectedInstitution || !selectedGroup) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(group),
+        group: structuredClone(selectedGroup),
       };
 
       const apply = () => {
         const newGroup: Group = {
-          ...group,
-          members: group.members ? [...group.members, user] : [user],
-          membersIds: group.membersIds
-            ? [...group.membersIds, user.uid]
+          ...selectedGroup,
+          members: selectedGroup.members
+            ? [...selectedGroup.members, user]
+            : [user],
+          membersIds: selectedGroup.membersIds
+            ? [...selectedGroup.membersIds, user.uid]
             : [user.uid],
         };
 
@@ -377,6 +394,7 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setSelectedGroup(newGroup);
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -390,8 +408,8 @@ export function DashboardProvider(props: Props) {
 
       const action = () =>
         InstitutionController.getInstance().addGroupMember(
-          group.institutionId,
-          group.id,
+          selectedGroup.institutionId,
+          selectedGroup.id,
           { userId: user.uid }
         );
 
@@ -402,20 +420,19 @@ export function DashboardProvider(props: Props) {
         prevState
       );
     },
-    removeGroupMember: async (userId: string, groupId: string) => {
-      const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-      if (!selectedInstitution || !group) return;
+    removeGroupMember: async (userId: string) => {
+      if (!selectedInstitution || !selectedGroup) return;
 
       const prevState = {
         institution: structuredClone(selectedInstitution),
-        group: structuredClone(group),
+        group: structuredClone(selectedGroup),
       };
 
       const apply = () => {
         const newGroup: Group = {
-          ...group,
-          members: group.members?.filter((m) => m.uid !== userId),
-          membersIds: group.membersIds?.filter((id) => id !== userId),
+          ...selectedGroup,
+          members: selectedGroup.members?.filter((m) => m.uid !== userId),
+          membersIds: selectedGroup.membersIds?.filter((id) => id !== userId),
         };
 
         setProfiles((prev) => prev.filter((m) => m.uid !== userId));
@@ -425,6 +442,7 @@ export function DashboardProvider(props: Props) {
             g.id === newGroup.id ? newGroup : g
           ),
         }));
+        setSelectedGroup(newGroup);
         setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -438,8 +456,8 @@ export function DashboardProvider(props: Props) {
 
       const action = () =>
         InstitutionController.getInstance().removeGroupMember(
-          group.institutionId,
-          group.id,
+          selectedGroup.institutionId,
+          selectedGroup.id,
           { userId }
         );
 
