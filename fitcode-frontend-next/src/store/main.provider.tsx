@@ -1,9 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth, withAuth } from './auth.provider';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
+import { ExerciseController } from '@/core/exercise/exercise.controller';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
 import type { Group } from '@/core/institution/type/group.type';
@@ -103,6 +106,44 @@ export default function MainProvider(props: MainProviderProps) {
     props.institution.protocols
   );
 
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  useEffect(() => {
+    const institutionId = props.institution.id;
+    if (!institutionId) return;
+
+    async function fetchExercises() {
+      const serverRevision = props.institution.exercisesRevision || 0;
+
+      console.log('server revision', serverRevision);
+
+      try {
+        const cachedExercises = await core.exercise.getCached(institutionId);
+        const cachedRevision = await core.exercise.getRevision(institutionId);
+
+        console.log('cached revision', cachedRevision);
+
+        if (cachedExercises) setExercises(cachedExercises);
+        if (serverRevision && cachedRevision === serverRevision) {
+          console.log('Exercises are up to date, no need to fetch');
+          return;
+        }
+
+        const exercises =
+          await ExerciseController.getInstance().findAll(institutionId);
+
+        setExercises(exercises);
+        await core.exercise.saveToCache(institutionId, exercises);
+        await core.exercise.saveRevision(institutionId, serverRevision);
+      } catch (e) {
+        console.error('Failed to fetch exercises', e);
+        toast.error('Failed to fetch exercises');
+      }
+    }
+
+    fetchExercises().then();
+  }, []);
+
   const value: IMainContext = {
     profile: profiles.find((p) => p.uid === user?.uid)!,
     setProfile: ((profile?: Profile) => {
@@ -115,8 +156,8 @@ export default function MainProvider(props: MainProviderProps) {
     setProfiles,
     users,
     setUsers,
-    exercises: [],
-    setExercises: () => {},
+    exercises,
+    setExercises,
     institutions: props.institutions,
     groups,
     setGroups,

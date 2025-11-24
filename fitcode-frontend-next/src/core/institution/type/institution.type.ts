@@ -9,6 +9,7 @@ export interface Institution extends BaseEntity {
   trainerIds: string[]; // all managers and trainers
   athleteIds: string[]; // all athletes
   imageUrl: string;
+  exercisesRevision?: number;
 
   // mapped properties
   owner: AuthUser;

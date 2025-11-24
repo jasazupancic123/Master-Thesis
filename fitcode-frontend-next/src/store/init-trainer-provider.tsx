@@ -7,8 +7,6 @@ import type { MainProviderProps } from '@/store/main.provider';
 import { CoachMainProvider } from '@/store/main.provider';
 import Alert from '@/ui/alert';
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 export default async function InitTrainerProvider({
   children,
 }: React.PropsWithChildren) {
@@ -29,18 +27,16 @@ export default async function InitTrainerProvider({
     const institutionId = institutions[0]?.id;
     if (!institutionId) throw new Error('No institution found');
 
-    const [institution, activeTraining, exerciseAiPrescriptions, wellness] =
-      await Promise.all([
-        controller.institution.init(institutionId, { session }),
-        controller.training.getActiveTrainingByAthlete({ session }),
-        controller.exerciseAiPrescriptions.findAll({ session }),
-        controller.profile.getWellnessByInstitution(institutionId, { session }),
-      ]);
+    const [institution, exerciseAiPrescriptions, wellness] = await Promise.all([
+      controller.institution.init(institutionId, { session }),
+      controller.exerciseAiPrescriptions.findAll({ session }),
+      controller.profile.getWellnessByInstitution(institutionId, { session }),
+    ]);
 
     const data: MainProviderProps = {
       institutions,
       institution,
-      activeTraining,
+      activeTraining: null,
       exerciseAiPrescriptions,
       wellness,
       trainings: [],
@@ -54,6 +50,6 @@ export default async function InitTrainerProvider({
     );
   } catch (e) {
     console.error('[TrainerProvider] error', e);
-    return <Alert type="unauthorized" />;
+    return <Alert type="error" errorMessage={(e as Error).message} />;
   }
 }

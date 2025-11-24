@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
 import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
@@ -27,6 +27,12 @@ export class Institution extends BaseEntity {
   @Expose()
   @IsOptional()
   imageUrl?: string;
+
+  @IsNumber()
+  @ApiPropertyOptional()
+  @Expose()
+  @IsOptional()
+  exercisesRevision?: number;
 
   // virtual, must be populated
   trainerIds: string[];

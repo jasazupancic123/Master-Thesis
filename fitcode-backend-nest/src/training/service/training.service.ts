@@ -280,6 +280,7 @@ export class TrainingService implements Permission<Training, Institution> {
         : input.membersIds;
 
     const exercises = await this.exerciseService.findAll(user, institutionId);
+
     this.trainingPlanService.validateTrainingComponents(
       inputComponents,
       membersIds,
