@@ -4,8 +4,8 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { core } from '@/core/core.service';
-import { GroupController } from '@/core/group/group.controller';
-import type { Group } from '@/core/group/type/group.type';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import type { Group } from '@/core/institution/type/group.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -60,7 +60,7 @@ export default function AddGroupModal(props: Props) {
 
         handleApiRequest(
           router,
-          () => GroupController.getInstance().create(input),
+          () => InstitutionController.getInstance().createGroup(input),
           (group) => {
             group = core.group.mapMembers(group, users);
 

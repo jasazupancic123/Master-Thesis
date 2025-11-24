@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
-import type { Group } from '@/core/group/type/group.type';
-import type { GroupEvent } from '@/core/group/type/group-event.type';
+import type { Group } from '@/core/institution/type/group.type';
+import type { GroupEvent } from '@/core/institution/type/group-event.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';

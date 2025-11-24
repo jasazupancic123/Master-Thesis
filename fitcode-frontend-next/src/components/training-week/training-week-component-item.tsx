@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material';
 
 import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 import { core } from '@/core/core.service';
-import type { GroupEvent } from '@/core/group/type/group-event.type';
+import type { GroupEvent } from '@/core/institution/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';

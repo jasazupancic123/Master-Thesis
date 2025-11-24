@@ -15,7 +15,7 @@ import { theme } from '@/app/style';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useMain } from '@/store/main.provider';

@@ -1,6 +1,5 @@
 import { BaseController } from '../base.controller';
 import type { CustomClaims } from './type/custom-claims.type';
-import type { FilterUsers } from './type/filter-user-query.type';
 import type { AuthUser, CreateUser, UpdateUser } from './type/user.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 
@@ -26,10 +25,6 @@ export class AuthController extends BaseController {
 
   async logout(options?: FetchOptions) {
     return this.api.post('/logout', {}, options);
-  }
-
-  async findAll(query?: FilterUsers, options?: FetchOptions) {
-    return this.api.get<AuthUser[]>('/', { query, ...options });
   }
 
   async findMe(options?: FetchOptions) {

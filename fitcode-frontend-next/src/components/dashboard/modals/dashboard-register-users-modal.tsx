@@ -11,7 +11,7 @@ import {
 
 import useInstitutionMembers from '../hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../hooks/use-register-member-form.hook';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { SetState } from '@/lib/common/type/state.type';
 import MyModal from '@/ui/modal';
