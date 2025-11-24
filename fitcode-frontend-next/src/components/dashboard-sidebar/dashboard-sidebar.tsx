@@ -11,14 +11,22 @@ import DashboardSidebarMenuItems from './dashboard-sidebar-menu-items';
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
+import Logo from '@/ui/logo';
 import ProfileCard from '@/ui/profile-card';
 
-export default function DashboardSidebar() {
+interface Props {
+  setDrawerOpen?: SetState<boolean>;
+}
+
+export default function DashboardSidebar(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { selectedInstitution, selectedGroup } = useDashboard();
+  const { selectedInstitution, selectedGroups } = useDashboard();
+
+  const { setDrawerOpen } = props;
 
   const [openGroupsMenu, setOpenGroupsMenu] = useState(false);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
@@ -30,7 +38,8 @@ export default function DashboardSidebar() {
 
   if (!selectedInstitution) return null;
 
-  const shortGroupName = selectedGroup ? selectedGroup.name.slice(0, 3) : '';
+  const shortGroupName =
+    selectedGroups.length === 1 ? selectedGroups[0]?.name.slice(0, 4) : 'All';
 
   return (
     <>
@@ -55,28 +64,13 @@ export default function DashboardSidebar() {
       >
         <Box
           width={DASHBOARD_SIDEBAR_WIDTH}
-          maxWidth={DASHBOARD_SIDEBAR_WIDTH}
           display="flex"
           flexDirection="column"
           alignItems="center"
           justifyContent="flex-start"
-          sx={{
-            px: 2,
-            cursor: 'pointer',
-          }}
+          gap={4}
         >
-          <Typography
-            width="100%"
-            textAlign="start"
-            fontSize={10}
-            lineHeight={1}
-            fontStyle="italic"
-            sx={{
-              color: alpha(theme.palette.text.primary, 0.6),
-            }}
-          >
-            Selected group
-          </Typography>
+          <Logo width={160} />
           <Box
             width={DASHBOARD_SIDEBAR_WIDTH}
             maxWidth={DASHBOARD_SIDEBAR_WIDTH}
@@ -86,75 +80,103 @@ export default function DashboardSidebar() {
             justifyContent="flex-start"
             sx={{
               px: 2,
-              position: 'relative',
+              cursor: 'pointer',
             }}
-            onClick={() => {
-              setOpenGroupsMenu((prev) => !prev);
-            }}
-            gap={!selectedGroup ? 0.5 : 0}
           >
             <Typography
               width="100%"
-              fontSize={40}
-              fontWeight={800}
-              lineHeight={1.2}
               textAlign="start"
-              ref={anchorElGroupsRef}
-              sx={{
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                color: theme.palette.primary.main,
-              }}
-            >
-              {shortGroupName}
-            </Typography>
-
-            <Typography
-              width="100%"
-              maxWidth={DASHBOARD_SIDEBAR_WIDTH}
-              textAlign="start"
-              fontSize={14}
-              fontWeight={600}
+              fontSize={10}
               lineHeight={1}
+              fontStyle="italic"
               sx={{
-                color: !selectedGroup
-                  ? theme.palette.text.primary
-                  : theme.palette.primary.main,
-                textTransform: !selectedGroup ? undefined : 'uppercase',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                color: alpha(theme.palette.text.primary, 0.6),
               }}
             >
-              {selectedGroup ? selectedGroup.name : '-'}
+              Selected athletes
             </Typography>
-
-            <IconButton
+            <Box
+              width={DASHBOARD_SIDEBAR_WIDTH}
+              maxWidth={DASHBOARD_SIDEBAR_WIDTH}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="flex-start"
               sx={{
-                p: 0,
-                m: 0,
-                position: 'absolute',
-                bottom: -6,
-                right: 3,
-                transform: 'translateY(-50%)',
-                zIndex: 10,
-                backgroundColor: theme.palette.background.default,
-                borderRadius: '50%',
+                px: 2,
+                position: 'relative',
               }}
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 setOpenGroupsMenu((prev) => !prev);
               }}
+              gap={!selectedGroups.length ? 0.5 : 0}
             >
-              {openGroupsMenu ? (
-                <KeyboardArrowUpOutlined sx={{ fontSize: 16 }} />
-              ) : (
-                <KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />
-              )}
-            </IconButton>
-          </Box>
+              <Typography
+                width="100%"
+                fontSize={50}
+                fontWeight={800}
+                lineHeight={1}
+                textAlign="start"
+                ref={anchorElGroupsRef}
+                sx={{
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  color: theme.palette.text.primary,
+                }}
+              >
+                {shortGroupName}
+              </Typography>
 
-          <DashboardSidebarMenuItems />
+              <Typography
+                width="100%"
+                maxWidth={DASHBOARD_SIDEBAR_WIDTH}
+                textAlign="start"
+                fontSize={14}
+                fontWeight={600}
+                lineHeight={1}
+                sx={{
+                  textTransform: !selectedGroups.length
+                    ? undefined
+                    : 'uppercase',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {selectedGroups.length > 1
+                  ? 'All'
+                  : selectedGroups.length === 1
+                    ? selectedGroups[0]?.name
+                    : '-'}
+              </Typography>
+
+              <IconButton
+                sx={{
+                  p: 0,
+                  m: 0,
+                  position: 'absolute',
+                  bottom: -6,
+                  right: 3,
+                  transform: 'translateY(-50%)',
+                  zIndex: 10,
+                  backgroundColor: theme.palette.background.default,
+                  borderRadius: '50%',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenGroupsMenu((prev) => !prev);
+                }}
+              >
+                {openGroupsMenu ? (
+                  <KeyboardArrowUpOutlined sx={{ fontSize: 16 }} />
+                ) : (
+                  <KeyboardArrowDownOutlined sx={{ fontSize: 16 }} />
+                )}
+              </IconButton>
+            </Box>
+
+            <DashboardSidebarMenuItems setDrawerOpen={setDrawerOpen} />
+          </Box>
         </Box>
         <Box
           width="100%"

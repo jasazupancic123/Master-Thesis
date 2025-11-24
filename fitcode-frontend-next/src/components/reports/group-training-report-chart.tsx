@@ -14,24 +14,20 @@ import { useDashboard } from '@/store/dashboard.provider';
 type AttendanceData = Record<string, GroupTrainingReportItem>;
 
 type Props = {
-  groupId?: string;
-  selectedUserId?: string;
   selectedComponentId?: string;
 };
 
 const cache = new Map<string, AttendanceData>();
 
 export default function GroupTrainingReportChart({
-  groupId,
-  selectedUserId,
   selectedComponentId,
 }: Props) {
-  const { selectedInstitution, trainings } = useDashboard();
+  const { selectedGroups, trainings } = useDashboard();
 
-  const group = selectedInstitution?.groups?.find((g) => g.id === groupId);
-  const members = selectedUserId
-    ? (group?.members || []).filter((m) => m.uid === selectedUserId)
-    : group?.members || [];
+  const members = lib.common.generic.getUnique(
+    selectedGroups.flatMap((g) => g.members || []),
+    'uid'
+  );
 
   const [data, setData] = useState<
     (GroupTrainingReportItem & {
@@ -42,6 +38,10 @@ export default function GroupTrainingReportChart({
   >([]);
 
   useEffect(() => {
+    if (selectedGroups.length !== 1) return;
+
+    const group = selectedGroups[0];
+
     if (!group) return;
 
     const key = selectedComponentId
@@ -65,7 +65,7 @@ export default function GroupTrainingReportChart({
     };
 
     fetchAttendance();
-  }, [group, selectedComponentId, selectedUserId]);
+  }, [selectedGroups, selectedComponentId]);
 
   const updateData = (attendanceData: AttendanceData) => {
     setData(

@@ -30,7 +30,7 @@ export default function AddGroupModal(props: ModalProps) {
     selectedInstitution,
     setSelectedInstitution,
     setDetectedChanges,
-    setSelectedGroup,
+    setSelectedGroups,
   } = useDashboard();
 
   const { open, setOpen } = props;
@@ -77,10 +77,13 @@ export default function AddGroupModal(props: ModalProps) {
 
             setGroups((prev) => [...prev, group]);
 
-            setSelectedGroup(group);
+            setSelectedGroups((prev) =>
+              prev.length === 1 ? [group] : [...prev, group]
+            );
             setOpen(false);
             setGroupName('');
             setDetectedChanges(false);
+            setOwner(null);
 
             lib.common.indexedDb.items.put({
               id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,

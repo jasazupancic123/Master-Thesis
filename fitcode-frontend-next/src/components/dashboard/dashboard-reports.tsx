@@ -1,20 +1,19 @@
 'use client';
 
 import { Avatar, Box, Tab, Tabs, Tooltip } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
 import WellnessReports from '../report-wellness/wellness-reports';
-import AthleteTrainingsRealizationChart from '../reports/athlete-trainings-realization-chart';
 import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
 import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -31,16 +30,10 @@ const cache = new Map<string, Workload[]>(); // LATER PUT THIS EVEN ONE HIGHER, 
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
-  const { selectedInstitution } = useDashboard();
-  const { selectedGroup } = useDashboard();
-  const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
+  const { selectedGroups } = useDashboard();
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
   );
-
-  useEffect(() => {
-    setSelectedUser(null);
-  }, [selectedGroup]);
 
   const { athleteExerciseReports, setAthleteExercisesReports } =
     useAthleteExerciseReports();
@@ -75,10 +68,7 @@ export default function DashboardReports() {
           cache={cache}
         />
       ) : tab === ReportTab.Wellness ? (
-        <WellnessReports
-          groupId={selectedGroup?.id}
-          selectedUserId={selectedUser?.uid}
-        />
+        <WellnessReports />
       ) : (
         <>
           <Box
@@ -97,44 +87,40 @@ export default function DashboardReports() {
               gap={1}
               alignItems="center"
             >
-              {(selectedGroup?.members || []).map((user) => {
-                if (!user || !user.displayName) return;
+              {lib.common.generic
+                .getUnique(
+                  selectedGroups.flatMap((g) => g.members || []),
+                  'uid'
+                )
+                .map((user) => {
+                  if (!user || !user.displayName) return;
 
-                return (
-                  <Box
-                    key={user.uid}
-                    display="flex"
-                    flexDirection="column"
-                    gap={1}
-                    sx={{
-                      position: 'relative',
-                      border:
-                        user.uid === selectedUser?.uid
-                          ? `2px solid ${theme.palette.primary.main}`
-                          : '2px solid transparent',
-                      borderRadius: '50%',
-                      padding: '1px',
-                    }}
-                  >
-                    <Tooltip title={user.displayName}>
-                      <Avatar
-                        className="avatar-border"
-                        src={user.photoURL || USER_AVATAR_IMG_URL}
-                        sx={{
-                          width: screenSize.isMobile ? 20 : 35,
-                          height: screenSize.isMobile ? 20 : 35,
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => {
-                          setSelectedUser(
-                            user.uid === selectedUser?.uid ? null : user
-                          );
-                        }}
-                      />
-                    </Tooltip>
-                  </Box>
-                );
-              })}
+                  return (
+                    <Box
+                      key={user.uid}
+                      display="flex"
+                      flexDirection="column"
+                      gap={1}
+                      sx={{
+                        position: 'relative',
+                        borderRadius: '50%',
+                        padding: '1px',
+                      }}
+                    >
+                      <Tooltip title={user.displayName}>
+                        <Avatar
+                          className="avatar-border"
+                          src={user.photoURL || USER_AVATAR_IMG_URL}
+                          sx={{
+                            width: screenSize.isMobile ? 20 : 35,
+                            height: screenSize.isMobile ? 20 : 35,
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </Tooltip>
+                    </Box>
+                  );
+                })}
             </Box>
 
             <ExerciseChips
@@ -156,22 +142,18 @@ export default function DashboardReports() {
           {tab === ReportTab.Realization && (
             <Box>
               <GroupTrainingReportChart
-                groupId={selectedGroup?.id}
-                selectedUserId={selectedUser?.uid}
                 selectedComponentId={selectedComponent?.field}
               />
 
-              {selectedUser && (
-                <AthleteTrainingsRealizationChart
-                  institutionId={selectedInstitution!.id}
-                  athleteId={selectedUser.uid}
-                  componentId={
-                    selectedComponent && !Array.isArray(selectedComponent)
-                      ? selectedComponent.field
-                      : undefined
-                  }
-                />
-              )}
+              {/* <AthleteTrainingsRealizationChart
+                institutionId={selectedInstitution!.id}
+                athleteId={selectedUser.uid}
+                componentId={
+                  selectedComponent && !Array.isArray(selectedComponent)
+                    ? selectedComponent.field
+                    : undefined
+                }
+              /> */}
             </Box>
           )}
         </>

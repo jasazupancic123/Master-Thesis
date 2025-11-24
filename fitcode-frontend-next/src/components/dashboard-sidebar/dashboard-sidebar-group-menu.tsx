@@ -1,20 +1,22 @@
 import { Add, Delete, Edit } from '@mui/icons-material';
 import {
   Box,
-  Divider,
   IconButton,
   Menu,
   MenuItem,
+  Paper,
   Tooltip,
   Typography,
 } from '@mui/material';
 import type { RefObject } from 'react';
 import { useEffect, useState } from 'react';
 
+import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '../dashboard/constant/dashboard.const';
 import AddGroupModal from '../dashboard/modals/add-group-modal';
 import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
 import EditGroupModal from '../dashboard/modals/edit-group-modal';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
+import { theme } from '@/app/style';
 import type { Group } from '@/core/group/type/group.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -31,7 +33,7 @@ interface Props {
 export default function DashboardSidebarGroupMenu(props: Props) {
   const { role } = useAuthenticatedAuth();
   const { groups } = useMain();
-  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+  const { selectedInstitution, selectedGroups, setSelectedGroups } =
     useDashboard();
 
   const { achorElRef, openGroupsMenu, setOpenGroupsMenu } = props;
@@ -100,62 +102,105 @@ export default function DashboardSidebarGroupMenu(props: Props) {
           vertical: 'top',
           horizontal: 'left',
         }}
-        sx={{ top: !selectedGroup ? 20 : 48 }}
+        sx={{ top: !selectedGroups.length ? 20 : 48 }}
+        PaperProps={{
+          sx: {
+            overflow: 'visible', // allow the actions container to "stick out" to the right
+            backgroundColor: theme.palette.background.selectedBackground,
+          },
+        }}
       >
-        {/* Actions row */}
-        <Box display="flex" gap={0.5}>
+        <Box
+          sx={{
+            position: 'relative',
+          }}
+        >
+          {/* GROUP LIST */}
           {!institutionAndTrainerGroups.length ? (
             <Typography sx={{ px: 1 }}>No groups</Typography>
           ) : (
-            <Box display="flex" flexDirection="column" sx={{ maxHeight: 300 }}>
+            <Box
+              display="flex"
+              flexDirection="column"
+              sx={{
+                maxHeight: 300,
+                overflowY: 'auto',
+              }}
+            >
+              <MenuItem
+                value={DASHBOARD_ALL_GROUPS_SELECTED_ID}
+                onClick={async () => {
+                  setSelectedGroups(
+                    (selectedInstitution?.groups || []).filter((g) =>
+                      groups.some((sg) => sg.id === g.id)
+                    ) || []
+                  );
+                  setOpenGroupsMenu(false);
+
+                  await lib.common.indexedDb.items.put({
+                    id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,
+                    payload: DASHBOARD_ALL_GROUPS_SELECTED_ID,
+                    updatedAt: new Date().getTime(),
+                  });
+                }}
+              >
+                <Typography>All</Typography>
+              </MenuItem>
               {institutionAndTrainerGroups
                 .sort((a, b) => a.name.localeCompare(b.name))
-                .map((group: Group) => {
-                  return (
-                    <MenuItem
-                      key={group.id}
-                      value={group.id}
-                      onClick={async () => {
-                        setSelectedGroup(group);
-                        setOpenGroupsMenu(false);
+                .map((group: Group) => (
+                  <MenuItem
+                    key={group.id}
+                    value={group.id}
+                    onClick={async () => {
+                      setSelectedGroups([group]);
+                      setOpenGroupsMenu(false);
 
-                        await lib.common.indexedDb.items.put({
-                          id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,
-                          payload: group.id,
-                          updatedAt: new Date().getTime(),
-                        });
-                      }}
-                    >
-                      <Typography>{group.name}</Typography>
-                    </MenuItem>
-                  );
-                })}
+                      await lib.common.indexedDb.items.put({
+                        id: INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID,
+                        payload: group.id,
+                        updatedAt: new Date().getTime(),
+                      });
+                    }}
+                  >
+                    <Typography>{group.name}</Typography>
+                  </MenuItem>
+                ))}
             </Box>
           )}
-          <Divider orientation="vertical" flexItem />
-          <Box display="flex" flexDirection="column" sx={{ px: 0.5 }} gap={1}>
-            {groupActions.map((action) => (
-              <Tooltip
-                key={action.title}
-                title={action.title}
-                arrow
-                placement="right"
-              >
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    action.onClick();
-                  }}
-                  sx={{
-                    p: 0,
-                    m: 0,
-                  }}
+
+          {/* ACTIONS BAR – FLOATING TO THE RIGHT */}
+          {!!groupActions.length && (
+            <Paper
+              elevation={3}
+              sx={{
+                position: 'absolute',
+                top: -46,
+                right: -40, // move it outside the main menu paper to the right
+                display: 'flex',
+                gap: 1,
+                border: `1px solid ${theme.palette.primary.main}`,
+                borderRadius: 1,
+              }}
+            >
+              {groupActions.map((action) => (
+                <Tooltip
+                  key={action.title}
+                  title={action.title}
+                  arrow
+                  placement="top"
                 >
-                  {action.icon}
-                </IconButton>
-              </Tooltip>
-            ))}
-          </Box>
+                  <IconButton
+                    size="small"
+                    onClick={action.onClick}
+                    sx={{ p: 0.5 }}
+                  >
+                    {action.icon}
+                  </IconButton>
+                </Tooltip>
+              ))}
+            </Paper>
+          )}
         </Box>
       </Menu>
 
