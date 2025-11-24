@@ -143,28 +143,34 @@ export default function ExercisesPage() {
       name: 'Import Exercises',
       onClick: () => setModal((prev) => ({ ...prev, import: true })),
     },
-    {
-      icon: <Publish />,
-      name: 'Import Muscle Values',
-      onClick: () => setModal((prev) => ({ ...prev, muscleValues: true })),
-    },
-    {
-      icon: <Download />,
-      name: 'Export Ai Prescriptions',
-      onClick: () => {
-        lib.common.file.downloadJson(
-          EXERCISE_POSES,
-          'exercise-ai-prescriptions.json'
-        );
-      },
-    },
-    {
-      icon: <Publish />,
-      name: 'Import Ai Prescriptions',
-      onClick: () =>
-        setModal((prev) => ({ ...prev, importAiPrescriptions: true })),
-    },
-  ];
+    lib.firebase.auth.isAdmin(role)
+      ? {
+          icon: <Publish />,
+          name: 'Import Muscle Values',
+          onClick: () => setModal((prev) => ({ ...prev, muscleValues: true })),
+        }
+      : undefined,
+    lib.firebase.auth.isAdmin(role)
+      ? {
+          icon: <Download />,
+          name: 'Export Ai Prescriptions',
+          onClick: () => {
+            lib.common.file.downloadJson(
+              EXERCISE_POSES,
+              'exercise-ai-prescriptions.json'
+            );
+          },
+        }
+      : undefined,
+    lib.firebase.auth.isAdmin(role)
+      ? {
+          icon: <Publish />,
+          name: 'Import Ai Prescriptions',
+          onClick: () =>
+            setModal((prev) => ({ ...prev, importAiPrescriptions: true })),
+        }
+      : undefined,
+  ].filter((s) => s !== undefined);
 
   /**
    * Filter exercises

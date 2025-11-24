@@ -3,13 +3,15 @@ import { useMemo, useState } from 'react';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import { core } from '@/core/core.service';
+import { lib } from '@/lib';
 
 export default function useAthleteExerciseReportAthletes(
   passedUserId?: string,
   passedUserIds?: string[]
 ) {
   const { users } = useMain();
-  const { selectedGroup } = useDashboard();
+  const { selectedGroups } = useDashboard();
 
   const [selectedAthlete, setSelectedAthlete] = useState<AuthUser | null>(
     passedUserId ? users.find((u) => u.uid === passedUserId) || null : null
@@ -20,14 +22,19 @@ export default function useAthleteExerciseReportAthletes(
   const [searchAthleteText, setSearchAthleteText] = useState('');
 
   const filteredAthletes = useMemo<AuthUser[]>(() => {
-    const allAthletes = selectedGroup?.members || [];
+    const allAthletes = lib.common.generic.getUnique(
+      selectedGroups.flatMap((group) => group?.members || []),
+      'uid'
+    );
+
     if (searchAthleteText.trim() === '') return allAthletes;
 
     const lowerSearch = searchAthleteText.toLowerCase();
+
     return allAthletes.filter((athlete) =>
       athlete.displayName?.toLowerCase().includes(lowerSearch)
     );
-  }, [selectedGroup, searchAthleteText]);
+  }, [selectedGroups, searchAthleteText]);
 
   return {
     selectedAthlete,

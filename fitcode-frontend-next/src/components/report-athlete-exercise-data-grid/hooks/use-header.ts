@@ -5,12 +5,13 @@ import { core } from '@/core/core.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { lib } from '@/lib';
 
 export default function useAthleteExerciseReportDataGridHeader(
   selectedAthlete: AuthUser | null,
   setSelectedTraining: SetState<Training | null>
 ) {
-  const { selectedInstitution, trainings } = useDashboard();
+  const { selectedGroups, trainings } = useDashboard();
 
   const [searchAthlete, setSearchAthlete] = useState('');
   const [openSelectAthleteMenu, setOpenAthleteMenu] = useState(false);
@@ -23,7 +24,11 @@ export default function useAthleteExerciseReportDataGridHeader(
   const percentageCalculationAnchorElRef = useRef<HTMLElement | null>(null);
 
   const filteredAthletes = useMemo<AuthUser[]>(() => {
-    const allAthletes = selectedInstitution?.athletes || [];
+    const allAthletes = lib.common.generic.getUnique(
+      selectedGroups.flatMap((group) => group.members || []),
+      'uid'
+    );
+
     if (searchAthlete.trim() === '') return allAthletes;
 
     const lowerSearch = searchAthlete.toLowerCase();
@@ -31,7 +36,7 @@ export default function useAthleteExerciseReportDataGridHeader(
     return allAthletes.filter((athlete) =>
       athlete.displayName?.toLowerCase().includes(lowerSearch)
     );
-  }, [selectedInstitution, searchAthlete]);
+  }, [selectedGroups, searchAthlete]);
 
   useEffect(() => {
     if (!selectedAthlete) return;

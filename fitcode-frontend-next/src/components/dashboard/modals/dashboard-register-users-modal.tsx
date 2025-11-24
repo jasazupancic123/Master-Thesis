@@ -10,7 +10,9 @@ import {
 } from '@mui/material';
 
 import useInstitutionMembers from '../hooks/use-institution-members.hook';
-import useRegisterMemberForm from '../hooks/use-register-member-form.hook';
+import useRegisterMemberForm, {
+  DEFAULT_FORM_DATA,
+} from '../hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';
@@ -34,13 +36,23 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
     addUser,
   } = useInstitutionMembers();
 
+  const clearFormData = () => {
+    setFormField('displayName', '');
+    setFormField('email', '');
+    setFormField('password', '');
+    setFormField('confirmPassword', '');
+  };
+
   return (
     <>
       <MyModal
         isOpen={open}
         setIsOpen={(open) => setOpen(open)}
         onConfirm={undefined}
-        onCancel={() => setOpen(false)}
+        onCancel={() => {
+          clearFormData();
+          setOpen(false);
+        }}
         cancelText="Close"
       >
         <Box maxWidth={400} mx="auto">
@@ -58,6 +70,8 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
             onSubmit={async (e) => {
               e.preventDefault();
               await registerUser(registerRole, formData);
+
+              clearFormData();
               setOpen(false);
             }}
           >

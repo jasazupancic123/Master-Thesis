@@ -14,6 +14,7 @@ import {
   INSTITUTION_PAGE_ID,
   LINK_DASHBOARD_ADD_INSTITUTION,
   LINK_DASHBOARD_EXERCISES,
+  LINK_DASHBOARD_HOME,
   LINK_DASHBOARD_MEMBERS,
   LINK_DASHBOARD_PLANNING,
   LINK_DASHBOARD_REPORTS,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/common/const/nav.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import DashboardHome from '@/components/dashboard/dashboard-home';
 
 export default function DashboardPage() {
   const { profile } = useMain();
@@ -30,6 +32,9 @@ export default function DashboardPage() {
 
   const renderContent = () => {
     switch (filter.id) {
+      case LINK_DASHBOARD_HOME.id: {
+        return <DashboardHome />;
+      }
       case LINK_DASHBOARD_SCHEDULE.id: {
         return <DashboardSchedule />;
       }

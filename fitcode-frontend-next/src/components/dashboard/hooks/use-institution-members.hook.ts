@@ -28,8 +28,8 @@ export default function useInstitutionMembers() {
   const {
     selectedInstitution,
     setSelectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
+    selectedGroups,
+    setSelectedGroups,
   } = useDashboard();
 
   const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
@@ -100,7 +100,7 @@ export default function useInstitutionMembers() {
 
     const prevState = {
       institution: structuredClone(selectedInstitution),
-      selectedGroup: selectedGroup ? structuredClone(selectedGroup) : null,
+      selectedGroups: selectedGroups ? structuredClone(selectedGroups) : [],
       groups: structuredClone(groups || []),
       users: structuredClone(users || []),
       profiles: structuredClone(profiles || []),
@@ -151,21 +151,22 @@ export default function useInstitutionMembers() {
           })
         );
 
-        setSelectedGroup((prev) =>
-          !prev
-            ? prev
-            : {
-                ...prev,
-                membersIds: prev.membersIds.filter((id) => id !== userId),
-                members: (prev.members || []).filter(
-                  (member) => member.uid !== userId
-                ),
-              }
+        setSelectedGroups((prev) =>
+          prev.map((group) => {
+            if (!group.membersIds.includes(userId)) return group;
+            return {
+              ...group,
+              membersIds: group.membersIds.filter((id) => id !== userId),
+              members: (group.members || []).filter(
+                (member) => member.uid !== userId
+              ),
+            };
+          })
         );
       },
       (snapshot) => {
         setSelectedInstitution(snapshot.institution);
-        setSelectedGroup(snapshot.selectedGroup);
+        setSelectedGroups(snapshot.selectedGroups);
         setGroups(snapshot.groups);
         setUsers(snapshot.users);
         setProfiles(snapshot.profiles);

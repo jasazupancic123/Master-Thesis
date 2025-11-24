@@ -29,7 +29,7 @@ export default function WellnessBarChart(props: Props) {
     metricConfig
   );
 
-  const { colorMapValues, colorMapColors, wrapLabel, containersWidth } =
+  const { colorMapValues, colorMapColors, containersWidth } =
     useWellnessChartUtils(rows, width);
 
   const MIN_BAR_WIDTH = 80;
@@ -48,15 +48,18 @@ export default function WellnessBarChart(props: Props) {
       <Box
         width={containersWidth}
         sx={{
-          backgroundColor: theme.palette.background.paper,
-          borderTopRightRadius: 8,
-          borderTopLeftRadius: 8,
+          borderRadius: 2,
+          border: `1px solid ${theme.palette.divider}`,
+          borderBottom: 'none',
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
         }}
       >
         <Typography
           variant="h6"
           textAlign="center"
           lineHeight={1}
+          fontSize={12}
           sx={{
             py: 1,
             textTransform: 'uppercase',
@@ -105,6 +108,8 @@ export default function WellnessBarChart(props: Props) {
                 {
                   scaleType: 'band',
                   dataKey: 'label',
+                  categoryGapRatio: rows.length < 8 ? 0.5 : undefined,
+                  barGapRatio: rows.length < 8 ? 0.5 : undefined,
                   colorMap: {
                     type: 'ordinal',
                     values: colorMapValues,
@@ -112,11 +117,16 @@ export default function WellnessBarChart(props: Props) {
                     unknownColor: theme.palette.primary.main,
                   },
                   tickLabelInterval: () => true,
-                  height: 50,
+                  height: 80,
+                  tickLabelStyle: {
+                    angle: -90,
+                    textAnchor: 'end',
+                  },
                   valueFormatter: (label, context) =>
                     context.location === 'tick'
-                      ? wrapLabel(String(label), 10)
-                      : String(label),
+                      ? String(label).split(' ').slice(0, 2).join('\n')
+                      : //? wrapLabel(String(label), 10)
+                        String(label),
                 },
               ]}
               yAxis={[
