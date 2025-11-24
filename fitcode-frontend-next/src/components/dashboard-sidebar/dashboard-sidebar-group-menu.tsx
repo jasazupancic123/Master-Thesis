@@ -131,7 +131,7 @@ export default function DashboardSidebarGroupMenu(props: Props) {
                 value={DASHBOARD_ALL_GROUPS_SELECTED_ID}
                 onClick={async () => {
                   setSelectedGroups(
-                    selectedInstitution?.groups.filter((g) =>
+                    (selectedInstitution?.groups || []).filter((g) =>
                       groups.some((sg) => sg.id === g.id)
                     ) || []
                   );

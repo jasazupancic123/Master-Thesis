@@ -13,10 +13,15 @@ import {
   Typography,
 } from '@mui/material';
 
-import DashboardGroupCard from './dashboard-group-card';
-import DashboardInstitutionMember from './dashboard-institution-member';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
+import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
+import DashboardGroupCard from './dashboard-group-card';
+import DashboardInstitutionMember from './dashboard-institution-member';
+import useCsvMembersUpload from './hooks/use-csv-members-upload.hook';
+import useDashboardMembers from './hooks/use-members.hook';
+import useDashboardMembersDrag from './hooks/use-members-drag.hook';
+import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
 import { theme } from '@/app/style';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
@@ -28,11 +33,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
-import useDashboardMembersDrag from './hooks/use-members-drag.hook';
-import useDashboardMembers from './hooks/use-members.hook';
-import useCsvMembersUpload from './hooks/use-csv-members-upload.hook';
-import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -230,14 +230,6 @@ export default function DashboardMembers() {
 
             setOpenAddMemberViaCsvModal(false);
             setCsvUserEmails(authUsers.map((d) => d.email!));
-
-            const athletes = authUsers.filter((user) =>
-              user.customClaims.role.includes(UserRole.ATHLETE)
-            );
-
-            const trainers = authUsers.filter((user) =>
-              user.customClaims.role.includes(UserRole.TRAINER)
-            );
           }}
         />
       </MyModal>

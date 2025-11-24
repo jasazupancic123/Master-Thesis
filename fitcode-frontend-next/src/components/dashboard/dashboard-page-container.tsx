@@ -1,6 +1,7 @@
 import type { SxProps } from '@mui/material';
 import { Box } from '@mui/material';
 import React from 'react';
+
 import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 
 type Props = React.PropsWithChildren<{

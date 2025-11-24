@@ -12,7 +12,7 @@ import MyModal from '@/ui/modal';
 export default function DeleteGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { groups, setGroups } = useMain();
+  const { setGroups } = useMain();
   const { setSelectedInstitution, selectedGroups, setSelectedGroups } =
     useDashboard();
 
