@@ -145,7 +145,7 @@ export function DashboardUserEditProvider({
               ...prev,
               athletes: mapUsers(prev.athletes),
               trainers: mapUsers(prev.trainers),
-              groups: prev.groups.map((group) =>
+              groups: (prev.groups || []).map((group) =>
                 core.group.mapMembers(group, mappedUsers)
               ),
             }

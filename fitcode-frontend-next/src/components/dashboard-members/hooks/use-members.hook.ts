@@ -1,5 +1,6 @@
-import { useDashboard } from '@/store/dashboard.provider';
 import { useEffect, useState } from 'react';
+
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useDashboardMembers() {
   const { selectedInstitution } = useDashboard();
