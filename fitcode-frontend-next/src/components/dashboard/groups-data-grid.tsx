@@ -82,6 +82,7 @@ export default function GroupsDataGrid({
       id: `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       institutionId: institution.id,
       name: 'New Group',
+      shortName: 'NG',
       trainerIds: [institution.trainers[0]?.uid ?? institution.owner.uid],
       membersIds: [],
       createdAt: new Date(),

@@ -2,7 +2,7 @@
 
 import { isSameDay } from 'date-fns';
 import dayjs from 'dayjs';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import toast from 'react-hot-toast';
@@ -65,6 +65,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   } = useGroup();
 
   const params = useSearchParams();
+  const pathname = usePathname();
   const controller = Controller.getInstance();
 
   // filtering selected component exercises
@@ -113,6 +114,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     const componentId = params.get('component');
 
     const training = trainings.find((t) => t.id === trainingId);
+
     if (!training) return;
 
     const day = lib.common.date.getDay(training.from);
@@ -127,6 +129,19 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       setComponent(mapped.components.find((c) => c.id === componentId));
       setExpandedExercisesView(true);
     }
+  }, [filter]);
+
+  useEffect(() => {
+    if (filter === 'day') return;
+
+    const sp = new URLSearchParams(params.toString());
+    sp.delete('training');
+    sp.delete('component');
+
+    const query = sp.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+
+    router.replace(url, { scroll: false });
   }, [filter]);
 
   useEffect(() => {

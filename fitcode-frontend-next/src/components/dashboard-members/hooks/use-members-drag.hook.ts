@@ -44,7 +44,7 @@ export default function useDashboardMembersDrag(
     const { active, over } = event;
 
     const userId = active.id as string;
-    const groupId = over?.id as string;
+    const groupId = over?.data.current?.groupId as string | undefined;
 
     if (!groupId) return;
 

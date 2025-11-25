@@ -147,7 +147,7 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
 
 export const DASHBOARD_MAIN = '/dashboard';
 
-const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
+export const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
 const DASHBOARD_ICONS_DIMENSION = 18;
 
 export const LINK_DASHBOARD_HOME = linkPngIcon(
@@ -220,7 +220,7 @@ export const INSTITUTION_PAGE_ID = 'institution-page';
 
 export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
   const links = [
-    // LINK_DASHBOARD_HOME,
+    LINK_DASHBOARD_HOME,
     LINK_DASHBOARD_SCHEDULE,
     LINK_DASHBOARD_REPORTS,
     LINK_DASHBOARD_MEMBERS,

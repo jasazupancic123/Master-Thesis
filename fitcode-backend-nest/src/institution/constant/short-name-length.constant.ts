@@ -1,0 +1,2 @@
+export const SHORT_GROUP_NAME_MAX_LENGTH = 4;
+export const SHORT_GROUP_NAME_MIN_LENGTH = 2;
