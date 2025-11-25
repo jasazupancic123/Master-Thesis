@@ -20,7 +20,11 @@ import type {
   TrainingReport,
   UserTrainingRealizationReportItem,
 } from './type/training-report.type';
-import type { CreateWorkload, Workload } from './type/workload.type';
+import type {
+  CreateWorkload,
+  ImportWorkload,
+  Workload,
+} from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 import type { ValidateError } from '@/lib/common/type/validate-row-error.type';
@@ -172,6 +176,10 @@ export class TrainingController extends BaseController {
       body,
       options
     );
+  }
+
+  async importWorkloads(workloads: ImportWorkload[]) {
+    return this.api.post<Training>(`/import-workloads`, { workloads });
   }
 
   async startTrainingComponent(

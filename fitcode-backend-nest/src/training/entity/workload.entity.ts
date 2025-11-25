@@ -1,5 +1,10 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PickType,
+} from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
@@ -174,3 +179,61 @@ export class CreateWorkload extends OmitType(Workload, [
   'loadRm',
   'loadRmR',
 ] as const) {}
+
+export class ImportWorkloadDto extends IntersectionType(
+  PickType(Workload, [
+    'exerciseId',
+    'setNumber',
+    'reps',
+    'repsR',
+    'loadKg',
+    'loadKgR',
+    'vel',
+    'velR',
+    'tempoEcc',
+    'tempoEccR',
+    'tempoCon',
+    'tempoConR',
+    'tempoIso',
+    'tempoIsoR',
+    'tempoIdle',
+    'tempoIdleR',
+    'eff',
+    'effR',
+    'time',
+    'timeR',
+    'dist',
+    'distR',
+    'recTime',
+    'recTimeR',
+    'recDist',
+    'recDistR',
+    'rir',
+    'rirR',
+    'rom',
+    'romR',
+  ] as const),
+) {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  email: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+  })
+  date: Date;
+}
+
+export class ImportWorkloadsDto {
+  @ValidateNested({ each: true })
+  @Type(() => ImportWorkloadDto)
+  @ApiProperty({ type: ImportWorkloadDto, isArray: true })
+  @Expose()
+  workloads: ImportWorkloadDto[];
+}
