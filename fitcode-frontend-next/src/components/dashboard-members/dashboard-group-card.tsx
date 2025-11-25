@@ -29,7 +29,7 @@ export default function DashboardGroupCard(props: Props) {
     setOpenEditAthleteModal,
   } = props;
 
-  const { setUserToEdit } = useDashboardUserEdit();
+  const { toggleUser } = useDashboardUserEdit();
 
   const containerId = group.id;
   const { setNodeRef } = useDroppable({
@@ -126,7 +126,7 @@ export default function DashboardGroupCard(props: Props) {
                     cursor: 'pointer',
                   }}
                   onClick={() => {
-                    setUserToEdit(user);
+                    toggleUser(user);
                     setOpenEditAthleteModal(true);
                   }}
                 />

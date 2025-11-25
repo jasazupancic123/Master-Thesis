@@ -34,7 +34,7 @@ export class ExerciseController {
     @RequestUser() user: User,
     @Query() query?: Record<string, string>,
   ) {
-    return this.exerciseService.findAllGlobal(user, query);
+    return await this.exerciseService.findAllGlobal(user, query);
   }
 
   @Get('institution/:institutionId')
@@ -49,7 +49,7 @@ export class ExerciseController {
   @Post()
   @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
-    return this.exerciseService.create(user, data);
+    return await this.exerciseService.create(user, data);
   }
 
   @Post('many')
@@ -58,7 +58,7 @@ export class ExerciseController {
     @RequestUser() user: User,
     @Body() data: UpsertManyExercisesDto,
   ) {
-    return this.exerciseService.upsertMany(
+    return await this.exerciseService.upsertMany(
       user,
       data.exercises.map((e) => ({ ...e, ownerId: user.uid })),
     );
@@ -80,7 +80,7 @@ export class ExerciseController {
     @Param('exerciseId') exerciseId: string,
     @Body() body: UpdateExerciseDto,
   ) {
-    return this.exerciseService.update(user, { exerciseId }, body);
+    return await this.exerciseService.update(user, { exerciseId }, body);
   }
 
   @Delete(':exerciseId')

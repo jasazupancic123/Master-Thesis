@@ -32,6 +32,8 @@ export default async function InitTrainerProvider({
       controller.institution.init(institutionId, { session }),
     ]);
 
+    console.log('main:', main);
+
     const data: MainProviderProps = {
       profile: main.profile,
       institutions,

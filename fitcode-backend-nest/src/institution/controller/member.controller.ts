@@ -20,7 +20,7 @@ export class MemberController {
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return this.institutionService.findAllMembers(user, institutionId);
+    return await this.institutionService.findAllMembers(user, institutionId);
   }
 
   @Patch('athlete')
@@ -30,7 +30,7 @@ export class MemberController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMember(
+    return await this.institutionService.updateMember(
       user,
       { institutionId },
       { add: true, userId, trainer: false },
@@ -44,7 +44,7 @@ export class MemberController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMember(
+    return await this.institutionService.updateMember(
       user,
       { institutionId },
       { add: false, userId, trainer: false },
@@ -58,7 +58,7 @@ export class MemberController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMember(
+    return await this.institutionService.updateMember(
       user,
       { institutionId },
       { add: true, userId, trainer: true },
@@ -72,7 +72,7 @@ export class MemberController {
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    return this.institutionService.updateMember(
+    return await this.institutionService.updateMember(
       user,
       { institutionId },
       { add: false, userId, trainer: true },

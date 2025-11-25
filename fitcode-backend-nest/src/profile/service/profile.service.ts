@@ -56,6 +56,7 @@ export class ProfileService implements Permission<Profile, Institution> {
 
   async findAllByInstitution(
     institution: Institution,
+    skipFields: (keyof AuthProfileMerged)[] = [],
   ): Promise<AuthProfileMerged[]> {
     const users = await this.authService.findAllByInstitution(institution);
     const profiles = await this.repository.findAllByInstitution(institution);
@@ -81,6 +82,7 @@ export class ProfileService implements Permission<Profile, Institution> {
           photoURLBase64: profile.photoURLBase64,
         };
 
+        skipFields.forEach((field) => delete merged[field]);
         return merged;
       })
       .filter(Boolean);

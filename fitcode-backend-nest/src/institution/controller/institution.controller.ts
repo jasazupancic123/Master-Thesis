@@ -19,7 +19,7 @@ export class InstitutionController {
   @Auth()
   @ApiOperation({ summary: 'Get all institutions for user' })
   async findAll(@RequestUser() user: User) {
-    return this.institutionService.findAll(user);
+    return await this.institutionService.findAll(user);
   }
 
   @Get(':institutionId')
@@ -29,13 +29,13 @@ export class InstitutionController {
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return this.institutionService.init(user, institutionId);
+    return await this.institutionService.init(user, institutionId);
   }
 
   @Post()
   @Auth([UserRole.ADMIN])
   async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
-    return this.institutionService.create(user, body);
+    return await this.institutionService.create(user, body);
   }
 
   @Patch(':institutionId')
@@ -45,6 +45,6 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() body: UpdateInstitutionDto,
   ) {
-    return this.institutionService.update(user, { institutionId }, body);
+    return await this.institutionService.update(user, { institutionId }, body);
   }
 }

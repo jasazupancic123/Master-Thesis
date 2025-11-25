@@ -4,6 +4,7 @@ import { addDays, endOfDay, isSameDay, startOfDay, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
+import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionRef,
@@ -20,6 +21,7 @@ import { WellnessRepository } from '../repository/wellness.repository';
 @Injectable()
 export class WellnessService {
   constructor(
+    private readonly common: CommonService,
     private readonly repository: WellnessRepository,
     private readonly profileRepository: ProfileRepository,
     private readonly institutionService: InstitutionService,
@@ -64,9 +66,15 @@ export class WellnessService {
     )
       throw new UnauthorizedException();
 
-    const wellnesses = await this.repository.findAllByInstitution(
-      institution,
-      range,
+    let wellnesses: Wellness[] = [];
+    await this.common.generic.measure(
+      'WellnessService.findAllByInstitution',
+      async () => {
+        wellnesses = await this.repository.findAllByInstitution(
+          institution,
+          range,
+        );
+      },
     );
 
     if (!wellnesses.length) return [];
