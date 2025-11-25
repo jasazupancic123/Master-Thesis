@@ -2,18 +2,15 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { AppService } from './app.service';
-import { AuthService } from './auth/service/auth.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
+import { FirestoreCollection } from './common/enum/firestore-collection.enum';
 import { User } from './common/type/firebase-auth.type';
-import { measureAsync } from './common/utils/time.util';
 import { NodeEnv } from './config/environment-validation-schema';
-import { ExerciseService } from './exercise/service/exercise.service';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
-import { GroupService } from './group/group.service';
-import { InstitutionService } from './institution/service/institution.service';
+import { FirebaseService } from './firebase/firebase.service';
 import { ProfileService } from './profile/service/profile.service';
-import { TrainingService } from './training/service/training.service';
+import { ActiveTrainingService } from './training/service/active-training.service';
 
 @ApiTags('General')
 @Controller()
@@ -22,13 +19,10 @@ export class AppController {
 
   constructor(
     private readonly appService: AppService,
-    private readonly authService: AuthService,
+    private readonly firebase: FirebaseService,
     private readonly profileService: ProfileService,
-    private readonly exerciseService: ExerciseService,
-    private readonly institutionService: InstitutionService,
-    private readonly groupService: GroupService,
-    private readonly trainingService: TrainingService,
-    private readonly exerciseAiPrescriptionsService: ExerciseAiPrescriptionsService,
+    private readonly exerciseAiPrescriptionService: ExerciseAiPrescriptionsService,
+    private readonly activeTrainingService: ActiveTrainingService,
   ) {}
 
   @Get()
@@ -45,88 +39,30 @@ export class AppController {
     this.logger.log(`Warming up instance ... (${nodeEnv})`);
   }
 
-  @Auth()
   @Get('init')
+  @Auth()
   async init(@RequestUser() user: User) {
-    const [
-      profileRes,
-      usersRes,
-      exercisesRes,
-      institutionsRes,
-      profilesRes,
-      groupsRes,
-      trainingRes,
-      exerciseAiPrescriptionsRes,
-    ] = await Promise.all([
-      measureAsync(
-        'profileService.findOneById()',
-        () => this.profileService.findOneById(user.uid),
-        this.logger,
-      ),
-      measureAsync(
-        'authService.findAll()',
-        () => this.authService.findAll(user),
-        this.logger,
-      ),
-      measureAsync(
-        'exerciseService.findAllByUser()',
-        () => this.exerciseService.findAllByUser(user),
-        this.logger,
-      ),
-      measureAsync(
-        'institutionService.findAll()',
-        () => this.institutionService.findAll(user),
-        this.logger,
-      ),
-      measureAsync(
-        'profileService.findAll()',
-        () => this.profileService.findAll(user),
-        this.logger,
-      ),
-      measureAsync(
-        'groupService.findAll()',
-        () => this.groupService.findAll(user),
-        this.logger,
-      ),
-      measureAsync(
-        'trainingService.getActiveTraining()',
-        () => this.trainingService.getActiveTrainingByAthlete(user, user.uid),
-        this.logger,
-      ),
-      measureAsync(
-        'exerciseAiPrescriptionsService.findAll()',
-        () => this.exerciseAiPrescriptionsService.findAll(),
-        this.logger,
-      ),
-    ]);
+    const isAthlete = this.firebase.isAthlete(user);
 
-    const profile = profileRes.result;
-    const users = usersRes.result;
-    const exercises = exercisesRes.result;
-    const institutions = institutionsRes.result;
-    const profiles = profilesRes.result;
-    const groups = groupsRes.result;
-    const activeTraining = trainingRes.result;
-    const exerciseAiPrescriptions = exerciseAiPrescriptionsRes.result;
-
-    const protocols = (
-      await Promise.all(
-        institutions.map(({ id }) =>
-          this.institutionService.getProtocols(user, { institutionId: id }),
-        ),
-      )
-    ).flat();
+    const [profile, exerciseAiPrescriptions, meta, activeTraining] =
+      await Promise.all([
+        this.profileService.findOneById(user.uid),
+        this.exerciseAiPrescriptionService.findAll(),
+        this.firebase.firestore.collection(FirestoreCollection.META).get(),
+        isAthlete
+          ? this.activeTrainingService.getActiveTrainingByAthlete(
+              user,
+              user.uid,
+            )
+          : null,
+      ]);
 
     return {
       profile,
-      profiles,
-      users,
-      exercises,
-      institutions,
-      groups,
-      activeTraining,
       exerciseAiPrescriptions,
-      protocols,
+      activeTraining,
+      globalExercisesRevision:
+        meta.docs.find((doc) => doc.id === 'exercises')?.data().revision || 0,
     };
   }
 }

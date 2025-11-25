@@ -111,9 +111,7 @@ describe('Update Exercise (e2e)', () => {
 
       for (const response of responses) {
         expect(response.status).toBe(401);
-        expect(response.body.message).toBe(
-          'You are not allowed to view this exercise',
-        );
+        expect(response.body.message).toBe('You cannot view this institution');
       }
 
       await testApp.auth.deleteUsers([
@@ -244,9 +242,7 @@ describe('Update Exercise (e2e)', () => {
       );
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not allowed to view this exercise',
-      );
+      expect(response.body.message).toBe('You cannot view this institution');
 
       await testApp.auth.deleteUsers([otherUser.uid]);
     });

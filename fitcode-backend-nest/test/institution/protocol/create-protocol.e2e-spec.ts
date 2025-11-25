@@ -48,9 +48,7 @@ describe('Create Training Protocol E2E', () => {
     });
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe(
-      'You do not have permission to edit training protocols',
-    );
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should fail if component does not exist', async () => {

@@ -2,15 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { addDays, addWeeks, subDays } from 'date-fns';
 
 import { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import { Group } from '@src/group/entity/group.entity';
-import { generateCycleStub } from '@src/group/mock/cycle.stub';
-import { generateGroupStub } from '@src/group/mock/group.stub';
-import { GroupRepository } from '@src/group/repository/group.repository';
+import { GroupRef } from '@src/common/type/firestore.type';
+import { Group } from '@src/institution/entity/group.entity';
+import { generateCycleStub } from '@src/institution/mock/cycle.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
+import { GroupRepository } from '@src/institution/repository/group.repository';
 
 import { TestRepositoryMixin } from '../test-repository.mixin';
 
 @Injectable()
-export class GroupTestRepository extends TestRepositoryMixin<Group>()(
+export class GroupTestRepository extends TestRepositoryMixin<Group, GroupRef>()(
   GroupRepository,
 ) {
   async createTest(
@@ -51,6 +52,6 @@ export class GroupTestRepository extends TestRepositoryMixin<Group>()(
       }),
     );
 
-    return await this.findById(groupId);
+    return await this.findById({ groupId, institutionId: institution.id });
   }
 }

@@ -1,14 +1,13 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
-import type { GroupController } from '@/core/group/group.controller';
-import type { Cycle } from '@/core/group/type/cycle.type';
-import type { Group } from '@/core/group/type/group.type';
+import { InstitutionController } from '@/core/institution/institution.controller';
+import type { Cycle } from '@/core/institution/type/cycle.type';
+import type { Group } from '@/core/institution/type/group.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export async function handleSaveGroup(
-  controller: GroupController,
   selectedGroup: Group,
   setSelectedGroup: SetState<Group>,
   cycle: Cycle | undefined,
@@ -25,10 +24,12 @@ export async function handleSaveGroup(
     }
   }
 
+  const controller = InstitutionController.getInstance();
+
   handleApiRequest(
     router,
     () =>
-      controller.update(selectedGroup.id, {
+      controller.updateGroup(selectedGroup.institutionId, selectedGroup.id, {
         cycles: selectedGroup.cycles,
       }),
     (group) => {

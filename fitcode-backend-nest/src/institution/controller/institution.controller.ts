@@ -1,0 +1,50 @@
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import { UserRole } from '@src/auth/enum/user-role.enum';
+import { Auth } from '@src/common/decorator/auth.decorator';
+import { RequestUser } from '@src/common/decorator/request-user.decorator';
+import { User } from '@src/common/type/firebase-auth.type';
+
+import { CreateInstitutionDto } from '../dto/create-institution.dto';
+import { UpdateInstitutionDto } from '../dto/update-institution.dto';
+import { InstitutionService } from '../service/institution.service';
+
+@ApiTags('Institution')
+@Controller('institution')
+export class InstitutionController {
+  constructor(private readonly institutionService: InstitutionService) {}
+
+  @Get()
+  @Auth()
+  @ApiOperation({ summary: 'Get all institutions for user' })
+  async findAll(@RequestUser() user: User) {
+    return this.institutionService.findAll(user);
+  }
+
+  @Get(':institutionId')
+  @Auth()
+  @ApiOperation({ summary: 'Get institution by id' })
+  async init(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+  ) {
+    return this.institutionService.init(user, institutionId);
+  }
+
+  @Post()
+  @Auth([UserRole.ADMIN])
+  async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
+    return this.institutionService.create(user, body);
+  }
+
+  @Patch(':institutionId')
+  @Auth([UserRole.MANAGER])
+  async update(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: UpdateInstitutionDto,
+  ) {
+    return this.institutionService.update(user, { institutionId }, body);
+  }
+}

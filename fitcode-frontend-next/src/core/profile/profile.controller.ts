@@ -6,6 +6,7 @@ import type {
   Wellness,
   WellnessZScore,
 } from './type/wellness.type';
+import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { ValidateRowError } from '@/lib/common/type/validate-row-error.type';
 
 export class ProfileController extends BaseController {
@@ -43,9 +44,13 @@ export class ProfileController extends BaseController {
     return this.api.get<Wellness>('/wellness');
   }
 
-  async getWellnessByInstitution(institutionId: string) {
+  async getWellnessByInstitution(
+    institutionId: string,
+    options?: FetchOptions
+  ) {
     return this.api.get<WellnessZScore[]>(
-      `/wellness/institution/${institutionId}`
+      `/wellness/institution/${institutionId}`,
+      options
     );
   }
 }

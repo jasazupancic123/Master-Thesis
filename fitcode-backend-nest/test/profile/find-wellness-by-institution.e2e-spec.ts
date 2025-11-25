@@ -51,7 +51,7 @@ describe('Find Wellness By Institution (e2e)', () => {
     const otherTrainer = await testApp.auth.createTrainer();
     const res = await req(otherTrainer.token);
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('Unauthorized');
+    expect(res.body.message).toBe('You cannot view this institution');
 
     await testApp.auth.deleteUsers([otherTrainer.uid]);
   });

@@ -3,7 +3,7 @@ import { TestApp } from '@test/common/utils/app.util';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type {
   CreateWorkload,
@@ -119,7 +119,7 @@ describe('Upsert Set (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       db.trainings.clear(),
-      db.groups.delete(group.id),
+      db.groups.delete({ institutionId: institution.id, groupId: group.id }),
       db.institutions.remove(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),

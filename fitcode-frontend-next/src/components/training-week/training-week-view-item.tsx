@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { handleUpdateTrainingTimes } from './actions/actions-week-item';
 import TrainerWeekViewItem from './training-week-component-item';
 import { core } from '@/core/core.service';
-import type { GroupEvent } from '@/core/group/type/group-event.type';
+import type { GroupEvent } from '@/core/institution/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

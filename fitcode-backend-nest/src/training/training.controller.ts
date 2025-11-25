@@ -22,8 +22,13 @@ import {
 } from '@nestjs/swagger';
 import { endOfDay, isBefore, startOfDay } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
+import { Auth } from '@src/common/decorator/auth.decorator';
+import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
+import { CommonService } from '@src/common/service/common.service';
+import { User } from '@src/common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
   TrainingProtocolRef,
@@ -31,11 +36,6 @@ import {
 } from '@src/common/type/firestore.type';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
-import { UserRole } from '../auth/enum/user-role.enum';
-import { Auth } from '../common/decorator/auth.decorator';
-import { RequestUser } from '../common/decorator/request-user.decorator';
-import { CommonService } from '../common/service/common.service';
-import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
@@ -49,7 +49,10 @@ import {
   UpdateTrainingProtocolDto,
 } from './entity/training-protocol.entity';
 import { CreateWorkload, Workload } from './entity/workload.entity';
+import { ActiveTrainingService } from './service/active-training.service';
 import { TrainingService } from './service/training.service';
+import { TrainingProtocolService } from './service/training-protocol.service';
+import { TrainingReportService } from './service/training-report.service';
 import { SmartWallTraining } from './type/smart-wall.type';
 
 @ApiTags('Training')
@@ -57,8 +60,11 @@ import { SmartWallTraining } from './type/smart-wall.type';
 export class TrainingController {
   constructor(
     private readonly commonService: CommonService,
-    private readonly trainingService: TrainingService,
     private readonly institutionService: InstitutionService,
+    private readonly trainingService: TrainingService,
+    private readonly activeTrainingService: ActiveTrainingService,
+    private readonly trainingProtocolService: TrainingProtocolService,
+    private readonly trainingReportService: TrainingReportService,
   ) {}
 
   @Get()
@@ -109,55 +115,9 @@ export class TrainingController {
       })
     | null
   > {
-    return await this.trainingService.getActiveTrainingByAthlete(
+    return await this.activeTrainingService.getActiveTrainingByAthlete(
       user,
       user.uid,
-    );
-  }
-
-  @Get('report/group')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getGroupReport(
-    @RequestUser() user: User,
-    @Query('groupId') groupId: string,
-    @Query('componentId') componentId: string,
-  ) {
-    return await this.trainingService.getGroupReport(
-      user,
-      groupId,
-      componentId,
-    );
-  }
-
-  @Get('report/athlete/trainings-realization')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getUserTrainingsRealizationReport(
-    @RequestUser() user: User,
-    @Query('institutionId') institutionId: string,
-    @Query('athleteId') athleteId: string,
-    @Query('componentId') componentId?: string,
-  ) {
-    return await this.trainingService.getTrainingsRealizationReport(
-      user,
-      institutionId,
-      athleteId,
-      componentId,
-    );
-  }
-
-  @Get('report/athlete/exercise/:exerciseId')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async getUserExerciseReport(
-    @RequestUser() user: User,
-    @Param('exerciseId') exerciseId: string,
-    @Query('institutionId') institutionId: string,
-    @Query('athleteId') athleteId: string,
-  ) {
-    return await this.trainingService.getUserExerciseReport(
-      user,
-      institutionId,
-      exerciseId,
-      athleteId,
     );
   }
 
@@ -169,7 +129,7 @@ export class TrainingController {
     @Param('cId') componentId: string,
     @Body() { userId }: UserIdDto,
   ) {
-    const link = await this.trainingService.generateQRCode(user, {
+    const link = await this.activeTrainingService.generateQRCode(user, {
       trainingId,
       componentId,
       uid: userId,
@@ -184,7 +144,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    return await this.trainingService.findReportsByUser(
+    return await this.trainingReportService.findReportsByUser(
       user,
       filter.institutionId,
     );
@@ -258,7 +218,7 @@ export class TrainingController {
     @Body()
     body: CreateTrainingProtocolDto,
   ) {
-    return await this.trainingService.createProtocol(user, institutionId, body);
+    return await this.trainingProtocolService.create(user, institutionId, body);
   }
 
   @Patch('institution/:institutionId/protocol/:protocolId')
@@ -271,7 +231,7 @@ export class TrainingController {
     body: UpdateTrainingProtocolDto,
   ) {
     const ref: TrainingProtocolRef = { institutionId, protocolId };
-    return await this.trainingService.updateProtocol(user, ref, body);
+    return await this.trainingProtocolService.update(user, ref, body);
   }
 
   @Delete('institution/:institutionId/protocol/:protocolId')
@@ -282,7 +242,7 @@ export class TrainingController {
     @Param('protocolId') protocolId: string,
   ) {
     const ref = { institutionId, protocolId };
-    await this.trainingService.deleteProtocol(user, ref);
+    await this.trainingProtocolService.delete(user, ref);
     return {};
   }
 
@@ -454,7 +414,11 @@ export class TrainingController {
     @Body() { userId }: OptionalUserIdDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.startTrainingComponent(user, ref, userId);
+    return await this.activeTrainingService.startTrainingComponent(
+      user,
+      ref,
+      userId,
+    );
   }
 
   /**
@@ -469,7 +433,7 @@ export class TrainingController {
     @Body() { userId }: OptionalUserIdDto,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.completeTrainingComponent(
+    return await this.activeTrainingService.completeTrainingComponent(
       user,
       ref,
       userId,
@@ -487,7 +451,54 @@ export class TrainingController {
     @Param('cId') componentId: string,
   ) {
     const ref: TrainingComponentRef = { trainingId, componentId };
-    return await this.trainingService.pauseComponent(user, ref);
+    return await this.activeTrainingService.pauseComponent(user, ref);
+  }
+
+  @Get('report/group')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getGroupReport(
+    @RequestUser() user: User,
+    @Query('institutionId') institutionId: string,
+    @Query('groupId') groupId: string,
+    @Query('componentId') componentId: string,
+  ) {
+    return await this.trainingReportService.getGroupReport(
+      user,
+      { institutionId, groupId },
+      componentId,
+    );
+  }
+
+  @Get('report/athlete/trainings-realization')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getUserTrainingsRealizationReport(
+    @RequestUser() user: User,
+    @Query('institutionId') institutionId: string,
+    @Query('athleteId') athleteId: string,
+    @Query('componentId') componentId?: string,
+  ) {
+    return await this.trainingReportService.getTrainingsRealizationReport(
+      user,
+      institutionId,
+      athleteId,
+      componentId,
+    );
+  }
+
+  @Get('report/athlete/exercise/:exerciseId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async getUserExerciseReport(
+    @RequestUser() user: User,
+    @Param('exerciseId') exerciseId: string,
+    @Query('institutionId') institutionId: string,
+    @Query('athleteId') athleteId: string,
+  ) {
+    return await this.trainingReportService.getUserExerciseReport(
+      user,
+      institutionId,
+      exerciseId,
+      athleteId,
+    );
   }
 
   /**

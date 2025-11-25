@@ -17,7 +17,7 @@ import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
 import EditGroupModal from '../dashboard/modals/edit-group-modal';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '../report-athlete-exercise/const/index-db-id.const';
 import { theme } from '@/app/style';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';

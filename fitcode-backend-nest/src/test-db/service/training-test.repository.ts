@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { getTime } from '@src/common/utils/date.util';
-import { Group } from '@src/group/entity/group.entity';
+import { Group } from '@src/institution/entity/group.entity';
 import { Training } from '@src/training/entity/training.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 import { TrainingRepository } from '@src/training/repository/training.repository';
