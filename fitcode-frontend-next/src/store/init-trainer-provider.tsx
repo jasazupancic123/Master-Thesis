@@ -3,11 +3,9 @@ import { cookies } from 'next/headers';
 import { SESSION_COOKIE_NAME } from '@/core/const/auth.const';
 import { Controller } from '@/core/controller';
 import { lib } from '@/lib';
-import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
+import type { MainProviderProps } from '@/store/main.provider';
 import { CoachMainProvider } from '@/store/main.provider';
 import Alert from '@/ui/alert';
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default async function InitTrainerProvider({
   children,
@@ -24,10 +22,32 @@ export default async function InitTrainerProvider({
     if (lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
       throw new Error('Not a trainer or manager');
 
-    const [data] = await Promise.all([
+    // For now, we just take the first institution
+    const institutions = await controller.institution.findAll({ session });
+    const institutionId = institutions[0]?.id;
+    if (!institutionId) throw new Error('No institution found');
+
+    const [main, institution, wellness] = await Promise.all([
       controller.app.init({ session }),
-      sleep(LOADING_ANIMATION_MIN_DURATION_MS), // ensures the server doesn’t reveal *too fast*
+      controller.institution.init(institutionId, { session }),
+      lib.firebase.auth.isAdmin(profile.customClaims.role[0])
+        ? []
+        : controller.profile.getWellnessByInstitution(institutionId, {
+            session,
+          }),
     ]);
+
+    const data: MainProviderProps = {
+      profile: main.profile,
+      institutions,
+      institution,
+      activeTraining: null,
+      exerciseAiPrescriptions: main.exerciseAiPrescriptions,
+      globalExercisesRevision: main.globalExercisesRevision,
+      wellness,
+      trainings: [],
+      reports: [],
+    };
 
     return (
       <CoachMainProvider key={profile.uid} {...data}>
@@ -36,6 +56,6 @@ export default async function InitTrainerProvider({
     );
   } catch (e) {
     console.error('[TrainerProvider] error', e);
-    return <Alert type="unauthorized" />;
+    return <Alert type="error" errorMessage={(e as Error).message} />;
   }
 }

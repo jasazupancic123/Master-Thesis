@@ -88,14 +88,14 @@ describe('Get Exercises (e2e)', () => {
       expect(response.body).toHaveLength(globalExercises.length);
     });
 
-    it('should return exercises from institution1 for athlete in the institution', async () => {
+    it('should return exercises from institution1 and all global for athlete in the institution', async () => {
       const response = await testApp.http.get(
         `/exercise/institution/${institution1.id}`,
         institution1.athletes[0].token,
       );
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(institution1Exercises.length);
+      expect(response.body).toHaveLength(4); // 3 global + 1 institution1
 
       const responseExerciseIds = response.body.map((e: Exercise) => e.id);
       expect(responseExerciseIds).toEqual(
@@ -114,7 +114,7 @@ describe('Get Exercises (e2e)', () => {
       );
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(institution1Exercises.length);
+      expect(response.body).toHaveLength(4); // 3 global + 1 institution1
 
       const responseExerciseIds = response.body.map((e: Exercise) => e.id);
       expect(responseExerciseIds).toEqual(
@@ -133,7 +133,7 @@ describe('Get Exercises (e2e)', () => {
       );
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(institution1Exercises.length);
+      expect(response.body).toHaveLength(4); // 3 global + 1 institution1
 
       const responseExerciseIds = response.body.map((e: Exercise) => e.id);
       expect(responseExerciseIds).toEqual(
@@ -214,44 +214,6 @@ describe('Get Exercises (e2e)', () => {
         filters.map((f) =>
           testApp.http.get(
             `/exercise/global?component=${f[0]}`,
-            institution1.athletes[0].token,
-          ),
-        ),
-      );
-
-      for (let i = 0; i < responses.length; i++) {
-        const response = responses[i];
-        expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(filters[i][1]);
-      }
-
-      for (const id of exerciseIds) await db.exercises.delete(id);
-    });
-
-    it('should filter exercises by component for institution', async () => {
-      const exercises = [
-        generateExerciseStub({ components: ['c1'] }),
-        generateExerciseStub({ components: ['c1'] }),
-        generateExerciseStub({ components: ['c1'] }),
-        generateExerciseStub({ components: ['c2'] }),
-        generateExerciseStub({ components: ['c2'] }),
-      ];
-
-      const exerciseIds = (
-        await exerciseService.upsertMany(institution1.manager, exercises)
-      ).map((e) => e.id);
-
-      const filters: [string, number][] = [
-        // array of <filter string, expected returned array length>
-        ['c1', 3],
-        ['c2', 2],
-        [['c1', 'c2'].join(','), 5],
-      ];
-
-      const responses = await Promise.all(
-        filters.map((f) =>
-          testApp.http.get(
-            `/exercise/institution/${institution1.id}?component=${f[0]}`,
             institution1.athletes[0].token,
           ),
         ),

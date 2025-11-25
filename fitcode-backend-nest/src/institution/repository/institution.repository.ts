@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
+  FieldValue,
   Query,
 } from 'firebase-admin/firestore';
 
@@ -74,12 +75,10 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     );
   }
 
-  async findAllByAdmin() {
-    return await this.findAll();
-  }
-
-  async findAllByManager(managerId: string) {
-    return await this.findAll((q) => q.where('ownerId', '==', managerId));
+  async findOneByManager(managerId: string) {
+    return await this.findAll((q) =>
+      q.where('ownerId', '==', managerId).limit(1),
+    );
   }
 
   async findAllByMember(memberId: string): Promise<Institution[]> {
@@ -123,5 +122,10 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
   async delete(id: string) {
     const ref = this.doc(id);
     await ref.delete();
+  }
+
+  async incrementExerciseRevisions(institutionId: string) {
+    const ref = this.doc(institutionId);
+    await ref.update({ exerciseRevisions: FieldValue.increment(1) });
   }
 }

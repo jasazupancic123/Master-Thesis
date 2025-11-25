@@ -7,7 +7,7 @@ import {
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import type { EventType } from '@/core/group/enum/event-type.enum';
+import type { EventType } from '@/core/institution/enum/event-type.enum';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 

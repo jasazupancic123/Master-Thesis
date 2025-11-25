@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase-admin/firestore';
 
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import type { Institution } from '@src/institution/entity/institution.entity';
 import type { Training } from '@src/training/entity/training.entity';
 

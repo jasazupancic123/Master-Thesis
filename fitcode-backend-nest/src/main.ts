@@ -68,8 +68,17 @@ async function initApp(app: INestApplication): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+  const logger = new Logger(bootstrap.name);
+
+  const startCreateApp = Date.now();
   const app = await createApp();
+  const endCreateApp = Date.now();
+  logger.verbose(`App creation took ${endCreateApp - startCreateApp}ms`);
+
+  const startInitApp = Date.now();
   await initApp(app);
+  const endInitApp = Date.now();
+  logger.verbose(`App initialization took ${endInitApp - startInitApp}ms`);
 }
 
 bootstrap()

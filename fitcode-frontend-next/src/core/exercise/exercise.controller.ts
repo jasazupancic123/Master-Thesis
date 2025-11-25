@@ -24,7 +24,13 @@ export class ExerciseController extends BaseController {
     return this.api.get<Exercise[]>('/global');
   }
 
-  async findAllByInstitution(institutionId: string, _query?: FilterExercises) {
+  async getHash(institutionId: string): Promise<string> {
+    return this.api
+      .get<{ hash: string }>(`/institution/${institutionId}/hash`)
+      .then((res) => res.hash);
+  }
+
+  async findAll(institutionId: string) {
     return this.api.get<Exercise[]>(`/institution/${institutionId}`);
   }
 

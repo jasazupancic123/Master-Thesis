@@ -7,7 +7,7 @@ import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { GroupService } from '@src/group/group.service';
+import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { SportLevel } from '@src/profile/enum/sport-level.enum';
 import { ProfileRepository } from '@src/profile/repository/profile.repository';
@@ -310,19 +310,20 @@ export class DataSetup extends BaseSetup {
 
   private async isInit() {
     const localDevCollection = this.firebase.firestore.collection(
-      FirestoreCollection.LOCAL_DEV,
+      FirestoreCollection.META,
     );
 
     return (
-      (await localDevCollection.get()).docs?.[0]?.data()?.inserted || false
+      (await localDevCollection.doc('local-dev').get()).data()?.inserted ||
+      false
     );
   }
 
   private async setInit() {
     const localDevCollection = this.firebase.firestore.collection(
-      FirestoreCollection.LOCAL_DEV,
+      FirestoreCollection.META,
     );
 
-    await localDevCollection.add({ inserted: true });
+    await localDevCollection.doc('local-dev').set({ inserted: true });
   }
 }

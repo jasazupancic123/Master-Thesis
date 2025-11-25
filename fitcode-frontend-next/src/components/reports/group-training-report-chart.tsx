@@ -55,6 +55,7 @@ export default function GroupTrainingReportChart({
 
     const fetchAttendance = async () => {
       const attendance = await TrainingController.getInstance().getGroupReport(
+        group.institutionId,
         group.id,
         selectedComponentId
       );
