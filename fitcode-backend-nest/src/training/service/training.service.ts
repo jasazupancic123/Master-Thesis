@@ -71,8 +71,13 @@ import {
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
-import { CreateWorkload, Workload } from '../entity/workload.entity';
+import {
+  CreateWorkload,
+  ImportWorkloadDto,
+  Workload,
+} from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
+import { SetStatus } from '../enum/set-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
@@ -779,6 +784,104 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     return await this.workloadService.upsertSet(ref, individualTraining, input);
+  }
+
+  @LogMethod()
+  async importWorkloads(
+    user: User,
+    workloads: ImportWorkloadDto[],
+  ): Promise<Training> {
+    const COMPONENT_ID = 'strength';
+    const institution = await this.institutionService.findByOwnerId(user.uid);
+    if (!institution) throw new NotFoundException('Institution not found');
+
+    // check that all exercises are valid
+    const exercises = await this.exerciseService.findAll(user, institution.id);
+    const input: Workload[] = [];
+
+    for (let i = 0; i < workloads.length; i++) {
+      const workload = workloads[i];
+
+      // validate user
+      const user = await this.authService.findOneBy('email', workload.email);
+      if (!user) throw new NotFoundException(`Row ${i + 1}: User not found`);
+
+      if (!this.institutionService.canView(user, institution))
+        throw new UnauthorizedException(
+          `Row ${i + 1}: User is not authorized to view this institution`,
+        );
+
+      if (!this.firebase.isAthlete(user))
+        throw new BadRequestException(`Row ${i + 1}: User is not an athlete`);
+
+      // validate that date is in the past
+      if (!this.isInPast(startOfDay(workload.date)))
+        throw new BadRequestException(`Row ${i + 1}: Date must be in the past`);
+
+      // validate exercise
+      const exercise = exercises.find((e) => e.id === workload.exerciseId);
+      if (!exercise)
+        throw new BadRequestException(`Row ${i + 1}: Invalid exerciseId`);
+
+      const setErrors = this.exerciseParamService.validateSetValues(
+        workload,
+        exercise,
+      );
+
+      const message = setErrors.length
+        ? this.common.generic.error(
+            setErrors.map((e) => ({
+              field: e.field,
+              message: `Row ${i + 1}: ${e.message}`,
+            })),
+          )
+        : '';
+
+      if (message)
+        throw new BadRequestException(`Set errors in row ${i + 1}: ${message}`);
+
+      input.push({
+        ...workload,
+        id: null,
+        institutionId: institution.id,
+        groupId: undefined,
+        cycleId: undefined,
+        userId: user.uid,
+        trainingId: undefined,
+        componentId: COMPONENT_ID,
+        supersetIndex: 0,
+        status: SetStatus.COMPLETED,
+        timestamp: workload.date,
+        from: workload.date,
+        to: workload.date,
+        prescribed: workload,
+      });
+    }
+
+    // create dummy training to link workloads to
+    const trainingId = await this.repository.save({
+      id: null,
+      ownerId: user.uid,
+      institutionId: institution.id,
+      from: new Date(),
+      to: new Date(),
+      membersIds: [],
+      components: [
+        {
+          id: COMPONENT_ID,
+          from: new Date(),
+          to: new Date(),
+          supersets: [],
+          subgroups: [],
+        },
+      ],
+    });
+
+    await this.workloadService.upsertMany(
+      input.map((w) => ({ ...w, trainingId })),
+    );
+
+    return await this.findOneByIdOrFail(user, { trainingId });
   }
 
   /**
