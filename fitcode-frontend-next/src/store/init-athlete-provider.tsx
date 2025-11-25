@@ -69,6 +69,6 @@ export default async function InitAthleteProvider({
     );
   } catch (e) {
     console.error('[AthleteProvider] error', e);
-    return <Alert type="unauthorized" errorMessage={(e as Error).message} />;
+    return <Alert type="error" errorMessage={(e as Error).message} />;
   }
 }

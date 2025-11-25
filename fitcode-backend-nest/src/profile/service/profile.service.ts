@@ -11,6 +11,7 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
+import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -143,6 +144,10 @@ export class ProfileService implements Permission<Profile, Institution> {
     ]);
 
     return result;
+  }
+
+  async create(input: Create<Profile>) {
+    return await this.repository.save(input);
   }
 
   @LogMethod()

@@ -17,6 +17,7 @@ import type {
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import { TrainingService } from '@/core/training/training.service';
 import type {
   ActiveTraining,
   Training,
@@ -184,8 +185,15 @@ export default function MainProvider(props: MainProviderProps) {
     institutions: props.institutions,
     institution: props.institution,
     wellness: props.wellness,
-    trainings: props.trainings,
-    reports: props.reports,
+    trainings: props.trainings.map((t) =>
+      TrainingService.mapData(t, { exercises })
+    ),
+    reports: props.reports.map((r) =>
+      TrainingService.mapReport(r, {
+        institutions: props.institutions,
+        groups: props.institution.groups,
+      })
+    ),
     globalExercisesRevision: props.globalExercisesRevision,
   };
 

@@ -21,6 +21,7 @@ import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { ProfileService } from '@src/profile/service/profile.service';
 
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateCustomClaimsDto } from '../dto/custom-claims.dto';
@@ -38,6 +39,8 @@ export class AuthService {
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
+    @Inject(forwardRef(() => ProfileService))
+    private readonly profileService: Wrapper<ProfileService>,
   ) {}
 
   async sessionLogin(idToken: string, res: Response): Promise<AuthUser | null> {
@@ -303,6 +306,13 @@ export class AuthService {
       });
 
       await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
+      await this.profileService.create({
+        uid: user.uid,
+        email: input.email,
+        height: 0,
+        weight: 0,
+      });
+
       created = { ...user, customClaims } as AuthUser;
     } catch (e) {
       // if user already exists, fetch it
