@@ -1,5 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { endOfDay, subDays } from 'date-fns';
 
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { User } from '@src/common/type/firebase-auth.type';
+import { GroupRef } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { GroupService } from '@src/institution/service/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
 import {
@@ -10,15 +17,120 @@ import {
 import { REP_TEMPO_TIME_IN_S } from '../constant/training-limits.constant';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { Workload } from '../entity/workload.entity';
+import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import {
+  GroupTrainingReportItem,
   PrescribedTrainingComponentStats,
   PrescribedTrainingStats,
   TrainingComponentReport,
   TrainingReport,
+  UserTrainingRealizationReportItem,
 } from '../type/training-report.type';
+import { TrainingService } from './training.service';
+import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingReportService {
+  constructor(
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
+    private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
+    private readonly institutionService: InstitutionService,
+    private readonly groupService: GroupService,
+    private readonly workloadService: WorkloadService,
+  ) {}
+
+  async findReportsByUser(
+    user: User,
+    institutionId: string,
+  ): Promise<TrainingReport[]> {
+    // find workloads for last 10 trainings of the user and calculate reports
+    const trainings = await this.trainingService.findAll(
+      user,
+      institutionId,
+      { from: subDays(new Date(), 7), to: endOfDay(new Date()) },
+      { limit: 100 },
+    );
+
+    const workloads = await this.workloadService.findAllByUserTrainingIds(
+      user.uid,
+      trainings.map((t) => t.id),
+    );
+
+    const reports: TrainingReport[] = [];
+    for (const training of trainings) {
+      const filtered = workloads.filter(
+        (w) => w.trainingId === training.id && w.userId === user.uid,
+      );
+
+      reports.push(this.getTrainingReportByUser(user.uid, training, filtered));
+    }
+
+    return reports;
+  }
+
+  @LogMethod()
+  async getGroupReport(
+    user: User,
+    ref: GroupRef,
+    componentId?: string,
+  ): Promise<Record<string, GroupTrainingReportItem>> {
+    const group = await this.groupService.findOneByIdOrFail(user, ref);
+    return await this.trainingComponentUserStatusRepository.getGroupReport(
+      group.id,
+      componentId,
+    );
+  }
+
+  @LogMethod()
+  async getTrainingsRealizationReport(
+    user: User,
+    institutionId: string,
+    uid: string, // athlete uid
+    componentId?: string,
+  ): Promise<UserTrainingRealizationReportItem[]> {
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      institutionId,
+    );
+
+    const athlete = await this.trainingService.getAthlete(
+      user,
+      uid,
+      institution,
+    );
+
+    return await this.trainingComponentUserStatusRepository.getUserTrainingsRealizationReport(
+      institutionId,
+      athlete.uid,
+      componentId,
+    );
+  }
+
+  @LogMethod()
+  async getUserExerciseReport(
+    user: User,
+    institutionId: string,
+    exerciseId: string,
+    uid: string, // athlete uid
+  ): Promise<Workload[]> {
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      institutionId,
+    );
+
+    const athlete = await this.trainingService.getAthlete(
+      user,
+      uid,
+      institution,
+    );
+
+    return await this.workloadService.getUserExerciseReport({
+      userId: athlete.uid,
+      exerciseId,
+    });
+  }
+
   getTrainingReportByUser(
     userId: string,
     training: Training,

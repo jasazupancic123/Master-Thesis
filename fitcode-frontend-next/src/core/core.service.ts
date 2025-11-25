@@ -1,6 +1,6 @@
 import { AttributeUtil } from './attribute/attribute.util';
 import { ExerciseUtil } from './exercise/utils/exercise.util';
-import { GroupUtil } from './group/group.util';
+import { GroupUtil } from './institution/group.util';
 import { InstitutionUtil } from './institution/institution.util';
 import { ProfileUtil } from './profile/profile.util';
 import { TrainingUtil } from './training/utils/training.util';

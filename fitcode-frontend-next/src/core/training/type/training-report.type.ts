@@ -1,5 +1,5 @@
-import type { Cycle } from '@/core/group/type/cycle.type';
-import type { Group } from '@/core/group/type/group.type';
+import type { Cycle } from '@/core/institution/type/cycle.type';
+import type { Group } from '@/core/institution/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 

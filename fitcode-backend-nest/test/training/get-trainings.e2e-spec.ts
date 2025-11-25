@@ -4,7 +4,7 @@ import { stringify } from 'qs';
 
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { FilterTrainingQueryDto } from '@src/training/dto/filter-training-query.dto';
 import { generateTrainingStub } from '@src/training/mock/training.stub';

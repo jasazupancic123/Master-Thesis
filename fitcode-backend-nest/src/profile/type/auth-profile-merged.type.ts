@@ -7,7 +7,16 @@ export type AuthProfileMerged = Pick<
   AuthUser,
   'uid' | 'email' | 'displayName' | 'photoURL'
 > &
-  Pick<Profile, 'weight' | 'height' | 'photoURLBase64'> & {
+  Pick<
+    Profile,
+    | 'weight'
+    | 'height'
+    | 'birthDate'
+    | 'gender'
+    | 'level'
+    | 'sport'
+    | 'photoURLBase64'
+  > & {
     role: UserRole;
     faceEmbedding: number[];
   };

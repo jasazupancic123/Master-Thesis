@@ -3,8 +3,8 @@ import { TestPeriodizationUtil } from '@test/common/utils/periodization.util';
 import { addDays } from 'date-fns';
 
 import type { Target } from '@src/exercise/entity/target.entity';
-import { generateCyclesStub } from '@src/group/mock/cycle.stub';
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateCyclesStub } from '@src/institution/mock/cycle.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { MAIN_GROUP_PARENT_ID } from '@src/training/constant/main-group-parent-id.constant';
 import type { PeriodizeTrainingsDto } from '@src/training/dto/periodize-training.dto';

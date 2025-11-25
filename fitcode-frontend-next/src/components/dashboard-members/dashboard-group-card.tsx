@@ -3,7 +3,7 @@ import { alpha, Box, Typography } from '@mui/material';
 
 import DashboardGroupCardUsers from './dashboard-group-card-users';
 import { theme } from '@/app/style';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 

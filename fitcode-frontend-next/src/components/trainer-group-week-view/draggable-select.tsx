@@ -2,7 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Box } from '@mui/material';
 
-import type { EventType } from '@/core/group/enum/event-type.enum';
+import type { EventType } from '@/core/institution/enum/event-type.enum';
 
 export default function DraggableSelect({
   selectedEventType,

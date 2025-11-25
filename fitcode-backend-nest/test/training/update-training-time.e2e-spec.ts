@@ -5,7 +5,7 @@ import { addDays, startOfDay, subDays } from 'date-fns';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import {
   generateTrainingComponent,
@@ -54,9 +54,12 @@ describe('Update Training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
-    await db.groups.delete(group.id);
     await db.trainings.delete(trainingId);
+    await db.institutions.remove(institution.id);
+    await db.groups.delete({
+      institutionId: institution.id,
+      groupId: group.id,
+    });
     await testApp.close();
   });
 
@@ -83,7 +86,7 @@ describe('Update Training (e2e)', () => {
     );
 
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe('You cannot view this training');
+    expect(response.body.message).toBe('You cannot view this institution');
 
     await db.institutions.remove(institution2.id);
   });

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { core } from '@/core/core.service';
-import { GroupController } from '@/core/group/group.controller';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -58,7 +58,12 @@ export default function EditGroupModal(props: ModalProps) {
 
         handleApiRequest(
           router,
-          () => GroupController.getInstance().update(selectedGroup.id, input),
+          () =>
+            InstitutionController.getInstance().updateGroup(
+              selectedGroup.institutionId,
+              selectedGroup.id,
+              input
+            ),
           (group) => {
             group = core.group.mapMembers(group, users);
 

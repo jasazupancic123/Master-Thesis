@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 
 import { Auth } from '@src/common/decorator/auth.decorator';
@@ -17,7 +8,6 @@ import { User } from '@src/common/type/firebase-auth.type';
 import { VerifyMagicLinkDto } from './dto/create-magic-link.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
-import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { IdTokenDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from './entity/user.entity';
@@ -39,12 +29,6 @@ export class AuthController {
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     await this.authService.logout(res);
-  }
-
-  @Get()
-  @Auth()
-  async findAll(@RequestUser() user: User, @Query() query: FilterUserQueryDto) {
-    return await this.authService.findAll(user, query);
   }
 
   @Get(':id')

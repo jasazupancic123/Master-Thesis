@@ -34,7 +34,6 @@ import { handleUpdateTraining } from './actions/actions-training';
 import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
-import { GroupController } from '@/core/group/group.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_DASHBOARD,
@@ -315,7 +314,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                         sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
                         onClick={() =>
                           handleSaveGroup(
-                            GroupController.getInstance(),
                             selectedGroup,
                             setSelectedGroup,
                             cycle,
@@ -450,7 +448,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
             <IconButton
               onClick={() =>
                 handleSaveGroup(
-                  GroupController.getInstance(),
                   selectedGroup,
                   setSelectedGroup,
                   cycle,

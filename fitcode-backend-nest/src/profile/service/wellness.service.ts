@@ -53,7 +53,11 @@ export class WellnessService {
       to: addDays(endOfDay(new Date()), 1), // default to now
     };
 
-    const institution = await this.institutionService.findByIdOrFail(ref);
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      ref.institutionId,
+    );
+
     if (
       !this.institutionService.canView(user, institution) ||
       institution.athleteIds.includes(user.uid) // only managers and trainers can view wellnesses

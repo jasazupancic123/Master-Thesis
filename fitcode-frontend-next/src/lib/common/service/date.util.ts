@@ -9,7 +9,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { getWeekStartByLocale } from 'weekstart';
 
-import type { Week } from '@/core/group/type/cycle.type';
+import type { Week } from '@/core/institution/type/cycle.type';
 
 export type Day = {
   label: string;

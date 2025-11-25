@@ -10,9 +10,8 @@ import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-a
 import { AuthController } from '@/core/auth/auth.controller';
 import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import { GroupController } from '@/core/group/group.controller';
-import type { Group, UpdateGroup } from '@/core/group/type/group.type';
 import { InstitutionController } from '@/core/institution/institution.controller';
+import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
 import type {
   Institution,
   UpdateInstitution,
@@ -219,7 +218,12 @@ export function DashboardProvider(props: Props) {
         toast.error('Failed to update group name');
       };
 
-      const action = () => GroupController.getInstance().update(groupId, input);
+      const action = () =>
+        InstitutionController.getInstance().updateGroup(
+          institutionId,
+          groupId,
+          input
+        );
 
       await lib.common.generic.optimisticUpdate(
         apply,
@@ -332,7 +336,8 @@ export function DashboardProvider(props: Props) {
         toast.error('Failed to delete group');
       };
 
-      const action = () => GroupController.getInstance().delete(groupId);
+      const action = () =>
+        InstitutionController.getInstance().deleteGroup(institutionId, groupId);
 
       await lib.common.generic.optimisticUpdate(
         apply,
@@ -360,7 +365,8 @@ export function DashboardProvider(props: Props) {
         toast.error('Failed to add group');
       };
 
-      const action = () => GroupController.getInstance().create(data);
+      const action = () =>
+        InstitutionController.getInstance().createGroup(data);
 
       return await lib.common.generic.optimisticUpdate(
         apply,
@@ -418,9 +424,11 @@ export function DashboardProvider(props: Props) {
       };
 
       const action = () =>
-        GroupController.getInstance().addMember(selectedGroup.id, {
-          userId: user.uid,
-        });
+        InstitutionController.getInstance().addGroupMember(
+          selectedGroup.institutionId,
+          selectedGroup.id,
+          { userId: user.uid }
+        );
 
       await lib.common.generic.optimisticUpdate(
         apply,
@@ -474,9 +482,11 @@ export function DashboardProvider(props: Props) {
       };
 
       const action = () =>
-        GroupController.getInstance().removeMember(selectedGroup.id, {
-          userId,
-        });
+        InstitutionController.getInstance().removeGroupMember(
+          selectedGroup.institutionId,
+          selectedGroup.id,
+          { userId }
+        );
 
       await lib.common.generic.optimisticUpdate(
         apply,

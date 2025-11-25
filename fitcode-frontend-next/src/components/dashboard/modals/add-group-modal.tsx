@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import { GroupController } from '@/core/group/group.controller';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import { lib } from '@/lib';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -73,7 +73,7 @@ export default function AddGroupModal(props: ModalProps) {
 
         handleApiRequest(
           router,
-          () => GroupController.getInstance().create(input),
+          () => InstitutionController.getInstance().createGroup(input),
           (group) => {
             group = core.group.mapMembers(group, users);
 

@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
-import { GroupController } from '@/core/group/group.controller';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -29,7 +29,7 @@ export default function EditCycleForm() {
   );
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(editCycle?.to));
 
-  const controller = GroupController.getInstance();
+  const controller = InstitutionController.getInstance();
 
   if (!editCycle) return null;
 
@@ -84,10 +84,7 @@ export default function EditCycleForm() {
           color="error"
           onClick={async () => {
             await handleDeleteCycle(
-              {
-                router,
-                controller,
-              },
+              { router },
               {
                 useMain: mainContext,
                 useGroup: groupContext,

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useDashboardMembersDrag(

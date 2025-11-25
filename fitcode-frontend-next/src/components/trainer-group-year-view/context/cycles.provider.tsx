@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useMultiCycleSliderYearProvider } from './years.provider';
-import type { Cycle } from '@/core/group/type/cycle.type';
+import type { Cycle } from '@/core/institution/type/cycle.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 

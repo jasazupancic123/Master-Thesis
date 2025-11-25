@@ -7,35 +7,38 @@ import {
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { AuthService } from '@src/auth/service/auth.service';
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
+import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, Update } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { GroupRef } from '@src/common/type/firestore.type';
 import {
   BatchDeleteOperation,
   BatchOperation,
   BatchWriteOperation,
 } from '@src/common/type/orm.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-institution-athlete-event.constant';
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 
-import { LogMethod } from '../common/decorator/log-method.decorator';
-import { Permission } from '../common/interface/permission.interface';
-import { CommonService } from '../common/service/common.service';
-import { Create, Update } from '../common/type/entity.type';
-import { User } from '../common/type/firebase-auth.type';
-import { GroupRef } from '../common/type/firestore.type';
-import { FirebaseService } from '../firebase/firebase.service';
-import { Institution } from '../institution/entity/institution.entity';
-import { InstitutionService } from '../institution/service/institution.service';
-import { DELETE_GROUP_EVENT } from './constant/delete-group-event.constant';
+import { DELETE_GROUP_EVENT } from '../constant/delete-group-event.constant';
 import {
   SHORT_GROUP_NAME_MAX_LENGTH,
   SHORT_GROUP_NAME_MIN_LENGTH,
-} from './constant/short-name-length.constant';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
-import { Cycle } from './entity/cycle.entity';
-import { Group } from './entity/group.entity';
-import { DeleteGroupOrCycleEvent } from './event/delete-group.event';
-import { GroupRepository } from './repository/group.repository';
+} from '../constant/short-name-length.constant';
+import { CreateGroupDto } from '../dto/create-group.dto';
+import {
+  BatchUpdateOneGroupDto,
+  UpdateGroupDto,
+} from '../dto/update-group.dto';
+import { Cycle } from '../entity/cycle.entity';
+import { Group } from '../entity/group.entity';
+import { Institution } from '../entity/institution.entity';
+import { DeleteGroupOrCycleEvent } from '../event/delete-group.event';
+import { GroupRepository } from '../repository/group.repository';
+import { InstitutionService } from './institution.service';
 
 @Injectable()
 export class GroupService implements Permission<Group, Institution> {
@@ -48,33 +51,17 @@ export class GroupService implements Permission<Group, Institution> {
     private readonly institutionService: InstitutionService,
   ) {}
 
-  findAllByInstitution(institutionId: string): Promise<Group[]> {
-    return this.repository.findAll((q) =>
-      q.where('institutionId', '==', institutionId),
-    );
-  }
-
-  async findAll(user: User): Promise<Group[]> {
-    if (this.firebase.isAdmin(user))
-      return await this.repository.findAllByAdmin();
-
-    if (this.firebase.isAthlete(user))
-      return await this.repository.findAllByAthlete(user.uid);
-
-    const institutions = await this.institutionService.findAll(user);
-    const institutionIds = institutions.map((i) => i.id);
-    return institutionIds.length > 0
-      ? await this.repository.findAllByInstitutions(institutionIds)
-      : [];
-  }
-
   async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
-    const group = await this.repository.findById(ref.groupId);
+    const group = await this.repository.findById(ref);
     if (!group || group.deletedAt) return null;
 
     // authorize
-    group.institution = await this.institutionService.findByIdOrFail(group);
+    group.institution = await this.institutionService.findByIdOrFail(
+      user,
+      group.institutionId,
+    );
+
     if (!this.canView(user, group, group.institution))
       throw new UnauthorizedException('You are not allowed to view this group');
 
@@ -92,7 +79,11 @@ export class GroupService implements Permission<Group, Institution> {
     const { name, shortName, membersIds, institutionId, trainerIds } = input;
 
     // validate
-    const institution = await this.institutionService.findByIdOrFail(input);
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      input.institutionId,
+    );
+
     await this.authService.findAllOrFail(user, { ids: membersIds });
 
     if (!this.institutionService.canEdit(user, institution))
@@ -170,7 +161,7 @@ export class GroupService implements Permission<Group, Institution> {
       cycles: input.cycles,
     };
 
-    await this.repository.update(ref.groupId, data);
+    await this.repository.update(ref, data);
     return {
       ...group,
       ...this.commonService.object.clean(data),
@@ -179,9 +170,18 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async batchUpdate(user: User, input: BatchUpdateOneGroupDto[]) {
+  async batchUpdate(
+    user: User,
+    institutionId: string,
+    input: BatchUpdateOneGroupDto[],
+  ) {
     // validate
-    const groups = await this.validateBatch(input);
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      institutionId,
+    );
+
+    const groups = await this.validateBatch(institution, input);
 
     // NOTE - trainer and manager can always edit all groups in the institution,
     // so this check is unnecessary, but still here
@@ -217,9 +217,13 @@ export class GroupService implements Permission<Group, Institution> {
           `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
         );
       }
+      const ref: GroupRef = {
+        institutionId: existingGroup.institutionId,
+        groupId: existingGroup.id,
+      };
 
       operations.push({
-        ref: this.repository.doc(id),
+        ref: this.repository.doc(ref),
         operation: 'update',
         data: this.firebase.buildUpdateQuery<Group>({
           ...existingGroup,
@@ -264,7 +268,7 @@ export class GroupService implements Permission<Group, Institution> {
     const cycle = this.findCycleOrFail(cycleId, group);
     const operations: BatchOperation<Group>[] = [
       {
-        ref: this.repository.doc(ref.groupId),
+        ref: this.repository.doc(ref),
         operation: 'update',
         data: this.firebase.buildUpdateQuery<Group>({
           cycles: group.cycles.filter((c) => c.id !== cycle.id),
@@ -310,7 +314,7 @@ export class GroupService implements Permission<Group, Institution> {
     // update group members
     const operations: BatchWriteOperation<{ membersIds: string[] }>[] = [
       // update member in group
-      this.repository.getUpdateMemberOperation(group.id, member.uid, add),
+      this.repository.getUpdateMemberOperation(ref, member.uid, add),
     ];
 
     // update member in trainings
@@ -339,14 +343,25 @@ export class GroupService implements Permission<Group, Institution> {
     if (groupId)
       // only handle single group update
       operations.push(
-        this.repository.getUpdateMemberOperation(groupId, userId, add),
+        this.repository.getUpdateMemberOperation(
+          { institutionId, groupId },
+          userId,
+          add,
+        ),
       );
     else {
       // handle all groups in the institution
-      const groups = await this.repository.findAllByInstitution(institutionId);
+      const groups = await this.repository.getAllByInstitution({
+        institutionId,
+      });
+
       for (const group of groups)
         operations.push(
-          this.repository.getUpdateMemberOperation(group.id, userId, add),
+          this.repository.getUpdateMemberOperation(
+            { institutionId, groupId: group.id },
+            userId,
+            add,
+          ),
         );
     }
   }
@@ -354,15 +369,14 @@ export class GroupService implements Permission<Group, Institution> {
   @LogMethod()
   async delete(user: User, ref: GroupRef): Promise<void> {
     const group = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.findByIdOrFail(group);
 
-    if (!this.canDelete(user, group, institution))
+    if (!this.canDelete(user, group, group.institution))
       throw new UnauthorizedException(
         'You are not allowed to delete this group',
       );
 
     const operations: BatchDeleteOperation[] = [
-      { ref: this.repository.doc(group.id), operation: 'delete' }, // delete group
+      { ref: this.repository.doc(ref), operation: 'delete' }, // delete group
     ];
 
     // delete all group trainings
@@ -385,6 +399,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   private async validateBatch(
+    institution: Institution,
     input: BatchUpdateOneGroupDto[],
   ): Promise<Group[]> {
     if (!input.length)
@@ -393,7 +408,7 @@ export class GroupService implements Permission<Group, Institution> {
     const groups = await this.firebase.batchIn<Group>(
       'id',
       input.map((g) => g.id),
-      this.repository.collection(),
+      this.repository.collection({ institutionId: institution.id }),
     );
 
     if (groups.length !== input.length)
@@ -407,8 +422,6 @@ export class GroupService implements Permission<Group, Institution> {
       throw new BadRequestException(
         'You can only update groups from the same institution',
       );
-
-    const institution = await this.institutionService.findByIdOrFail(groups[0]);
 
     for (const group of groups) group.institution = institution;
     return groups;

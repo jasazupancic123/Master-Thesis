@@ -12,6 +12,7 @@ import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardMembers from '@/components/dashboard-members/dashboard-members';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { lib } from '@/lib';
 import {
   INSTITUTION_PAGE_ID,
   LINK_DASHBOARD_ADD_INSTITUTION,
@@ -23,10 +24,12 @@ import {
   LINK_DASHBOARD_SCHEDULE,
   LINK_DASHBOARD_SETTINGS,
 } from '@/lib/common/const/nav.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function DashboardPage() {
+  const { role } = useAuthenticatedAuth();
   const { profile } = useMain();
 
   const { filter, institutions, selectedInstitution } = useDashboard();
@@ -65,7 +68,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!profile) return null;
+  if (!profile && !lib.firebase.auth.isAdmin(role)) return null;
 
   if (!institutions.length)
     return (

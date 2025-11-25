@@ -3,7 +3,7 @@ import { addDays, startOfDay, subDays } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
@@ -44,9 +44,11 @@ describe('Update Group (e2e)', () => {
   });
 
   async function addMemberReq(groupId: string, token: string, userId: string) {
-    return await testApp.http.patch(`/group/${groupId}/member`, token, {
-      userId,
-    });
+    return await testApp.http.patch(
+      `/institution/${institutionId}/group/${groupId}/member`,
+      token,
+      { userId },
+    );
   }
 
   async function deleteMemberReq(
@@ -54,9 +56,11 @@ describe('Update Group (e2e)', () => {
     token: string,
     userId: string,
   ) {
-    return await testApp.http.delete(`/group/${groupId}/member`, token, {
-      userId,
-    });
+    return await testApp.http.delete(
+      `/institution/${institutionId}/group/${groupId}/member`,
+      token,
+      { userId },
+    );
   }
 
   it('should fail if group does not exist', async () => {
@@ -73,7 +77,7 @@ describe('Update Group (e2e)', () => {
 
   it('should fail if user does not have permission to update group members', async () => {
     const response = await testApp.http.patch(
-      `/group/${groupId}/member`,
+      `/institution/${institutionId}/group/${groupId}/member`,
       athletes[0].token,
       { userId: athletes[1].uid },
     );
@@ -85,15 +89,13 @@ describe('Update Group (e2e)', () => {
   it('should fail if other trainer tries to update group members', async () => {
     const newTrainer = await testApp.auth.createTrainer();
     const response = await testApp.http.patch(
-      `/group/${groupId}/member`,
+      `/institution/${institutionId}/group/${groupId}/member`,
       newTrainer.token,
       { userId: athletes[0].uid },
     );
 
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe(
-      'You are not allowed to view this group',
-    );
+    expect(response.body.message).toBe('You cannot view this institution');
 
     await testApp.auth.deleteUsers([newTrainer.uid]);
   });
@@ -179,7 +181,7 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.findById(groupId);
+    const group = await db.groups.findById({ institutionId, groupId });
     expect(group.membersIds).toContain(newAthlete.uid);
     expect(group.membersIds).toHaveLength(4);
 
@@ -209,7 +211,7 @@ describe('Update Group (e2e)', () => {
     );
 
     // manually remove the athlete from the group
-    await db.groups.removeMember(groupId, newAthlete.uid);
+    await db.groups.removeMember({ institutionId, groupId }, newAthlete.uid);
   });
 
   it('should successfully remove a member from the group and all future trainings', async () => {
@@ -240,7 +242,7 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.findById(groupId);
+    const group = await db.groups.findById({ institutionId, groupId });
     expect(group.membersIds).not.toContain(athletes[0].uid);
     expect(group.membersIds).toHaveLength(2);
 
@@ -269,7 +271,7 @@ describe('Update Group (e2e)', () => {
     );
 
     // manually add the athlete back to the group
-    await db.groups.addMember(groupId, athletes[0].uid);
+    await db.groups.addMember({ institutionId, groupId }, athletes[0].uid);
   });
 
   it('should not update members in other groups or trainings', async () => {
@@ -333,7 +335,7 @@ describe('Update Group (e2e)', () => {
 
     expect(response.status).toBe(200);
 
-    const group = await db.groups.findById(groupId);
+    const group = await db.groups.findById({ institutionId, groupId });
     expect(group.membersIds).toContain(newAthlete.uid);
     expect(group.membersIds).toHaveLength(4);
 
@@ -389,7 +391,7 @@ describe('Update Group (e2e)', () => {
     );
 
     // delete groups and manually remove the athlete from the group
-    await db.groups.delete(otherGroupId);
-    await db.groups.removeMember(groupId, newAthlete.uid);
+    await db.groups.delete({ institutionId, groupId: otherGroupId });
+    await db.groups.removeMember({ institutionId, groupId }, newAthlete.uid);
   });
 });

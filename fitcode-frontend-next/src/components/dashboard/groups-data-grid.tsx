@@ -14,7 +14,7 @@ import { DataGrid, GridActionsCellItem, GridRowModes } from '@mui/x-data-grid';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import type { Group, UpdateGroup } from '@/core/group/type/group.type';
+import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 
