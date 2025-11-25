@@ -1,9 +1,11 @@
 'use client';
 
-import { Edit, Remove } from '@mui/icons-material';
+import { Edit, FileDownload, Remove } from '@mui/icons-material';
 import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
+import ImportWorkloadsModal from '../workloads/import-workloads-modal';
 import EditInstitutionModal from './modals/edit-institution-modal';
 import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
@@ -11,6 +13,8 @@ import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-
 import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
 import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
+import { TrainingController } from '@/core/training/training.controller';
+import type { ImportWorkload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -41,6 +45,8 @@ export default function DashboardInstitution() {
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
   const [openEditInstitutionModal, setOpenEditInstitutionModal] =
+    useState(false);
+  const [openImportWorkloadsModal, setOpenImportWorkloadsModal] =
     useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -167,6 +173,20 @@ export default function DashboardInstitution() {
                 <Edit fontSize="small" />
               </IconButton>
             </Tooltip>
+
+            <Tooltip title="Import Workloads">
+              <IconButton
+                sx={{
+                  m: 0,
+                  p: 0.5,
+                  backgroundColor: theme.palette.background.light,
+                  borderRadius: 1,
+                }}
+                onClick={() => setOpenImportWorkloadsModal(true)}
+              >
+                <FileDownload fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         )}
       </Box>
@@ -270,6 +290,24 @@ export default function DashboardInstitution() {
           institution={selectedInstitution}
           open={openEditInstitutionModal}
           onClose={() => setOpenEditInstitutionModal(false)}
+        />
+      )}
+
+      {selectedInstitution && (
+        <ImportWorkloadsModal
+          open={openImportWorkloadsModal}
+          setOpen={setOpenImportWorkloadsModal}
+          importWorkloads={async (workloads: ImportWorkload[]) => {
+            try {
+              await TrainingController.getInstance().importWorkloads(workloads);
+              toast.success('Workloads imported successfully');
+            } catch (e) {
+              console.error(e);
+              toast.error(
+                `Failed to import workloads: ${(e as Error).message}`
+              );
+            }
+          }}
         />
       )}
 
