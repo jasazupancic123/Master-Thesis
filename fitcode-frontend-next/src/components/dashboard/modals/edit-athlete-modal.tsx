@@ -39,9 +39,6 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
     onUserChange,
   } = useDashboardUserEdit();
 
-  console.log('userToEdit:', userToEdit);
-  console.log('profileToEdit:', profileToEdit);
-
   const [base64Preview, setBase64Preview] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
