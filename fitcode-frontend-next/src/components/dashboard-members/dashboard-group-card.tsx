@@ -1,16 +1,16 @@
 import { useDroppable } from '@dnd-kit/core';
+import { GridView, TableRows } from '@mui/icons-material';
 import { alpha, Avatar, Box, IconButton, Typography } from '@mui/material';
+import { useState } from 'react';
 
+import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
 import DashboardGroupCardUsers from './dashboard-group-card-users';
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
-import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
-import { useState } from 'react';
-import { GridView, TableRows } from '@mui/icons-material';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
 
 interface Props {
   group: Group;
@@ -126,7 +126,6 @@ export default function DashboardGroupCard(props: Props) {
                     cursor: 'pointer',
                   }}
                   onClick={() => {
-                    console.log('on click user', user);
                     setUserToEdit(user);
                     setOpenEditAthleteModal(true);
                   }}

@@ -1,9 +1,10 @@
-import { theme } from '@/app/style';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { lib } from '@/lib';
-import { useDashboard } from '@/store/dashboard.provider';
 import { alpha, Box, SvgIcon, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+
+import { theme } from '@/app/style';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function DashboardHomeTodaySessions() {
   const { selectedGroups, trainings } = useDashboard();

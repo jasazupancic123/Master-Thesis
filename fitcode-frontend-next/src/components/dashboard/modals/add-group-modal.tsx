@@ -21,7 +21,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { CreateGroup } from '@/core/group/type/group.type';
+import { CreateGroup } from '@/core/institution/type/group.type';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();

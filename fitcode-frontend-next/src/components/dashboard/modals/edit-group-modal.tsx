@@ -12,7 +12,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { UpdateGroup } from '@/core/group/type/group.type';
+import { UpdateGroup } from '@/core/institution/type/group.type';
 
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();

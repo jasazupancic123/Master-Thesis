@@ -51,7 +51,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 
 type AttributeValue =
   | string

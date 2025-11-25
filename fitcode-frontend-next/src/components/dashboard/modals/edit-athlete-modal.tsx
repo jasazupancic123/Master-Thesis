@@ -25,10 +25,7 @@ import MyModal from '@/ui/modal';
 
 const DEFAULT_MARGIN = 1;
 
-export default function EditAthleteModal({
-  open,
-  setOpen,
-}: ModalProps) {
+export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
 
@@ -46,8 +43,6 @@ export default function EditAthleteModal({
   const [file, setFile] = useState<File | null>(null);
 
   if (!userToEdit) return;
-
-  console.log('userToEdit in EditAthleteModal:', userToEdit);
 
   return (
     <MyModal
@@ -112,7 +107,8 @@ export default function EditAthleteModal({
             initialFileUrl={base64Preview || userToEdit?.photoURL || undefined}
             disableBorder={
               userToEdit?.photoURL !== undefined &&
-              userToEdit?.photoURL !== null && userToEdit?.photoURL !== ''
+              userToEdit?.photoURL !== null &&
+              userToEdit?.photoURL !== ''
             }
             onRemoveFile={
               userToEdit.photoURL || base64Preview
