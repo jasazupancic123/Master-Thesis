@@ -16,13 +16,10 @@ import {
   TrainingRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
-import { TrainingComponent } from '@src/training/entity/training-component.entity';
-import { TrainingExercise } from '@src/training/entity/training-exercise.entity';
 import {
   CreateWorkload,
   Workload,
@@ -40,7 +37,6 @@ export class WorkloadService {
     private readonly common: CommonService,
     private readonly firebase: FirebaseService,
     private readonly repository: WorkloadRepository,
-    private readonly exerciseService: ExerciseService,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
   ) {}
 
@@ -298,6 +294,16 @@ export class WorkloadService {
     );
   }
 
+  async upsertMany(data: Workload[]): Promise<void> {
+    const operations: BatchWriteOperation<Workload>[] = data.map((w) => ({
+      ref: this.getDoc(w),
+      operation: 'set',
+      data: this.firebase.buildCreateQuery<Workload>(w),
+    }));
+
+    await this.firebase.paginateBatches(operations);
+  }
+
   async checkTrainingStatus(ref: TrainingComponentUserStatusRef) {
     const status =
       await this.trainingComponentUserStatusRepository.findById(ref);
@@ -314,77 +320,6 @@ export class WorkloadService {
 
     if (status.status === TrainingStatus.PAUSED)
       throw new ConflictException('Training component has been paused');
-  }
-
-  async validateWorkloads(
-    customWorkloads: CreatePrescribedWorkloadDto[],
-    trainingComponents: Pick<
-      TrainingComponent,
-      'id' | 'supersets' | 'subgroups' | 'from'
-    >[],
-  ): Promise<Create<Workload>[]> {
-    if (!customWorkloads || !customWorkloads.length) return [];
-
-    const allExercises = await this.exerciseService.getAll();
-
-    const workloads: Create<Workload>[] = [];
-    for (const customWorkload of customWorkloads) {
-      // provided workload component must exist in training components
-      const trainingComponent = trainingComponents.find(
-        (c) => c.id === customWorkload.componentId,
-      );
-
-      if (!trainingComponent)
-        throw new BadRequestException('Invalid component provided in workload');
-
-      const exercise = allExercises.find(
-        (e) => e.id === customWorkload.exerciseId,
-      );
-
-      if (!exercise) throw new BadRequestException(`Exercise does not exist`);
-
-      // find prescribed supersets (either from subgroup or main group)
-      const subgroup = trainingComponent.subgroups.find((s) =>
-        s.membersIds.includes(customWorkload.userId),
-      );
-
-      const prescribedSupersets = subgroup
-        ? subgroup.supersets
-        : trainingComponent.supersets;
-
-      // ensure that workload exercise exists in prescribed supersets
-      // find exercise by same id and superset index must also match
-      const prescribedExercises: (TrainingExercise & {
-        supersetIndex: number;
-      })[] = prescribedSupersets.flatMap((s, supersetIndex) =>
-        s.exercises.map((e) => ({ ...e, supersetIndex })),
-      );
-
-      const prescribedExercise = prescribedExercises.find(
-        (e) =>
-          e.id === customWorkload.exerciseId &&
-          e.supersetIndex === customWorkload.supersetIndex,
-      );
-
-      if (!prescribedExercise)
-        throw new BadRequestException(
-          `Exercise ${exercise.name} is not prescribed in superset ${
-            customWorkload.supersetIndex + 1
-          }`,
-        );
-
-      // ensure that all prescribed values are present in workload
-      const prescribedSet = prescribedExercise.sets.find(
-        (s) => s.setNumber === customWorkload.setNumber,
-      );
-
-      if (!prescribedSet)
-        throw new BadRequestException(
-          `Set number ${customWorkload.setNumber} is invalid for exercise ${exercise.name}`,
-        );
-    }
-
-    return workloads;
   }
 
   getStatus(prescribed: ExerciseSet, completed: ExerciseSet): SetStatus {
