@@ -9,7 +9,7 @@ export interface IFormData {
   confirmPassword: string;
 }
 
-const DEFAULT_FORM_DATA: IFormData = {
+export const DEFAULT_FORM_DATA: IFormData = {
   displayName: '',
   email: '',
   password: '',

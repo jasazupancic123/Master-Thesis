@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Components } from '@/core/exercise/constant/components.constant';
+import { handlePaginateExercises } from '@/core/exercise/exercise-page-state';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
@@ -8,7 +9,6 @@ import { lib } from '@/lib';
 import type { AttributeFilters } from '@/sites/exercises.page';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { handlePaginateExercises } from '@/core/exercise/exercise-page-state';
 
 export default function useExerciseFormFilters(
   component: TrainingComponent,

@@ -16,22 +16,26 @@ import MyModal from '@/ui/modal';
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();
   const { users, setGroups } = useMain();
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setSelectedInstitution,
-    selectedInstitution,
-  } = useDashboard();
+  const { selectedGroups, setSelectedGroups, setSelectedInstitution } =
+    useDashboard();
 
   const { open, setOpen } = props;
 
-  const [groupName, setGroupName] = useState<string>(selectedGroup?.name || '');
+  const [groupName, setGroupName] = useState<string>(
+    selectedGroups.length === 1 ? selectedGroups[0].name : ''
+  );
 
   useEffect(() => {
-    setGroupName(selectedGroup?.name || '');
-  }, [selectedGroup]);
+    if (selectedGroups.length !== 1) return;
 
-  if (!selectedGroup || !selectedInstitution) return null;
+    const selectedGroup = selectedGroups[0];
+
+    setGroupName(selectedGroup?.name || '');
+  }, [selectedGroups]);
+
+  if (selectedGroups.length !== 1) return null;
+
+  const selectedGroup = selectedGroups[0];
 
   return (
     <MyModal
@@ -50,7 +54,7 @@ export default function EditGroupModal(props: ModalProps) {
           router,
           () =>
             InstitutionController.getInstance().updateGroup(
-              selectedInstitution?.id,
+              selectedGroup.institutionId,
               selectedGroup.id,
               input
             ),
@@ -72,7 +76,9 @@ export default function EditGroupModal(props: ModalProps) {
               prev.map((g) => (g.id === group.id ? group : g))
             );
 
-            setSelectedGroup(group);
+            setSelectedGroups((prev) =>
+              prev.map((g) => (g.id === group.id ? group : g))
+            );
             setOpen(false);
             toast.success('Group updated successfully.');
           },
