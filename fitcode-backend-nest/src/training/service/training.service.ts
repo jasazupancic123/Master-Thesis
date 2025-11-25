@@ -806,6 +806,11 @@ export class TrainingService implements Permission<Training, Institution> {
       const user = await this.authService.findOneBy('email', workload.email);
       if (!user) throw new NotFoundException(`Row ${i + 1}: User not found`);
 
+      if (!this.institutionService.canView(user, institution))
+        throw new UnauthorizedException(
+          `Row ${i + 1}: User is not authorized to view this institution`,
+        );
+
       if (!this.firebase.isAthlete(user))
         throw new BadRequestException(`Row ${i + 1}: User is not an athlete`);
 
