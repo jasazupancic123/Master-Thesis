@@ -39,7 +39,7 @@ export default function DashboardSidebar(props: Props) {
   if (!selectedInstitution) return null;
 
   const shortGroupName =
-    selectedGroups.length === 1 ? selectedGroups[0]?.name.slice(0, 4) : 'All';
+    selectedGroups.length === 1 ? selectedGroups[0]?.shortName : 'All';
 
   return (
     <>

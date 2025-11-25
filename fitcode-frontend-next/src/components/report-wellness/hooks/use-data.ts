@@ -28,6 +28,7 @@ export default function useWellnessReportData(
 
       return row;
     })
+    .filter((r) => r.value !== null && r.value !== undefined)
     .sort((a, b) => {
       const aValue = a.value ?? -1;
       const bValue = b.value ?? -1;

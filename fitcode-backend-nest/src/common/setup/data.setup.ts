@@ -299,6 +299,7 @@ export class DataSetup extends BaseSetup {
       const membersIds = members.map((m) => m.uid);
       const group = await groupService.create(this.manager, {
         name,
+        shortName: name.slice(0, 4).toUpperCase(),
         trainerIds: [this.trainer.uid],
         membersIds,
         institutionId: institution.id,

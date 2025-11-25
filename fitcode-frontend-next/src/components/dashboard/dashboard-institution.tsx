@@ -10,7 +10,7 @@ import EditInstitutionModal from './modals/edit-institution-modal';
 import { theme } from '@/app/style';
 import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
 import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
-import DashboardEditAthleteModal from '@/components/dashboard/modals/dashboard-edit-athlete-modal';
+import EditAthleteModal from '@/components/dashboard/modals/edit-athlete-modal';
 import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { AthletesTrainers } from '@/core/institution/enum/athletes-trainer.enum';
 import { TrainingController } from '@/core/training/training.controller';
@@ -293,6 +293,11 @@ export default function DashboardInstitution() {
         />
       )}
 
+      <EditAthleteModal
+        open={openEditAthleteModal}
+        setOpen={setOpenEditAthleteModal}
+      />
+
       {selectedInstitution && (
         <ImportWorkloadsModal
           open={openImportWorkloadsModal}
@@ -310,11 +315,6 @@ export default function DashboardInstitution() {
           }}
         />
       )}
-
-      <DashboardEditAthleteModal
-        open={openEditAthleteModal}
-        setOpen={setOpenEditAthleteModal}
-      />
     </Box>
   );
 }

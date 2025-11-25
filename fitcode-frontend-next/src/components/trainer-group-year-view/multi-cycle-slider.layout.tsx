@@ -47,8 +47,6 @@ export default function MultiCycleSliderLayout(
   const { yearsForSelect, selectedYear, setSelectedYear } =
     useMultiCycleSliderYearProvider();
 
-  const controller = InstitutionController.getInstance();
-
   const sliderRef = useRef<HTMLDivElement | null>(null);
 
   const HorizontalItems = () => {

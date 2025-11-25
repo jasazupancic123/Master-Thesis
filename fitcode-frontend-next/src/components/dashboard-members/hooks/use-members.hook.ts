@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useDashboardMembers() {
@@ -14,10 +15,17 @@ export default function useDashboardMembers() {
 
   const [search, setSearch] = useState('');
 
+  const [includeTrainers, setIncludeTrainers] = useState(true);
+  const [includeAthletes, setIncludeAthletes] = useState(true);
+
   const [allInstitutionMembers, setAllInstitutionMembers] = useState(
-    (selectedInstitution?.trainers || []).concat(
-      selectedInstitution?.athletes || []
-    )
+    (selectedInstitution?.trainers || [])
+      .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+      .concat(
+        (selectedInstitution?.athletes || []).sort((a, b) =>
+          (a.displayName || '').localeCompare(b.displayName || '')
+        )
+      )
   );
 
   const [hoveredUser, setHoveredUser] = useState<{
@@ -34,6 +42,19 @@ export default function useDashboardMembers() {
   }, [selectedInstitution]);
 
   const [filteredMembers, setFilteredMembers] = useState(allInstitutionMembers);
+
+  useEffect(() => {
+    let members: AuthUser[] = [];
+
+    if (includeTrainers) {
+      members = members.concat(selectedInstitution?.trainers || []);
+    }
+    if (includeAthletes) {
+      members = members.concat(selectedInstitution?.athletes || []);
+    }
+
+    setAllInstitutionMembers(members);
+  }, [includeTrainers, includeAthletes]);
 
   useEffect(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -53,6 +74,10 @@ export default function useDashboardMembers() {
     allInstitutionMembers,
     hoveredUser,
     setHoveredUser,
+    includeTrainers,
+    setIncludeTrainers,
+    includeAthletes,
+    setIncludeAthletes,
     openRegisterAthletesModal,
     setOpenRegisterAthletesModal,
     openRegisterTrainersModal,

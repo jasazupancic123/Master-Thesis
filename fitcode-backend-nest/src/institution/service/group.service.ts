@@ -24,6 +24,10 @@ import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-inst
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 
 import { DELETE_GROUP_EVENT } from '../constant/delete-group-event.constant';
+import {
+  SHORT_GROUP_NAME_MAX_LENGTH,
+  SHORT_GROUP_NAME_MIN_LENGTH,
+} from '../constant/short-name-length.constant';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import {
   BatchUpdateOneGroupDto,
@@ -72,7 +76,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   @LogMethod()
   async create(user: User, input: CreateGroupDto): Promise<Group> {
-    const { name, membersIds, institutionId, trainerIds } = input;
+    const { name, shortName, membersIds, institutionId, trainerIds } = input;
 
     // validate
     const institution = await this.institutionService.findByIdOrFail(
@@ -87,9 +91,15 @@ export class GroupService implements Permission<Group, Institution> {
         'You are not allowed to create group in this institution',
       );
 
+    if (!this.checkShortName(shortName))
+      throw new BadRequestException(
+        `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
+      );
+
     const data: Create<Group> = {
       id: null,
       name,
+      shortName,
       trainerIds,
       membersIds,
       institutionId,
@@ -137,9 +147,16 @@ export class GroupService implements Permission<Group, Institution> {
       )
         throw new UnauthorizedException('You are not allowed to update owner');
 
+    if (!this.checkShortName(input.shortName)) {
+      throw new BadRequestException(
+        `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
+      );
+    }
+
     // update group
     const data: Update<Group> = {
       name: input.name,
+      shortName: input.shortName,
       trainerIds: input.trainerIds,
       cycles: input.cycles,
     };
@@ -176,7 +193,7 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate cycles
     const operations: BatchWriteOperation<Group>[] = [];
-    for (const { id, name, cycles: inputCycles } of input) {
+    for (const { id, name, shortName, cycles: inputCycles } of input) {
       if (!inputCycles) continue; // no cycles to update
 
       const existingGroup = groups.find((g) => g.id === id)!;
@@ -195,6 +212,11 @@ export class GroupService implements Permission<Group, Institution> {
           `Cycles in group ${existingGroup.name} cannot overlap`,
         );
 
+      if (!this.checkShortName(shortName)) {
+        throw new BadRequestException(
+          `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
+        );
+      }
       const ref: GroupRef = {
         institutionId: existingGroup.institutionId,
         groupId: existingGroup.id,
@@ -206,6 +228,7 @@ export class GroupService implements Permission<Group, Institution> {
         data: this.firebase.buildUpdateQuery<Group>({
           ...existingGroup,
           name,
+          shortName,
           cycles: inputCycles,
         }),
       });
@@ -418,6 +441,16 @@ export class GroupService implements Permission<Group, Institution> {
     }
 
     return false;
+  }
+
+  private checkShortName(shortName: string): boolean {
+    if (
+      shortName.length < SHORT_GROUP_NAME_MIN_LENGTH ||
+      shortName.length > SHORT_GROUP_NAME_MAX_LENGTH
+    )
+      return false;
+
+    return true;
   }
 
   canView(user: User, group: Group, institution?: Institution) {

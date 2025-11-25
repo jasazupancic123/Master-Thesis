@@ -175,8 +175,8 @@ export default function DashboardSidebarGroupMenu(props: Props) {
               elevation={3}
               sx={{
                 position: 'absolute',
-                top: -46,
-                right: -40, // move it outside the main menu paper to the right
+                top: -48,
+                right: groupActions.length === 1 ? 0 : -54, // move it outside the main menu paper to the right
                 display: 'flex',
                 gap: 1,
                 border: `1px solid ${theme.palette.primary.main}`,

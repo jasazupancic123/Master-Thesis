@@ -3,6 +3,7 @@
 import { Circle } from '@mui/icons-material';
 import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
@@ -100,7 +101,9 @@ export default function DashboardSchedule() {
         <Box width="50%" display="flex" justifyContent="center">
           <Box width="70%">
             <DashboardTrainingsList
-              trainings={completedTrainings}
+              trainings={completedTrainings.sort((a, b) =>
+                dayjs(b.from).isAfter(dayjs(a.from)) ? 1 : -1
+              )}
               filter={filter}
             />
           </Box>

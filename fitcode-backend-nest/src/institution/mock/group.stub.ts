@@ -2,6 +2,7 @@ import { v4 } from 'uuid';
 
 import { generateRandomName } from '@src/common/utils/random.util';
 
+import { SHORT_GROUP_NAME_MAX_LENGTH } from '../constant/short-name-length.constant';
 import type { Group } from '../entity/group.entity';
 
 export function generateGroupStub(data?: Partial<Group>): Group {
@@ -11,6 +12,9 @@ export function generateGroupStub(data?: Partial<Group>): Group {
     updatedAt: new Date(),
     deletedAt: null,
     name: data?.name ?? generateRandomName(),
+    shortName:
+      data?.shortName ??
+      generateRandomName().slice(0, SHORT_GROUP_NAME_MAX_LENGTH),
     trainerIds: data?.trainerIds || [global.trainer.uid],
     membersIds: data?.membersIds || [global.athlete.uid],
     institutionId: data?.institutionId || v4(),

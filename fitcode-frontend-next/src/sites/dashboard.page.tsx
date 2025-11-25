@@ -5,11 +5,11 @@ import { Box } from '@mui/material';
 
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
-import DashboardGroups from '@/components/dashboard/dashboard-groups';
-import DashboardHome from '@/components/dashboard/dashboard-home';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
+import DashboardGroups from '@/components/dashboard/dashboard-planning';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
+import DashboardHome from '@/components/dashboard-home/dashboard-home';
 import DashboardMembers from '@/components/dashboard-members/dashboard-members';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { lib } from '@/lib';
