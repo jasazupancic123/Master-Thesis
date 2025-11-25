@@ -72,6 +72,7 @@ export class GroupRepository extends FirestoreRepository<Group> {
       {
         id,
         name: input.name,
+        shortName: input.shortName,
         trainerIds: input.trainerIds,
         membersIds: input.membersIds,
         institutionId: input.institutionId,
@@ -88,6 +89,7 @@ export class GroupRepository extends FirestoreRepository<Group> {
   async update(id: string, input: Update<Group>) {
     const query = this.firebase.buildUpdateQuery<Group>({
       name: input.name,
+      shortName: input.shortName,
       cycles: input.cycles,
       trainerIds: input.trainerIds,
     });

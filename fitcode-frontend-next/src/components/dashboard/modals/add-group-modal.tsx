@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
@@ -21,6 +21,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
+import { CreateGroup } from '@/core/group/type/group.type';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
@@ -36,12 +37,16 @@ export default function AddGroupModal(props: ModalProps) {
   const { open, setOpen } = props;
 
   const [groupName, setGroupName] = useState('');
+  const [shortName, setShortName] = useState('');
   const [owner, setOwner] = useState<AuthUser | null>(null);
-  const [allTrainers, _setAllTrainers] = useState(
-    (users || []).filter((user) =>
-      selectedInstitution?.trainerIds.includes(user.uid)
-    )
+
+  const [allTrainers, setAllTrainers] = useState(
+    selectedInstitution?.trainers || []
   );
+
+  useEffect(() => {
+    setAllTrainers(selectedInstitution?.trainers || []);
+  }, [selectedInstitution]);
 
   if (!selectedInstitution) return null;
 
@@ -51,14 +56,16 @@ export default function AddGroupModal(props: ModalProps) {
       setIsOpen={(open) => setOpen(open)}
       onCancel={() => {
         setOpen(false);
+        setShortName('');
         setGroupName('');
       }}
       cancelText="Close"
       onConfirm={async () => {
         if (!owner) return toast.error('Please select an owner for the group.');
 
-        const input = {
+        const input: CreateGroup = {
           name: groupName,
+          shortName: shortName,
           membersIds: [],
           trainerIds: [owner.uid],
           institutionId: selectedInstitution.id,
@@ -81,6 +88,7 @@ export default function AddGroupModal(props: ModalProps) {
               prev.length === 1 ? [group] : [...prev, group]
             );
             setOpen(false);
+            setShortName('');
             setGroupName('');
             setDetectedChanges(false);
             setOwner(null);
@@ -108,6 +116,15 @@ export default function AddGroupModal(props: ModalProps) {
           variant="outlined"
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
+        />
+
+        <TextField
+          id="outlined-basic"
+          size="small"
+          label="Short Name"
+          variant="outlined"
+          value={shortName}
+          onChange={(e) => setShortName(e.target.value)}
         />
 
         <FormControl size="small">
