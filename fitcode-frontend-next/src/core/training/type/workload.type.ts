@@ -84,3 +84,40 @@ export type CreateWorkload = Omit<
   | 'loadRm'
   | 'loadRmR'
 >;
+
+export type ImportWorkload = Pick<
+  Workload,
+  | 'exerciseId'
+  | 'setNumber'
+  | 'reps'
+  | 'repsR'
+  | 'loadKg'
+  | 'loadKgR'
+  | 'vel'
+  | 'velR'
+  | 'tempoEcc'
+  | 'tempoEccR'
+  | 'tempoCon'
+  | 'tempoConR'
+  | 'tempoIso'
+  | 'tempoIsoR'
+  | 'tempoIdle'
+  | 'tempoIdleR'
+  | 'eff'
+  | 'effR'
+  | 'time'
+  | 'timeR'
+  | 'dist'
+  | 'distR'
+  | 'recTime'
+  | 'recTimeR'
+  | 'recDist'
+  | 'recDistR'
+  | 'rir'
+  | 'rirR'
+  | 'rom'
+  | 'romR'
+> & {
+  email: string;
+  date: Date;
+};
