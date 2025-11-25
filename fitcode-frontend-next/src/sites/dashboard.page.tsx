@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
-import DashboardGroups from '@/components/dashboard/dashboard-groups';
+import DashboardGroups from '@/components/dashboard/dashboard-planning';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';

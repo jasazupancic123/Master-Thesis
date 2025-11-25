@@ -2,11 +2,21 @@
 
 import { closestCenter, DndContext, DragOverlay } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
-import { FileUploadOutlined } from '@mui/icons-material';
+import {
+  AccountCircle,
+  AccountCircleOutlined,
+  FileUploadOutlined,
+  GridView,
+  KeyboardArrowDownOutlined,
+  KeyboardArrowRight,
+  KeyboardArrowRightOutlined,
+  ViewWeek,
+} from '@mui/icons-material';
 import {
   alpha,
   Box,
   CircularProgress,
+  Grid2,
   IconButton,
   TextField,
   Tooltip,
@@ -34,6 +44,9 @@ import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
+import { useState } from 'react';
+import Image from 'next/image';
+import EditAthleteModal from '../dashboard/modals/edit-athlete-modal';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -53,6 +66,10 @@ export default function DashboardMembers() {
     allInstitutionMembers,
     hoveredUser,
     setHoveredUser,
+    includeTrainers,
+    setIncludeTrainers,
+    includeAthletes,
+    setIncludeAthletes,
     openRegisterAthletesModal,
     setOpenRegisterAthletesModal,
     openRegisterTrainersModal,
@@ -68,6 +85,9 @@ export default function DashboardMembers() {
     activeMemberId,
     isDragging,
   } = useDashboardMembersDrag(allInstitutionMembers);
+
+  const [wrapInstitutionMembers, setWrapInstitutionMembers] = useState(false);
+  const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
   if (!selectedInstitution) return null;
 
@@ -96,11 +116,30 @@ export default function DashboardMembers() {
           <Box
             width="100%"
             display="flex"
+            flexDirection={screenSize.isMobile ? 'column' : 'row'}
             justifyContent="flex-start"
-            alignItems="center"
-            gap={2}
+            alignItems={screenSize.isMobile ? 'flex-start' : 'center'}
+            gap={screenSize.isMobile ? 1 : 2}
           >
-            <Typography variant="h6">Members</Typography>
+            <Box
+              display="flex"
+              justifyContent="flex-start"
+              alignItems="center"
+              gap={0.5}
+            >
+              <Image
+                src={selectedInstitution.imageUrl}
+                alt="Institution"
+                unoptimized={lib.common.env.unoptimizeImages()}
+                width={24}
+                height={0}
+                layout="intrinsic"
+                style={{ objectFit: 'cover' }}
+              />
+              <Typography lineHeight={1} variant="h6" mt={0.3}>
+                Members
+              </Typography>
+            </Box>
             <TextField
               size="small"
               label="Search members"
@@ -130,6 +169,57 @@ export default function DashboardMembers() {
                     <FileUploadOutlined fontSize="small" />
                   </IconButton>
                 </Tooltip>
+                <IconButton
+                  onClick={() => {
+                    setIncludeTrainers((prev) => !prev);
+                  }}
+                  sx={{ p: 0, m: 0 }}
+                >
+                  <Typography
+                    width={20}
+                    height={20}
+                    variant="caption"
+                    fontWeight={600}
+                    fontSize={12}
+                    sx={{
+                      borderRadius: '50%',
+                      backgroundColor: !includeTrainers
+                        ? theme.palette.action.focus
+                        : theme.palette.primary.main,
+                      color: !includeTrainers
+                        ? theme.palette.text.primary
+                        : theme.palette.text.secondary,
+                    }}
+                  >
+                    T
+                  </Typography>
+                </IconButton>
+
+                <IconButton
+                  onClick={() => {
+                    setIncludeAthletes((prev) => !prev);
+                  }}
+                  sx={{ p: 0, m: 0 }}
+                >
+                  <Typography
+                    width={20}
+                    height={20}
+                    variant="caption"
+                    fontWeight={600}
+                    fontSize={12}
+                    sx={{
+                      borderRadius: '50%',
+                      backgroundColor: !includeAthletes
+                        ? theme.palette.action.focus
+                        : theme.palette.primary.main,
+                      color: !includeAthletes
+                        ? theme.palette.text.primary
+                        : theme.palette.text.secondary,
+                    }}
+                  >
+                    A
+                  </Typography>
+                </IconButton>
               </Box>
             )}
           </Box>
@@ -137,12 +227,15 @@ export default function DashboardMembers() {
             width="100%"
             display="flex"
             alignItems="flex-start"
+            flexWrap={wrapInstitutionMembers ? 'wrap' : undefined}
             sx={{
               mx: 'auto',
               overflowX: 'visible',
               overflowY: 'hidden',
               pb: 1,
+              pl: 2,
               ...styledScrollbarSx(theme),
+              position: 'relative',
             }}
             gap={3}
           >
@@ -158,39 +251,65 @@ export default function DashboardMembers() {
                 ))
               )}
             </SortableContext>
+            <IconButton
+              onClick={() => setWrapInstitutionMembers((prev) => !prev)}
+              sx={{ position: 'absolute', top: -3, left: 0, p: 0, m: 0 }}
+            >
+              {!wrapInstitutionMembers ? (
+                <KeyboardArrowRightOutlined fontSize="small" />
+              ) : (
+                <KeyboardArrowDownOutlined fontSize="small" />
+              )}
+            </IconButton>
           </Box>
         </Box>
 
-        <Box
-          width="100%"
-          display="flex"
-          flexWrap="wrap"
-          justifyContent={
-            selectedGroups.length === 1
-              ? 'center'
-              : screenSize.isMobile || screenSize.isTablet
-                ? 'space-around'
-                : 'space-between'
-          }
-          alignItems="flex-start"
-          gap={2}
-        >
-          {!selectedGroups.length ? (
-            <Typography>No groups</Typography>
-          ) : (
-            selectedGroups
+        {!selectedGroups.length ? (
+          <Typography>No groups</Typography>
+        ) : (
+          <Grid2
+            container
+            spacing={2}
+            justifyContent={
+              selectedGroups.length === 1 ? 'center' : 'flex-start'
+            }
+            alignItems="flex-start"
+            width="100%"
+          >
+            {selectedGroups
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((g) => (
-                <DashboardGroupCard
+                <Grid2
                   key={g.id}
-                  group={g}
-                  hoveredUser={hoveredUser}
-                  setHoveredUser={setHoveredUser}
-                  isDragging={isDragging}
-                />
-              ))
-          )}
-        </Box>
+                  size={
+                    selectedGroups.length === 1
+                      ? {
+                          xs: 12,
+                          sm: 12,
+                          md: 12,
+                          lg: 9,
+                        }
+                      : {
+                          xs: 12,
+                          sm: 6,
+                          md: 6,
+                          lg: 4,
+                        }
+                  }
+                  display="flex"
+                  justifyContent="center"
+                >
+                  <DashboardGroupCard
+                    group={g}
+                    hoveredUser={hoveredUser}
+                    setHoveredUser={setHoveredUser}
+                    isDragging={isDragging}
+                    setOpenEditAthleteModal={setOpenEditAthleteModal}
+                  />
+                </Grid2>
+              ))}
+          </Grid2>
+        )}
 
         <DragOverlay style={{ cursor: 'grab' }}>
           {activeMemberId ? (
@@ -201,6 +320,11 @@ export default function DashboardMembers() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <EditAthleteModal
+        open={openEditAthleteModal}
+        setOpen={setOpenEditAthleteModal}
+      />
 
       <RegisterUsersDashboardModal
         open={openRegisterAthletesModal}
