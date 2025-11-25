@@ -1,12 +1,5 @@
-import { Add, Circle } from '@mui/icons-material';
-import {
-  Box,
-  IconButton,
-  LinearProgress,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { Circle } from '@mui/icons-material';
+import { Box, LinearProgress, Menu, MenuItem, Typography } from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
@@ -398,7 +391,7 @@ export default function TrainingInProgress() {
                     })}
 
                     {/* Button to add new exercise */}
-                    <IconButton
+                    {/* <IconButton
                       size="small"
                       color="primary"
                       onClick={() => {
@@ -412,7 +405,7 @@ export default function TrainingInProgress() {
                       }}
                     >
                       <Add />
-                    </IconButton>
+                    </IconButton> */}
                   </Box>
                 </Box>
               );

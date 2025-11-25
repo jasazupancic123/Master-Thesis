@@ -1,7 +1,6 @@
 'use client';
 
-import { Add } from '@mui/icons-material';
-import { Box, Fab, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import AthleteOptionsContainer from '@/components/athlete/athlete-options-container';
@@ -115,7 +114,7 @@ export default function TrainingPage() {
         </Box>
       </Box>
 
-      <Fab
+      {/* <Fab
         color="primary"
         aria-label="add"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
@@ -124,7 +123,7 @@ export default function TrainingPage() {
         <Tooltip title="Add Training">
           <Add />
         </Tooltip>
-      </Fab>
+      </Fab> */}
 
       <CreateTrainingModal
         open={openCreateTrainingModal}

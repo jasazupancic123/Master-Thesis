@@ -40,7 +40,6 @@ export default function ProfileCard(props: ProfileHeaderMenuProps) {
             sx={{
               width: 30,
               height: 30,
-              cursor: 'pointer',
             }}
           />
           <Box

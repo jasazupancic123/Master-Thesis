@@ -36,7 +36,7 @@ interface Props {
 }
 
 export default function AthleteExerciseReports(props: Props) {
-  const { selectedGroup } = useDashboard();
+  const { selectedGroups } = useDashboard();
 
   const { reports, setReports, cache } = props;
 
@@ -107,8 +107,6 @@ export default function AthleteExerciseReports(props: Props) {
       <Box>
         <AddButton
           onClick={async () => {
-            if (!selectedGroup) return;
-
             const id = v4();
 
             const prevReport = reports.length
@@ -131,18 +129,22 @@ export default function AthleteExerciseReports(props: Props) {
                   type: 'single',
                 };
 
-            const item: IndexDbAthleteExerciseReport | undefined = prevReport
-              ? {
-                  id,
-                  exerciseId: prevReport.exerciseId,
-                  groupId: selectedGroup.id,
-                  userId: prevReport.userId,
-                  userIds: prevReport.userIds,
-                  type: prevReport.type,
-                }
-              : undefined;
+            if (selectedGroups.length === 1) {
+              const selectedGroup = selectedGroups[0];
 
-            if (item) await updateReportInIndexDb(item);
+              const item: IndexDbAthleteExerciseReport | undefined = prevReport
+                ? {
+                    id,
+                    exerciseId: prevReport.exerciseId,
+                    groupId: selectedGroup.id,
+                    userId: prevReport.userId,
+                    userIds: prevReport.userIds,
+                    type: prevReport.type,
+                  }
+                : undefined;
+
+              if (item) await updateReportInIndexDb(item);
+            }
 
             setReports((prev) => [...prev, newReport]);
           }}

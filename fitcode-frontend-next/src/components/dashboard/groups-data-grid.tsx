@@ -31,7 +31,7 @@ export default function GroupsDataGrid({
   onRowDelete,
   onRowAdd,
 }: Props) {
-  const [rows, setRows] = useState<Group[]>(() => institution.groups);
+  const [rows, setRows] = useState<Group[]>(() => institution.groups || []);
   const [model, setModel] = React.useState<GridRowModesModel>({});
 
   const users = [

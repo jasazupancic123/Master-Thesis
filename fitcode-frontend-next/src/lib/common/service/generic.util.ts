@@ -31,4 +31,18 @@ export class GenericUtil {
       throw e; // rethrow for optional handling by caller
     }
   }
+
+  getUnique<T>(arr: T[], uniqueKey?: keyof T): T[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seen = new Set<any>();
+    return arr.filter((item) => {
+      const key = uniqueKey ? item[uniqueKey] : item;
+      if (seen.has(key)) {
+        return false;
+      } else {
+        seen.add(key);
+        return true;
+      }
+    });
+  }
 }

@@ -12,17 +12,15 @@ import MyModal from '@/ui/modal';
 export default function DeleteGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { groups, setGroups } = useMain();
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
-  } = useDashboard();
+  const { setGroups } = useMain();
+  const { setSelectedInstitution, selectedGroups, setSelectedGroups } =
+    useDashboard();
 
   const { open, setOpen } = props;
 
-  if (!selectedInstitution || !selectedGroup) return null;
+  if (selectedGroups.length !== 1) return null;
+
+  const selectedGroup = selectedGroups[0];
 
   return (
     <MyModal
@@ -37,7 +35,7 @@ export default function DeleteGroupModal(props: ModalProps) {
           router,
           () =>
             InstitutionController.getInstance().deleteGroup(
-              selectedInstitution?.id,
+              selectedGroup.institutionId,
               selectedGroup.id
             ),
           () => {
@@ -54,11 +52,9 @@ export default function DeleteGroupModal(props: ModalProps) {
 
             setGroups((prev) => prev.filter((g) => g.id !== selectedGroup.id));
 
-            const institutionTrainerGroup = (selectedInstitution?.groups || [])
-              .filter((g) => g.id !== selectedGroup.id)
-              .find((g) => groups.some((sg) => sg.id === g.id));
-
-            setSelectedGroup(institutionTrainerGroup || null);
+            setSelectedGroups((prev) =>
+              prev.filter((g) => g.id !== selectedGroup.id)
+            );
             setOpen(false);
             toast.success('Group deleted successfully.');
           },
