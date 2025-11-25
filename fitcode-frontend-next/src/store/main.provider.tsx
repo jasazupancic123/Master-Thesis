@@ -15,6 +15,7 @@ import type {
   Institution,
 } from '@/core/institution/type/institution.type';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import { TrainingService } from '@/core/training/training.service';
@@ -33,7 +34,6 @@ export interface MainProviderProps extends React.PropsWithChildren {
   activeTraining: ActiveTraining | null;
   exerciseAiPrescriptions: ExerciseAiPrescription[];
   institution: InitInstitution;
-  wellness: WellnessZScore[];
   trainings: Training[];
   reports: TrainingReport[];
 }
@@ -52,6 +52,7 @@ export interface IMainContext extends MainProviderProps {
   setActiveTraining: SetState<ActiveTraining | null>;
   setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
   setProtocols: SetState<TrainingProtocol[]>;
+  wellness: WellnessZScore[];
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -66,7 +67,7 @@ export const CoachMainProvider = withAuth(MainProvider, [
 ]);
 
 export default function MainProvider(props: MainProviderProps) {
-  const { user } = useAuthenticatedAuth();
+  const { user, role } = useAuthenticatedAuth();
   const { children } = props;
 
   const [users, setUsers] = useState<AuthUser[]>(() =>
@@ -96,9 +97,6 @@ export default function MainProvider(props: MainProviderProps) {
   );
 
   const [groups, setGroups] = useState<Group[]>(props.institution.groups);
-  const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
-    props.activeTraining
-  );
 
   const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState<
     ExerciseAiPrescription[]
@@ -109,6 +107,10 @@ export default function MainProvider(props: MainProviderProps) {
   );
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [wellness, setWellness] = useState<WellnessZScore[]>([]);
+  const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
+    () => TrainingService.mapActiveTraining(props.activeTraining, { exercises })
+  );
 
   useEffect(() => {
     const institutionId = props.institution.id;
@@ -160,6 +162,30 @@ export default function MainProvider(props: MainProviderProps) {
     fetchExercises().then();
   }, []);
 
+  useEffect(() => {
+    const institutionId = props.institution.id;
+    if (!institutionId) return;
+
+    // only for manager and trainers
+    if (role === UserRole.ATHLETE || role === UserRole.ADMIN) return;
+
+    async function fetchWellness() {
+      try {
+        const wellness =
+          await ProfileController.getInstance().getWellnessByInstitution(
+            institutionId
+          );
+
+        setWellness(wellness);
+      } catch (e) {
+        console.error('Failed to fetch wellness', e);
+        toast.error('Failed to fetch wellness');
+      }
+    }
+
+    fetchWellness().then();
+  }, []);
+
   const value: IMainContext = {
     profile: profiles.find((p) => p.uid === user?.uid)!,
     setProfile: ((profile?: Profile) => {
@@ -176,7 +202,9 @@ export default function MainProvider(props: MainProviderProps) {
     setExercises,
     groups,
     setGroups,
-    activeTraining,
+    activeTraining: TrainingService.mapActiveTraining(props.activeTraining, {
+      exercises,
+    }),
     setActiveTraining,
     exerciseAiPrescriptions,
     setExerciseAiPrescriptions,
@@ -184,7 +212,7 @@ export default function MainProvider(props: MainProviderProps) {
     setProtocols,
     institutions: props.institutions,
     institution: props.institution,
-    wellness: props.wellness,
+    wellness,
     trainings: props.trainings.map((t) =>
       TrainingService.mapData(t, { exercises })
     ),

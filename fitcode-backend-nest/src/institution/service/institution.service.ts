@@ -123,9 +123,11 @@ export class InstitutionService implements Permission<Institution> {
     const ref: InstitutionRef = { institutionId };
     const institution = await this.findByIdOrFail(user, institutionId);
 
-    const users = await this.memberService.findAllByInstitution(institution);
-    const groups = await this.groupRepository.getAllByInstitution(ref);
-    const protocols = await this.protocolRepository.getAllByInstitution(ref);
+    const [users, groups, protocols] = await Promise.all([
+      this.memberService.findAllByInstitution(institution),
+      this.groupRepository.getAllByInstitution(ref),
+      this.protocolRepository.getAllByInstitution(ref),
+    ]);
 
     return { ...institution, groups, users, protocols };
   }
