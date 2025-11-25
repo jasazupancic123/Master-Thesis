@@ -1,10 +1,11 @@
-import { theme } from '@/app/style';
-import { Cycle } from '@/core/institution/type/cycle.type';
-import { useDashboard } from '@/store/dashboard.provider';
-import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
-import { alpha, Box, LinearProgress, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { Cycle } from '@/core/institution/type/cycle.type';
+import { useDashboard } from '@/store/dashboard.provider';
+import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 
 export default function DashboardHomeCycleProgress() {
   const { selectedGroups } = useDashboard();

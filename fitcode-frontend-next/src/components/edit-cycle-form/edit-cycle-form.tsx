@@ -29,8 +29,6 @@ export default function EditCycleForm() {
   );
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(editCycle?.to));
 
-  const controller = InstitutionController.getInstance();
-
   if (!editCycle) return null;
 
   return (

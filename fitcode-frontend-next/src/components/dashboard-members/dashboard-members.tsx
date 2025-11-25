@@ -3,17 +3,11 @@
 import { closestCenter, DndContext, DragOverlay } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import {
-  AccountCircle,
-  AccountCircleOutlined,
   FileUploadOutlined,
-  GridView,
   KeyboardArrowDownOutlined,
-  KeyboardArrowRight,
   KeyboardArrowRightOutlined,
-  ViewWeek,
 } from '@mui/icons-material';
 import {
-  alpha,
   Box,
   CircularProgress,
   Grid2,
@@ -22,9 +16,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import Image from 'next/image';
+import { useState } from 'react';
 
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
+import EditAthleteModal from '../dashboard/modals/edit-athlete-modal';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import DashboardGroupCard from './dashboard-group-card';
 import DashboardInstitutionMember from './dashboard-institution-member';
@@ -36,6 +33,7 @@ import { theme } from '@/app/style';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
+import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -43,10 +41,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
-import { useState } from 'react';
-import Image from 'next/image';
-import EditAthleteModal from '../dashboard/modals/edit-athlete-modal';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();

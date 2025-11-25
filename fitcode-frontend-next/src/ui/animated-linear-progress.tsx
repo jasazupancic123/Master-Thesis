@@ -1,4 +1,5 @@
-import { LinearProgress, LinearProgressProps } from '@mui/material';
+import type { LinearProgressProps } from '@mui/material';
+import { LinearProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 type AnimatedLinearProgressProps = LinearProgressProps & {

@@ -1,17 +1,18 @@
-import { alpha, Box, Grid2, SxProps, Typography } from '@mui/material';
-
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useEffect, useState } from 'react';
-import { theme } from '@/app/style';
-import { useDashboard } from '@/store/dashboard.provider';
-import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
+import type { SxProps } from '@mui/material';
+import { Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
-import DashboardHomeTodaySessions from './dashboard-home-today-sessions';
 import DashboardHomeCycleProgress from './dashboard-home-cycle-progress';
 import DashboardHomeFlaggedAthletes from './dashboard-home-flagged-athletes';
-import { useScreenSize } from '@/store/screen-size.provider';
+import DashboardHomeTodaySessions from './dashboard-home-today-sessions';
+import { theme } from '@/app/style';
+import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardHome() {
   const screenSize = useScreenSize();
@@ -245,7 +246,7 @@ export default function DashboardHome() {
             gap={1}
           >
             <Typography variant="h6" lineHeight={1}>
-              Today's sessions
+              Today&apos;s sessions
             </Typography>
 
             <DashboardHomeTodaySessions />

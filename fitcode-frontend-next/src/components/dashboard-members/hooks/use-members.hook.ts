@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { AuthUser } from '@/core/auth/type/user.type';
 
 export default function useDashboardMembers() {
   const { selectedInstitution } = useDashboard();

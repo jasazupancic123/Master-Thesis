@@ -3,6 +3,7 @@
 import { Circle } from '@mui/icons-material';
 import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
@@ -14,7 +15,6 @@ import useDashboardScheduleSnapshots from './hooks/use-snapshots';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useDashboard } from '@/store/dashboard.provider';
-import dayjs from 'dayjs';
 
 export default function DashboardSchedule() {
   const theme = useTheme();

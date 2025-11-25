@@ -1,11 +1,12 @@
+import { alpha, Avatar, Box, Typography } from '@mui/material';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+
 import { theme } from '@/app/style';
 import { WellnessChartDataType } from '@/core/profile/enum/wellness-chart-data-type.enum';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { alpha, Avatar, Box, Typography } from '@mui/material';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
 
 export default function DashboardHomeFlaggedAthletes() {
   const { users, wellness } = useMain();
