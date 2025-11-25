@@ -40,8 +40,12 @@ export class MemberService {
 
   async findAllByInstitution(
     institution: Institution,
+    skipFields: (keyof AuthProfileMerged)[] = [],
   ): Promise<AuthProfileMerged[]> {
-    return await this.profileService.findAllByInstitution(institution);
+    return await this.profileService.findAllByInstitution(
+      institution,
+      skipFields,
+    );
   }
 
   async addOrRemove(

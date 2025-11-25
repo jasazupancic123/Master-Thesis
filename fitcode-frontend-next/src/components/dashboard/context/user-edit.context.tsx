@@ -58,7 +58,7 @@ export function DashboardUserEditProvider({
     if (!userToEdit) return;
 
     const newUserToEdit = users.find((u) => u.uid === userToEdit.uid) || null;
-    setUserToEdit(newUserToEdit);
+    toggleUser(newUserToEdit);
   }, [users]);
 
   function onHoverUser(user: AuthUser | null) {

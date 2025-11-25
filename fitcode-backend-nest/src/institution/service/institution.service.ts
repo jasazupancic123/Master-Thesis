@@ -39,7 +39,7 @@ import { MemberService } from './member.service';
 export class InstitutionService implements Permission<Institution> {
   constructor(
     private readonly firebase: FirebaseService,
-    private readonly commonService: CommonService,
+    private readonly common: CommonService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
     private readonly repository: InstitutionRepository,
@@ -123,11 +123,23 @@ export class InstitutionService implements Permission<Institution> {
     const ref: InstitutionRef = { institutionId };
     const institution = await this.findByIdOrFail(user, institutionId);
 
-    const [users, groups, protocols] = await Promise.all([
-      this.memberService.findAllByInstitution(institution),
-      this.groupRepository.getAllByInstitution(ref),
-      this.protocolRepository.getAllByInstitution(ref),
-    ]);
+    let groups: Group[] = [];
+    let protocols: TrainingProtocol[] = [];
+    let users: AuthProfileMerged[] = [];
+
+    await this.common.generic.measure(
+      'InstitutionService.init (groups, protocols, members)',
+      async () => {
+        [groups, protocols, users] = await Promise.all([
+          this.groupRepository.getAllByInstitution(ref),
+          this.protocolRepository.getAllByInstitution(ref),
+          this.memberService.findAllByInstitution(institution, [
+            'faceEmbedding',
+            'photoURLBase64',
+          ]),
+        ]);
+      },
+    );
 
     return { ...institution, groups, users, protocols };
   }
@@ -185,7 +197,7 @@ export class InstitutionService implements Permission<Institution> {
       throw new UnauthorizedException('You cannot edit this institution');
 
     await this.repository.update(ref.institutionId, input);
-    return { ...institution, ...this.commonService.object.clean(input) };
+    return { ...institution, ...this.common.object.clean(input) };
   }
 
   @LogMethod()

@@ -19,6 +19,6 @@ export class ProtocolController {
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return this.institutionService.findAllProtocols(user, institutionId);
+    return await this.institutionService.findAllProtocols(user, institutionId);
   }
 }

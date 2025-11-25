@@ -28,7 +28,7 @@ interface Props {
 export default function DashboardGroupCardUsers(props: Props) {
   const { removeGroupMember, updateGroup } = useDashboard();
 
-  const { setUserToEdit } = useDashboardUserEdit();
+  const { toggleUser } = useDashboardUserEdit();
 
   const {
     title,
@@ -73,7 +73,7 @@ export default function DashboardGroupCardUsers(props: Props) {
                   setHoveredUser({ userId: null, groupId: null });
                 }}
                 onClick={() => {
-                  setUserToEdit(user);
+                  toggleUser(user);
                   setOpenEditAthleteModal(true);
                 }}
                 sx={{
