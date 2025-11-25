@@ -1,7 +1,7 @@
 import { TestApp } from '@test/common/utils/app.util';
 
 import type { TestInstitution } from '@src/common/type/entity.type';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { UpdateTraining } from '@src/training/interface/update-training.interface';
@@ -119,7 +119,7 @@ describe('Update Training (e2e)', () => {
 
       for (const response of responses) {
         expect(response.status).toBe(401);
-        expect(response.body.message).toBe(`You cannot view this training`);
+        expect(response.body.message).toBe(`You cannot view this institution`);
       }
     });
 

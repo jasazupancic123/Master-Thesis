@@ -14,7 +14,7 @@ import MultiCycleSlider from './multi-cycle-slider';
 import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
 import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year-view/context/years.provider';
 import MobileDoubleTextItems from '@/components/trainer-group-year-view/mobile-double-text-items';
-import { GroupController } from '@/core/group/group.controller';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
@@ -47,7 +47,7 @@ export default function MultiCycleSliderLayout(
   const { yearsForSelect, selectedYear, setSelectedYear } =
     useMultiCycleSliderYearProvider();
 
-  const controller = GroupController.getInstance();
+  const controller = InstitutionController.getInstance();
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
 
@@ -201,7 +201,6 @@ export default function MultiCycleSliderLayout(
 
             handleAddCycle(
               {
-                controller,
                 router,
                 addCycleInput: {
                   name: `Cycle ${selectedGroup.cycles.length + 1}`,

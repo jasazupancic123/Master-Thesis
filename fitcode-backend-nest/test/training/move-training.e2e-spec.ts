@@ -5,7 +5,7 @@ import { addDays } from 'date-fns';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import { generateTrainingComponent } from '@src/training/mock/training.stub';

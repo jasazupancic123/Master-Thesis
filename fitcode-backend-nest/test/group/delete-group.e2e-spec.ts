@@ -1,6 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
@@ -26,7 +26,10 @@ describe('Delete Group (e2e)', () => {
   });
 
   async function req(groupId: string, token: string) {
-    return await testApp.http.delete(`/group/${groupId}`, token);
+    return await testApp.http.delete(
+      `/institution/${institutionId}/group/${groupId}`,
+      token,
+    );
   }
 
   it.each([
@@ -43,7 +46,7 @@ describe('Delete Group (e2e)', () => {
     const response = await req(groupId, global.manager.token);
     expect(response.status).toBe(200);
 
-    const groups = await db.groups.findAll();
+    const groups = await db.groups.getAllByInstitution({ institutionId });
     expect(groups.length).toBe(0);
 
     groupId = await db.groups.save(generateGroupStub({ institutionId }));
@@ -80,7 +83,7 @@ describe('Delete Group (e2e)', () => {
     const response = await req(groupId, global.manager.token);
     expect(response.status).toBe(200);
 
-    const groups = await db.groups.findAll();
+    const groups = await db.groups.getAllByInstitution({ institutionId });
     expect(groups.length).toBe(1);
 
     const trainingsAfterDelete = await db.trainings.findAll();
@@ -97,6 +100,6 @@ describe('Delete Group (e2e)', () => {
     expect(otherGroupTrainingsAfter.length).toBe(5);
 
     groupId = await db.groups.save(generateGroupStub({ institutionId }));
-    await db.groups.delete(otherGroupId);
+    await db.groups.delete({ institutionId, groupId: otherGroupId });
   });
 });

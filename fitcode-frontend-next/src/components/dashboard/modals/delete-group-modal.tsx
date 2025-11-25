@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-import { GroupController } from '@/core/group/group.controller';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -33,7 +33,11 @@ export default function DeleteGroupModal(props: ModalProps) {
       onConfirm={async () => {
         handleApiRequest(
           router,
-          () => GroupController.getInstance().delete(selectedGroup.id),
+          () =>
+            InstitutionController.getInstance().deleteGroup(
+              selectedGroup.institutionId,
+              selectedGroup.id
+            ),
           () => {
             setSelectedInstitution((prev) =>
               !prev

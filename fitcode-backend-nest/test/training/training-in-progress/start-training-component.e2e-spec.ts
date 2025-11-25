@@ -2,7 +2,7 @@ import { TestApp } from '@test/common/utils/app.util';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import type { Group } from '@src/group/entity/group.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
@@ -113,7 +113,7 @@ describe('Start Training Component (e2e)', () => {
     );
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if trainer cannot access this training', async () => {
@@ -125,7 +125,7 @@ describe('Start Training Component (e2e)', () => {
     );
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('You cannot view this training');
+    expect(res.body.message).toBe('You cannot view this institution');
   });
 
   it('should throw error if athlete cannot access this training', async () => {

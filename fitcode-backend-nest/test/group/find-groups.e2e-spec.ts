@@ -47,33 +47,21 @@ describe('Find Groups (e2e)', () => {
     await testApp.close();
   });
 
-  async function req(token: string) {
-    return await testApp.http.get(`/group`, token);
+  async function req(token: string, institutionId: string) {
+    return await testApp.http.get(`/institution/${institutionId}/group`, token);
   }
 
-  it('should return all groups for admin', async () => {
-    const res = await req(global.admin.token);
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBe(5);
-  });
-
-  it('should return all institution groups for trainer', async () => {
-    const expected: [TestUser, number][] = [
-      [trainers1[0], 3], // trainer, count of groups
-      [trainers1[1], 3],
-      [trainers2[0], 2],
+  it('should return all institution groups correctly', async () => {
+    const expected: [string, TestUser, number][] = [
+      [institution1.id, trainers1[0], 3], // institution, trainer, count of groups
+      [institution1.id, trainers1[1], 3],
+      [institution2.id, trainers2[0], 2],
     ];
 
-    for (const [user, count] of expected) {
-      const res = await req(user.token);
+    for (const [institutionId, user, count] of expected) {
+      const res = await req(user.token, institutionId);
       expect(res.status).toBe(200);
       expect(res.body.length).toBe(count);
     }
-  });
-
-  it('should return all institution groups for manager', async () => {
-    const res = await req(global.manager.token); // owns both institutions
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBe(5);
   });
 });

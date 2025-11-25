@@ -2,15 +2,12 @@ import { startOfDay } from 'date-fns';
 import { cookies } from 'next/headers';
 
 import { AthleteProvider } from './athlete.provider';
+import type { MainProviderProps } from './main.provider';
 import { AthleteMainProvider } from './main.provider';
 import { SESSION_COOKIE_NAME } from '@/core/const/auth.const';
 import { Controller } from '@/core/controller';
-import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
-import { LOADING_ANIMATION_MIN_DURATION_MS } from '@/lib/common/const/animation.const';
 import Alert from '@/ui/alert';
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default async function InitAthleteProvider({
   children,
@@ -27,22 +24,15 @@ export default async function InitAthleteProvider({
     if (!lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
       throw new Error('Not an athlete');
 
-    const [data] = await Promise.all([
+    // For now, we just take the first institution
+    const institutions = await controller.institution.findAll({ session });
+    const institutionId = institutions[0]?.id;
+    if (!institutionId) throw new Error('No institution found');
+
+    const [main, institution, reports, trainings] = await Promise.all([
       controller.app.init({ session }),
-      sleep(LOADING_ANIMATION_MIN_DURATION_MS),
-    ]);
-
-    if (data.activeTraining && data.activeTraining?.id) {
-      TrainingService.mapData(data.activeTraining, {
-        exercises: data.exercises,
-      });
-    } else {
-      data.activeTraining = null;
-    }
-
-    const institutionId = data.institutions?.[0]?.id;
-
-    let [trainings, reports] = await Promise.all([
+      controller.institution.init(institutionId, { session }),
+      controller.training.findReports(institutionId!, { session }),
       controller.training.findAll(
         {
           institutionId,
@@ -52,16 +42,23 @@ export default async function InitAthleteProvider({
         },
         { session }
       ),
-      controller.training.findReports(institutionId!, { session }),
     ]);
 
-    trainings = trainings
-      .map((t) => TrainingService.mapData(t, data))
-      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
-
-    reports = reports
-      .map((t) => TrainingService.mapReport(t, data))
-      .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
+    const data: MainProviderProps = {
+      profile: main.profile,
+      institutions,
+      institution,
+      activeTraining: main.activeTraining,
+      exerciseAiPrescriptions: main.exerciseAiPrescriptions,
+      globalExercisesRevision: main.globalExercisesRevision,
+      wellness: [],
+      trainings: trainings.sort(
+        (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+      ),
+      reports: reports.sort(
+        (a, b) => new Date(b.from).getTime() - new Date(a.from).getTime()
+      ),
+    };
 
     return (
       <AthleteMainProvider key={profile.uid} {...data}>
@@ -72,6 +69,6 @@ export default async function InitAthleteProvider({
     );
   } catch (e) {
     console.error('[AthleteProvider] error', e);
-    return <Alert type="unauthorized" />;
+    return <Alert type="error" errorMessage={(e as Error).message} />;
   }
 }

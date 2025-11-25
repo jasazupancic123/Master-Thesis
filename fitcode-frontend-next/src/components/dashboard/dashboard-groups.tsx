@@ -9,7 +9,7 @@ import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constan
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
 import { theme } from '@/app/style';
-import type { Group } from '@/core/group/type/group.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { lib } from '@/lib';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
 import { EMPTY_STRING } from '@/lib/common/const/string.const';

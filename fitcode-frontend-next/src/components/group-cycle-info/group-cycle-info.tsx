@@ -1,8 +1,8 @@
 import { MoreVert } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 
-import type { Cycle } from '@/core/group/type/cycle.type';
-import type { Group } from '@/core/group/type/group.type';
+import type { Cycle } from '@/core/institution/type/cycle.type';
+import type { Group } from '@/core/institution/type/group.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {

@@ -2,6 +2,7 @@ import type { User } from '@firebase/auth';
 
 import type { CustomClaims } from './custom-claims.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { Profile } from '@/core/profile/type/user.type';
 
 // Firebase Auth User
 export type AuthUser = Pick<
@@ -20,3 +21,21 @@ export type CreateUser = Omit<AuthUser, 'uid' | 'customClaims' | 'photoURL'> & {
 };
 
 export type UpdateUser = Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>;
+
+export type AuthProfileMerged = Pick<
+  AuthUser,
+  'uid' | 'email' | 'displayName' | 'photoURL'
+> &
+  Pick<
+    Profile,
+    | 'weight'
+    | 'height'
+    | 'birthDate'
+    | 'gender'
+    | 'level'
+    | 'sport'
+    | 'photoURLBase64'
+  > & {
+    role: UserRole;
+    faceEmbedding: number[];
+  };

@@ -52,10 +52,20 @@ export class TrainingController extends BaseController {
     return this.api.get<ActiveTraining | null>(`/get/active`, options);
   }
 
-  async getGroupReport(groupId: string, componentId?: string) {
+  async getGroupReport(
+    institutionId: string,
+    groupId: string,
+    componentId?: string
+  ) {
     return await this.api.get<Record<string, GroupTrainingReportItem>>(
       `/report/group`,
-      { query: { groupId, ...(componentId ? { componentId } : {}) } }
+      {
+        query: {
+          institutionId,
+          groupId,
+          ...(componentId ? { componentId } : {}),
+        },
+      }
     );
   }
 

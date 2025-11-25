@@ -2,11 +2,11 @@ import { TestApp } from '@test/common/utils/app.util';
 import { addDays } from 'date-fns';
 
 import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
-import type { BatchUpdateOneGroupDto } from '@src/group/dto/update-group.dto';
-import type { Group } from '@src/group/entity/group.entity';
-import { GroupService } from '@src/group/group.service';
-import { generateCycleStub } from '@src/group/mock/cycle.stub';
-import { generateGroupStub } from '@src/group/mock/group.stub';
+import type { BatchUpdateOneGroupDto } from '@src/institution/dto/update-group.dto';
+import type { Group } from '@src/institution/entity/group.entity';
+import { generateCycleStub } from '@src/institution/mock/cycle.stub';
+import { generateGroupStub } from '@src/institution/mock/group.stub';
+import { GroupService } from '@src/institution/service/group.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Update Group (e2e)', () => {
@@ -35,10 +35,13 @@ describe('Update Group (e2e)', () => {
     async function batchUpdateRequest(
       user: TestUser,
       input: BatchUpdateOneGroupDto[],
+      institutionId = institution.id,
     ) {
-      return await testApp.http.patch(`/group/update/batch`, user.token, {
-        groups: input,
-      });
+      return await testApp.http.patch(
+        `/institution/${institutionId}/group/update/batch`,
+        user.token,
+        { groups: input },
+      );
     }
 
     it('should fail if empty array is passed in', async () => {
@@ -65,19 +68,20 @@ describe('Update Group (e2e)', () => {
       });
 
       const newGroup = await db.groups.createTest(newInstitution);
-
-      const response = await batchUpdateRequest(global.trainer, [
-        group,
-        newGroup,
-      ]);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `You can only update groups from the same institution`,
+      const response = await batchUpdateRequest(
+        global.trainer,
+        [group, newGroup],
+        newInstitution.id,
       );
 
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(`Invalid groups provided`);
+
       await db.institutions.remove(newInstitution.id);
-      await db.groups.delete(newGroup.id);
+      await db.groups.delete({
+        institutionId: newInstitution.id,
+        groupId: newGroup.id,
+      });
     });
 
     it('should fail if cycles overlap', async () => {
@@ -116,6 +120,7 @@ describe('Update Group (e2e)', () => {
       ]);
 
       const found = await groupService.findOneById(global.trainer, {
+        institutionId: institution.id,
         groupId: group.id,
       });
 
@@ -147,6 +152,7 @@ describe('Update Group (e2e)', () => {
       ]);
 
       const found = await groupService.findOneById(global.trainer, {
+        institutionId: institution.id,
         groupId: group.id,
       });
 

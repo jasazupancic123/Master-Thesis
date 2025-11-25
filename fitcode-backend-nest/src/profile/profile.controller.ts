@@ -19,10 +19,10 @@ export class ProfileController {
     private readonly wellnessService: WellnessService,
   ) {}
 
-  @Get('all')
-  @Auth()
-  async findAllMerged(@RequestUser() user: User) {
-    return await this.profileService.findAllMerged(user);
+  @Get('institution')
+  @Auth([UserRole.MANAGER])
+  async findAllByInstitution(@RequestUser() user: User) {
+    return await this.profileService.findAllByManager(user);
   }
 
   @Get()
