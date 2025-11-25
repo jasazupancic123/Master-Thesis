@@ -202,7 +202,7 @@ export default function MainProvider(props: MainProviderProps) {
     setExercises,
     groups,
     setGroups,
-    activeTraining: TrainingService.mapActiveTraining(props.activeTraining, {
+    activeTraining: TrainingService.mapActiveTraining(activeTraining, {
       exercises,
     }),
     setActiveTraining,
