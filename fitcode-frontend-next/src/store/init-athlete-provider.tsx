@@ -51,7 +51,6 @@ export default async function InitAthleteProvider({
       activeTraining: main.activeTraining,
       exerciseAiPrescriptions: main.exerciseAiPrescriptions,
       globalExercisesRevision: main.globalExercisesRevision,
-      wellness: [],
       trainings: trainings.sort(
         (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
       ),

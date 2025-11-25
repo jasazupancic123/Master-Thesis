@@ -205,7 +205,7 @@ export class TrainingExerciseSetUtil {
     exercise: Exercise,
     param: ExerciseParamFieldExtended
   ): boolean {
-    return exercise.params.includes(param);
+    return exercise?.params?.includes(param) ?? false;
   }
 
   private assignParamOption<T extends keyof ExerciseSet>(
