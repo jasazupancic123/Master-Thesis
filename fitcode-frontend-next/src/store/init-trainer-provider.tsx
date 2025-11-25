@@ -41,7 +41,7 @@ export default async function InitTrainerProvider({
       profile: main.profile,
       institutions,
       institution,
-      activeTraining: main.activeTraining,
+      activeTraining: null,
       exerciseAiPrescriptions: main.exerciseAiPrescriptions,
       globalExercisesRevision: main.globalExercisesRevision,
       wellness,

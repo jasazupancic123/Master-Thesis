@@ -20,10 +20,9 @@ export class FirebaseModule {
           useFactory: async (
             configService: ConfigService<Environment>,
             commonService: CommonService,
-          ) => {
-            return getFirebaseClient(configService, commonService);
-          },
+          ) => getFirebaseClient(configService, commonService),
         },
+
         FirebaseService,
       ],
       exports: [FIREBASE_ADMIN, FirebaseService],
