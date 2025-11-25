@@ -48,7 +48,11 @@ import {
   CreateTrainingProtocolDto,
   UpdateTrainingProtocolDto,
 } from './entity/training-protocol.entity';
-import { CreateWorkload, Workload } from './entity/workload.entity';
+import {
+  CreateWorkload,
+  ImportWorkloadsDto,
+  Workload,
+} from './entity/workload.entity';
 import { ActiveTrainingService } from './service/active-training.service';
 import { TrainingService } from './service/training.service';
 import { TrainingProtocolService } from './service/training-protocol.service';
@@ -403,6 +407,15 @@ export class TrainingController {
     };
 
     return await this.trainingService.upsertSet(user, ref, body);
+  }
+
+  @Post('import-workloads')
+  @Auth([UserRole.MANAGER])
+  async importWorkloads(
+    @RequestUser() user: User,
+    @Body() { workloads }: ImportWorkloadsDto,
+  ) {
+    return await this.trainingService.importWorkloads(user, workloads);
   }
 
   @Post(':trainingId/component/:cId/start')
