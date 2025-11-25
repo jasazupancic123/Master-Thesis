@@ -8,7 +8,7 @@ export const MAX_WIDTH_NUMERIC = 1340;
 export const DASHBOARD_SIDEBAR_WIDTH = '200px';
 export const DASHBOARD_SIDEBAR_WIDTH_NUMERIC = 200;
 export const MAX_WIDTH_DASHBOARD = '1480px';
-export const MAX_WIDTH_DASHBOARD_ITEM = '1280px';
+export const MAX_WIDTH_DASHBOARD_ITEM = '1300px';
 export const DIVIDER_HEIGHT = '180px';
 
 // ICON SIDEBAR:
