@@ -6,6 +6,7 @@ import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
+import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 
 interface Props {
   group: Group;
@@ -30,7 +31,7 @@ export default function DashboardGroupCard(props: Props) {
       justifyContent="flex-start"
       alignItems="center"
       sx={{
-        background: `linear-gradient(135deg, ${theme.palette.background.dark} 0%, ${alpha(theme.palette.background.light, 0.5)} 100%, ${theme.palette.background.light} 100%)`,
+        background: LINEAR_GRADIENT_BG,
         borderRadius: 2,
         p: 1,
         boxShadow: hoveredUser.groupId === group.id ? 6 : 2,

@@ -6,7 +6,6 @@ import { Box } from '@mui/material';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
 import DashboardGroups from '@/components/dashboard/dashboard-groups';
-import DashboardHome from '@/components/dashboard/dashboard-home';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
@@ -27,6 +26,7 @@ import {
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import DashboardHome from '@/components/dashboard-home/dashboard-home';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();

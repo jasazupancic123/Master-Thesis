@@ -33,6 +33,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -87,7 +88,7 @@ export default function DashboardMembers() {
             py: 1,
             px: 2,
             borderRadius: 2,
-            background: `linear-gradient(135deg, ${theme.palette.background.dark} 0%, ${alpha(theme.palette.background.light, 0.5)} 100%, ${theme.palette.background.light} 100%)`,
+            background: LINEAR_GRADIENT_BG,
             overflowX: 'hidden',
           }}
           gap={2}
