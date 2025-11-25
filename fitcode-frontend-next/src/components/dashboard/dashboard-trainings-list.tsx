@@ -57,8 +57,6 @@ export default function DashboardTrainingsList(props: Props) {
         const group = groups.find((g) => g.id === training.groupId);
         if (!group) return null;
 
-        const shortGroupName = group.name.substring(0, 3);
-
         return (
           <Fragment key={training.id}>
             {training.components
@@ -70,7 +68,7 @@ export default function DashboardTrainingsList(props: Props) {
                     t.componentId === component.id
                 );
 
-                const trainingName = `${shortGroupName} - ${component.id}${target ? ` - ${target.name}` : ''}`;
+                const trainingName = `${group.shortName} - ${component.id}${target ? ` - ${target.name}` : ''}`;
 
                 const periodLabel =
                   new Date(training.from).getHours() < 12
@@ -80,7 +78,8 @@ export default function DashboardTrainingsList(props: Props) {
                 const time = dayjs(training.from).format('HH:mm');
                 const timeLabel = `${periodLabel}, ${time}`;
 
-                const isToday = dayjs(training.from).isSame(dayjs(), 'day');
+                const isToday =
+                  upcoming && dayjs(training.from).isSame(dayjs(), 'day');
                 const dateLabel = isToday
                   ? 'Today'
                   : dayjs(training.from).format('D-MMM');
@@ -137,15 +136,13 @@ export default function DashboardTrainingsList(props: Props) {
                         {trainingName}
                       </Typography>
 
-                      {upcoming && (
-                        <Typography
-                          fontSize={12}
-                          lineHeight={1}
-                          sx={{ textTransform: 'uppercase' }}
-                        >
-                          {dateLabel}
-                        </Typography>
-                      )}
+                      <Typography
+                        fontSize={12}
+                        lineHeight={1}
+                        sx={{ textTransform: 'uppercase' }}
+                      >
+                        {dateLabel}
+                      </Typography>
                     </Box>
                     <Box
                       width="60px"

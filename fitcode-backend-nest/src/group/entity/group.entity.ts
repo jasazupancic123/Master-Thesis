@@ -31,6 +31,11 @@ export class Group extends BaseEntity {
   @Expose()
   name: string;
 
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  shortName: string;
+
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ApiProperty()

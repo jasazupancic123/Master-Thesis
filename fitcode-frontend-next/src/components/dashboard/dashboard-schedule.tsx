@@ -14,6 +14,7 @@ import useDashboardScheduleSnapshots from './hooks/use-snapshots';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useDashboard } from '@/store/dashboard.provider';
+import dayjs from 'dayjs';
 
 export default function DashboardSchedule() {
   const theme = useTheme();
@@ -100,7 +101,9 @@ export default function DashboardSchedule() {
         <Box width="50%" display="flex" justifyContent="center">
           <Box width="70%">
             <DashboardTrainingsList
-              trainings={completedTrainings}
+              trainings={completedTrainings.sort((a, b) =>
+                dayjs(b.from).isAfter(dayjs(a.from)) ? 1 : -1
+              )}
               filter={filter}
             />
           </Box>

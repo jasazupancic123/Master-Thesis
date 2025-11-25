@@ -1,6 +1,6 @@
 'use client';
 
-import { TextField } from '@mui/material';
+import { Box, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
+import { UpdateGroup } from '@/core/group/type/group.type';
 
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();
@@ -24,6 +25,9 @@ export default function EditGroupModal(props: ModalProps) {
   const [groupName, setGroupName] = useState<string>(
     selectedGroups.length === 1 ? selectedGroups[0].name : ''
   );
+  const [shortName, setShortName] = useState<string>(
+    selectedGroups.length === 1 ? selectedGroups[0].shortName : ''
+  );
 
   useEffect(() => {
     if (selectedGroups.length !== 1) return;
@@ -31,6 +35,7 @@ export default function EditGroupModal(props: ModalProps) {
     const selectedGroup = selectedGroups[0];
 
     setGroupName(selectedGroup?.name || '');
+    setShortName(selectedGroup?.shortName || '');
   }, [selectedGroups]);
 
   if (selectedGroups.length !== 1) return null;
@@ -46,8 +51,9 @@ export default function EditGroupModal(props: ModalProps) {
       }}
       cancelText="Close"
       onConfirm={async () => {
-        const input = {
+        const input: UpdateGroup = {
           name: groupName,
+          shortName: shortName,
         };
 
         handleApiRequest(
@@ -82,14 +88,23 @@ export default function EditGroupModal(props: ModalProps) {
         );
       }}
     >
-      <TextField
-        fullWidth
-        value={groupName}
-        label="Group Name"
-        onChange={(e) => setGroupName(e.target.value)}
-        placeholder="Group Name"
-        sx={{ mt: 2 }}
-      />
+      <Box display="flex" flexDirection="column">
+        <TextField
+          value={groupName}
+          label="Group Name"
+          onChange={(e) => setGroupName(e.target.value)}
+          placeholder="Group Name"
+          sx={{ mt: 2 }}
+        />
+        <TextField
+          size="small"
+          value={shortName}
+          label="Short Name"
+          onChange={(e) => setShortName(e.target.value)}
+          placeholder="Short Name"
+          sx={{ mt: 2 }}
+        />
+      </Box>
     </MyModal>
   );
 }

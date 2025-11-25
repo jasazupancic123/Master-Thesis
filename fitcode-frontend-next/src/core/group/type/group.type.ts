@@ -7,6 +7,7 @@ export type Group = BaseEntity & {
   institutionId: string;
   trainerIds: string[];
   name: string;
+  shortName: string;
   membersIds: string[];
   cycles: Cycle[];
   events?: GroupEvent[];
@@ -18,11 +19,11 @@ export type Group = BaseEntity & {
 
 export type CreateGroup = Pick<
   Group,
-  'institutionId' | 'name' | 'trainerIds' | 'membersIds'
+  'institutionId' | 'name' | 'shortName' | 'trainerIds' | 'membersIds'
 >;
 
 export type UpdateGroup = Partial<
-  Pick<Group, 'trainerIds' | 'name' | 'cycles'>
+  Pick<Group, 'trainerIds' | 'name' | 'shortName' | 'cycles'>
 >;
 
 export type BatchUpdateOneGroup = IdEntity & UpdateGroup;
