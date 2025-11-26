@@ -105,7 +105,8 @@ export default function DashboardGroupCardUsers(props: Props) {
                   hoveredUser.groupId === group.id && (
                     <Tooltip title="Remove from group">
                       <IconButton
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.stopPropagation();
                           const isTrainer = group.trainerIds.includes(user.uid);
 
                           if (isTrainer) {

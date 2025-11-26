@@ -26,15 +26,14 @@ export default function DashboardHomeFlaggedAthletes() {
       value: number;
     }[] = [];
 
+    const userIds = selectedGroups
+      .flatMap((g) => g.membersIds)
+      .filter((v, i, a) => a.indexOf(v) === i); // unique
+
     wellness
       .filter((tw) => {
-        const group = selectedInstitution?.groups?.find((g) =>
-          g.membersIds.includes(tw.userId)
-        );
         return (
-          dayjs(tw.date).isSame(dayjs(), 'day') &&
-          group &&
-          selectedGroups.some((sg) => sg.id === group.id)
+          dayjs(tw.date).isSame(dayjs(), 'day') && userIds.includes(tw.userId)
         );
       })
       .forEach((w) => {
@@ -59,7 +58,7 @@ export default function DashboardHomeFlaggedAthletes() {
       });
 
     setFlaggedWellness(newFlaggedWellness.sort((a, b) => a.value - b.value));
-  }, [wellness, selectedGroups, selectedInstitution]);
+  }, [wellness, selectedGroups]);
 
   return (
     <Box
