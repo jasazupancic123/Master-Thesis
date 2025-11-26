@@ -49,7 +49,8 @@ export async function uploadFaceCaptures(state: {
         const path = `user/${user.uid}/${file.name}`;
         const { base64 } = await lib.firebase.storage.uploadFileWithBase64(
           file,
-          path
+          path,
+          { maxDimensionCrop: 1000 }
         );
 
         switch (view) {
