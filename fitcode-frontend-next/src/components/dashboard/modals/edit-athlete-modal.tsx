@@ -9,7 +9,7 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
 import { Gender } from '@/core/profile/enum/gender.enum';
@@ -21,8 +21,8 @@ import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
-import MyModal from '@/ui/modal';
 import LoadingOverlay from '@/ui/loading-overlay';
+import MyModal from '@/ui/modal';
 
 const DEFAULT_MARGIN = 1;
 
