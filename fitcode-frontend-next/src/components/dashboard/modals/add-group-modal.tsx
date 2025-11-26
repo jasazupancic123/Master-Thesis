@@ -15,13 +15,13 @@ import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-a
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
+import type { CreateGroup } from '@/core/institution/type/group.type';
 import { lib } from '@/lib';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { CreateGroup } from '@/core/institution/type/group.type';
 
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
