@@ -11,7 +11,7 @@ import { useMain } from '@/store/main.provider';
 export default function DashboardHomeFlaggedAthletes() {
   const { users, wellness } = useMain();
 
-  const { selectedGroups, selectedInstitution } = useDashboard();
+  const { selectedGroups } = useDashboard();
 
   const LOWER_BOUNDARY = 5; // it it's the same or lower than this, flag the athlete
 

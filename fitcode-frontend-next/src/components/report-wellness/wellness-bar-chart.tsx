@@ -44,8 +44,6 @@ export default function WellnessBarChart(props: Props) {
     chartWidth <= 0 ||
     !Number.isFinite(height)
   ) {
-    // avoid rendering with invalid dimensions
-    console.log('Invalid chart dimensions', chartWidth, height);
     return null;
   }
 
