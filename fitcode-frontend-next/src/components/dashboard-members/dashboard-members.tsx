@@ -281,7 +281,7 @@ export default function DashboardMembers() {
                           xs: 12,
                           sm: 12,
                           md: 12,
-                          lg: 9,
+                          lg: 12,
                         }
                       : {
                           xs: 12,

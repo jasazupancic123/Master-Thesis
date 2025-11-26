@@ -113,6 +113,7 @@ export default function DashboardSidebarGroupMenu(props: Props) {
         <Box
           sx={{
             position: 'relative',
+            minWidth: 200,
           }}
         >
           {/* GROUP LIST */}
