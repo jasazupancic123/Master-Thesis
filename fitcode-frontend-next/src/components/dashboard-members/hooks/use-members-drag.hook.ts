@@ -39,6 +39,7 @@ export default function useDashboardMembersDrag(
   };
 
   const onUserDragEnd = async (event: DragEndEvent) => {
+    console.log('event', event);
     setIsDragging(false);
 
     const { active, over } = event;
