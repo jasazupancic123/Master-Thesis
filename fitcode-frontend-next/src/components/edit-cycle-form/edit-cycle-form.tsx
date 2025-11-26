@@ -10,7 +10,6 @@ import { useState } from 'react';
 
 import { handleDeleteCycle } from '../trainer-group-year-view/actions/actions-cycle';
 import { useMultiCycleSliderCyclesProvider } from '../trainer-group-year-view/context/cycles.provider';
-import { InstitutionController } from '@/core/institution/institution.controller';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 

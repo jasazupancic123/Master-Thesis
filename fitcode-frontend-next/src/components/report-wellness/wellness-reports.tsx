@@ -1,10 +1,12 @@
 import { Avatar, Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 
 import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { MetricConfig } from './types/wellness-metrics.type';
 import WellnessBarChart from './wellness-bar-chart';
 import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
@@ -18,14 +20,24 @@ export default function WellnessReports() {
   const { wellness } = useMain();
   const { selectedGroups } = useDashboard();
 
-  const members = lib.common.generic.getUnique(
-    selectedGroups.flatMap((g) => g.members || []),
-    'uid'
-  );
+  const [members, setMembers] = useState<AuthUser[]>([]);
+
+  useEffect(() => {
+    setMembers(
+      lib.common.generic.getUnique(
+        selectedGroups.flatMap((g) => g.members || []),
+        'uid'
+      )
+    );
+  }, [selectedGroups]);
 
   const todaysWellness = wellness.filter((w) => {
     return dayjs(w.date).isSame(dayjs(), 'day');
   });
+
+  const comments = todaysWellness.filter(
+    (w) => w.comment && w.comment.trim() !== ''
+  );
 
   const metricConfigs: MetricConfig[] = [
     { key: 'sleep', zKey: 'zScoreSleep', title: 'Sleep' },
@@ -33,17 +45,19 @@ export default function WellnessReports() {
     { key: 'soreness', zKey: 'zScoreSoreness', title: 'Soreness' },
   ];
 
-  const barChartWidth =
+  let barChartWidth =
     typeof window !== 'undefined'
       ? screenSize.xs || screenSize.sm
         ? Math.min(450, window.innerWidth * 0.85)
         : Math.min(window.innerWidth, MAX_WIDTH_NUMERIC) * 0.35
       : 450;
-  const barChartHeight = barChartWidth * 0.5;
 
-  const comments = todaysWellness.filter(
-    (w) => w.comment && w.comment.trim() !== ''
-  );
+  // Fallback to a safe default if something went wrong
+  if (!Number.isFinite(barChartWidth) || barChartWidth <= 0) {
+    barChartWidth = 450;
+  }
+
+  const barChartHeight = barChartWidth * 0.5;
 
   return (
     <Box

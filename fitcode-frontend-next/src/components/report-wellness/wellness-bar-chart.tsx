@@ -29,13 +29,23 @@ export default function WellnessBarChart(props: Props) {
     metricConfig
   );
 
+  const safeWidth = Number.isFinite(width) && width > 0 ? width : 450;
+
   const { colorMapValues, colorMapColors, containersWidth } =
-    useWellnessChartUtils(rows, width);
+    useWellnessChartUtils(rows, safeWidth);
 
   const MIN_BAR_WIDTH = 80;
 
   const barCount = rows.length;
-  const chartWidth = Math.max(width, barCount * MIN_BAR_WIDTH);
+  const chartWidth = Math.max(safeWidth, barCount * MIN_BAR_WIDTH);
+
+  if (
+    !Number.isFinite(chartWidth) ||
+    chartWidth <= 0 ||
+    !Number.isFinite(height)
+  ) {
+    return null;
+  }
 
   return (
     <Box
@@ -97,19 +107,24 @@ export default function WellnessBarChart(props: Props) {
             pb: screenSize.isTouchDevice ? 1 : undefined,
           }}
         >
-          {/* Inner width = scroll area (can be wider than container) */}
           <Box sx={{ width: chartWidth }}>
             <BarChart
               width={chartWidth}
               height={height}
               dataset={rows}
               hideLegend
+              series={[
+                {
+                  dataKey: 'value',
+                  label: metricConfig.title,
+                },
+              ]}
               xAxis={[
                 {
                   scaleType: 'band',
                   dataKey: 'label',
-                  categoryGapRatio: rows.length < 8 ? 0.5 : undefined,
-                  barGapRatio: rows.length < 8 ? 0.5 : undefined,
+                  categoryGapRatio: 0.5,
+                  barGapRatio: 0.5,
                   colorMap: {
                     type: 'ordinal',
                     values: colorMapValues,
@@ -125,8 +140,7 @@ export default function WellnessBarChart(props: Props) {
                   valueFormatter: (label, context) =>
                     context.location === 'tick'
                       ? String(label).split(' ').slice(0, 2).join('\n')
-                      : //? wrapLabel(String(label), 10)
-                        String(label),
+                      : String(label),
                 },
               ]}
               yAxis={[
@@ -142,12 +156,6 @@ export default function WellnessBarChart(props: Props) {
                 left: 0,
                 top: 10,
               }}
-              series={[
-                {
-                  dataKey: 'value',
-                  label: metricConfig.title,
-                },
-              ]}
             />
           </Box>
         </Box>

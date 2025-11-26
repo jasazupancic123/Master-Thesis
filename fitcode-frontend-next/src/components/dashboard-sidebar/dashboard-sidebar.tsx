@@ -45,7 +45,7 @@ export default function DashboardSidebar(props: Props) {
     <>
       <Box
         width={DASHBOARD_SIDEBAR_WIDTH}
-        height="100vh"
+        height="100dvh"
         display="flex"
         flexDirection="column"
         alignItems="center"
@@ -183,7 +183,6 @@ export default function DashboardSidebar(props: Props) {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          gap={2}
           sx={{
             cursor: lib.firebase.auth.isAdmin(role) ? 'pointer' : undefined,
           }}
