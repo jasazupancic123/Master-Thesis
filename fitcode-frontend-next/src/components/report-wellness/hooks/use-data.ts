@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 
+import { INVALID_Z_SCORE } from '../const/invalid-z-score';
 import type { WellnessChartRow } from '../types/wellness-chart-row';
 import type { MetricConfig } from '../types/wellness-metrics.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
@@ -13,50 +15,79 @@ export default function useWellnessReportData(
 ) {
   const { wellness } = useMain();
 
-  const rows = members
-    .map((member) => {
-      const row: WellnessChartRow = {};
+  const [rows, setRows] = useState<WellnessChartRow[]>([]);
+  const [avgValue, setAvgValue] = useState<number>(0);
+  const [last10DayAvgValue, setLast10DayAvgValue] = useState<number>(0);
 
+  // -------- TODAY / ROWS --------
+  useEffect(() => {
+    const newRows: WellnessChartRow[] = [];
+
+    for (const member of members) {
       const memberWellness = todaysWellness.find(
         (w) => w.userId === member.uid
       );
 
-      row.id = member.uid;
-      row.label = member.displayName || member.email || 'Unknown';
-      row.value = memberWellness ? memberWellness[metricConfig.key] : null;
-      row.zScore = memberWellness ? memberWellness[metricConfig.zKey] : null;
+      const rawValue = memberWellness
+        ? (memberWellness[metricConfig.key] as unknown)
+        : null;
 
-      return row;
-    })
-    .filter((r) => r.value !== null && r.value !== undefined)
-    .sort((a, b) => {
-      const aValue = a.value ?? -1;
-      const bValue = b.value ?? -1;
-      return aValue - bValue;
+      const numericValue =
+        rawValue === null || rawValue === undefined ? null : Number(rawValue);
+
+      // Skip invalid numbers (null, undefined, NaN, Infinity, etc.)
+      if (numericValue === null || !Number.isFinite(numericValue)) {
+        continue;
+      }
+
+      const rawZ = memberWellness
+        ? (memberWellness[metricConfig.zKey] as unknown)
+        : null;
+      const numericZ =
+        rawZ === null || rawZ === undefined ? INVALID_Z_SCORE : Number(rawZ);
+
+      const row: WellnessChartRow = {
+        id: member.uid,
+        label: member.displayName || member.email || 'Unknown',
+        value: numericValue,
+        zScore: Number.isFinite(numericZ) ? numericZ : INVALID_Z_SCORE,
+      };
+
+      newRows.push(row);
+    }
+
+    newRows.sort((a, b) => a.value - b.value);
+
+    const values = newRows.map((r) => r.value);
+    const avg =
+      values.length > 0
+        ? values.reduce((acc, val) => acc + val, 0) / values.length
+        : 0;
+
+    setRows(newRows);
+    setAvgValue(avg);
+  }, [members, todaysWellness, metricConfig]);
+
+  useEffect(() => {
+    const last10DaysWellness = wellness.filter((w) => {
+      return (
+        dayjs(w.date).isAfter(dayjs().subtract(10, 'day'), 'day') &&
+        members.some((m) => m.uid === w.userId)
+      );
     });
 
-  const last10DaysWellness = wellness.filter((w) => {
-    return (
-      dayjs(w.date).isAfter(dayjs().subtract(10, 'day'), 'day') &&
-      members.some((m) => m.uid === w.userId)
-    );
-  });
+    const last10DaysValues = last10DaysWellness
+      .map((w) => Number(w[metricConfig.key] as unknown))
+      .filter((v) => Number.isFinite(v));
 
-  const last10DaysValues = last10DaysWellness
-    .map((w) => w[metricConfig.key])
-    .filter((v) => v !== null && v !== undefined) as number[];
+    const newLast10DayAvgValue =
+      last10DaysValues.length > 0
+        ? last10DaysValues.reduce((acc, val) => acc + val, 0) /
+          last10DaysValues.length
+        : 0;
 
-  const last10DayAvgValue =
-    last10DaysValues.reduce((acc, val) => acc + val, 0) /
-    (last10DaysValues.length > 0 ? last10DaysValues.length : 1);
-
-  const todayValues = rows
-    .map((r) => r.value)
-    .filter((v): v is number => v !== null && v !== undefined);
-
-  const avgValue =
-    todayValues.reduce((acc, val) => acc + val, 0) /
-    (todayValues.length > 0 ? todayValues.length : 1);
+    setLast10DayAvgValue(newLast10DayAvgValue);
+  }, [wellness, members, metricConfig]);
 
   return {
     rows,
