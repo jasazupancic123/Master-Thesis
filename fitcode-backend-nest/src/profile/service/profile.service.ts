@@ -44,14 +44,40 @@ export class ProfileService implements Permission<Profile, Institution> {
     return await this.repository.findOneOrCreate(uid);
   }
 
-  async findAllByManager(user: User): Promise<Profile[]> {
+  async findAllByManager(user: User): Promise<AuthProfileMerged[]> {
     if (!this.firebase.isManager(user)) throw new UnauthorizedException();
 
     const institution = await this.institutionService.findByOwnerId(user.uid);
     if (!institution)
       throw new BadRequestException('User does not own any institution');
 
-    return await this.repository.findAllByInstitution(institution);
+    const users = await this.authService.findAllByInstitution(institution);
+    const profiles = await this.repository.findAllByInstitution(institution);
+
+    return users
+      .map((user) => {
+        const profile = profiles.find((p) => p.uid === user.uid);
+        if (!profile) return null;
+
+        const merged: AuthProfileMerged = {
+          uid: user.uid,
+          email: user.email!,
+          role: user.customClaims?.role?.[0],
+          faceEmbedding: [],
+          height: profile.height || 0,
+          weight: profile.weight || 0,
+          displayName: user.displayName || '',
+          photoURL: user.photoURL,
+          sport: profile.sport,
+          level: profile.level,
+          gender: profile.gender,
+          birthDate: profile.birthDate,
+          photoURLBase64: profile.photoURLBase64,
+        };
+
+        return merged;
+      })
+      .filter(Boolean);
   }
 
   async findAllByInstitution(
