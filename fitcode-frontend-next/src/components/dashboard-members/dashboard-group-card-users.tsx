@@ -9,13 +9,13 @@ import {
 } from '@mui/material';
 
 import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Group } from '@/core/institution/type/group.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 
 interface Props {
   title: string;
