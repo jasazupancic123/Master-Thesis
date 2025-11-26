@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '../auth/enum/user-role.enum';
@@ -59,29 +59,6 @@ export class ProfileController {
       ...body,
       userId: user.uid,
       date: ref.date,
-    });
-  }
-
-  @Get('/wellness')
-  @Auth([UserRole.ATHLETE])
-  async getLatestWellnessByUser(@RequestUser() user: User) {
-    const ref = { uid: user.uid };
-    return (
-      (await this.wellnessService.getLatestByUser(ref)) || {
-        date: new Date(),
-        userId: user.uid,
-      }
-    );
-  }
-
-  @Get('/wellness/institution/:institutionId')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getWellnessByInstitution(
-    @RequestUser() user: User,
-    @Param('institutionId') institutionId: string,
-  ) {
-    return await this.wellnessService.findAllByInstitution(user, {
-      institutionId,
     });
   }
 }

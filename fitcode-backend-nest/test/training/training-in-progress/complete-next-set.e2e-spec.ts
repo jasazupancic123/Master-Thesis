@@ -567,7 +567,10 @@ describe('Complete Next Set (e2e)', () => {
       }),
     );
 
-    await db.profiles.update(global.athlete.uid, { weight: 78.5 });
+    await db.profiles.update(global.athlete.uid, {
+      wellness: { date: new Date(), userId: global.athlete.uid, weight: 78.5 },
+    });
+
     await db.workloads.createMany([
       {
         trainingId,

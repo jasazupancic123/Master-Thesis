@@ -1,19 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
-  Max,
-  Min,
+  ValidateNested,
 } from 'class-validator';
 
 import { TimestampEntity } from '@src/common/entity/timestamp.entity';
 
 import { Gender } from '../enum/gender.enum';
 import { SportLevel } from '../enum/sport-level.enum';
+import { WellnessZScore } from './wellnes-z-score.entity';
 
 export class Profile extends TimestampEntity {
   @IsString()
@@ -27,18 +26,6 @@ export class Profile extends TimestampEntity {
   @ApiProperty()
   @Expose()
   email: string;
-
-  @IsNumber()
-  @ApiProperty()
-  @Min(0)
-  @Max(250)
-  height: number;
-
-  @IsNumber()
-  @ApiProperty()
-  @Min(0)
-  @Max(500)
-  weight: number; // in kg
 
   @IsString()
   @ApiPropertyOptional()
@@ -71,4 +58,10 @@ export class Profile extends TimestampEntity {
     return isNaN(date.getTime()) ? undefined : date;
   })
   birthDate?: Date;
+
+  @ValidateNested()
+  @Type(() => WellnessZScore)
+  @ApiProperty()
+  @Expose()
+  wellness: WellnessZScore;
 }

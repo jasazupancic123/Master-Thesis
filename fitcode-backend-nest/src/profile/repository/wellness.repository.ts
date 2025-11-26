@@ -110,10 +110,13 @@ export class WellnessRepository extends FirestoreRepository<
     );
   }
 
-  async getAllByUser(ref: UserRef): Promise<Wellness[]> {
-    const snapshot = await this.collection(ref).orderBy('date', 'desc').get();
-    if (snapshot.empty) return [];
+  async getLastNByUser(ref: UserRef, n: number): Promise<Wellness[]> {
+    const snapshot = await this.collection(ref)
+      .orderBy('date', 'desc')
+      .limit(n)
+      .get();
 
+    if (snapshot.empty) return [];
     return snapshot.docs.map((doc) =>
       this.firebase.serialize(doc.data() as FirestoreEntity<Wellness>),
     );
