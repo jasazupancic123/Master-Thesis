@@ -1,5 +1,6 @@
 import type { Gender } from '../enum/gender.enum';
 import type { SportLevel } from '../enum/sport-level.enum';
+import type { WellnessZScore } from './wellness.type';
 import type { CreateUser } from '@/core/auth/type/user.type';
 import type { TimestampEntity } from '@/core/entity.type';
 
@@ -7,8 +8,7 @@ import type { TimestampEntity } from '@/core/entity.type';
 export type Profile = TimestampEntity & {
   uid: string;
   email: string;
-  weight: number;
-  height: number;
+  wellness: WellnessZScore;
   photoURLBase64?: string;
   sport?: string;
   level?: SportLevel;

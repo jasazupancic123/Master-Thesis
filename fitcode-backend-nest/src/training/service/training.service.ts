@@ -939,7 +939,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const profile = await this.profileService.findOneById(athleteId);
     if (!profile) return;
 
-    const bw = profile.weight;
+    const bw = profile.wellness.weight;
     if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(

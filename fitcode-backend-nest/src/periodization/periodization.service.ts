@@ -311,17 +311,16 @@ export class PeriodizationService {
     const firstTraining = trainings[0];
     const lastTraining = trainings[trainings.length - 1];
 
-    const startWeek = this.common.date.getIsoWeek(firstTraining.from);
-    const lastWeek = this.common.date.getIsoWeek(lastTraining.from);
-    const numWeeks = lastWeek - startWeek + 1;
+    const startIndex = this.isoWeekIndex(firstTraining.from);
+    const endIndex = this.isoWeekIndex(lastTraining.from);
+    const numWeeks = endIndex - startIndex + 1;
 
     const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
 
     // fill the trainings in weeks
     for (const training of trainings) {
-      const weekIndex = this.common.date.getIsoWeek(training.from) - startWeek;
-      if (weekIndex >= 0 && weekIndex < weeks.length)
-        weeks[weekIndex].push(training);
+      const idx = this.isoWeekIndex(training.from) - startIndex;
+      weeks[idx].push(training);
     }
 
     // sort trainings in week by date
@@ -333,6 +332,29 @@ export class PeriodizationService {
       throw new BadRequestException('Some trainings are missing or not found');
 
     return weeks;
+  }
+
+  private getIsoWeekAndYear(date: Date): { week: number; year: number } {
+    const tmp = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
+
+    // Thursday of this week
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+
+    // January 1 of ISO year
+    const year = tmp.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil(
+      ((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
+
+    return { week, year };
+  }
+
+  private isoWeekIndex(date: Date) {
+    const { week, year } = this.getIsoWeekAndYear(date);
+    return year * 100 + week; // always increasing across years
   }
 
   /**

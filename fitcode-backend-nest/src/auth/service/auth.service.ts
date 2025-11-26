@@ -309,8 +309,6 @@ export class AuthService {
       await this.profileService.create({
         uid: user.uid,
         email: input.email,
-        height: 0,
-        weight: 0,
       });
 
       created = { ...user, customClaims } as AuthUser;

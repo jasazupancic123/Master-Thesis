@@ -58,8 +58,10 @@ export class ProfileService implements Permission<Profile, Institution> {
     institution: Institution,
     skipFields: (keyof AuthProfileMerged)[] = [],
   ): Promise<AuthProfileMerged[]> {
-    const users = await this.authService.findAllByInstitution(institution);
-    const profiles = await this.repository.findAllByInstitution(institution);
+    const [users, profiles] = await Promise.all([
+      this.authService.findAllByInstitution(institution),
+      this.repository.findAllByInstitution(institution),
+    ]);
 
     return users
       .map((user) => {
@@ -71,8 +73,6 @@ export class ProfileService implements Permission<Profile, Institution> {
           email: user.email!,
           role: user.customClaims?.role?.[0],
           faceEmbedding: [],
-          height: profile.height || 0,
-          weight: profile.weight || 0,
           displayName: user.displayName || '',
           photoURL: user.photoURL,
           sport: profile.sport,
@@ -80,6 +80,7 @@ export class ProfileService implements Permission<Profile, Institution> {
           gender: profile.gender,
           birthDate: profile.birthDate,
           photoURLBase64: profile.photoURLBase64,
+          wellness: profile.wellness,
         };
 
         skipFields.forEach((field) => delete merged[field]);
@@ -123,8 +124,7 @@ export class ProfileService implements Permission<Profile, Institution> {
         data: this.firebase.buildCreateQuery<Profile>({
           uid: profile.uid,
           email: profile.email!,
-          height: 0,
-          weight: 0,
+          wellness: { userId: profile.uid, date: new Date() },
         }),
       }),
     );
@@ -148,7 +148,7 @@ export class ProfileService implements Permission<Profile, Institution> {
     return result;
   }
 
-  async create(input: Create<Profile>) {
+  async create(input: Create<Omit<Profile, 'wellness'>>) {
     return await this.repository.save(input);
   }
 

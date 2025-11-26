@@ -5,7 +5,6 @@ import type { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import type { Group } from '@src/institution/entity/group.entity';
-import { WellnessService } from '@src/profile/service/wellness.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { TrainingComponent } from '@src/training/entity/training-component.entity';
@@ -41,7 +40,6 @@ describe('Get Training By Athlete (e2e)', () => {
   let db: TestDbService;
 
   let exerciseService: ExerciseService;
-  let wellnessService: WellnessService;
   let workloadRepository: WorkloadRepository;
   let trainingService: TrainingService;
 
@@ -55,7 +53,6 @@ describe('Get Training By Athlete (e2e)', () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     exerciseService = testApp.module.get(ExerciseService);
-    wellnessService = testApp.module.get(WellnessService);
     workloadRepository = testApp.module.get(WorkloadRepository);
     trainingService = testApp.module.get(TrainingService);
 
@@ -341,7 +338,13 @@ describe('Get Training By Athlete (e2e)', () => {
   });
 
   it('should populate weight for exercises with bodyweight param', async () => {
-    await db.profiles.update(global.athlete.uid, { weight: 85 });
+    await db.profiles.update(global.athlete.uid, {
+      wellness: {
+        date: new Date(),
+        userId: global.athlete.uid,
+        weight: 85,
+      },
+    });
 
     const trainingId = await db.trainings.save(
       generateTrainingStub({
@@ -428,43 +431,6 @@ describe('Get Training By Athlete (e2e)', () => {
     });
 
     // clear up
-    await db.trainings.delete(trainingId);
-  });
-
-  it('should not call "getLatestWellnessByUser" if no bodyweight param', async () => {
-    const trainingId = await db.trainings.save(
-      generateTrainingStub({
-        ownerId: global.trainer.uid,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        membersIds: [global.athlete.uid],
-        date: new Date(),
-        components: [
-          generateTrainingComponent({
-            id: 'c1',
-            from: new Date(),
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({
-                    id: 'squat', // squat does not have bodyweight param
-                    sets: [generateExerciseSet(1)],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    );
-
-    const training = await db.trainings.findById(trainingId);
-    const spy = jest.spyOn(wellnessService, 'getLatestByUser');
-    await trainingService.getTrainingByAthlete(global.athlete.uid, training);
-
-    expect(spy).not.toHaveBeenCalled();
-    spy.mockRestore();
-
     await db.trainings.delete(trainingId);
   });
 

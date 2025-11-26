@@ -50,7 +50,11 @@ export class TestDbService {
         .doc(uid)
         .set(
           this.firebase.buildCreateQuery<Profile>(
-            { uid, email, height: 0, weight: 0 },
+            {
+              uid,
+              email,
+              wellness: { userId: uid, date: new Date() },
+            },
             { timestamps: true },
           ),
         );

@@ -52,16 +52,14 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
     let profile = await this.findById(uid);
     if (!profile) {
       const user = await this.firebase.auth.getUser(uid);
-      await this.save({ uid, email: user.email!, height: 0, weight: 0 });
-
-      profile = {
+      const _profile: Create<Profile> = {
         uid,
         email: user.email!,
-        height: 0,
-        weight: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        wellness: { userId: uid, date: new Date() },
       };
+
+      await this.save(_profile);
+      profile = { ..._profile, createdAt: new Date(), updatedAt: new Date() };
     }
 
     return profile;
@@ -88,7 +86,12 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
         const user = users.find((u) => u.uid === uid);
         if (!user || !user.email) return;
 
-        const profile = { uid, email: user.email, height: 0, weight: 0 };
+        const profile: Create<Profile> = {
+          uid,
+          email: user.email,
+          wellness: { userId: uid, date: new Date() },
+        };
+
         profiles.push({
           ...profile,
           createdAt: new Date(),
@@ -108,18 +111,17 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
     return profiles;
   }
 
-  async save(input: Create<Profile>) {
+  async save(input: Create<Omit<Profile, 'wellness'>>) {
     const query = this.firebase.buildCreateQuery<Profile>(
       {
         uid: input.uid,
         email: input.email,
-        height: input.height,
-        weight: input.weight,
         gender: input.gender,
         birthDate: input.birthDate,
         level: input.level,
         photoURLBase64: input.photoURLBase64,
         sport: input.sport,
+        wellness: { userId: input.uid, date: new Date() },
       },
       { timestamps: true },
     );
