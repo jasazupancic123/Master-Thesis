@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 
 import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Group } from '@/core/institution/type/group.type';
@@ -90,7 +91,10 @@ export default function DashboardGroupCardUsers(props: Props) {
               >
                 <Avatar
                   src={user.photoURL || USER_AVATAR_IMG_URL}
-                  sx={{ width: 46, height: 46 }}
+                  sx={{
+                    width: DASHBOARD_MEMBERS_AVATAR_SIZE,
+                    height: DASHBOARD_MEMBERS_AVATAR_SIZE,
+                  }}
                 />
                 <Box display="flex" flexDirection="column" maxWidth={'90%'}>
                   <Typography fontSize={14}>{user.displayName}</Typography>
