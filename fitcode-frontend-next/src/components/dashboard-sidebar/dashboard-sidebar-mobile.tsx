@@ -6,14 +6,9 @@ import { useState } from 'react';
 
 import DashboardSidebar from './dashboard-sidebar';
 import { theme } from '@/app/style';
-import { useDashboard } from '@/store/dashboard.provider';
 
 export default function DashboardSidebarMobile() {
-  const { selectedInstitution } = useDashboard();
-
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  if (!selectedInstitution) return null;
 
   const DRAWER_WIDTH = 170;
 

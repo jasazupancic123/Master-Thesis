@@ -1,18 +1,18 @@
 import { Avatar, Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 
 import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { MetricConfig } from './types/wellness-metrics.type';
 import WellnessBarChart from './wellness-bar-chart';
 import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useEffect, useState } from 'react';
-import { AuthUser } from '@/core/auth/type/user.type';
 
 export default function WellnessReports() {
   const screenSize = useScreenSize();

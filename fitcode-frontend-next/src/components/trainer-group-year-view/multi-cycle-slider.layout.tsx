@@ -14,7 +14,6 @@ import MultiCycleSlider from './multi-cycle-slider';
 import { useMultiCycleSliderCyclesProvider } from '@/components/trainer-group-year-view/context/cycles.provider';
 import { useMultiCycleSliderYearProvider } from '@/components/trainer-group-year-view/context/years.provider';
 import MobileDoubleTextItems from '@/components/trainer-group-year-view/mobile-double-text-items';
-import { InstitutionController } from '@/core/institution/institution.controller';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';

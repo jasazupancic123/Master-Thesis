@@ -52,6 +52,44 @@ export default function TrainingInProgressExerciseControls() {
       ep.exerciseIds.includes(selectedExercise?.exercise?.id || 'UNKNOWN')
     );
 
+  const switchToCameraTracking = () => {
+    if (
+      setIndex === undefined ||
+      supersetIndex === undefined ||
+      !activeTraining
+    )
+      return;
+
+    const hasPoseLogic =
+      selectedExercise.exercise !== undefined &&
+      exerciseAiPrescriptions.some((ep) =>
+        ep.exerciseIds.includes(selectedExercise.exercise!.id)
+      );
+
+    if (!hasPoseLogic) {
+      toast.error('Pose detection is not supported for this exercise yet');
+      return;
+    }
+
+    const isCurrentSetDone = ExerciseSetService.isSetCompleted(
+      {
+        trainingId: trainingInProgress.training.id,
+        componentId: trainingInProgress.selectedComponent.id,
+        exerciseId: selectedExercise.id,
+        supersetIndex: supersetIndex,
+        setIndex: setIndex,
+      },
+      activeTraining.workloads
+    );
+
+    if (isCurrentSetDone) {
+      toast.error('This set is already marked as done');
+      return;
+    }
+
+    setSelectedTrackingMethod(TrackingMethod.CAMERA);
+  };
+
   return (
     <Box width="100%" display="flex" flexDirection="column" alignItems="center">
       <Box
@@ -114,36 +152,7 @@ export default function TrainingInProgressExerciseControls() {
               return;
             }
 
-            const hasPoseLogic =
-              selectedExercise.exercise !== undefined &&
-              exerciseAiPrescriptions.some((ep) =>
-                ep.exerciseIds.includes(selectedExercise.exercise!.id)
-              );
-
-            if (!hasPoseLogic) {
-              toast.error(
-                'Pose detection is not supported for this exercise yet'
-              );
-              return;
-            }
-
-            const isCurrentSetDone = ExerciseSetService.isSetCompleted(
-              {
-                trainingId: trainingInProgress.training.id,
-                componentId: trainingInProgress.selectedComponent.id,
-                exerciseId: selectedExercise.id,
-                supersetIndex: supersetIndex,
-                setIndex: setIndex,
-              },
-              activeTraining.workloads
-            );
-
-            if (isCurrentSetDone) {
-              toast.error('This set is already marked as done');
-              return;
-            }
-
-            setSelectedTrackingMethod(TrackingMethod.CAMERA);
+            switchToCameraTracking();
           }}
         />
 
@@ -218,7 +227,11 @@ export default function TrainingInProgressExerciseControls() {
         <ExercieseControlSelected selectedControl={selectedControl} />
       </Box>
 
-      <AiNoticeModal open={openAiNoticeModal} setOpen={setOpenAiNoticeModal} />
+      <AiNoticeModal
+        open={openAiNoticeModal}
+        setOpen={setOpenAiNoticeModal}
+        switchToCameraTracking={switchToCameraTracking}
+      />
     </Box>
   );
 }
