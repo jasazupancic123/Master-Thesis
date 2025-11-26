@@ -208,7 +208,9 @@ export default function ProfilePage() {
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
             const { url, base64 } =
-              await lib.firebase.storage.uploadFileWithBase64(file, path);
+              await lib.firebase.storage.uploadFileWithBase64(file, path, {
+                maxDimensionCrop: 300,
+              });
 
             handleChangeUser('photoURL', url);
             handleChangeProfile('photoURLBase64', base64);

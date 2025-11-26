@@ -21,9 +21,12 @@ import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
+import LoadingOverlay from '@/ui/loading-overlay';
 import MyModal from '@/ui/modal';
 
 const DEFAULT_MARGIN = 1;
+
+export const DASHBOARD_MEMBERS_AVATAR_SIZE = 50;
 
 export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const screenSize = useScreenSize();
@@ -42,6 +45,8 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const [base64Preview, setBase64Preview] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
   if (!userToEdit) return;
 
   return (
@@ -50,13 +55,17 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
       setIsOpen={setOpen}
       cancelText="Close"
       onConfirm={async () => {
+        setIsUpdatingProfile(true);
+
         let url: string | null = userToEdit.photoURL;
         let base64: string | undefined = profileToEdit?.photoURLBase64;
 
         if (file) {
           const path = `user/${userToEdit.uid}/${file.name}`;
           const { url: uploadedUrl, base64: uploadedBase64 } =
-            await lib.firebase.storage.uploadFileWithBase64(file, path);
+            await lib.firebase.storage.uploadFileWithBase64(file, path, {
+              maxDimensionCrop: 300,
+            });
 
           url = uploadedUrl;
           base64 = uploadedBase64;
@@ -83,12 +92,14 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
         setBase64Preview('');
         setFile(null);
         toggleUser(null);
+        setIsUpdatingProfile(false);
       }}
       onCancel={() => {
         setOpen(false);
         toggleUser(null);
         setBase64Preview('');
         setFile(null);
+        setIsUpdatingProfile(false);
       }}
     >
       <Box display="flex" flexDirection="column" gap={2}>
@@ -235,6 +246,8 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           </FormControl>
         </Box>
       </Box>
+
+      {isUpdatingProfile && <LoadingOverlay title="Updating Profile..." />}
     </MyModal>
   );
 }
