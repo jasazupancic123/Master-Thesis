@@ -5,6 +5,7 @@ import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
+import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 
 interface Props {
   member: AuthUser;
@@ -51,7 +52,10 @@ export default function DashboardInstitutionMember(props: Props) {
       >
         <Avatar
           src={member.photoURL || USER_AVATAR_IMG_URL}
-          sx={{ width: 50, height: 50 }}
+          sx={{
+            width: DASHBOARD_MEMBERS_AVATAR_SIZE,
+            height: DASHBOARD_MEMBERS_AVATAR_SIZE,
+          }}
         />
       </Box>
 

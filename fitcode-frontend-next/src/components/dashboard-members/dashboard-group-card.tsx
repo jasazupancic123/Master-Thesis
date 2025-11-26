@@ -133,7 +133,8 @@ export default function DashboardGroupCard(props: Props) {
 
                 <Typography
                   variant="body2"
-                  maxWidth={50}
+                  width={74}
+                  maxWidth={74}
                   sx={{
                     textAlign: 'center',
                     fontWeight: 400,
