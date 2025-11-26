@@ -1,3 +1,4 @@
+import { INVALID_Z_SCORE } from '../const/invalid-z-score';
 import type { WellnessChartRow } from '../types/wellness-chart-row';
 import { theme } from '@/app/style';
 
@@ -11,7 +12,8 @@ export default function useWellnessChartUtils(
     const z = r.zScore;
 
     // Fallback: keep default series color if no zScore or 0
-    if (z === null || z === undefined) return theme.palette.primary.main;
+    if (z === null || z === undefined || z === INVALID_Z_SCORE)
+      return theme.palette.primary.main;
 
     if (z <= -2) return theme.palette.error.main;
     if (z <= -1) return theme.palette.warning.main;
