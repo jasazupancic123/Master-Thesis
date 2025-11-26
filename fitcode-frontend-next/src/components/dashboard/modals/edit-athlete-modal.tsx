@@ -50,8 +50,8 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
       setIsOpen={setOpen}
       cancelText="Close"
       onConfirm={async () => {
-        let url: string | null = null;
-        let base64: string | undefined = undefined;
+        let url: string | null = userToEdit.photoURL;
+        let base64: string | undefined = profileToEdit?.photoURLBase64;
 
         if (file) {
           const path = `user/${userToEdit.uid}/${file.name}`;

@@ -5,8 +5,12 @@ import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';
 
-export default function AiNoticeModal(props: ModalProps) {
-  const { open, setOpen } = props;
+interface Props {
+  switchToCameraTracking: () => void;
+}
+
+export default function AiNoticeModal(props: ModalProps & Props) {
+  const { open, setOpen, switchToCameraTracking } = props;
 
   return (
     <MyModal
@@ -21,6 +25,8 @@ export default function AiNoticeModal(props: ModalProps) {
           updatedAt: Date.now(),
         });
         setOpen(false);
+
+        switchToCameraTracking();
       }}
       onCancel={() => {
         setOpen(false);
