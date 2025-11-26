@@ -51,8 +51,10 @@ export class ProfileService implements Permission<Profile, Institution> {
     if (!institution)
       throw new BadRequestException('User does not own any institution');
 
-    const users = await this.authService.findAllByInstitution(institution);
-    const profiles = await this.repository.findAllByInstitution(institution);
+    const [users, profiles] = await Promise.all([
+      this.authService.findAllByInstitution(institution),
+      this.repository.findAllByInstitution(institution),
+    ]);
 
     return users
       .map((user) => {
@@ -64,8 +66,6 @@ export class ProfileService implements Permission<Profile, Institution> {
           email: user.email!,
           role: user.customClaims?.role?.[0],
           faceEmbedding: [],
-          height: profile.height || 0,
-          weight: profile.weight || 0,
           displayName: user.displayName || '',
           photoURL: user.photoURL,
           sport: profile.sport,
@@ -73,6 +73,7 @@ export class ProfileService implements Permission<Profile, Institution> {
           gender: profile.gender,
           birthDate: profile.birthDate,
           photoURLBase64: profile.photoURLBase64,
+          wellness: profile.wellness,
         };
 
         return merged;
