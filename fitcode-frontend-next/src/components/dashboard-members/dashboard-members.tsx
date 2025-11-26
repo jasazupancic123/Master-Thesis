@@ -1,6 +1,11 @@
 'use client';
 
-import { closestCenter, DndContext, DragOverlay } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  pointerWithin,
+} from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import {
   FileUploadOutlined,
@@ -89,7 +94,7 @@ export default function DashboardMembers() {
     <DashboardPageContainer>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={pointerWithin}
         onDragEnd={onUserDragEnd}
         onDragStart={onUserDragStart}
       >
@@ -241,6 +246,7 @@ export default function DashboardMembers() {
                   <DashboardInstitutionMember
                     key={member.uid}
                     member={member}
+                    isDragging={isDragging}
                   />
                 ))
               )}
@@ -309,7 +315,7 @@ export default function DashboardMembers() {
           {activeMemberId ? (
             <DashboardInstitutionMember
               member={filteredMembers.find((m) => m.uid === activeMemberId)!}
-              isDragging
+              isBeingDragged
             />
           ) : null}
         </DragOverlay>
