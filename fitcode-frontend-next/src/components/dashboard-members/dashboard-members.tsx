@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  closestCenter,
-  DndContext,
-  DragOverlay,
-  pointerWithin,
-} from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import {
   FileUploadOutlined,

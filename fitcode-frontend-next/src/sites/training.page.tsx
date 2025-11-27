@@ -7,8 +7,8 @@ import AthleteOptionsContainer from '@/components/athlete/athlete-options-contai
 import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
 import TrainingReportCard from '@/components/athlete/training-report-card';
 import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
-import { useTraining } from '@/store/training.provider';
 import { useAthlete } from '@/store/athlete.provider';
+import { useTraining } from '@/store/training.provider';
 
 export default function TrainingPage() {
   const { trainings } = useAthlete();

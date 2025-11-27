@@ -16,6 +16,7 @@ import {
   useTheme,
 } from '@mui/material';
 import Box from '@mui/material/Box';
+import dayjs from 'dayjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -24,23 +25,22 @@ import { useState } from 'react';
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
 import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';
+import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import Logo from '@/ui/logo';
-import CreateTrainingModal from './create-training-modal';
-import dayjs from 'dayjs';
-import { TrainingService } from '@/core/training/training.service';
-import { useMain } from '@/store/main.provider';
 
 interface Props {
   trainingInProgressUndoneExercisesContext?: IUndoneExercisesCtx;
@@ -88,8 +88,6 @@ export default function AthleteHeader(props: Props) {
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
   const mobileDisplay = screenSize.isMobile || screenSize.isLandscapeMobile;
-
-  console.log('mobileDIsplay', mobileDisplay);
 
   const DrawerList = role && (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggle(false)}>

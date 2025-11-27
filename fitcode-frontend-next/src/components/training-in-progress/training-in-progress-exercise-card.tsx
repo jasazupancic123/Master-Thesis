@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import TrainingInProgressExerciseControls from './exercise-controls';
 import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
@@ -16,7 +17,6 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
-import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 
 export default function TrainingInProgressExerciseCard() {
   const { activeTraining } = useMain();

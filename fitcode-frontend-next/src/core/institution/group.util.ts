@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
-import { Cycle } from './type/cycle.type';
+
+import type { Cycle } from './type/cycle.type';
 import type { Group } from './type/group.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 
