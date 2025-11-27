@@ -30,6 +30,9 @@ export default function WellnessInitializer(props: React.PropsWithChildren) {
     init();
   }, [wellness]);
 
-  if (!wellness) return <Alert type="loading" />;
+  if (!wellness) {
+    console.log('Loading in wellness.initializer.tsx');
+    return <Alert type="loading" />;
+  }
   return <WellnessProvider wellness={wellness}>{children}</WellnessProvider>;
 }
