@@ -9,6 +9,7 @@ import { User } from './common/type/firebase-auth.type';
 import { NodeEnv } from './config/environment-validation-schema';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
 import { FirebaseService } from './firebase/firebase.service';
+import { InstitutionService } from './institution/service/institution.service';
 import { ProfileService } from './profile/service/profile.service';
 import { ActiveTrainingService } from './training/service/active-training.service';
 
@@ -23,6 +24,7 @@ export class AppController {
     private readonly profileService: ProfileService,
     private readonly exerciseAiPrescriptionService: ExerciseAiPrescriptionsService,
     private readonly activeTrainingService: ActiveTrainingService,
+    private readonly institutionService: InstitutionService,
   ) {}
 
   @Get()
@@ -44,21 +46,25 @@ export class AppController {
   async init(@RequestUser() user: User) {
     const isAthlete = this.firebase.isAthlete(user);
 
-    const [profile, exerciseAiPrescriptions, meta, activeTraining] =
-      await Promise.all([
-        this.profileService.findOneById(user.uid),
-        this.exerciseAiPrescriptionService.findAll(),
-        this.firebase.firestore.collection(FirestoreCollection.META).get(),
-        isAthlete
-          ? this.activeTrainingService.getActiveTrainingByAthlete(
-              user,
-              user.uid,
-            )
-          : null,
-      ]);
+    const [
+      profile,
+      institutions,
+      exerciseAiPrescriptions,
+      meta,
+      activeTraining,
+    ] = await Promise.all([
+      this.profileService.findOneById(user.uid),
+      this.institutionService.findAll(user),
+      this.exerciseAiPrescriptionService.findAll(),
+      this.firebase.firestore.collection(FirestoreCollection.META).get(),
+      isAthlete
+        ? this.activeTrainingService.getActiveTrainingByAthlete(user, user.uid)
+        : null,
+    ]);
 
     return {
       profile,
+      institutions,
       exerciseAiPrescriptions,
       activeTraining,
       globalExercisesRevision:

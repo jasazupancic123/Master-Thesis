@@ -3,8 +3,6 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
-import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
-import { TrainingProtocol } from '@src/training/entity/training-protocol.entity';
 
 import { Group } from './group.entity';
 
@@ -40,7 +38,5 @@ export class Institution extends BaseEntity {
 }
 
 export type InitInstitution = Institution & {
-  users: AuthProfileMerged[];
   groups: Group[];
-  protocols: TrainingProtocol[];
 };

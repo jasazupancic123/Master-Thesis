@@ -1,7 +1,6 @@
-import type { AuthProfileMerged, AuthUser } from '@/core/auth/type/user.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Group } from '@/core/institution/type/group.type';
-import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 
 export interface Institution extends BaseEntity {
   name: string;
@@ -30,7 +29,5 @@ export type UserId = { userId: string };
 export type UpdateMembers = UserId & { add: boolean };
 
 export type InitInstitution = Institution & {
-  users: AuthProfileMerged[];
   groups: Group[];
-  protocols: TrainingProtocol[];
 };

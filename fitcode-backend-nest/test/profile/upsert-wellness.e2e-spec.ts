@@ -1,18 +1,15 @@
 import { TestApp } from '@test/common/utils/app.util';
 
-import type { TestInstitution } from '@src/common/type/entity.type';
 import type { SaveWellnessDto } from '@src/profile/dto/save-wellness.dto';
 import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Upsert Wellness (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let institution: TestInstitution;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    institution = await db.institutions.createTest();
   });
 
   afterAll(async () => {

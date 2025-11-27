@@ -1,8 +1,11 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { SESSION_COOKIE_NAME } from '@/core/const/auth.const';
 import { Controller } from '@/core/controller';
 import { lib } from '@/lib';
+import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
+import type { FetchOptions } from '@/lib/common/type/api.type';
 import type { MainProviderProps } from '@/store/main.provider';
 import { CoachMainProvider } from '@/store/main.provider';
 import Alert from '@/ui/alert';
@@ -13,34 +16,32 @@ export default async function InitTrainerProvider({
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-    if (!session) throw new Error('No session');
+    const opts: FetchOptions = { session };
+    if (!session) redirect(LINK_SIGN_IN.href);
 
     const controller = Controller.getInstance();
-    const profile = await controller.auth.findMe({ session });
-    if (!profile) throw new Error('No profile found');
+    const {
+      profile,
+      institutions,
+      exerciseAiPrescriptions,
+      globalExercisesRevision,
+    } = await controller.app.init({ session });
 
-    if (lib.firebase.auth.isAthlete(profile.customClaims.role[0]))
+    if (lib.firebase.auth.isAthlete(profile.role))
       throw new Error('Not a trainer or manager');
 
     // For now, we just take the first institution
-    const institutions = await controller.institution.findAll({ session });
     const institutionId = institutions[0]?.id;
     if (!institutionId) throw new Error('No institution found');
 
-    const [main, institution] = await Promise.all([
-      controller.app.init({ session }),
-      controller.institution.init(institutionId, { session }),
-    ]);
-
+    const institution = await controller.institution.init(institutionId, opts);
     const data: MainProviderProps = {
-      profile: main.profile,
+      profile,
       institutions,
       institution,
+      exerciseAiPrescriptions,
+      globalExercisesRevision,
       activeTraining: null,
-      exerciseAiPrescriptions: main.exerciseAiPrescriptions,
-      globalExercisesRevision: main.globalExercisesRevision,
-      trainings: [],
-      reports: [],
     };
 
     return (
