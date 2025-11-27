@@ -37,16 +37,6 @@ export default function useInstitutionMembers() {
   const [openUserAlreadyExistsModal, setOpenUserAlreadyExistsModal] =
     useState(false);
 
-  useEffect(() => {
-    if (isFormEmpty()) return setIsUploadingMembers(false);
-
-    const user = users?.find((user) => user.email === formData.email);
-    resetForm();
-
-    if (!user || !selectedInstitution) return setIsUploadingMembers(false);
-    addUser(user).then();
-  }, [users]);
-
   async function addUser(user: AuthUser | null) {
     if (!user || !selectedInstitution) return;
 
@@ -220,6 +210,24 @@ export default function useInstitutionMembers() {
         password,
         role: registerRole,
       });
+
+      if (registerRole === UserRole.ATHLETE) {
+        setSelectedInstitution((prev) => ({
+          ...prev!,
+          athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
+          athleteIds: prev!.athleteIds
+            ? [...prev!.athleteIds, user.uid]
+            : [user.uid],
+        }));
+      } else if (registerRole === UserRole.TRAINER) {
+        setSelectedInstitution((prev) => ({
+          ...prev!,
+          trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
+          trainerIds: prev!.trainerIds
+            ? [...prev!.trainerIds, user.uid]
+            : [user.uid],
+        }));
+      }
 
       setUsers((prev) => [...prev, user]);
       setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
