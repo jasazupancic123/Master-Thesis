@@ -244,8 +244,6 @@ export default function AthleteTrainingComponents(props: Props) {
               }
             }
 
-            console.log('activeTraining', activeTraining);
-
             const isDifferentActiveTraining = activeTraining?.statuses.some(
               (a) => a.trainingId !== training.id
             );

@@ -15,6 +15,7 @@ import ExerciseMenuDropdown from '../exercises-list/exercise-menu';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
+import type { Group } from '@/core/institution/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -23,7 +24,6 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
 import SelectInput from '@/ui/select-input/select-input';
-import { Group } from '@/core/institution/type/group.type';
 
 interface Props {
   open: boolean;
@@ -126,9 +126,6 @@ export default function CreateTrainingModal({
           ? core.group.getCurrentActiveCycle(group)
           : undefined;
 
-        console.log('group', group);
-        console.log('cycle', cycle);
-
         try {
           const training = await TrainingController.getInstance().create({
             institutionId,
@@ -146,8 +143,6 @@ export default function CreateTrainingModal({
               },
             ],
           });
-
-          console.log('new traijning', training);
 
           setOpen(false);
           setGroup(DEFAULT_GROUP);
