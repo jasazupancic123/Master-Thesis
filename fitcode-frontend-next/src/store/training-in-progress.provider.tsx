@@ -420,6 +420,19 @@ export const TrainingInProgressProvider = ({
         }
       );
 
+      const newExercise = {
+        ...selectedExercise,
+        sets: [
+          ...selectedExercise.sets,
+          core.training.set.stub(
+            selectedExercise.sets.length + 1,
+            selectedExercise.exercise!
+          ),
+        ],
+      };
+
+      setSelectedExercise(newExercise);
+
       // update local state
       setTrainingInProgress({
         ...trainingInProgress,
@@ -432,16 +445,7 @@ export const TrainingInProgressProvider = ({
                     ...superset,
                     exercises: superset.exercises.map((exercise) =>
                       exercise.id === selectedExercise.id
-                        ? {
-                            ...exercise,
-                            sets: [
-                              ...exercise.sets,
-                              core.training.set.stub(
-                                exercise.sets.length + 1,
-                                exercise.exercise!
-                              ),
-                            ],
-                          }
+                        ? newExercise
                         : exercise
                     ),
                   }
@@ -453,9 +457,7 @@ export const TrainingInProgressProvider = ({
             ? {
                 ...superset,
                 exercises: superset.exercises.map((exercise) =>
-                  exercise.id === selectedExercise.id
-                    ? { ...exercise, sets: [...exercise.sets, set] }
-                    : exercise
+                  exercise.id === selectedExercise.id ? newExercise : exercise
                 ),
               }
             : superset

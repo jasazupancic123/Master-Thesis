@@ -49,6 +49,26 @@ export class TrainingService {
     return training;
   }
 
+  static mapTraining(
+    training: Training,
+    data: { exercises?: Exercise[] }
+  ): Training {
+    if (data.exercises) {
+      for (const tc of training.components) {
+        for (const s of tc.supersets)
+          for (const e of s.exercises)
+            e.exercise = data.exercises.find(({ id }) => id === e.id);
+
+        for (const subgroup of tc.subgroups)
+          for (const s of subgroup.supersets)
+            for (const e of s.exercises)
+              e.exercise = data.exercises.find(({ id }) => id === e.id);
+      }
+    }
+
+    return training;
+  }
+
   static mapSupersets(supersets: Superset[], data: { exercises?: Exercise[] }) {
     if (data.exercises)
       for (const s of supersets)
