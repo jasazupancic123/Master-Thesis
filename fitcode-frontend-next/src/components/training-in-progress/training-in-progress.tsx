@@ -1,5 +1,12 @@
-import { Circle } from '@mui/icons-material';
-import { Box, LinearProgress, Menu, MenuItem, Typography } from '@mui/material';
+import { Add, Circle } from '@mui/icons-material';
+import {
+  Box,
+  IconButton,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material';
 import { linearProgressClasses } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
@@ -41,6 +48,7 @@ export default function TrainingInProgress() {
 
   const { user } = useAuthenticatedAuth();
   const { activeTraining, exercises } = useMain();
+
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
@@ -70,6 +78,7 @@ export default function TrainingInProgress() {
     setOpenFinishTrainingModal,
     showUndoneSetsError,
     setShowUndoneSetsError,
+    edit,
   } = trainingInProgressUtilsContext;
 
   const { selectedTrackingMethod } = athleteHeaderContext;
@@ -391,21 +400,22 @@ export default function TrainingInProgress() {
                     })}
 
                     {/* Button to add new exercise */}
-                    {/* <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => {
-                        setOpenAddExerciseModal(true);
-                      }}
-                      sx={{
-                        border: `1px solid ${theme.palette.primary.main}`,
-                        width: 30,
-                        height: 30,
-                        alignSelf: 'center',
-                      }}
-                    >
-                      <Add />
-                    </IconButton> */}
+                    {edit && (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          setOpenAddExerciseModal(true);
+                        }}
+                        sx={{
+                          p: 0.5,
+                          border: `1px solid ${theme.palette.primary.main}`,
+                          alignSelf: 'center',
+                        }}
+                      >
+                        <Add fontSize="small" />
+                      </IconButton>
+                    )}
                   </Box>
                 </Box>
               );

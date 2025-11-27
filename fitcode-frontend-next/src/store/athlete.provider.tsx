@@ -26,6 +26,7 @@ interface IAthleteContext extends Props {
   setHasJustLoggedIn: SetState<boolean>;
   filter: ILink;
   setFilter: SetState<ILink>;
+  setTrainings: SetState<Training[]>;
 }
 
 const AthleteContext = createContext<IAthleteContext | null>(null);
@@ -33,7 +34,7 @@ const AthleteContext = createContext<IAthleteContext | null>(null);
 export const useAthlete = () => useContext(AthleteContext)!;
 
 export function AthleteProvider(props: Props) {
-  const { children, trainings, reports } = props;
+  const { children, trainings: propsTrainings, reports } = props;
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
 
@@ -47,6 +48,7 @@ export function AthleteProvider(props: Props) {
   });
 
   const [filter, setFilter] = useState<ILink>(currentFilter);
+  const [trainings, setTrainings] = useState<Training[]>(propsTrainings);
 
   const value: IAthleteContext = {
     selectedDate,
@@ -56,6 +58,7 @@ export function AthleteProvider(props: Props) {
     filter,
     setFilter,
     trainings,
+    setTrainings,
     reports,
   };
 

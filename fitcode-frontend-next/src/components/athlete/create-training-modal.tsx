@@ -15,6 +15,7 @@ import ExerciseMenuDropdown from '../exercises-list/exercise-menu';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { Components } from '@/core/exercise/constant/components.constant';
+import type { Group } from '@/core/institution/type/group.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Superset } from '@/core/training/type/superset.type';
@@ -40,9 +41,13 @@ export default function CreateTrainingModal({
   setOpen,
   onCreateTraining,
 }: Props) {
-  const { exercises, institutions } = useMain();
+  const { exercises, institutions, groups } = useMain();
   const institutionId = institutions?.[0]?.id;
 
+  const DEFAULT_GROUP =
+    core.group.getGroupsWithCurrentActiveCycles(groups || [])?.[0] || null;
+
+  const [group, setGroup] = useState<Group | null>(DEFAULT_GROUP);
   const [component, setComponent] = useState(DEFAULT_COMPONENT);
   const [supersets, setSupersets] = useState([DEFAULT_SUPERSET]);
 
@@ -109,15 +114,25 @@ export default function CreateTrainingModal({
       setIsOpen={setOpen}
       title="Create Training"
       width={300}
-      onCancel={() => {}}
+      onCancel={() => {
+        setGroup(DEFAULT_GROUP);
+        setComponent(DEFAULT_COMPONENT);
+        setSupersets([DEFAULT_SUPERSET]);
+      }}
       onConfirm={async () => {
         if (!component) return;
+
+        const cycle = group
+          ? core.group.getCurrentActiveCycle(group)
+          : undefined;
 
         try {
           const training = await TrainingController.getInstance().create({
             institutionId,
             from: new Date(),
             membersIds: [],
+            groupId: group?.id,
+            cycleId: cycle?.id,
             components: [
               {
                 id: component.field as string,
@@ -130,6 +145,7 @@ export default function CreateTrainingModal({
           });
 
           setOpen(false);
+          setGroup(DEFAULT_GROUP);
           setComponent(DEFAULT_COMPONENT);
           setSupersets([DEFAULT_SUPERSET]);
           toast.success('Training created successfully');
@@ -142,6 +158,20 @@ export default function CreateTrainingModal({
       }}
     >
       <Box position="relative" p={2}>
+        <SelectInput<Group>
+          label="Group"
+          value={(group?.id as string) || ''}
+          setValue={(val) =>
+            setGroup(groups?.find((g) => g.id === val) || null)
+          }
+          disableNoneChoice
+          icon={null}
+          itemKey="id"
+          itemName="name"
+          items={core.group.getGroupsWithCurrentActiveCycles(groups || [])}
+          sx={{ mt: 2 }}
+        />
+
         <SelectInput<Attribute>
           label="Component"
           value={(component?.field as string) || ''}

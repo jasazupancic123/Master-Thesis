@@ -168,7 +168,10 @@ export function withAuth<P extends object>(
     const auth = useAuth();
     const router = useRouter();
 
-    if (auth.status !== 'authenticated') return <Alert type="loading" />;
+    if (auth.status !== 'authenticated') {
+      console.log('Loading in auth.provider.tsx');
+      return <Alert type="loading" />;
+    }
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
       router.replace(LINK_SIGN_IN.href);

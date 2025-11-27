@@ -1,9 +1,10 @@
-import { Check, VideoLibrary } from '@mui/icons-material';
+import { Add, Check, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import TrainingInProgressExerciseControls from './exercise-controls';
 import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
@@ -22,6 +23,7 @@ export default function TrainingInProgressExerciseCard() {
   const theme = useTheme();
   const trainingContext = useTraining();
   const trainingInProgressContext = useTrainingInProgress();
+  const { edit } = useTrainingInProgressUtils();
 
   const {
     selectedExercise,
@@ -170,10 +172,10 @@ export default function TrainingInProgressExerciseCard() {
           maxWidth="100%"
           display="flex"
           alignItems="center"
-          justifyContent="center"
           sx={{
             overflowX: 'auto',
             mx: 'auto',
+            px: 0.5,
           }}
         >
           {selectedExercise.sets.map((s, i) => {
@@ -287,22 +289,25 @@ export default function TrainingInProgressExerciseCard() {
             );
           })}
 
-          {/* <IconButton
-            size="small"
-            color="primary"
-            onClick={async () => {
-              await trainingInProgressContext.addSetToExercise();
-            }}
-            sx={{
-              border: `1px solid ${theme.palette.primary.main}`,
-              width: 20,
-              height: 20,
-              mb: 2.5,
-              ml: 1,
-            }}
-          >
-            <Add />
-          </IconButton> */}
+          {edit && (
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={async () => {
+                await trainingInProgressContext.addSetToExercise();
+              }}
+              sx={{
+                p: 0.5,
+                m: 0,
+                mb: 2,
+                ml: 0.5,
+                alignSelf: 'center',
+                border: `1px solid ${theme.palette.primary.main}`,
+              }}
+            >
+              <Add fontSize="small" />
+            </IconButton>
+          )}
         </Box>
 
         {setIndex !== undefined &&
