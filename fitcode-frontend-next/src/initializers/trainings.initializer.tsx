@@ -5,9 +5,9 @@ import { TrainingProvider } from '@/store/training.provider';
 
 export default function TrainingsInitializer(props: React.PropsWithChildren) {
   const { children } = props;
-  const { trainings, reports } = useAthlete();
+  const { reports } = useAthlete();
 
-  const state = { trainings, reports };
+  const state = { reports };
 
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
 }
