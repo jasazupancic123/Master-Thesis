@@ -48,5 +48,7 @@ export default function MagicAuthPage() {
   }, [token]);
 
   if (error) return <Alert type="error" errorMessage={error} />;
+
+  console.log('Loading in magic-auth.page.tsx');
   return <Alert type="loading" />;
 }
