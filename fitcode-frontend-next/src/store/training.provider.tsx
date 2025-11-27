@@ -51,9 +51,7 @@ export const TrainingProvider = (
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { user } = useAuthenticatedAuth();
-
   const pathname = usePathname();
-
   const trainingId = pathname.split('/')[2];
   const componentId = pathname.split('/').pop() || '';
 

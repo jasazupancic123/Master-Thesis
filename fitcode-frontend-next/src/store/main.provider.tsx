@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useAuthenticatedAuth, withAuth } from './auth.provider';
-import type { AuthUser } from '@/core/auth/type/user.type';
+import { withAuth } from './auth.provider';
+import type { AuthProfileMerged, AuthUser } from '@/core/auth/type/user.type';
+import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseController } from '@/core/exercise/exercise.controller';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -23,18 +24,17 @@ import type {
   Training,
 } from '@/core/training/type/training.type';
 import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
-import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
+import type { Fetch } from '@/lib/common/type/fetch.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { initFetch, settleState } from '@/lib/common/util/state.util';
 
 export interface MainProviderProps extends React.PropsWithChildren {
-  profile: Profile;
+  profile: AuthProfileMerged;
   globalExercisesRevision: number;
   institutions: Institution[];
   activeTraining: ActiveTraining | null;
   exerciseAiPrescriptions: ExerciseAiPrescription[];
   institution: InitInstitution;
-  trainings: Training[];
-  reports: TrainingReport[];
 }
 
 export interface IMainContext extends MainProviderProps {
@@ -42,16 +42,17 @@ export interface IMainContext extends MainProviderProps {
   profiles: Profile[];
   exercises: Exercise[];
   groups: Group[];
-  protocols: TrainingProtocol[];
-  setProfile: SetStateNullable<Profile>;
+  setProfile: SetState<AuthProfileMerged>;
   setProfiles: SetState<Profile[]>;
   setUsers: SetState<AuthUser[]>;
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
   setActiveTraining: SetState<ActiveTraining | null>;
   setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
-  setProtocols: SetState<TrainingProtocol[]>;
   wellness: WellnessZScore[];
+  trainings: Fetch<Training[]>;
+  protocols: Fetch<TrainingProtocol[]>;
+  setProtocols: SetState<Fetch<TrainingProtocol[]>>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -66,53 +67,34 @@ export const CoachMainProvider = withAuth(MainProvider, [
 ]);
 
 export default function MainProvider(props: MainProviderProps) {
-  const { user } = useAuthenticatedAuth();
-  const { children } = props;
+  const { institution: _institution, children } = props;
+  const institutionId = _institution.id;
 
-  const [users, setUsers] = useState<AuthUser[]>(() =>
-    props.institution.users.map((u) => ({
-      uid: u.uid,
-      email: u.email!,
-      displayName: u.displayName || '',
-      photoURL: u.photoURL || '',
-      customClaims: { role: [u.role || UserRole.ATHLETE] },
-    }))
-  );
-
-  const [profiles, setProfiles] = useState<Profile[]>(() =>
-    props.institution.users.map((u) => ({
-      uid: u.uid,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      email: u.email!,
-      photoURLBase64: u.photoURLBase64 || '',
-      sport: u.sport,
-      level: u.level,
-      gender: u.gender,
-      birthDate: u.birthDate || new Date(),
-      wellness: u.wellness || [],
-    }))
-  );
-
-  const [groups, setGroups] = useState<Group[]>(props.institution.groups);
-
-  const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState<
-    ExerciseAiPrescription[]
-  >(props.exerciseAiPrescriptions);
-
-  const [protocols, setProtocols] = useState<TrainingProtocol[]>(
-    props.institution.protocols
-  );
-
+  const [profile, setProfile] = useState(props.profile);
+  const [institution, setInstitution] = useState(_institution);
+  const [groups, setGroups] = useState<Group[]>(_institution.groups);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [trainings, setTrainings] = useState(initFetch<Training[]>([]));
+  const [protocols, setProtocols] = useState(initFetch<TrainingProtocol[]>([]));
+  const [users, setUsers] = useState<AuthUser[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+
+  const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState(
+    props.exerciseAiPrescriptions
+  );
+
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(
     () => TrainingService.mapActiveTraining(props.activeTraining, { exercises })
   );
 
+  // map users on fetch
   useEffect(() => {
-    const institutionId = props.institution.id;
-    if (!institutionId) return;
+    setGroups(institution.groups.map((g) => core.group.mapMembers(g, users)));
+    setInstitution((prev) => core.institution.mapUsers([prev], users)[0]);
+  }, [users]);
 
+  // load exercises (from cache or from server)
+  useEffect(() => {
     async function fetchExercises() {
       const serverGlobalRevision = props.globalExercisesRevision;
       const serverInstitutionRevision =
@@ -159,14 +141,55 @@ export default function MainProvider(props: MainProviderProps) {
     fetchExercises().then();
   }, []);
 
+  // load other data
+  useEffect(() => {
+    async function fetchData() {
+      setProtocols((prev) => ({ ...prev, loading: true }));
+      setTrainings((prev) => ({ ...prev, loading: true }));
+
+      const controller = Controller.getInstance();
+      const [authProfiles, protocols, trainings] = await Promise.allSettled([
+        controller.institution.findAllMembersByInstitution(institutionId),
+        controller.institution.findAllProtocolsByInstitution(institutionId),
+        controller.training.findAll({ institutionId }),
+      ]);
+
+      setProtocols(settleState(protocols, []));
+      setTrainings(settleState(trainings, []));
+
+      if (authProfiles.status === 'fulfilled') {
+        const users: AuthUser[] = authProfiles.value.map((u) => ({
+          uid: u.uid,
+          email: u.email!,
+          displayName: u.displayName || '',
+          photoURL: u.photoURL || '',
+          customClaims: { role: [u.role || UserRole.ATHLETE] },
+        }));
+
+        const profiles: Profile[] = authProfiles.value.map((u) => ({
+          uid: u.uid,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          email: u.email!,
+          photoURLBase64: u.photoURLBase64 || '',
+          sport: u.sport,
+          level: u.level,
+          gender: u.gender,
+          birthDate: u.birthDate || new Date(),
+          wellness: u.wellness || [],
+        }));
+
+        setUsers(users);
+        setProfiles(profiles);
+      }
+    }
+
+    fetchData().then();
+  }, []);
+
   const value: IMainContext = {
-    profile: profiles.find((p) => p.uid === user?.uid)!,
-    setProfile: ((profile?: Profile) => {
-      if (!profile) return;
-      setProfiles((prev) =>
-        prev.map((p) => (p.uid === profile.uid ? profile! : p))
-      );
-    }) as SetStateNullable<Profile>,
+    profile,
+    setProfile,
     profiles,
     setProfiles,
     users,
@@ -175,27 +198,19 @@ export default function MainProvider(props: MainProviderProps) {
     setExercises,
     groups,
     setGroups,
-    activeTraining: TrainingService.mapActiveTraining(activeTraining, {
-      exercises,
-    }),
     setActiveTraining,
     exerciseAiPrescriptions,
     setExerciseAiPrescriptions,
+    trainings,
     protocols,
     setProtocols,
     institutions: props.institutions,
     institution: props.institution,
     wellness: profiles.map((p) => p.wellness).flat(),
-    trainings: props.trainings.map((t) =>
-      TrainingService.mapData(t, { exercises })
-    ),
-    reports: props.reports.map((r) =>
-      TrainingService.mapReport(r, {
-        institutions: props.institutions,
-        groups: props.institution.groups,
-      })
-    ),
     globalExercisesRevision: props.globalExercisesRevision,
+    activeTraining: TrainingService.mapActiveTraining(activeTraining, {
+      exercises,
+    }),
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

@@ -21,7 +21,7 @@ export class ProfileController {
 
   @Get('institution')
   @Auth([UserRole.MANAGER])
-  async findAllByInstitution(@RequestUser() user: User) {
+  async findAllByManager(@RequestUser() user: User) {
     return await this.profileService.findAllByManager(user);
   }
 

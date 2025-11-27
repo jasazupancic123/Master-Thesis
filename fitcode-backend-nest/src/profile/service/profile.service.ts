@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { v4 } from 'uuid';
@@ -40,8 +41,18 @@ export class ProfileService implements Permission<Profile, Institution> {
     private readonly memberService: Wrapper<MemberService>,
   ) {}
 
-  async findOneById(uid: string): Promise<Profile> {
-    return await this.repository.findOneOrCreate(uid);
+  async findOneById(uid: string): Promise<AuthProfileMerged> {
+    const [user, profile] = await Promise.all([
+      this.authService.findOneBy('id', uid),
+      this.repository.findOneOrCreate(uid),
+    ]);
+
+    if (!user) throw new NotFoundException('User not found');
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    return this.mergeAuthProfile(user, profile, {
+      skipFields: ['faceEmbedding', 'photoURLBase64'],
+    });
   }
 
   async findAllByManager(user: User): Promise<AuthProfileMerged[]> {
@@ -60,23 +71,7 @@ export class ProfileService implements Permission<Profile, Institution> {
       .map((user) => {
         const profile = profiles.find((p) => p.uid === user.uid);
         if (!profile) return null;
-
-        const merged: AuthProfileMerged = {
-          uid: user.uid,
-          email: user.email!,
-          role: user.customClaims?.role?.[0],
-          faceEmbedding: [],
-          displayName: user.displayName || '',
-          photoURL: user.photoURL,
-          sport: profile.sport,
-          level: profile.level,
-          gender: profile.gender,
-          birthDate: profile.birthDate,
-          photoURLBase64: profile.photoURLBase64,
-          wellness: profile.wellness,
-        };
-
-        return merged;
+        return this.mergeAuthProfile(user, profile);
       })
       .filter(Boolean);
   }
@@ -95,23 +90,7 @@ export class ProfileService implements Permission<Profile, Institution> {
         const profile = profiles.find((p) => p.uid === user.uid);
         if (!profile) return null;
 
-        const merged: AuthProfileMerged = {
-          uid: user.uid,
-          email: user.email!,
-          role: user.customClaims?.role?.[0],
-          faceEmbedding: [],
-          displayName: user.displayName || '',
-          photoURL: user.photoURL,
-          sport: profile.sport,
-          level: profile.level,
-          gender: profile.gender,
-          birthDate: profile.birthDate,
-          photoURLBase64: profile.photoURLBase64,
-          wellness: profile.wellness,
-        };
-
-        skipFields.forEach((field) => delete merged[field]);
-        return merged;
+        return this.mergeAuthProfile(user, profile, { skipFields });
       })
       .filter(Boolean);
   }
@@ -226,5 +205,31 @@ export class ProfileService implements Permission<Profile, Institution> {
     }
 
     return false;
+  }
+
+  private mergeAuthProfile(
+    user: User,
+    profile: Profile,
+    options?: {
+      skipFields?: (keyof AuthProfileMerged)[];
+    },
+  ): AuthProfileMerged {
+    const merged: AuthProfileMerged = {
+      uid: user.uid,
+      email: user.email!,
+      role: user.customClaims?.role?.[0],
+      faceEmbedding: [],
+      displayName: user.displayName || '',
+      photoURL: user.photoURL,
+      sport: profile.sport,
+      level: profile.level,
+      gender: profile.gender,
+      wellness: profile.wellness,
+      birthDate: profile.birthDate,
+      photoURLBase64: profile.photoURLBase64,
+    };
+
+    options?.skipFields?.forEach((field) => delete merged[field]);
+    return merged;
   }
 }

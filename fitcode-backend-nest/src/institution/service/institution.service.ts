@@ -119,29 +119,12 @@ export class InstitutionService implements Permission<Institution> {
 
   @LogMethod()
   async init(user: User, institutionId: string): Promise<InitInstitution> {
-    // used for initializing institution-related data
-    const ref: InstitutionRef = { institutionId };
     const institution = await this.findByIdOrFail(user, institutionId);
+    const groups = await this.groupRepository.getAllByInstitution({
+      institutionId,
+    });
 
-    let groups: Group[] = [];
-    let protocols: TrainingProtocol[] = [];
-    let users: AuthProfileMerged[] = [];
-
-    await this.common.generic.measure(
-      'InstitutionService.init (groups, protocols, members)',
-      async () => {
-        [groups, protocols, users] = await Promise.all([
-          this.groupRepository.getAllByInstitution(ref),
-          this.protocolRepository.getAllByInstitution(ref),
-          this.memberService.findAllByInstitution(institution, [
-            'faceEmbedding',
-            'photoURLBase64',
-          ]),
-        ]);
-      },
-    );
-
-    return { ...institution, groups, users, protocols };
+    return { ...institution, groups };
   }
 
   async incrementExerciseRevisions(institutionId: string) {

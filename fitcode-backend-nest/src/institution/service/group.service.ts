@@ -91,15 +91,16 @@ export class GroupService implements Permission<Group, Institution> {
         'You are not allowed to create group in this institution',
       );
 
-    if (!this.checkShortName(shortName))
-      throw new BadRequestException(
-        `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
-      );
+    if (shortName)
+      if (!this.checkShortName(shortName))
+        throw new BadRequestException(
+          `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
+        );
 
     const data: Create<Group> = {
       id: null,
       name,
-      shortName,
+      shortName: shortName || name.slice(0, SHORT_GROUP_NAME_MAX_LENGTH),
       trainerIds,
       membersIds,
       institutionId,

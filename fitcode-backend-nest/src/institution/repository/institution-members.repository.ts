@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import {
   CollectionGroup,
   CollectionReference,
@@ -21,7 +20,6 @@ import {
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { InstitutionMember } from '../entity/institution-member.entity';
-import { InstitutionRepository } from './institution.repository';
 
 @Injectable()
 export class InstitutionMembersRepository extends FirestoreRepository<
@@ -29,26 +27,16 @@ export class InstitutionMembersRepository extends FirestoreRepository<
   InstitutionMemberRef
 > {
   collectionName = FirestoreCollection.INSTITUTION_MEMBERS;
-  private _parent?: InstitutionRepository;
 
-  constructor(
-    readonly firebase: FirebaseService,
-    private readonly moduleRef: ModuleRef,
-  ) {
+  constructor(readonly firebase: FirebaseService) {
     super(firebase);
   }
 
-  get parent(): InstitutionRepository {
-    if (!this._parent)
-      this._parent = this.moduleRef.get(InstitutionRepository, {
-        strict: false,
-      });
-
-    return this._parent;
-  }
-
   collection(ref: InstitutionRef): CollectionReference {
-    return this.parent.doc(ref.institutionId).collection(this.collectionName);
+    return this.firebase.firestore
+      .collection(FirestoreCollection.INSTITUTION)
+      .doc(ref.institutionId)
+      .collection(this.collectionName);
   }
 
   collectionGroup(): CollectionGroup {
