@@ -7,7 +7,7 @@ import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 export interface IUndoneExercisesCtx {
   undoneExercises: TrainingExerciseExtended[];
@@ -20,7 +20,7 @@ export const useUndoneExercises = () => useContext(UndoneExercisesContext)!;
 
 export function UndoneExercisesProvider({ children }: React.PropsWithChildren) {
   const { activeTraining } = useMain();
-  const { trainingInProgress } = useTraining();
+  const { trainingInProgress } = useTrainings();
   const { setShowUndoneSetsError } = useTrainingInProgressUtils();
 
   const [undoneExercises, setUndoneExercises] = useState<

@@ -38,7 +38,7 @@ import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import Logo from '@/ui/logo';
 
@@ -59,7 +59,7 @@ export default function AthleteHeader(props: Props) {
 
   const { selectedTrackingMethod } = useAthleteHeader() || {};
 
-  const trainingContext = useTraining();
+  const trainingContext = useTrainings();
 
   const { trainingInProgress } = trainingContext || {};
 

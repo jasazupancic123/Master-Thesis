@@ -10,7 +10,7 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingExerciseExtended } from '@/core/training/type/training-exercise.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
@@ -26,7 +26,7 @@ interface Props {
 export default function UndoneExerciseSet(props: Props) {
   const screenSize = useScreenSize();
 
-  const { trainingInProgress, updateTrainingInProgress } = useTraining();
+  const { trainingInProgress, updateTrainingInProgress } = useTrainings();
 
   const {
     set,

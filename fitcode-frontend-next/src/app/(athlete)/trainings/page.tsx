@@ -1,5 +1,5 @@
-import TrainingPage from '@/sites/training.page';
+import TrainingsPage from '@/sites/trainings.page';
 
 export default function Page() {
-  return <TrainingPage />;
+  return <TrainingsPage />;
 }

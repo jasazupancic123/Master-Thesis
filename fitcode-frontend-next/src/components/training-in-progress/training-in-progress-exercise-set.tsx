@@ -9,7 +9,7 @@ import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
@@ -21,7 +21,7 @@ interface Props {
 export default function TrainingInProgressExerciseSet(props: Props) {
   const { activeTraining } = useMain();
 
-  const { trainingInProgress, updateTrainingInProgress } = useTraining();
+  const { trainingInProgress, updateTrainingInProgress } = useTrainings();
 
   const { supersetIndex, selectedExercise } = useTrainingInProgress();
 

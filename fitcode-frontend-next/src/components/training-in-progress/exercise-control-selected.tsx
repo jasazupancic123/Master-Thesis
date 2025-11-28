@@ -12,7 +12,7 @@ import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum
 import SWControl from './sw-control';
 import { theme } from '@/app/style';
 import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import ImageGallery from '@/ui/image-gallery';
 
@@ -23,7 +23,7 @@ interface Props {
 export default function ExercieseControlSelected(props: Props) {
   const { selectedControl } = props;
 
-  const trainingContext = useTraining();
+  const trainingContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
 
   const { selectedExercise, setIndex, supersetIndex } =

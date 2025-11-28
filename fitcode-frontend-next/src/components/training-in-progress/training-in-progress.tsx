@@ -37,7 +37,7 @@ import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
@@ -49,7 +49,7 @@ export default function TrainingInProgress() {
   const { user } = useAuthenticatedAuth();
   const { activeTraining, exercises } = useMain();
 
-  const trainingContext = useTraining();
+  const trainingContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
