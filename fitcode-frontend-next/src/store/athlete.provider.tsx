@@ -27,6 +27,7 @@ interface IAthleteContext {
   setHasJustLoggedIn: SetState<boolean>;
   filter: ILink;
   setFilter: SetState<ILink>;
+  setTrainings: SetState<Fetch<Training[]>>;
 }
 
 const AthleteContext = createContext<IAthleteContext | null>(null);
@@ -102,6 +103,7 @@ export function AthleteProvider(props: React.PropsWithChildren) {
     filter,
     setFilter,
     trainings,
+    setTrainings,
     reports,
   };
 

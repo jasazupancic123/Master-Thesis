@@ -1,6 +1,6 @@
 'use client';
 
-import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
+import { Done, Edit, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Divider,
@@ -16,6 +16,7 @@ import {
   useTheme,
 } from '@mui/material';
 import Box from '@mui/material/Box';
+import dayjs from 'dayjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -24,15 +25,18 @@ import { useState } from 'react';
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
 import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';
+import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTraining } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
@@ -50,7 +54,8 @@ export default function AthleteHeader(props: Props) {
   const pathname = usePathname();
 
   const { user, role, logout } = useAuthenticatedAuth();
-  const { filter, setFilter } = useAthlete() || {};
+  const { exercises } = useMain();
+  const { filter, setTrainings, setFilter } = useAthlete() || {};
 
   const { selectedTrackingMethod } = useAthleteHeader() || {};
 
@@ -67,53 +72,63 @@ export default function AthleteHeader(props: Props) {
   const {
     anchorEl,
     open: openTrainingControls,
+    edit,
     handleCancel,
     handleFinish,
+    handleEdit,
     handleOpenMenu,
     handleCloseMenu,
   } = trainingInProgressUtilsContext || {};
 
-  const includeBottomHeader = !pathname.includes('/components/');
+  const isInTrainingInProgress = pathname.includes('/components');
 
   const [open, setOpen] = useState(false);
+  const [openCreateTrainingModal, setOpenCreateTrainingModal] = useState(false);
 
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
+
+  const mobileDisplay = screenSize.isMobile || screenSize.isLandscapeMobile;
 
   const DrawerList = role && (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggle(false)}>
       <List sx={{ pt: 0 }}>
-        <ListItem>
-          {/* This provides the gap from the top of the screen */}
-          <ListItemButton>
-            <ListItemText />
+        {(!mobileDisplay
+          ? lib.common.nav.getSidebarLinksByUserRole(role) // for desktop, use all links
+          : []
+        ).map(({ href, label }, i) => (
+          <ListItem key={i} disablePadding>
+            <Link
+              href={href}
+              passHref
+              style={{ width: '100%' }}
+              onClick={() => {
+                if (!filter || !setFilter) return;
+
+                const newValue = Object.values(
+                  LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]
+                )[i];
+                if (!newValue) return;
+
+                setFilter(newValue);
+              }}
+            >
+              <ListItemButton sx={{ width: '100%' }}>
+                <ListItemText primary={label} />
+              </ListItemButton>
+            </Link>
+          </ListItem>
+        ))}
+
+        <ListItem disablePadding>
+          <ListItemButton
+            sx={{ width: '100%' }}
+            onClick={() => {
+              setOpenCreateTrainingModal(true);
+            }}
+          >
+            <ListItemText primary="Add training" />
           </ListItemButton>
         </ListItem>
-
-        {lib.common.nav
-          .getSidebarLinksByUserRole(role)
-          .map(({ href, label }, i) => (
-            <ListItem key={i} disablePadding>
-              <Link
-                href={href}
-                passHref
-                style={{ width: '100%' }}
-                onClick={() => {
-                  if (!filter || !setFilter) return;
-
-                  const newValue = Object.values(
-                    LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]
-                  )[i];
-                  if (!newValue) return;
-
-                  setFilter(newValue);
-                }}
-              >
-                <ListItemButton sx={{ width: '100%' }}>
-                  <ListItemText primary={label} />
-                </ListItemButton>
-              </Link>
-            </ListItem>
-          ))}
 
         {trainingInProgress &&
           trainingInProgressUndoneExercisesContext &&
@@ -141,6 +156,15 @@ export default function AthleteHeader(props: Props) {
               >
                 <Pause sx={{ marginRight: 1 }} />
                 Pause Training
+              </ListItem>
+              <ListItem
+                onClick={handleEdit}
+                sx={{
+                  cursor: 'pointer',
+                }}
+              >
+                <Edit sx={{ marginRight: 1 }} />
+                {edit ? 'Disable' : 'Enable'} Editing
               </ListItem>
             </>
           )}
@@ -177,7 +201,7 @@ export default function AthleteHeader(props: Props) {
       >
         <Box
           sx={{
-            px: screenSize.isMobile ? 2.5 : 6,
+            px: mobileDisplay ? 2.5 : 6,
           }}
         >
           <Logo width={100} />
@@ -195,7 +219,9 @@ export default function AthleteHeader(props: Props) {
             sx={{ width: 32, height: 32 }}
           />
 
-          {!screenSize.isLandscapeMobile && !screenSize.isMobile ? (
+          {isInTrainingInProgress ? (
+            <></>
+          ) : (
             <Box
               sx={{
                 display: 'flex',
@@ -209,70 +235,90 @@ export default function AthleteHeader(props: Props) {
                 <MenuIcon />
               </Tooltip>
             </Box>
-          ) : (
-            <>
-              {trainingInProgress &&
-                trainingInProgressUndoneExercisesContext &&
-                trainingInProgressUtilsContext &&
-                openTrainingControls !== undefined &&
-                trainingInProgressContext && (
-                  <>
-                    <IconButton sx={{ p: 0, m: 0 }} onClick={handleOpenMenu}>
-                      <MenuIcon style={{ cursor: 'pointer' }} />
-                    </IconButton>
+          )}
 
-                    <Menu
-                      anchorEl={anchorEl}
-                      open={openTrainingControls}
-                      onClose={handleCloseMenu}
-                      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                      transformOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'center',
-                      }}
-                      PaperProps={{ sx: { mb: 1 } }}
+          <>
+            {trainingInProgress &&
+              trainingInProgressUndoneExercisesContext &&
+              trainingInProgressUtilsContext &&
+              openTrainingControls !== undefined &&
+              trainingInProgressContext && (
+                <>
+                  <IconButton sx={{ p: 0, m: 0 }} onClick={handleOpenMenu}>
+                    <MenuIcon style={{ cursor: 'pointer' }} />
+                  </IconButton>
+
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={openTrainingControls}
+                    onClose={handleCloseMenu}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                    transformOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    PaperProps={{ sx: { mb: 1 } }}
+                  >
+                    <MenuItem onClick={handleFinish}>
+                      <>
+                        <Done sx={{ marginRight: 1 }} />
+                        Finish Training
+                      </>
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={handleCancel}
+                      sx={{ color: 'warning.main' }}
                     >
-                      <MenuItem onClick={handleFinish}>
-                        <>
-                          <Done sx={{ marginRight: 1 }} />
-                          Finish Training
-                        </>
-                      </MenuItem>
-
-                      <MenuItem
-                        onClick={handleCancel}
-                        sx={{ color: 'warning.main' }}
-                      >
-                        <Pause sx={{ marginRight: 1 }} />
-                        Pause Training
-                      </MenuItem>
-                    </Menu>
-                  </>
-                )}
-            </>
-          )}
-
-          {!screenSize.isLandscapeMobile && !screenSize.isMobile && (
-            <Drawer open={open} onClose={toggle(false)} anchor="right">
-              {DrawerList}
-            </Drawer>
-          )}
+                      <Pause sx={{ marginRight: 1 }} />
+                      Pause Training
+                    </MenuItem>
+                    <MenuItem
+                      onClick={handleEdit}
+                      sx={{
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Edit sx={{ marginRight: 1 }} />
+                      {edit ? 'Disable' : 'Enable'} Editing
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+          </>
+          <Drawer open={open} onClose={toggle(false)} anchor="right">
+            {DrawerList}
+          </Drawer>
         </Box>
 
-        {(screenSize.isLandscapeMobile || screenSize.isMobile) &&
-          includeBottomHeader && (
-            <Box
-              position="fixed"
-              bottom={0}
-              width="100%"
-              display="flex"
-              justifyContent="center"
-              zIndex={1000}
-            >
-              <BottomNavigation />
-            </Box>
-          )}
+        {mobileDisplay && !isInTrainingInProgress && (
+          <Box
+            position="fixed"
+            bottom={0}
+            width="100%"
+            display="flex"
+            justifyContent="center"
+            zIndex={1000}
+          >
+            <BottomNavigation />
+          </Box>
+        )}
       </Box>
+      <CreateTrainingModal
+        open={openCreateTrainingModal}
+        setOpen={setOpenCreateTrainingModal}
+        onCreateTraining={(training) => {
+          training = TrainingService.mapTraining(training, { exercises });
+
+          if (setTrainings)
+            setTrainings((prev) => ({
+              ...prev,
+              data: [...prev.data, training].sort((a, b) =>
+                dayjs(a.from).diff(dayjs(b.from))
+              ),
+            }));
+        }}
+      />
     </>
   );
 }

@@ -5,7 +5,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
@@ -16,7 +15,6 @@ import { type SetState } from '@/lib/common/type/state.type';
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
 export interface TrainingProviderProps {
-  trainings: Training[];
   reports: TrainingReport[];
 }
 
@@ -44,7 +42,7 @@ export const TrainingProvider = (
   props: TrainingProviderProps & React.PropsWithChildren
 ) => {
   const { activeTraining } = useMain();
-  const { children, trainings, reports } = props;
+  const { children, reports } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
@@ -163,7 +161,6 @@ export const TrainingProvider = (
   return (
     <TrainingContext.Provider
       value={{
-        trainings,
         reports,
         clearTrainingState,
         trainingInProgress,

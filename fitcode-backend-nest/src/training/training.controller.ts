@@ -192,6 +192,11 @@ export class TrainingController {
 
     const result: SmartWallTraining[] = [];
     for (const training of trainings) {
+      const individual = await this.trainingService.findAllIndividual(
+        training,
+        training.membersIds,
+      );
+
       const groupName = training.group?.name || 'Unnamed Group';
       const period = isBefore(training.from, new Date().setHours(12, 0, 0, 0))
         ? 'AM'
@@ -202,7 +207,7 @@ export class TrainingController {
         name: `${groupName} - ${period}`,
         users: training.membersIds.map((uid) => ({
           uid,
-          exercises: training.components.flatMap((component) =>
+          exercises: individual[uid].components.flatMap((component) =>
             component.supersets.flatMap((superset) =>
               superset.exercises.map((exercise) => exercise),
             ),

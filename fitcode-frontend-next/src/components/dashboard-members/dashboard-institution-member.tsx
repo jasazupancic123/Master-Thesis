@@ -9,13 +9,14 @@ import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   member: AuthUser;
+  isBeingDragged?: boolean;
   isDragging?: boolean;
 }
 
 export default function DashboardInstitutionMember(props: Props) {
   const { selectedInstitution } = useDashboard();
 
-  const { member, isDragging } = props;
+  const { member, isBeingDragged, isDragging } = props;
 
   const { attributes, listeners, setNodeRef } = useSortable({
     id: member.uid,
@@ -40,7 +41,7 @@ export default function DashboardInstitutionMember(props: Props) {
     >
       <Box
         key={member.uid}
-        ref={setNodeRef}
+        ref={isDragging ? undefined : setNodeRef}
         {...attributes}
         {...listeners}
         sx={{
@@ -87,7 +88,7 @@ export default function DashboardInstitutionMember(props: Props) {
         </Box>
       )}
 
-      {!isDragging && (
+      {!isBeingDragged && (
         <Typography
           variant="caption"
           textAlign="center"
