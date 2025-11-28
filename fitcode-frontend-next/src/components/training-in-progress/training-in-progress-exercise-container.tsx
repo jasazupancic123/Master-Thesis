@@ -2,11 +2,11 @@ import { Box } from '@mui/material';
 import { useRef } from 'react';
 
 import TrainingInProgressExerciseCard from './training-in-progress-exercise-card';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 
 export default function TrainingInProgressExerciseContainer() {
-  const traininContext = useTraining();
+  const traininContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
 
   const { trainingInProgress } = traininContext;

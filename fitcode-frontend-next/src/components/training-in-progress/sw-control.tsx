@@ -9,7 +9,7 @@ import { theme } from '@/app/style';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { STRING_CONST } from '@/lib/common/const/string.const';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { PieCenterLabel } from '@/ui/mui-charts';
 
@@ -22,7 +22,7 @@ export default function SWControl(props: Props) {
 
   const { startOfTraining } = props;
 
-  const { trainingInProgress } = useTraining();
+  const { trainingInProgress } = useTrainings();
 
   const { setIndex, selectedExercise, supersetIndex } = useTrainingInProgress();
 

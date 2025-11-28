@@ -22,8 +22,8 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import {
   TRAINING_IN_PROGRESS_STORAGE_KEY,
-  useTraining,
-} from '@/store/training.provider';
+  useTrainings,
+} from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
 
 interface Props {
@@ -54,7 +54,7 @@ export default function AthleteTrainingComponents(props: Props) {
     timeout,
   } = props;
 
-  const { setTrainingInProgress } = useTraining();
+  const { setTrainingInProgress } = useTrainings();
   const { exercises, activeTraining, setActiveTraining } = useMain();
   const { user } = useAuthenticatedAuth();
 

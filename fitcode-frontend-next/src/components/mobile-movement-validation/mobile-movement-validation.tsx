@@ -62,7 +62,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
 
@@ -91,7 +91,7 @@ export default function MobileMovementValidation(
   const mainContext = useMain();
   const { exerciseAiPrescriptions, activeTraining } = mainContext || {};
 
-  const trainingContext = useTraining();
+  const trainingContext = useTrainings();
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
   const trainingInProgressContext = useTrainingInProgress();

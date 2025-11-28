@@ -13,7 +13,7 @@ import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;
@@ -49,7 +49,7 @@ export function TrainingInProgressUtilsProvider({
 
   const { setActiveTraining } = useMain();
   const { trainingInProgress, setTrainingInProgress, clearTrainingState } =
-    useTraining();
+    useTrainings();
 
   const { selectedTrackingMethod } = useAthleteHeader();
 

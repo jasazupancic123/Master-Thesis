@@ -8,11 +8,11 @@ import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
 import TrainingReportCard from '@/components/athlete/training-report-card';
 import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
 import { useAthlete } from '@/store/athlete.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
-export default function TrainingPage() {
+export default function TrainingsPage() {
   const { trainings } = useAthlete();
-  const { reports } = useTraining();
+  const { reports } = useTrainings();
 
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
