@@ -52,7 +52,10 @@ export default function GroupInitializer({
     init();
   }, []);
 
-  if (!state) return <Alert type="loading" />;
+  if (!state) {
+    console.log('Loading in group.initializer.tsx');
+    return <Alert type="loading" />;
+  }
 
   return <GroupProvider {...state}>{children}</GroupProvider>;
 }

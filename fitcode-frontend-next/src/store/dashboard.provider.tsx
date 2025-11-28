@@ -196,6 +196,7 @@ export function DashboardProvider(props: Props) {
         let newGroup: Group = {
           ...group,
           name: input.name ?? group.name,
+          shortName: input.shortName ?? group.shortName,
           trainerIds: input.trainerIds ?? group.trainerIds,
         };
 

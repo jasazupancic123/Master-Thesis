@@ -141,7 +141,7 @@ export class TrainingService implements Permission<Training, Institution> {
     options?: { limit?: number },
     populate?: boolean,
   ): Promise<(Training & { statuses?: TrainingComponentUserStatus[] })[]> {
-    const trainings = (await this.repository.findAll((_) =>
+    let trainings = (await this.repository.findAll((_) =>
       this.repository.buildGetQuery(
         { uid: user.uid, role: this.firebase.getRole(user), institutionId },
         filter,
@@ -168,34 +168,11 @@ export class TrainingService implements Permission<Training, Institution> {
       const institutions: Institution[] = [];
       const groups: Group[] = [];
 
-      for (const t of trainings) {
-        const foundInstitution = institutions.find(
-          (i) => i.id === t.institutionId,
-        );
-
-        const institution =
-          foundInstitution || t.institutionId
-            ? await this.institutionService.findById(user, t.institutionId)
-            : undefined;
-
-        const foundGroup = groups.find((g) => g.id === t.groupId);
-        const group =
-          foundGroup || t.groupId
-            ? await this.groupService.findOneById(user, {
-                groupId: t.groupId,
-                institutionId: institution?.id!,
-              })
-            : undefined;
-
-        if (!foundInstitution && institution) institutions.push(institution);
-        if (!foundGroup && group) groups.push(group);
-
-        t.institution = institution;
-        t.group = group;
-
-        if (group)
-          t.cycle = this.groupService.findCycleOrFail(t.cycleId, t.group);
-      }
+      trainings = await Promise.all(
+        trainings.map((t) =>
+          this.populateTraining(t, user, { institutions, groups }),
+        ),
+      );
 
       const duration = this.common.number.round(performance.now() - start);
 
@@ -314,7 +291,15 @@ export class TrainingService implements Permission<Training, Institution> {
     };
 
     const id = await this.repository.save(data);
-    return { ...data, id, createdAt: new Date(), updatedAt: new Date() };
+
+    const institutions: Institution[] = [];
+    const groups: Group[] = [];
+
+    return await this.populateTraining(
+      { ...data, id, createdAt: new Date(), updatedAt: new Date() },
+      user,
+      { institutions, groups },
+    );
   }
 
   @LogMethod()
@@ -1048,6 +1033,52 @@ export class TrainingService implements Permission<Training, Institution> {
         );
 
     return found;
+  }
+
+  private async populateTraining(
+    training: Training,
+    user: User,
+    options?: {
+      institutions?: Institution[];
+      groups?: Group[];
+    },
+  ): Promise<Training> {
+    const { institutions = [], groups = [] } = options || {
+      institutions: [],
+      groups: [],
+    };
+
+    const foundInstitution = institutions.find(
+      (i) => i.id === training.institutionId,
+    );
+
+    const institution =
+      foundInstitution || training.institutionId
+        ? await this.institutionService.findById(user, training.institutionId)
+        : undefined;
+
+    const foundGroup = groups.find((g) => g.id === training.groupId);
+    const group =
+      foundGroup || training.groupId
+        ? await this.groupService.findOneById(user, {
+            groupId: training.groupId,
+            institutionId: institution?.id!,
+          })
+        : undefined;
+
+    if (!foundInstitution && institution) institutions.push(institution);
+    if (!foundGroup && group) groups.push(group);
+
+    training.institution = institution;
+    training.group = group;
+
+    if (group)
+      training.cycle = this.groupService.findCycleOrFail(
+        training.cycleId,
+        training.group,
+      );
+
+    return training;
   }
 
   private async validateOverlapAndMaxLimit(

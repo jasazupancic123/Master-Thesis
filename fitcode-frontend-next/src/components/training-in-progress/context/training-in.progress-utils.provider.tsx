@@ -25,10 +25,13 @@ export interface ITrainingInProgressUtilsCtx {
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   open: boolean;
+  edit: boolean;
+  setEdit: SetState<boolean>;
   handleOpenMenu: (event: React.MouseEvent<HTMLElement>) => void;
   handleCloseMenu: () => void;
   handleFinish: () => void;
   handleCancel: () => void;
+  handleEdit: () => void;
   handlePauseTraining: () => Promise<void>;
   handleCompleteTraining: () => Promise<void>;
 }
@@ -55,6 +58,8 @@ export function TrainingInProgressUtilsProvider({
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
+
+  const [edit, setEdit] = useState(false);
 
   useEffect(() => {
     if (!trainingInProgress) return;
@@ -134,6 +139,11 @@ export function TrainingInProgressUtilsProvider({
     setOpenFinishTrainingModal(true);
   };
 
+  const handleEdit = () => {
+    handleCloseMenu();
+    setEdit((prev) => !prev);
+  };
+
   const handleCancel = () => {
     handleCloseMenu();
     setOpenCancelTrainingModal(true);
@@ -149,10 +159,13 @@ export function TrainingInProgressUtilsProvider({
     anchorEl,
     setAnchorEl,
     open,
+    edit,
+    setEdit,
     handleOpenMenu,
     handleCloseMenu,
     handleFinish,
     handleCancel,
+    handleEdit,
     handlePauseTraining,
     handleCompleteTraining,
   };
