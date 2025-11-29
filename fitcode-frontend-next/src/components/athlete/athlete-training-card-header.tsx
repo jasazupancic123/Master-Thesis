@@ -43,22 +43,26 @@ export default function AthleteTrainingCardHeader({
     >
       {/* Group name, cycle name, date */}
       <Box display="flex" alignItems="center" gap={1}>
-        <ComponentsAvatar
-          size={50}
-          components={
-            isTrainingComponentArray(components)
-              ? components
-              : (components || []).map((c) => ({
-                  id: c.field,
-                  completedMembersIds: [],
-                  from: new Date(),
-                  to: new Date(),
-                  mainSet: MainSet.BLOCK,
-                  subgroups: [],
-                  supersets: [],
-                }))
-          }
-        />
+        {components.length ? (
+          <ComponentsAvatar
+            size={50}
+            components={
+              isTrainingComponentArray(components)
+                ? components
+                : (components || []).map((c) => ({
+                    id: c.field,
+                    completedMembersIds: [],
+                    from: new Date(),
+                    to: new Date(),
+                    mainSet: MainSet.BLOCK,
+                    subgroups: [],
+                    supersets: [],
+                  }))
+            }
+          />
+        ) : (
+          <></>
+        )}
 
         <Box display="flex" flexDirection="column">
           <Typography sx={{ fontWeight: 'bold', fontSize: 15, height: 20 }}>

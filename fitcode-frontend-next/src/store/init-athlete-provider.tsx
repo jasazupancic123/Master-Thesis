@@ -44,6 +44,8 @@ export default async function InitAthleteProvider({
       ),
     ]);
 
+    console.log('reports', reports);
+
     const data: MainProviderProps = {
       profile: main.profile,
       institutions,

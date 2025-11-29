@@ -9,11 +9,11 @@ import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { LINK_TRAININGS } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainings } from '@/store/trainings.provider';
+import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 
 export interface ITrainingInProgressUtilsCtx {
   showUndoneSetsError: boolean;
@@ -99,7 +99,7 @@ export function TrainingInProgressUtilsProvider({
       };
     });
 
-    router.push(LINK_TRAININGS.href);
+    router.push(LINK_ATHLETE_HOME.href);
     // await clearTrainingState();
   };
 
@@ -118,7 +118,7 @@ export function TrainingInProgressUtilsProvider({
       toast.error('Failed to complete training');
     }
 
-    router.push(LINK_TRAININGS.href);
+    router.push(LINK_ATHLETE_HOME.href);
 
     setActiveTraining(null);
     await clearTrainingState();

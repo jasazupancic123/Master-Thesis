@@ -254,7 +254,7 @@ export class ActiveTrainingService {
     return await this.authService.createMagicLink(
       user,
       athlete.uid,
-      `/trainings/${training.id}/components/${ref.componentId}`,
+      `/home/${training.id}/components/${ref.componentId}`,
     );
   }
 

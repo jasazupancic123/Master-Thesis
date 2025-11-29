@@ -18,7 +18,7 @@ export interface TrainingsProviderProps {
   reports: TrainingReport[];
 }
 
-interface ITrainingsContext extends TrainingsProviderProps {
+interface ITrainingsContextProps extends TrainingsProviderProps {
   clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
@@ -29,7 +29,11 @@ interface ITrainingsContext extends TrainingsProviderProps {
   ) => void;
 }
 
-const TrainingsContext = createContext<ITrainingsContext | undefined>(undefined);
+const TrainingsContext = createContext<ITrainingsContextProps | undefined>(
+  undefined
+);
+
+export type ITrainingsContext = ReturnType<typeof useTrainings>;
 
 export type ITrainingsContextDefined = Omit<
   ReturnType<typeof useTrainings>,
