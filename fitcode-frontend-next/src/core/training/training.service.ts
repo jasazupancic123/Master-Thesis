@@ -9,7 +9,7 @@ import type { TrainingReport } from './type/training-report.type';
 export class TrainingService {
   static mapData<T extends Training>(
     item: T,
-    data: { exercises?: Exercise[] }
+    data: { exercises?: Exercise[]; users?: AuthUser[] }
   ) {
     if (data.exercises) {
       for (const tc of item.components) {
@@ -23,6 +23,11 @@ export class TrainingService {
               e.exercise = data.exercises.find(({ id }) => id === e.id);
       }
     }
+
+    if (data.users)
+      item.members = item.membersIds.map(
+        (id) => (data.users || []).find((u) => u.uid === id)!
+      );
 
     return item;
   }

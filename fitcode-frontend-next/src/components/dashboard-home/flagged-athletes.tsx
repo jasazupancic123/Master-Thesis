@@ -8,11 +8,12 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
-export default function DashboardHomeFlaggedAthletes() {
+export default function FlaggedAthletes() {
   const { users, wellness } = useMain();
 
   const { selectedGroups } = useDashboard();
 
+  const LIMIT = 7; // max number of flagged athletes to show
   const LOWER_BOUNDARY = 5; // it it's the same or lower than this, flag the athlete
 
   const [flaggedWellness, setFlaggedWellness] = useState<
@@ -57,7 +58,9 @@ export default function DashboardHomeFlaggedAthletes() {
           });
       });
 
-    setFlaggedWellness(newFlaggedWellness.sort((a, b) => a.value - b.value));
+    setFlaggedWellness(
+      newFlaggedWellness.sort((a, b) => a.value - b.value).slice(0, LIMIT)
+    );
   }, [wellness, selectedGroups]);
 
   return (

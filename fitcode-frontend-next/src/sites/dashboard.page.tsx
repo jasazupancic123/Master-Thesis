@@ -32,12 +32,13 @@ export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();
   const { profile } = useMain();
 
-  const { filter, institutions, selectedInstitution } = useDashboard();
+  const { filter, institutions, selectedInstitution, trainings } =
+    useDashboard();
 
   const renderContent = () => {
     switch (filter.id) {
       case LINK_DASHBOARD_HOME.id: {
-        return <DashboardHome />;
+        return <DashboardHome trainings={trainings} />;
       }
       case LINK_DASHBOARD_SCHEDULE.id: {
         return <DashboardSchedule />;

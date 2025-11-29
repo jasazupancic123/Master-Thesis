@@ -1,7 +1,6 @@
 import {
   Add,
   CalendarTodayOutlined,
-  FitnessCenterOutlined,
   Logout,
   Settings,
   SpaOutlined,
@@ -122,11 +121,7 @@ export const LINK_DASHBOARD = link(
   DASHBOARD_LINK_ID
 );
 
-export const LINK_TRAININGS = link(
-  'Trainings',
-  '/trainings',
-  <FitnessCenterOutlined />
-);
+export const LINK_ATHLETE_HOME = link('Home', '/home', <HomeIcon />);
 
 export const LINK_CALENDAR = link(
   'Calendar',
@@ -251,7 +246,7 @@ export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<
   UserRole,
   Record<string, ILink>
 > = {
-  [UserRole.ATHLETE]: { trainings: LINK_TRAININGS, signout: LINK_SIGN_OUT },
+  [UserRole.ATHLETE]: { trainings: LINK_ATHLETE_HOME, signout: LINK_SIGN_OUT },
   [UserRole.TRAINER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
   [UserRole.MANAGER]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
   [UserRole.ADMIN]: { dashboard: LINK_DASHBOARD, signout: LINK_SIGN_OUT },
@@ -259,7 +254,7 @@ export const LINKS_AUTHENTICATED_HERO_NAVBAR: Record<
 
 export const LINKS_SIDEBAR_GROUP_VIEW = {
   [UserRole.ATHLETE]: {
-    trainings: LINK_TRAININGS,
+    trainings: LINK_ATHLETE_HOME,
     calendar: LINK_CALENDAR,
     feedback: LINK_FEEDBACK,
     profile: LINK_PROFILE,
@@ -301,7 +296,7 @@ export const LINKS_SIDEBAR_DAHBOARD_VIEW = {
 };
 
 export const SIGN_IN_REDIRECT_MAPPER = {
-  [UserRole.ATHLETE]: LINK_TRAININGS,
+  [UserRole.ATHLETE]: LINK_ATHLETE_HOME,
   [UserRole.TRAINER]: LINK_DASHBOARD,
   [UserRole.MANAGER]: LINK_DASHBOARD,
   [UserRole.ADMIN]: LINK_DASHBOARD,
