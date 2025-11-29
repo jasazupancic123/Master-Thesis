@@ -41,6 +41,7 @@ import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
+import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
@@ -98,7 +99,7 @@ export default function TrainingInProgress() {
 
   useEffect(() => {
     const redirectToTrainings = async () => {
-      window.location.href = '/trainings';
+      window.location.href = LINK_ATHLETE_HOME.href;
       await clearTrainingState();
     };
 

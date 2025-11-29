@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from '@mui/material';
+import { alpha, Box, Divider, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import {
   BarPlot,
@@ -60,187 +60,186 @@ export default function TrainingReportCard({ report }: Props) {
   ];
 
   return (
-    <>
-      <Box
-        id="training-report-card"
-        width="100%"
-        display="flex"
-        flexDirection="column"
-        sx={{ px: 2, py: 2, backgroundColor: theme.palette.background.default }}
-        gap={2}
-      >
-        {/* Group name, cycle name, date */}
-        {report && (
-          <AthleteTrainingCardHeader
-            report={report}
-            components={[]}
-            group={report.group}
-            cycle={report.cycle}
-            from={report.from}
-            to={report.to}
-          />
-        )}
+    <Box
+      id="training-report-card"
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      sx={{
+        px: 2,
+        py: 2,
+        backgroundColor: alpha(theme.palette.background.dark, 0.75),
+        borderRadius: 2,
+      }}
+      gap={2}
+    >
+      {/* Group name, cycle name, date */}
+      {report && (
+        <AthleteTrainingCardHeader
+          report={report}
+          components={[]}
+          group={report.group}
+          cycle={report.cycle}
+          from={report.from}
+          to={report.to}
+        />
+      )}
 
-        {/* Report charts */}
-        <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
-          <CustomChartContainer label="Realization">
+      {/* Report charts */}
+      <Box width="100%" display="flex" alignItems="flex-start" gap={'1%'}>
+        <CustomChartContainer label="Realization">
+          <PieChart
+            height={120}
+            hideLegend
+            series={[
+              {
+                data: [
+                  { value: realizationScore, label: '' },
+                  { value: 100 - realizationScore, label: '' },
+                ],
+                innerRadius: 30,
+              },
+            ]}
+            colors={[
+              theme.palette.primary.main,
+              theme.palette.background.light,
+            ]}
+          >
+            <ChartsTooltip trigger="none" />
+            <PieCenterLabel label={`${realizationScore}%`} />
+          </PieChart>
+        </CustomChartContainer>
+
+        <CustomChartContainer label="Tonnage">
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+          >
             <PieChart
-              height={120}
+              height={75}
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
               hideLegend
               series={[
                 {
+                  startAngle: -90,
+                  endAngle: 90,
                   data: [
-                    { value: realizationScore, label: '' },
-                    { value: 100 - realizationScore, label: '' },
+                    { label: '', value: tonnageScore },
+                    { label: '', value: 100 - tonnageScore },
                   ],
                   innerRadius: 35,
+                  outerRadius: 45,
+                  cy: 55,
                 },
               ]}
               colors={[
                 theme.palette.primary.main,
-                theme.palette.background.dark,
+                theme.palette.background.light,
               ]}
             >
-              <ChartsTooltip trigger="none" />
-              <PieCenterLabel label={`${realizationScore}%`} />
-            </PieChart>
-          </CustomChartContainer>
-
-          <CustomChartContainer label="Tonnage">
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <PieChart
-                height={75}
-                margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                hideLegend
-                series={[
-                  {
-                    startAngle: -90,
-                    endAngle: 90,
-                    data: [
-                      { label: '', value: tonnageScore },
-                      { label: '', value: 100 - tonnageScore },
-                    ],
-                    innerRadius: 35,
-                    outerRadius: 45,
-                    cy: 55,
-                  },
-                ]}
-                colors={[
-                  theme.palette.primary.main,
-                  theme.palette.background.dark,
-                ]}
-              >
-                <PieCenterLabel
-                  label={`${report.tonnage}kg`}
-                  position={{ top: 12 }}
-                  fontSize={12}
-                />
-                <ChartsTooltip trigger="none" />
-              </PieChart>
-
-              <Typography
+              <PieCenterLabel
+                label={`${report.tonnage}kg`}
+                position={{ top: 12 }}
                 fontSize={12}
-                textAlign="center"
-                color={theme.palette.background.lightBorder}
-              >
-                Density
-              </Typography>
+              />
+              <ChartsTooltip trigger="none" />
+            </PieChart>
 
-              <ChartContainer
-                height={15}
-                series={[
-                  { type: 'bar', data: [densityScore], layout: 'horizontal' },
-                ]}
-                margin={0}
-                xAxis={[{ position: 'none', min: 0, max: 100 }]}
-                yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
-                colors={[theme.palette.primary.main]}
-                sx={{
-                  backgroundColor: theme.palette.background.dark,
-                }}
-              >
-                <BarPlot />
-                <ChartsTooltip trigger="item" />
-              </ChartContainer>
-            </Box>
-          </CustomChartContainer>
+            <Typography
+              fontSize={12}
+              textAlign="center"
+              color={theme.palette.background.lightBorder}
+            >
+              Density
+            </Typography>
 
-          <Box
-            width="32.33%"
-            height={133}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            gap={1}
-          >
-            <CustomValueBox value={`${duration}’`} title="Duration" />
+            <ChartContainer
+              height={15}
+              series={[
+                { type: 'bar', data: [densityScore], layout: 'horizontal' },
+              ]}
+              margin={0}
+              xAxis={[{ position: 'none', min: 0, max: 100 }]}
+              yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
+              colors={[theme.palette.primary.main]}
+              sx={{
+                backgroundColor: theme.palette.background.light,
+              }}
+            >
+              <BarPlot />
+              <ChartsTooltip trigger="item" />
+            </ChartContainer>
           </Box>
-        </Box>
-        {/* Bar charts for remaining metrics */}
+        </CustomChartContainer>
+
         <Box
-          width="100%"
+          width="32.33%"
+          height={133}
           display="flex"
-          justifyContent="space-around"
-          flexWrap="wrap"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
           gap={1}
         >
-          {metrics.map((metric) => {
-            const score =
-              metric.total > 0
-                ? Math.round((metric.completed / metric.total) * 100)
-                : 0;
-            return (
-              <CustomChartContainer key={metric.label} label={metric.label}>
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <ChartContainer
-                    height={18}
-                    series={[
-                      {
-                        type: 'bar',
-                        data: [score],
-                        layout: 'horizontal',
-                      },
-                    ]}
-                    margin={0}
-                    xAxis={[{ position: 'none', min: 0, max: 100 }]}
-                    yAxis={[
-                      { position: 'none', scaleType: 'band', data: [''] },
-                    ]}
-                    colors={[theme.palette.primary.main]}
-                    sx={{
-                      backgroundColor: theme.palette.background.dark,
-                      borderRadius: 2,
-                      width: '100%',
-                    }}
-                  >
-                    <BarPlot />
-                  </ChartContainer>
-
-                  <Typography
-                    fontSize={11}
-                    color={theme.palette.text.primary}
-                    mt={0.5}
-                    textAlign="center"
-                  >
-                    {lib.common.number.formatNumber(metric.completed)}
-                    {metric.unit || ''} / {metric.total}
-                    {metric.unit || ''}
-                  </Typography>
-                </Box>
-              </CustomChartContainer>
-            );
-          })}
+          <CustomValueBox value={`${duration}’`} title="Duration" />
         </Box>
       </Box>
+      {/* Bar charts for remaining metrics */}
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent="space-around"
+        flexWrap="wrap"
+        gap={1}
+      >
+        {metrics.map((metric) => {
+          const score =
+            metric.total > 0
+              ? Math.round((metric.completed / metric.total) * 100)
+              : 0;
+          return (
+            <CustomChartContainer key={metric.label} label={metric.label}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <ChartContainer
+                  height={18}
+                  series={[
+                    {
+                      type: 'bar',
+                      data: [score],
+                      layout: 'horizontal',
+                    },
+                  ]}
+                  margin={0}
+                  xAxis={[{ position: 'none', min: 0, max: 100 }]}
+                  yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
+                  colors={[theme.palette.primary.main]}
+                  sx={{
+                    backgroundColor: theme.palette.background.light,
+                    borderRadius: 2,
+                    width: '100%',
+                  }}
+                >
+                  <BarPlot />
+                </ChartContainer>
 
-      <Divider sx={{ mx: 2 }} />
-    </>
+                <Typography
+                  fontSize={11}
+                  color={theme.palette.text.primary}
+                  mt={0.5}
+                  textAlign="center"
+                >
+                  {lib.common.number.formatNumber(metric.completed)}
+                  {metric.unit || ''} / {metric.total}
+                  {metric.unit || ''}
+                </Typography>
+              </Box>
+            </CustomChartContainer>
+          );
+        })}
+      </Box>
+    </Box>
   );
 }
 
@@ -279,7 +278,7 @@ const CustomValueBox = ({ value, title }: { value: string; title: string }) => {
       justifyContent="center"
       alignItems="center"
       sx={{
-        backgroundColor: theme.palette.background.dark,
+        backgroundColor: theme.palette.background.light,
         border: `1px solid ${theme.palette.primary.main}`,
         borderRadius: '5px',
       }}

@@ -1,42 +1,70 @@
 import type { SxProps } from '@mui/material';
 import { Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
-import DashboardHomeCycleProgress from './dashboard-home-cycle-progress';
-import DashboardHomeFlaggedAthletes from './dashboard-home-flagged-athletes';
-import DashboardHomeTodaySessions from './dashboard-home-today-sessions';
+import CycleProgress from './cycle-progress';
+import FlaggedAthletes from './flagged-athletes';
+import TodaySessions from './today-sessions';
 import { theme } from '@/app/style';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { Training } from '@/core/training/type/training.type';
+import { useMain } from '@/store/main.provider';
+import AthleteReports from './athlete-reports';
+import { useAthlete } from '@/store/athlete.provider';
+import TodaySessionsComponent from './today-sessions-component';
+import SelectedTrainingComponentModal from './modals/selected-training-component-modal';
+import useDashboardHomeComponents from './hooks/use-components.hook';
 
-export default function DashboardHome() {
+interface Props {
+  trainings: Training[];
+}
+
+export default function DashboardHome(props: Props) {
   const screenSize = useScreenSize();
 
   const { user } = useAuthenticatedAuth();
-  const { selectedGroups, trainings } = useDashboard();
 
-  const COMPONENT_ITEMS_CONTAINER_WIDTH = 600;
+  const mainContext = useMain();
+  const dashboardContext = useDashboard();
+  const athleteContext = useAthlete();
 
-  const [componentItems, setComponentItems] = useState<
-    {
-      id: string;
-      percentage: number; // in %
-      value: number;
-    }[]
-  >([]);
+  const { activeTraining } = mainContext;
+
+  const { trainings } = props;
+
+  const selectedGroups = dashboardContext
+    ? dashboardContext.selectedGroups
+    : mainContext.groups;
+
+  const {
+    selectedTrainingComponent,
+    setSelectedTrainingComponent,
+    selectedTraining,
+    setSelectedTraining,
+    componentItems,
+    activeComponent,
+  } = useDashboardHomeComponents(selectedGroups, trainings);
+
+  const [openTrainingComponentModal, setOpenTrainingComponentModal] =
+    useState(false);
 
   const [mounted, setMounted] = useState(false);
+
+  const hasPlayedAudioRef = useRef(false);
 
   useEffect(() => {
     // small timeout is optional, just to ensure it's after first paint
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
   }, []);
+
+  const COMPONENT_ITEMS_CONTAINER_WIDTH = 600;
 
   const ORANGE_COLOR_COMBO = {
     backgroundColor: theme.palette.secondary.light,
@@ -68,42 +96,6 @@ export default function DashboardHome() {
       );
     });
 
-  useEffect(() => {
-    const componentIdCounter: { id: string; count: number }[] = [];
-
-    trainings
-      .filter((training) =>
-        selectedGroups.some((group) => group.id === training.groupId)
-      )
-      .forEach((training) => {
-        training.components.forEach((component) => {
-          const existingComponent = componentIdCounter.find(
-            (item) => item.id === component.id
-          );
-          if (existingComponent) {
-            existingComponent.count += 1;
-          } else {
-            componentIdCounter.push({ id: component.id, count: 1 });
-          }
-        });
-      });
-
-    const totalCount = componentIdCounter.reduce(
-      (acc, item) => acc + item.count,
-      0
-    );
-    const componentItems = componentIdCounter
-      .map((item) => ({
-        id: item.id,
-        percentage:
-          totalCount > 0 ? Math.round((item.count / totalCount) * 100) : 0,
-        value: item.count,
-      }))
-      .sort((a, b) => b.value - a.value);
-
-    setComponentItems(componentItems);
-  }, [selectedGroups, trainings]);
-
   const cardProps: SxProps = {
     p: 2,
     borderRadius: 2,
@@ -118,7 +110,7 @@ export default function DashboardHome() {
         flexDirection="column"
         alignItems="flex-start"
         gap={2}
-        mt={4}
+        mt={dashboardContext ? 4 : 0}
       >
         <Typography variant="h4">
           Welcome back, <strong>{user.displayName?.split(' ')[0]}</strong>
@@ -238,6 +230,33 @@ export default function DashboardHome() {
           </Box>
         </Box>
         <Grid2 width="100%" container spacing={2}>
+          {activeComponent && activeTraining && (
+            <Grid2
+              size={{ xs: 12, sm: 12, md: 4 }}
+              sx={cardProps}
+              display="flex"
+              flexDirection="column"
+              gap={1}
+            >
+              <Typography variant="h6" lineHeight={1}>
+                Active sessions
+              </Typography>
+
+              <TodaySessionsComponent
+                component={{
+                  ...activeComponent,
+                  groupId: activeTraining.groupId,
+                  trainingId: activeTraining.id,
+                }}
+                trainings={trainings}
+                index={0}
+                setSelectedTraining={setSelectedTraining}
+                setSelectedTrainingComponent={setSelectedTrainingComponent}
+                setOpenTrainingComponentModal={setOpenTrainingComponentModal}
+              />
+            </Grid2>
+          )}
+
           <Grid2
             size={{ xs: 12, sm: 12, md: 4 }}
             sx={cardProps}
@@ -249,7 +268,20 @@ export default function DashboardHome() {
               Today&apos;s sessions
             </Typography>
 
-            <DashboardHomeTodaySessions />
+            <TodaySessions
+              trainings={trainings}
+              activeComponent={
+                activeComponent
+                  ? {
+                      ...activeComponent,
+                      trainingId: activeTraining?.id || '',
+                    }
+                  : null
+              }
+              setSelectedTraining={setSelectedTraining}
+              setSelectedTrainingComponent={setSelectedTrainingComponent}
+              setOpenTrainingComponentModal={setOpenTrainingComponentModal}
+            />
           </Grid2>
           <Grid2
             size={{ xs: 12, sm: 12, md: 4 }}
@@ -262,7 +294,7 @@ export default function DashboardHome() {
               Cycle progress
             </Typography>
 
-            <DashboardHomeCycleProgress />
+            <CycleProgress />
           </Grid2>
           <Grid2
             size={{ xs: 12, sm: 12, md: 4 }}
@@ -271,14 +303,40 @@ export default function DashboardHome() {
             flexDirection="column"
             gap={1}
           >
-            <Typography variant="h6" lineHeight={1}>
-              Flagged athletes
-            </Typography>
+            {dashboardContext ? (
+              <>
+                <Typography variant="h6" lineHeight={1}>
+                  Flagged athletes
+                </Typography>
 
-            <DashboardHomeFlaggedAthletes />
+                <FlaggedAthletes />
+              </>
+            ) : athleteContext ? (
+              <>
+                <Typography variant="h6" lineHeight={1}>
+                  Reports
+                </Typography>
+
+                <AthleteReports />
+              </>
+            ) : (
+              <></>
+            )}
           </Grid2>
         </Grid2>
       </Box>
+
+      {selectedTraining && selectedTrainingComponent && (
+        <SelectedTrainingComponentModal
+          open={openTrainingComponentModal}
+          setOpen={setOpenTrainingComponentModal}
+          training={selectedTraining}
+          setTraining={setSelectedTraining}
+          component={selectedTrainingComponent}
+          setComponent={setSelectedTrainingComponent}
+          hasPlayedAudioRef={hasPlayedAudioRef}
+        />
+      )}
     </DashboardPageContainer>
   );
 }
