@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import AthleteHeader from '@/components/athlete/athlete-header';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
+import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
 
@@ -46,7 +47,7 @@ function TrainingContent({ children }: React.PropsWithChildren) {
     if (inProgress?.componentId && activeTraining?.id) {
       // Use replace so the user can't "back" into the pre-redirect state
       router.replace(
-        `/trainings/${activeTraining.id}/components/${inProgress.componentId}`
+        `${LINK_ATHLETE_HOME.href}/${activeTraining.id}/components/${inProgress.componentId}`
       );
     }
   }, [router, activeTraining]); // run when activeTraining changes

@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import type { IFormData } from './use-register-member-form.hook';
@@ -22,7 +22,7 @@ export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 export default function useInstitutionMembers() {
   const { users, profiles, setProfiles, setUsers, groups, setGroups } =
     useMain();
-  const { isFormEmpty, setFormData, formData, resetForm } =
+  const { setFormData, } =
     useRegisterMemberForm();
 
   const {

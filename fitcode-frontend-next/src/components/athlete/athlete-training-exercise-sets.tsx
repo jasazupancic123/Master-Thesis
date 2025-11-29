@@ -12,7 +12,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTraining } from '@/store/training.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
@@ -46,7 +46,7 @@ export default function AthleteTrainingExerciseSets({
 
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const { updateTrainingInProgress } = useTraining();
+  const { updateTrainingInProgress } = useTrainings();
 
   const uni = exercise.exercise?.isUnilateral;
   const volType = core.training.set.getVolType(exercise.sets[0]);

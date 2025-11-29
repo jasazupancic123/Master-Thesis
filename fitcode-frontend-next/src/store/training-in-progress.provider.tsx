@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useMain } from './main.provider';
-import { useTraining } from './training.provider';
+import { useTrainings } from './trainings.provider';
 import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { TrainingController } from '@/core/training/training.controller';
@@ -70,7 +70,7 @@ export const TrainingInProgressProvider = ({
     trainingInProgress,
     updateTrainingInProgress,
     setTrainingInProgress,
-  } = useTraining();
+  } = useTrainings();
 
   const router = useRouter();
 

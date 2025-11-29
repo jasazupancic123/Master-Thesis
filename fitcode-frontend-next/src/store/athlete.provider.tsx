@@ -8,7 +8,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
-  LINK_TRAININGS,
+  LINK_ATHLETE_HOME,
   LINKS_SIDEBAR_GROUP_VIEW,
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
@@ -38,7 +38,7 @@ export function AthleteProvider(props: Props) {
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
 
-  let currentFilter = LINK_TRAININGS;
+  let currentFilter = LINK_ATHLETE_HOME;
   const url = new URL(window.location.href);
   const lastItemInUrl = url.pathname.split('/').pop();
   Object.values(LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]).map((link) => {

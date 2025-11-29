@@ -10,8 +10,8 @@ import { useTrainingInProgressUtils } from './context/training-in.progress-utils
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 interface Props {
   exercise: TrainingExercise;
@@ -24,7 +24,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const mainContext = useMain();
   const { activeTraining, setActiveTraining } = mainContext;
-  const trainingContext = useTraining();
+  const trainingContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
 
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();

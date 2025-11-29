@@ -1,7 +1,7 @@
 'use client';
 
 import { useAthlete } from '@/store/athlete.provider';
-import { TrainingProvider } from '@/store/training.provider';
+import { TrainingsProvider } from '@/store/trainings.provider';
 
 export default function TrainingsInitializer(props: React.PropsWithChildren) {
   const { children } = props;
@@ -9,5 +9,5 @@ export default function TrainingsInitializer(props: React.PropsWithChildren) {
 
   const state = { reports };
 
-  return <TrainingProvider {...state}>{children}</TrainingProvider>;
+  return <TrainingsProvider {...state}>{children}</TrainingsProvider>;
 }

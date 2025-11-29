@@ -63,6 +63,8 @@ export class TrainingReportService {
         (w) => w.trainingId === training.id && w.userId === user.uid,
       );
 
+      if (!filtered.length) continue;
+
       reports.push(this.getTrainingReportByUser(user.uid, training, filtered));
     }
 
@@ -141,8 +143,12 @@ export class TrainingReportService {
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     );
 
-    const from = new Date(workloads[0]?.timestamp) || new Date();
-    const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
+    const from = workloads[0]?.timestamp
+      ? new Date(workloads[0]?.timestamp)
+      : new Date();
+    const to = workloads[workloads.length - 1]?.timestamp
+      ? new Date(workloads[workloads.length - 1]?.timestamp)
+      : from;
 
     // filter out warmup and cooldown
     workloads = workloads.filter(
