@@ -1,9 +1,10 @@
-import { Subgroup } from '@/core/training/type/subgroup.type';
-import { useCoachTraining } from '@/store/coach-training.provider';
-import { DEFAULT_SUBGROUP } from '../trainer-group-day-view/constant/subgroups.constant';
-import { useTrainingPreview } from '@/store/training-preview.provider';
 import { Avatar, Box, Typography } from '@mui/material';
+
+import { DEFAULT_SUBGROUP } from '../trainer-group-day-view/constant/subgroups.constant';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { useCoachTraining } from '@/store/coach-training.provider';
+import { useTrainingPreview } from '@/store/training-preview.provider';
 
 export default function TrainingPreviewMembers() {
   const { training } = useCoachTraining();
@@ -13,8 +14,6 @@ export default function TrainingPreviewMembers() {
     (m) =>
       !selectedComponent?.subgroups.some((sg) => sg.membersIds.includes(m.uid))
   );
-
-  console.log('training', training);
 
   const subgroups: Subgroup[] = selectedComponent
     ? [

@@ -1,11 +1,11 @@
 import { alpha, Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
+import useDashboardCycles from './hooks/use-cycles.hook';
 import { theme } from '@/app/style';
 import { useDashboard } from '@/store/dashboard.provider';
-import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 import { useMain } from '@/store/main.provider';
-import useDashboardCycles from './hooks/use-cycles.hook';
+import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 
 export default function CycleProgress() {
   const mainContext = useMain();

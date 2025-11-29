@@ -12,8 +12,8 @@ import { TrainingInProgressExerciseControl } from './enum/exercise-controls.enum
 import SWControl from './sw-control';
 import { theme } from '@/app/style';
 import type { TrainingExerciseRecordedSet } from '@/core/training/type/training-exercise.type';
-import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import ImageGallery from '@/ui/image-gallery';
 
 interface Props {

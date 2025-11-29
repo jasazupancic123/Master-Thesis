@@ -4,8 +4,8 @@ import { useUndoneExercises } from './context/undone-exercises.provider';
 import UndoneExerciseSet from '@/components/training-in-progress/undone-exercise-set';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { useMain } from '@/store/main.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 export default function UndoneExercisesList() {
   const { activeTraining } = useMain();

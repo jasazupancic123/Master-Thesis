@@ -1,14 +1,15 @@
-import { theme } from '@/app/style';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Training } from '@/core/training/type/training.type';
-import { lib } from '@/lib';
-import { SetState } from '@/lib/common/type/state.type';
-import { useMain } from '@/store/main.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import { Check, Circle, Pause } from '@mui/icons-material';
 import { alpha, Box, SvgIcon, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+
+import { theme } from '@/app/style';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 interface Props {
   component: TrainingComponent & { groupId?: string; trainingId: string };

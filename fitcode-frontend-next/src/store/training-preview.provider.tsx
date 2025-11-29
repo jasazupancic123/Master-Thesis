@@ -1,8 +1,9 @@
 'use client';
 
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { SetState } from '@/lib/common/type/state.type';
 import React, { createContext, useContext, useState } from 'react';
+
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface ITrainingPreviewContext {
   selectedComponent: TrainingComponent | null;

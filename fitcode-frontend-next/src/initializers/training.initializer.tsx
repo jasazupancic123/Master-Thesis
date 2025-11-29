@@ -1,15 +1,14 @@
 'use client';
 
-import { Controller } from '@/core/controller';
-import { TrainingService } from '@/core/training/training.service';
-import { useMain } from '@/store/main.provider';
-import {
-  TrainingIdPageProps,
-  CoachTrainingProvider,
-} from '@/store/coach-training.provider';
-import Alert from '@/ui/alert';
 import { notFound, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+import { Controller } from '@/core/controller';
+import { TrainingService } from '@/core/training/training.service';
+import type { TrainingIdPageProps } from '@/store/coach-training.provider';
+import { CoachTrainingProvider } from '@/store/coach-training.provider';
+import { useMain } from '@/store/main.provider';
+import Alert from '@/ui/alert';
 
 export default function TrainingInitializer({
   children,

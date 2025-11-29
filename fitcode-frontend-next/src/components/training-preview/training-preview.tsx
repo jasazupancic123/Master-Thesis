@@ -1,8 +1,9 @@
 'use client';
 
 import { Box } from '@mui/material';
-import { useCoachTraining } from '@/store/coach-training.provider';
+
 import TrainingPreviewMembers from './training-preview-members';
+import { useCoachTraining } from '@/store/coach-training.provider';
 
 export default function TrainingPreview() {
   const { training } = useCoachTraining();

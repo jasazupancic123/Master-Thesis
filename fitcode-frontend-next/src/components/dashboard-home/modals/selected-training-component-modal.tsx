@@ -1,18 +1,19 @@
+import { Box, Button, Typography } from '@mui/material';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+
 import { startTrainingComponent } from '@/components/athlete/actions/actions-training-component';
 import { core } from '@/core/core.service';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Training } from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { SetState } from '@/lib/common/type/state.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
-import { Box, Button, Typography } from '@mui/material';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 
 interface Props {
   training: Training;

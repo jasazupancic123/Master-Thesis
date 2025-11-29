@@ -34,14 +34,14 @@ import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
+import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 
 export default function TrainingInProgress() {
   const theme = useTheme();

@@ -1,5 +1,6 @@
-import TrainingInitializer from '@/initializers/training.initializer';
 import { Box } from '@mui/material';
+
+import TrainingInitializer from '@/initializers/training.initializer';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
