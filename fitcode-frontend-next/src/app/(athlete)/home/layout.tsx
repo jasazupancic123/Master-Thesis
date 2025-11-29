@@ -8,9 +8,9 @@ import { useEffect, useState } from 'react';
 import AthleteHeader from '@/components/athlete/athlete-header';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import TrainingsInitializer from '@/initializers/trainings.initializer';
+import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (

@@ -1,22 +1,21 @@
-import { AuthUser } from '@/core/auth/type/user.type';
+import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { RefObject } from 'react';
+import toast from 'react-hot-toast';
+
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { Training } from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
-import { SetState } from '@/lib/common/type/state.type';
-import { IMainContext } from '@/store/main.provider';
-import {
-  ITrainingsContext,
-  TRAINING_IN_PROGRESS_STORAGE_KEY,
-} from '@/store/trainings.provider';
-import dayjs from 'dayjs';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { RefObject } from 'react';
-import toast from 'react-hot-toast';
+import type { SetState } from '@/lib/common/type/state.type';
+import type { IMainContext } from '@/store/main.provider';
+import type { ITrainingsContext } from '@/store/trainings.provider';
+import { TRAINING_IN_PROGRESS_STORAGE_KEY } from '@/store/trainings.provider';
 
 export async function startTrainingComponent(
   context: {
@@ -119,8 +118,6 @@ export async function startTrainingComponent(
     exercises,
   });
 
-  console.log('trainingToStart', trainingToStart);
-
   const component = trainingToStart.components.find(
     (c) => c.id === selectedComponent.id
   );
@@ -180,17 +177,6 @@ export async function startTrainingComponent(
   const foundTrainingInProgress = foundTrainingInProgressObject
     ? JSON.parse(foundTrainingInProgressObject.payload)
     : null;
-
-  console.log('new training in progress', {
-    training: trainingToStart,
-    selectedComponent: component,
-    supersets: component.supersets,
-    userId: user.uid,
-    recordedSets: foundTrainingInProgress
-      ? foundTrainingInProgress.recordedSets
-      : [],
-    startOfTraining: foundTrainingInProgress?.startOfTraining || dayjs(),
-  });
 
   setTrainingInProgress({
     training: trainingToStart,

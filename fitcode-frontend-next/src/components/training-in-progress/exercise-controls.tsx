@@ -13,8 +13,8 @@ import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 export default function TrainingInProgressExerciseControls() {
   const { activeTraining, exerciseAiPrescriptions } = useMain();

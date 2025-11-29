@@ -1,15 +1,16 @@
+import { Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
+
+import { startTrainingComponent } from '../actions/actions-training-component';
 import { Components } from '@/core/exercise/constant/components.constant';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Training } from '@/core/training/type/training.type';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
-import { Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
-import { startTrainingComponent } from '../actions/actions-training-component';
 
 interface Props extends ModalProps {
   training: Training;

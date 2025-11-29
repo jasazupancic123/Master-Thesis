@@ -4,22 +4,22 @@ import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
+import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
 import FlaggedAthletes from './flagged-athletes';
+import useDashboardHomeComponents from './hooks/use-components.hook';
+import SelectedTrainingComponentModal from './modals/selected-training-component-modal';
 import TodaySessions from './today-sessions';
+import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
+import type { Training } from '@/core/training/type/training.type';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
+import { useAthlete } from '@/store/athlete.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
-import AthleteReports from './athlete-reports';
-import { useAthlete } from '@/store/athlete.provider';
-import TodaySessionsComponent from './today-sessions-component';
-import SelectedTrainingComponentModal from './modals/selected-training-component-modal';
-import useDashboardHomeComponents from './hooks/use-components.hook';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 interface Props {
   trainings: Training[];

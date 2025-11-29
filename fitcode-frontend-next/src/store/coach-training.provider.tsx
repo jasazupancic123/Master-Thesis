@@ -1,7 +1,8 @@
-import { Institution } from '@/core/institution/type/institution.type';
-import { Training } from '@/core/training/type/training.type';
-import { SetState } from '@/lib/common/type/state.type';
 import { createContext, useContext, useState } from 'react';
+
+import type { Institution } from '@/core/institution/type/institution.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 export type TrainingIdPageProps = {
   training: Training;

@@ -7,8 +7,8 @@ import type {
   TrainingExerciseExtended,
 } from '@/core/training/type/training-exercise.type';
 import type { IMainContext } from '@/store/main.provider';
-import type { ITrainingsContextDefined } from '@/store/trainings.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
+import type { ITrainingsContextDefined } from '@/store/trainings.provider';
 
 export function handleChangeSuperset(
   input: { superset: Superset; i: number },

@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 
 import AthleteSuperset from './athlete-superset';
+import StartTrainingComponentModal from './modals/start-training-component-modal';
 import { core } from '@/core/core.service';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { Training } from '@/core/training/type/training.type';
@@ -12,7 +13,6 @@ import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import StartTrainingComponentModal from './modals/start-training-component-modal';
 
 interface Props {
   training: Training;

@@ -1,11 +1,11 @@
-import { useAthlete } from '@/store/athlete.provider';
-import { Box, IconButton, Typography } from '@mui/material';
-import TrainingReportCard from '../athlete/training-report-card';
-import { useTrainings } from '@/store/trainings.provider';
-import { useState } from 'react';
-import { TrainingReport } from '@/core/training/type/training-report.type';
 import { ExpandLessOutlined, ExpandMoreOutlined } from '@mui/icons-material';
+import { Box, IconButton, Typography } from '@mui/material';
+import { useState } from 'react';
+
+import TrainingReportCard from '../athlete/training-report-card';
 import { theme } from '@/app/style';
+import type { TrainingReport } from '@/core/training/type/training-report.type';
+import { useTrainings } from '@/store/trainings.provider';
 
 export default function AthleteReports() {
   const { reports } = useTrainings();

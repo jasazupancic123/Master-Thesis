@@ -1,9 +1,10 @@
-import { Group } from '@/core/institution/type/group.type';
+import { useEffect, useState } from 'react';
+
+import type { Group } from '@/core/institution/type/group.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Training } from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useMain } from '@/store/main.provider';
-import { useState, useEffect } from 'react';
 
 export default function useDashboardHomeComponents(
   selectedGroups: Group[],

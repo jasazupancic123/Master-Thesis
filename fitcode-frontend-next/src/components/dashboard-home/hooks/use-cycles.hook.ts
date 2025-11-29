@@ -1,7 +1,8 @@
-import { Cycle } from '@/core/institution/type/cycle.type';
-import { Group } from '@/core/institution/type/group.type';
 import dayjs from 'dayjs';
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import type { Cycle } from '@/core/institution/type/cycle.type';
+import type { Group } from '@/core/institution/type/group.type';
 
 export default function useDashboardCycles(selectedGroups: Group[]) {
   const [cycles, setCycles] = useState<(Cycle & { groupId: string })[]>([]);

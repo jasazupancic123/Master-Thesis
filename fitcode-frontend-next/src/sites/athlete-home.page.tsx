@@ -2,8 +2,8 @@
 
 import { Box } from '@mui/material';
 
-import { useAthlete } from '@/store/athlete.provider';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
+import { useAthlete } from '@/store/athlete.provider';
 
 export default function AthleteHomePage() {
   const { trainings } = useAthlete();

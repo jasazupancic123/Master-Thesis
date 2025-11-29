@@ -5,8 +5,8 @@ import { useTrainingInProgressUtils } from '../context/training-in.progress-util
 import { useUndoneExercises } from '../context/undone-exercises.provider';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useMain } from '@/store/main.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
 
 export default function FinishPauseTrainingModal(

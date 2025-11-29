@@ -1,12 +1,12 @@
 import { Box } from '@mui/material';
 import dayjs from 'dayjs';
 
-import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import { useDashboard } from '@/store/dashboard.provider';
-import { Training } from '@/core/training/type/training.type';
-import { Group } from '@/core/institution/type/group.type';
 import TodaySessionsComponent from './today-sessions-component';
-import { SetState } from '@/lib/common/type/state.type';
+import type { Group } from '@/core/institution/type/group.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   trainings: Training[];
