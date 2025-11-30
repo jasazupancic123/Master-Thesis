@@ -4,7 +4,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
-import { FirestoreCollection } from './common/enum/firestore-collection.enum';
 import { User } from './common/type/firebase-auth.type';
 import { NodeEnv } from './config/environment-validation-schema';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
@@ -46,29 +45,24 @@ export class AppController {
   async init(@RequestUser() user: User) {
     const isAthlete = this.firebase.isAthlete(user);
 
-    const [
-      profile,
-      institutions,
-      exerciseAiPrescriptions,
-      meta,
-      activeTraining,
-    ] = await Promise.all([
-      this.profileService.findOneById(user.uid),
-      this.institutionService.findAll(user),
-      this.exerciseAiPrescriptionService.findAll(),
-      this.firebase.firestore.collection(FirestoreCollection.META).get(),
-      isAthlete
-        ? this.activeTrainingService.getActiveTrainingByAthlete(user, user.uid)
-        : null,
-    ]);
+    const [profile, institutions, exerciseAiPrescriptions, activeTraining] =
+      await Promise.all([
+        this.profileService.findOneById(user.uid),
+        this.institutionService.findAll(user),
+        this.exerciseAiPrescriptionService.findAll(),
+        isAthlete
+          ? this.activeTrainingService.getActiveTrainingByAthlete(
+              user,
+              user.uid,
+            )
+          : null,
+      ]);
 
     return {
       profile,
       institutions,
       exerciseAiPrescriptions,
       activeTraining,
-      globalExercisesRevision:
-        meta.docs.find((doc) => doc.id === 'exercises')?.data().revision || 0,
     };
   }
 }

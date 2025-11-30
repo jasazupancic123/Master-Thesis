@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
-  FieldValue,
   Query,
 } from 'firebase-admin/firestore';
 
@@ -70,6 +69,7 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
       name: input.name,
       imageUrl: input.imageUrl,
       members: [],
+      exerciseRevisions: 0,
     });
 
     const ref = this.doc(id);
@@ -92,10 +92,5 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
   async delete(id: string) {
     const ref = this.doc(id);
     await ref.delete();
-  }
-
-  async incrementExerciseRevisions(institutionId: string) {
-    const ref = this.doc(institutionId);
-    await ref.update({ exerciseRevisions: FieldValue.increment(1) });
   }
 }
