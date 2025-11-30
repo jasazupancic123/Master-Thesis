@@ -5,8 +5,8 @@ import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-fiel
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
-import { useTraining } from '@/store/training.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
+import { useTrainings } from '@/store/trainings.provider';
 
 export default function useRecoveryTime(
   selected: string,
@@ -16,7 +16,7 @@ export default function useRecoveryTime(
 ) {
   const { activeTraining } = useMain();
 
-  const { trainingInProgress } = useTraining() || {};
+  const { trainingInProgress } = useTrainings() || {};
   const { selectedExercise, setIndex, supersetIndex } =
     useTrainingInProgress() || {};
 

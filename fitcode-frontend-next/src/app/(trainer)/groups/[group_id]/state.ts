@@ -30,6 +30,7 @@ export async function handleSaveGroup(
     router,
     () =>
       controller.updateGroup(selectedGroup.institutionId, selectedGroup.id, {
+        shortName: selectedGroup.shortName,
         cycles: selectedGroup.cycles,
       }),
     (group) => {

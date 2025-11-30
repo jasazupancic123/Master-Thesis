@@ -28,6 +28,7 @@ import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import LoadingOverlay from '@/ui/loading-overlay';
 
 export default function TrainerCycleView() {
   const { exercises: allExercises } = useMain();
@@ -44,6 +45,7 @@ export default function TrainerCycleView() {
   const { isSticky } = useTrainerCycleViewSticky();
 
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
+  const [isCreatingTraining, setIsCreatingTraining] = useState(false);
 
   const HorizontalItems = () => {
     return (
@@ -217,6 +219,7 @@ export default function TrainerCycleView() {
                       )
                     }
                     selectedTargets={selectedTargets}
+                    setIsCreatingTraining={setIsCreatingTraining}
                   />
                 </Fragment>
               ))}
@@ -224,6 +227,7 @@ export default function TrainerCycleView() {
           </Stack>
         </Box>
       )}
+      {isCreatingTraining && <LoadingOverlay title="Creating training..." />}
     </Box>
   );
 }

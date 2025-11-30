@@ -31,7 +31,10 @@ import { ProfileController } from '@/core/profile/profile.controller';
 import type { Profile } from '@/core/profile/type/user.type';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
-import { LINK_DASHBOARD, LINK_TRAININGS } from '@/lib/common/const/nav.const';
+import {
+  LINK_ATHLETE_HOME,
+  LINK_DASHBOARD,
+} from '@/lib/common/const/nav.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -191,7 +194,7 @@ export default function ProfilePage() {
                 customClaims.role.includes(UserRole.MANAGER)
               ) {
                 router.push(LINK_DASHBOARD.href);
-              } else router.push(LINK_TRAININGS.href);
+              } else router.push(LINK_ATHLETE_HOME.href);
             }}
           >
             <ArrowBack />

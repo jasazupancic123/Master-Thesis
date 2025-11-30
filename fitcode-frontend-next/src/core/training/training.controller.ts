@@ -45,6 +45,10 @@ export class TrainingController extends BaseController {
     return this.api.get<Training[]>('/', { query, ...options });
   }
 
+  async findById(trainingId: string) {
+    return this.api.get<Training>(`/${trainingId}`);
+  }
+
   async findAllIndividual(trainingId: string, options?: FetchOptions) {
     return this.api.get<Record<string, Training>>(
       `/${trainingId}/individual`,

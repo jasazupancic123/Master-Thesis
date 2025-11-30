@@ -14,11 +14,11 @@ import { type SetState } from '@/lib/common/type/state.type';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
-export interface TrainingProviderProps {
+export interface TrainingsProviderProps {
   reports: TrainingReport[];
 }
 
-interface ITrainingContext extends TrainingProviderProps {
+interface ITrainingsContextProps extends TrainingsProviderProps {
   clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
@@ -29,17 +29,21 @@ interface ITrainingContext extends TrainingProviderProps {
   ) => void;
 }
 
-const TrainingContext = createContext<ITrainingContext | undefined>(undefined);
+const TrainingsContext = createContext<ITrainingsContextProps | undefined>(
+  undefined
+);
 
-export type ITrainingContextDefined = Omit<
-  ReturnType<typeof useTraining>,
+export type ITrainingsContext = ReturnType<typeof useTrainings>;
+
+export type ITrainingsContextDefined = Omit<
+  ReturnType<typeof useTrainings>,
   'trainingInProgress'
 > & {
   trainingInProgress: TrainingInProgress;
 };
 
-export const TrainingProvider = (
-  props: TrainingProviderProps & React.PropsWithChildren
+export const TrainingsProvider = (
+  props: TrainingsProviderProps & React.PropsWithChildren
 ) => {
   const { activeTraining } = useMain();
   const { children, reports } = props;
@@ -159,7 +163,7 @@ export const TrainingProvider = (
   };
 
   return (
-    <TrainingContext.Provider
+    <TrainingsContext.Provider
       value={{
         reports,
         clearTrainingState,
@@ -170,8 +174,8 @@ export const TrainingProvider = (
       }}
     >
       {children}
-    </TrainingContext.Provider>
+    </TrainingsContext.Provider>
   );
 };
 
-export const useTraining = () => useContext(TrainingContext)!;
+export const useTrainings = () => useContext(TrainingsContext)!;

@@ -48,6 +48,7 @@ interface TrainingWeekDatesProps {
     trainingId: string,
     componentId: string
   ) => Promise<void>;
+  setIsCreatingTraining?: SetState<boolean>;
 }
 
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
@@ -78,6 +79,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     setTrainingInPeriodForModal,
     addTrainingComponent,
     deleteTrainingComponent,
+    setIsCreatingTraining,
   } = props;
 
   return week.map((date, j) => {
@@ -151,6 +153,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                         selectedTargets,
                         setOpenOverwriteModal,
                         setTrainingInPeriodForModal,
+                        setIsCreatingTraining,
                       },
                       groupContext,
                       mainContext

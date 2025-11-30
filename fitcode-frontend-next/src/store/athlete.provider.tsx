@@ -11,7 +11,7 @@ import { UserRole } from '@/core/profile/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
-  LINK_TRAININGS,
+  LINK_ATHLETE_HOME,
   LINKS_SIDEBAR_GROUP_VIEW,
 } from '@/lib/common/const/nav.const';
 import type { Fetch } from '@/lib/common/type/fetch.type';
@@ -85,7 +85,7 @@ export function AthleteProvider(props: React.PropsWithChildren) {
     fetchData().then();
   }, []);
 
-  let currentFilter = LINK_TRAININGS;
+  let currentFilter = LINK_ATHLETE_HOME;
   const url = new URL(window.location.href);
   const lastItemInUrl = url.pathname.split('/').pop();
   Object.values(LINKS_SIDEBAR_GROUP_VIEW[UserRole.ATHLETE]).map((link) => {
