@@ -1,3 +1,4 @@
+import type { SxProps } from '@mui/material/styles';
 import { styled } from '@mui/material/styles';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 
@@ -12,6 +13,7 @@ export function PieCenterLabel({
   label,
   position,
   fontSize,
+  sx,
 }: {
   label: string;
   position?: {
@@ -19,6 +21,7 @@ export function PieCenterLabel({
     left?: number;
   };
   fontSize?: number;
+  sx?: SxProps;
 }) {
   const { width, height, left, top } = useDrawingArea();
 
@@ -26,7 +29,7 @@ export function PieCenterLabel({
   const y = (position?.top !== undefined ? position.top : top) + height / 2;
 
   return (
-    <StyledText x={x} y={y} sx={{ fontSize: fontSize ?? 14 }}>
+    <StyledText x={x} y={y} sx={{ fontSize: fontSize ?? 14, ...sx }}>
       {label}
     </StyledText>
   );
