@@ -94,6 +94,17 @@ export class TrainingController {
     );
   }
 
+  @Get(':trainingId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async findById(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ): Promise<Training> {
+    return await this.trainingService.findOneByIdOrFail(user, {
+      trainingId,
+    });
+  }
+
   @Get(':trainingId/individual')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async findAllIndividual(

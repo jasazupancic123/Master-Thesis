@@ -2,29 +2,17 @@ import { Check, Circle, Pause } from '@mui/icons-material';
 import { Box, Collapse, IconButton, SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
-import toast from 'react-hot-toast';
 
 import AthleteSuperset from './athlete-superset';
+import StartTrainingComponentModal from './modals/start-training-component-modal';
 import { core } from '@/core/core.service';
-import { Components } from '@/core/exercise/constant/components.constant';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
-import { TrainingController } from '@/core/training/training.controller';
-import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
-import {
-  TRAINING_IN_PROGRESS_STORAGE_KEY,
-  useTraining,
-} from '@/store/training.provider';
-import MyModal from '@/ui/modal';
 
 interface Props {
   training: Training;
@@ -40,7 +28,6 @@ interface Props {
 
 export default function AthleteTrainingComponents(props: Props) {
   const theme = useTheme();
-  const router = useRouter();
 
   const {
     training,
@@ -54,11 +41,8 @@ export default function AthleteTrainingComponents(props: Props) {
     timeout,
   } = props;
 
-  const { setTrainingInProgress } = useTraining();
-  const { exercises, activeTraining, setActiveTraining } = useMain();
+  const { activeTraining } = useMain();
   const { user } = useAuthenticatedAuth();
-
-  const hasPlayedAudioRef = useRef(false);
 
   return (
     <Box
@@ -211,186 +195,12 @@ export default function AthleteTrainingComponents(props: Props) {
         </Box>
       </Collapse>
 
-      <MyModal
-        isOpen={modal}
-        setIsOpen={(open) => setModal(open)}
-        cancelText="Cancel"
-        onCancel={() => setModal(false)}
-        onConfirm={async () => {
-          if (!selectedComponent) {
-            toast.error('No component selected.');
-            return;
-          }
-
-          let trainingToStart: Training | null = null;
-          const controller = TrainingController.getInstance();
-
-          try {
-            if (activeTraining && activeTraining.id === training.id) {
-              const isCompleted =
-                activeTraining.statuses?.find(
-                  (s) =>
-                    s.componentId === selectedComponent.id &&
-                    s.trainingId === training.id
-                )?.status === TrainingStatus.COMPLETED;
-
-              if (isCompleted) {
-                toast.error(
-                  'This training component has already been completed.'
-                );
-
-                setModal(false);
-                return;
-              }
-            }
-
-            const isDifferentActiveTraining = activeTraining?.statuses.some(
-              (a) => a.trainingId !== training.id
-            );
-
-            if (isDifferentActiveTraining) {
-              toast.error(
-                'Another training is already in progress. Please finish it before starting a new one.'
-              );
-
-              setModal(false);
-
-              return;
-            }
-
-            // restart training with new component
-            const result = await controller.startTrainingComponent(
-              training.id,
-              selectedComponent.id
-            );
-
-            trainingToStart = result.trainings[user.uid];
-
-            const errors = result.errors as unknown as {
-              field: string;
-              message: string;
-            }[];
-
-            if (errors && errors.length > 0) {
-              toast.error(`Error: ${errors[0].message}`);
-              setModal(false);
-
-              return;
-            }
-          } catch (e) {
-            console.error(e);
-            toast.error((e as Error).message || 'An error occurred.');
-            return;
-          }
-
-          if (!trainingToStart) {
-            toast.error('Failed to start training. Please try again.');
-            return;
-          }
-
-          trainingToStart = TrainingService.mapData(trainingToStart, {
-            exercises,
-          });
-
-          const component = trainingToStart.components.find(
-            (c) => c.id === selectedComponent.id
-          );
-
-          if (!component) {
-            toast.error(
-              'Selected component not found in training. Please try again.'
-            );
-
-            return;
-          }
-
-          const newStatus = {
-            id: `${trainingToStart.id}-${component.id}-${user.uid}`,
-            trainingId: trainingToStart.id,
-            componentId: component.id,
-            status: TrainingStatus.IN_PROGRESS,
-            userId: user.uid,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-
-          setActiveTraining((prev) => {
-            if (!prev)
-              return {
-                ...trainingToStart,
-                workloads: [],
-                statuses: [newStatus],
-              };
-
-            const foundStatus = prev.statuses?.find(
-              (s) =>
-                s.trainingId === trainingToStart!.id &&
-                s.componentId === component.id
-            );
-
-            return {
-              ...prev,
-              statuses: prev.statuses
-                ? foundStatus
-                  ? prev.statuses.map((s) =>
-                      s.componentId === component.id &&
-                      s.trainingId === trainingToStart.id
-                        ? {
-                            ...s,
-                            status: TrainingStatus.IN_PROGRESS,
-                            updatedAt: new Date(),
-                          }
-                        : s
-                    )
-                  : [...prev.statuses, newStatus]
-                : [newStatus],
-            };
-          });
-
-          const foundTrainingInProgressObject =
-            await lib.common.indexedDb.items.get(
-              `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingToStart.id}_${component.id}`
-            );
-
-          const foundTrainingInProgress = foundTrainingInProgressObject
-            ? JSON.parse(foundTrainingInProgressObject.payload)
-            : null;
-
-          setTrainingInProgress({
-            training: trainingToStart,
-            selectedComponent: component,
-            supersets: component.supersets,
-            userId: user.uid,
-            recordedSets: foundTrainingInProgress
-              ? foundTrainingInProgress.recordedSets
-              : [],
-            startOfTraining:
-              foundTrainingInProgress?.startOfTraining || dayjs(),
-          } as TrainingInProgress);
-
-          setModal(false);
-
-          if (hasPlayedAudioRef.current === false) {
-            lib.common.audio.playSound(
-              '/sounds/training-in-progress-start.mp3'
-            );
-            hasPlayedAudioRef.current = true;
-          }
-
-          router.push(
-            `/trainings/${training.id}/components/${selectedComponent.id}`
-          );
-        }}
-      >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          Start{' '}
-          <b>
-            {Components.find((c) => c.field === selectedComponent?.id)?.name ||
-              'training'}
-          </b>
-          ?
-        </Typography>
-      </MyModal>
+      <StartTrainingComponentModal
+        training={training}
+        selectedComponent={selectedComponent}
+        open={modal}
+        setOpen={setModal}
+      />
     </Box>
   );
 }

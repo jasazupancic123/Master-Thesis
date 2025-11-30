@@ -1,6 +1,6 @@
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import type { ITrainingContextDefined } from '@/store/training.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
+import type { ITrainingsContextDefined } from '@/store/trainings.provider';
 
 export function updateTrainingExerciseWithAI(
   repsCountL: number,
@@ -9,7 +9,7 @@ export function updateTrainingExerciseWithAI(
   tempoR: string | null | undefined,
   passedExercise: TrainingExercise | undefined,
   updateSelectedExercise: boolean | undefined,
-  trainingCtx: ITrainingContextDefined,
+  trainingCtx: ITrainingsContextDefined,
   trainingInProgressCtx: ITrainingInProgressContext
 ) {
   const { updateTrainingInProgress } = trainingCtx;
@@ -52,7 +52,7 @@ export function updateTrainingExerciseWithAI(
 }
 
 export const goToNextExercise = (context: {
-  useTraining: ITrainingContextDefined;
+  useTraining: ITrainingsContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
 }) => {
   const { useTraining, useTrainingInProgress } = context;
@@ -77,7 +77,7 @@ export const goToNextExercise = (context: {
 };
 
 export const goToPreviousExercise = (context: {
-  useTraining: ITrainingContextDefined;
+  useTraining: ITrainingsContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
 }) => {
   const { useTraining, useTrainingInProgress } = context;
