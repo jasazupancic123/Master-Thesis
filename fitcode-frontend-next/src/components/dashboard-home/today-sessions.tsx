@@ -11,9 +11,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 interface Props {
   trainings: Training[];
   activeComponent?: (TrainingComponent & { trainingId?: string }) | null;
-  setSelectedTraining?: SetState<Training | null>;
-  setSelectedTrainingComponent?: SetState<TrainingComponent | null>;
-  setOpenTrainingComponentModal?: SetState<boolean>;
 }
 
 export default function TodaySessions(props: Props) {
@@ -23,13 +20,7 @@ export default function TodaySessions(props: Props) {
     ? dashboardContext.selectedGroups
     : null;
 
-  const {
-    trainings,
-    activeComponent,
-    setSelectedTraining,
-    setSelectedTrainingComponent,
-    setOpenTrainingComponentModal,
-  } = props;
+  const { trainings, activeComponent } = props;
 
   const todayComponents: (TrainingComponent & {
     groupId: string | undefined;
@@ -51,13 +42,7 @@ export default function TodaySessions(props: Props) {
     );
 
   return (
-    <Box
-      width="100%"
-      display="flex"
-      flexDirection="column"
-      gap={2}
-      sx={{ p: 1 }}
-    >
+    <Box width="100%" display="flex" flexDirection="column" gap={2}>
       {todayComponents.map((component, i) => {
         if (
           activeComponent &&
@@ -72,9 +57,6 @@ export default function TodaySessions(props: Props) {
             component={component}
             trainings={trainings}
             index={i}
-            setSelectedTraining={setSelectedTraining}
-            setSelectedTrainingComponent={setSelectedTrainingComponent}
-            setOpenTrainingComponentModal={setOpenTrainingComponentModal}
           />
         );
       })}

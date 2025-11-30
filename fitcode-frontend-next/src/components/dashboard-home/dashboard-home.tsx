@@ -42,21 +42,12 @@ export default function DashboardHome(props: Props) {
     ? dashboardContext.selectedGroups
     : mainContext.groups;
 
-  const {
-    selectedTrainingComponent,
-    setSelectedTrainingComponent,
-    selectedTraining,
-    setSelectedTraining,
-    componentItems,
-    activeComponent,
-  } = useDashboardHomeComponents(selectedGroups, trainings);
-
-  const [openTrainingComponentModal, setOpenTrainingComponentModal] =
-    useState(false);
+  const { componentItems, activeComponent } = useDashboardHomeComponents(
+    selectedGroups,
+    trainings
+  );
 
   const [mounted, setMounted] = useState(false);
-
-  const hasPlayedAudioRef = useRef(false);
 
   useEffect(() => {
     // small timeout is optional, just to ensure it's after first paint
@@ -136,6 +127,9 @@ export default function DashboardHome(props: Props) {
             <Box
               width={COMPONENT_ITEMS_CONTAINER_WIDTH}
               display="flex"
+              flexWrap={
+                screenSize.isMobile || screenSize.isTablet ? 'wrap' : undefined
+              }
               alignItems="center"
               gap={0.5}
             >
@@ -149,6 +143,7 @@ export default function DashboardHome(props: Props) {
                   <Box
                     key={item.id}
                     width={`${item.percentage}%`}
+                    minWidth={80}
                     display="flex"
                     flexDirection="column"
                     alignItems="flex-start"
@@ -199,7 +194,12 @@ export default function DashboardHome(props: Props) {
                 );
               })}
             </Box>
-            <Box display="flex" justifyContent="flex-end" alignItems="center">
+            <Box
+              width="20%"
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+            >
               <Box
                 display="flex"
                 flexDirection="column"
@@ -254,9 +254,6 @@ export default function DashboardHome(props: Props) {
                 }}
                 trainings={trainings}
                 index={0}
-                setSelectedTraining={setSelectedTraining}
-                setSelectedTrainingComponent={setSelectedTrainingComponent}
-                setOpenTrainingComponentModal={setOpenTrainingComponentModal}
               />
             </Grid2>
           )}
@@ -282,9 +279,6 @@ export default function DashboardHome(props: Props) {
                     }
                   : null
               }
-              setSelectedTraining={setSelectedTraining}
-              setSelectedTrainingComponent={setSelectedTrainingComponent}
-              setOpenTrainingComponentModal={setOpenTrainingComponentModal}
             />
           </Grid2>
           <Grid2
@@ -329,18 +323,6 @@ export default function DashboardHome(props: Props) {
           </Grid2>
         </Grid2>
       </Box>
-
-      {selectedTraining && selectedTrainingComponent && (
-        <SelectedTrainingComponentModal
-          open={openTrainingComponentModal}
-          setOpen={setOpenTrainingComponentModal}
-          training={selectedTraining}
-          setTraining={setSelectedTraining}
-          component={selectedTrainingComponent}
-          setComponent={setSelectedTrainingComponent}
-          hasPlayedAudioRef={hasPlayedAudioRef}
-        />
-      )}
     </DashboardPageContainer>
   );
 }

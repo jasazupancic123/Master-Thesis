@@ -102,7 +102,7 @@ export default function TrainingReportCard({ report }: Props) {
             ]}
             colors={[
               theme.palette.primary.main,
-              theme.palette.background.light,
+              theme.palette.background.default,
             ]}
           >
             <ChartsTooltip trigger="none" />
@@ -136,7 +136,7 @@ export default function TrainingReportCard({ report }: Props) {
               ]}
               colors={[
                 theme.palette.primary.main,
-                theme.palette.background.light,
+                theme.palette.background.default,
               ]}
             >
               <PieCenterLabel
@@ -165,7 +165,7 @@ export default function TrainingReportCard({ report }: Props) {
               yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
               colors={[theme.palette.primary.main]}
               sx={{
-                backgroundColor: theme.palette.background.light,
+                backgroundColor: theme.palette.background.default,
               }}
             >
               <BarPlot />
@@ -216,7 +216,7 @@ export default function TrainingReportCard({ report }: Props) {
                   yAxis={[{ position: 'none', scaleType: 'band', data: [''] }]}
                   colors={[theme.palette.primary.main]}
                   sx={{
-                    backgroundColor: theme.palette.background.light,
+                    backgroundColor: theme.palette.background.default,
                     borderRadius: 2,
                     width: '100%',
                   }}
@@ -278,7 +278,7 @@ const CustomValueBox = ({ value, title }: { value: string; title: string }) => {
       justifyContent="center"
       alignItems="center"
       sx={{
-        backgroundColor: theme.palette.background.light,
+        backgroundColor: theme.palette.background.default,
         border: `1px solid ${theme.palette.primary.main}`,
         borderRadius: '5px',
       }}
