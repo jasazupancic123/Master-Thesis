@@ -36,41 +36,43 @@ export default function AthleteReports() {
         <TrainingReportCard key={i} report={report} />
       ))}
 
-      <IconButton
-        sx={{ p: 0, m: 0, mt: 1 }}
-        onClick={() => {
-          if (reports.data.length > filteredReports.length) {
-            loadMoreReports();
-            return;
-          }
+      {reports.data.length > 1 && (
+        <IconButton
+          sx={{ p: 0, m: 0, mt: 1 }}
+          onClick={() => {
+            if (reports.data.length > filteredReports.length) {
+              loadMoreReports();
+              return;
+            }
 
-          showLessReports();
-        }}
-      >
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          gap={0.5}
-          sx={{
-            backgroundColor: theme.palette.background.dark,
-            borderRadius: 4,
-            p: 0.5,
+            showLessReports();
           }}
         >
-          {reports.data.length > filteredReports.length ? (
-            <>
-              <ExpandMoreOutlined sx={{ fontSize: 12 }} />
-              <Typography fontSize={12}>Load more</Typography>
-            </>
-          ) : (
-            <>
-              <ExpandLessOutlined sx={{ fontSize: 12 }} />
-              <Typography fontSize={12}>Show less</Typography>
-            </>
-          )}
-        </Box>
-      </IconButton>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            gap={0.5}
+            sx={{
+              backgroundColor: theme.palette.background.dark,
+              borderRadius: 4,
+              p: 0.5,
+            }}
+          >
+            {reports.data.length > filteredReports.length ? (
+              <>
+                <ExpandMoreOutlined sx={{ fontSize: 12 }} />
+                <Typography fontSize={12}>Load more</Typography>
+              </>
+            ) : (
+              <>
+                <ExpandLessOutlined sx={{ fontSize: 12 }} />
+                <Typography fontSize={12}>Show less</Typography>
+              </>
+            )}
+          </Box>
+        </IconButton>
+      )}
     </Box>
   );
 }

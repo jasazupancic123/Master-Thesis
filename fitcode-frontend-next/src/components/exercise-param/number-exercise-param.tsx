@@ -7,8 +7,7 @@ import {
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import ExerciseParamValueText from './exercise-param-value-text';
-import useRecoveryTime from './hooks/use-recovery-time';
-import NumericParamInputBox from './numeric-param-input-box';
+import NumericParamInputBoxModal from './numeric-param-input-box';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
@@ -35,12 +34,14 @@ interface Props {
   readOnly?: boolean;
   disableOptions?: boolean;
   disable?: boolean;
+  setIndex?: number;
 }
 
 export function NumberExerciseParam(props: Props) {
   const theme = useTheme();
 
   const {
+    exercise,
     options,
     selected,
     value: initValue,
@@ -55,6 +56,7 @@ export function NumberExerciseParam(props: Props) {
     disableOptions = false,
     disable = false,
     readOnly = false,
+    setIndex,
   } = props;
 
   const group = useGroup() ?? {};
@@ -70,14 +72,6 @@ export function NumberExerciseParam(props: Props) {
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<number | string>(initValue as number);
-
-  // hook to manage recovery time if param is recTime - decrease value every second if set not completed
-  const recoveryTime = useRecoveryTime(
-    selected,
-    initValue,
-    setValue,
-    trainingInProgressSecondaryItem
-  );
 
   const anchorEl = useRef<HTMLElement | null>(null);
   const valueBoxRef = useRef<HTMLDivElement | null>(null);
@@ -223,7 +217,7 @@ export function NumberExerciseParam(props: Props) {
             px: 2,
             zIndex: 10,
             position: 'relative',
-            cursor: 'pointer',
+            cursor: trainingInProgressPrimaryItem ? 'pointer' : undefined,
             userSelect: 'none',
           }}
         >
@@ -242,9 +236,11 @@ export function NumberExerciseParam(props: Props) {
           </Box>
 
           {open && onInputChange && typeof value === 'number' && (
-            <NumericParamInputBox
-              anchorEl={anchorEl.current}
+            <NumericParamInputBoxModal
               value={value}
+              exercise={exercise}
+              setNumber={setIndex !== undefined ? setIndex + 1 : undefined}
+              param={exerciseParam.name}
               open={open}
               setOpen={setOpen}
               onSubOptionChange={onInputChange}

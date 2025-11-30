@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import type { Group } from '@/core/institution/type/group.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { Training } from '@/core/training/type/training.type';
-import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useDashboardHomeComponents(
@@ -11,13 +10,6 @@ export default function useDashboardHomeComponents(
   trainings: Training[]
 ) {
   const { activeTraining } = useMain();
-
-  const [selectedTrainingComponent, setSelectedTrainingComponent] =
-    useState<TrainingComponent | null>(null);
-
-  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
-    null
-  );
 
   const [componentItems, setComponentItems] = useState<
     {
@@ -78,10 +70,6 @@ export default function useDashboardHomeComponents(
   }, [selectedGroups, trainings]);
 
   return {
-    selectedTrainingComponent,
-    setSelectedTrainingComponent,
-    selectedTraining,
-    setSelectedTraining,
     componentItems,
     activeComponent,
   };

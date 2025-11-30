@@ -3,6 +3,7 @@ import type {
   ExerciseParamFieldExtended,
   ExerciseSet,
 } from '../type/exercise-set.type';
+import type { Workload } from '../type/workload.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import {
@@ -122,7 +123,7 @@ export class TrainingExerciseSetUtil {
   }
 
   getTempo(
-    set?: ExerciseSet,
+    set?: ExerciseSet | Workload,
     removeIdle?: boolean
   ): [number, number, number, number] | [number, number, number] {
     if (!set) return [2, 0, 0, 0];

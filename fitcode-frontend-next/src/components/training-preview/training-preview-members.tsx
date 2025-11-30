@@ -45,7 +45,7 @@ export default function TrainingPreviewMembers() {
           flexDirection="column"
           justifyContent="center"
           alignItems="flex-start"
-          gap={1}
+          gap={0.5}
         >
           <Box
             key={`subgroup-box-${subgroup.id}-${index}`}
@@ -67,9 +67,11 @@ export default function TrainingPreviewMembers() {
               />
             ))}
           </Box>
-          <Typography fontSize={12}>
-            {subgroup.name} #({subgroup.membersIds.length})
-          </Typography>
+          {selectedComponent && (
+            <Typography fontSize={12}>
+              {subgroup.name} #{subgroup.membersIds.length}
+            </Typography>
+          )}
         </Box>
       ))}
     </Box>
