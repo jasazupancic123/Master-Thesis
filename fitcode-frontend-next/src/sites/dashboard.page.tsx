@@ -1,6 +1,7 @@
 'use client';
 
-import { Typography } from '@mui/material';
+import { Refresh } from '@mui/icons-material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
 
 import ExercisesPage from './exercises.page';
@@ -30,15 +31,13 @@ import { useMain } from '@/store/main.provider';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();
-  const { profile } = useMain();
-
-  const { filter, institutions, selectedInstitution, trainings } =
-    useDashboard();
+  const { profile, reloadExercises } = useMain();
+  const { filter, institutions, selectedInstitution } = useDashboard();
 
   const renderContent = () => {
     switch (filter.id) {
       case LINK_DASHBOARD_HOME.id: {
-        return <DashboardHome trainings={trainings} />;
+        return <DashboardHome />;
       }
       case LINK_DASHBOARD_SCHEDULE.id: {
         return <DashboardSchedule />;
@@ -50,7 +49,15 @@ export default function DashboardPage() {
         return <DashboardMembers />;
       }
       case LINK_DASHBOARD_SETTINGS.id: {
-        return <>Dashboard settings page</>;
+        return (
+          <Box>
+            <Tooltip title="Refresh Exercises">
+              <IconButton onClick={reloadExercises}>
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
       }
       case LINK_DASHBOARD_PLANNING.id: {
         return <DashboardGroups />;

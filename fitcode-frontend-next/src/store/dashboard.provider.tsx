@@ -17,16 +17,10 @@ import type {
   UpdateInstitution,
 } from '@/core/institution/type/institution.type';
 import type { UserRole } from '@/core/profile/enum/user-role.enum';
-import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import { DASHBOARD_VIEWS } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-
-interface Props extends React.PropsWithChildren {
-  institutionId: string;
-  trainings: Training[];
-}
 
 export interface IDashboardContext {
   filter: ILink;
@@ -37,8 +31,6 @@ export interface IDashboardContext {
   setSelectedInstitution: SetState<Institution | null>;
   selectedGroups: Group[];
   setSelectedGroups: SetState<Group[]>;
-  trainings: Training[];
-  setTrainings: SetState<Training[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
   updateInstitution: (
@@ -60,9 +52,8 @@ const DashboardContext = createContext<IDashboardContext | null>(null);
 
 export const useDashboard = () => useContext(DashboardContext)!;
 
-export function DashboardProvider(props: Props) {
-  const { children, institutionId, trainings: propsTrainings } = props;
-
+export function DashboardProvider(props: React.PropsWithChildren) {
+  const { children } = props;
   const { user, role } = useAuthenticatedAuth();
   const {
     users,
@@ -70,19 +61,22 @@ export function DashboardProvider(props: Props) {
     setProfiles,
     groups,
     setGroups,
+    institution: propsInstitution,
     institutions: propsInstitutions,
   } = useMain();
 
   const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
-
   const [institutions, setInstitutions] = useState<Institution[]>(() =>
     core.institution.mapUsers(propsInstitutions || [], users)
   );
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<Institution | null>(() => {
-      const institution = propsInstitutions.find((i) => i.id === institutionId);
+      const institution = propsInstitutions.find(
+        (i) => i.id === propsInstitution.id
+      );
+
       if (!institution) return null;
 
       core.institution.mapUsers([institution], users);
@@ -101,8 +95,6 @@ export function DashboardProvider(props: Props) {
       groups.some((sg) => sg.id === g.id)
     ) || []
   );
-
-  const [trainings, setTrainings] = useState<Training[]>([]);
 
   useEffect(() => {
     if (!selectedInstitution) return;
@@ -136,10 +128,6 @@ export function DashboardProvider(props: Props) {
     setupSelectedGroup();
   }, []);
 
-  useEffect(() => {
-    setTrainings(propsTrainings);
-  }, [propsTrainings]);
-
   const value: IDashboardContext = {
     filter,
     setFilter,
@@ -149,8 +137,6 @@ export function DashboardProvider(props: Props) {
     setSelectedInstitution,
     selectedGroups,
     setSelectedGroups,
-    trainings,
-    setTrainings,
     detectedChanges,
     setDetectedChanges,
     updateInstitution: async (institutionId, input) => {
@@ -221,7 +207,7 @@ export function DashboardProvider(props: Props) {
 
       const action = () =>
         InstitutionController.getInstance().updateGroup(
-          institutionId,
+          propsInstitution.id,
           groupId,
           input
         );
@@ -338,7 +324,10 @@ export function DashboardProvider(props: Props) {
       };
 
       const action = () =>
-        InstitutionController.getInstance().deleteGroup(institutionId, groupId);
+        InstitutionController.getInstance().deleteGroup(
+          propsInstitution.id,
+          groupId
+        );
 
       await lib.common.generic.optimisticUpdate(
         apply,

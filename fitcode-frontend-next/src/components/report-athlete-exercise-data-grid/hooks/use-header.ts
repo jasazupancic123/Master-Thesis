@@ -6,12 +6,14 @@ import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportDataGridHeader(
   selectedAthlete: AuthUser | null,
   setSelectedTraining: SetState<Training | null>
 ) {
-  const { selectedGroups, trainings } = useDashboard();
+  const { trainings } = useMain();
+  const { selectedGroups } = useDashboard();
 
   const [searchAthlete, setSearchAthlete] = useState('');
   const [openSelectAthleteMenu, setOpenAthleteMenu] = useState(false);
@@ -42,7 +44,7 @@ export default function useAthleteExerciseReportDataGridHeader(
     if (!selectedAthlete) return;
 
     const newPossibleTrainings = core.training.getPotentiallyCompletedTrainings(
-      trainings
+      trainings.data
         .filter((t) => t.membersIds.includes(selectedAthlete.uid))
         .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime())
     );

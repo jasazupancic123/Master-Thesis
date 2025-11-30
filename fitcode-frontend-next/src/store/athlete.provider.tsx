@@ -1,6 +1,5 @@
 'use client';
 
-import { startOfDay } from 'date-fns';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -8,7 +7,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useMain } from './main.provider';
 import { Controller } from '@/core/controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
-import type { Training } from '@/core/training/type/training.type';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
   LINK_ATHLETE_HOME,
@@ -17,9 +15,9 @@ import {
 import type { Fetch } from '@/lib/common/type/fetch.type';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { settleState } from '@/lib/common/util/state.util';
 
 interface IAthleteContext {
-  trainings: Fetch<Training[]>;
   reports: Fetch<TrainingReport[]>;
   selectedDate: Dayjs;
   setSelectedDate: SetState<Dayjs>;
@@ -27,7 +25,6 @@ interface IAthleteContext {
   setHasJustLoggedIn: SetState<boolean>;
   filter: ILink;
   setFilter: SetState<ILink>;
-  setTrainings: SetState<Fetch<Training[]>>;
 }
 
 const AthleteContext = createContext<IAthleteContext | null>(null);
@@ -40,12 +37,6 @@ export function AthleteProvider(props: React.PropsWithChildren) {
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
 
-  const [trainings, setTrainings] = useState<Fetch<Training[]>>({
-    data: [],
-    loading: false,
-    error: null,
-  });
-
   const [reports, setReports] = useState<Fetch<TrainingReport[]>>({
     data: [],
     loading: false,
@@ -54,32 +45,14 @@ export function AthleteProvider(props: React.PropsWithChildren) {
 
   useEffect(() => {
     const fetchData = async () => {
-      setTrainings((prev) => ({ ...prev, loading: true }));
       setReports((prev) => ({ ...prev, loading: true }));
 
       const controller = Controller.getInstance();
-      const [reports, trainings] = await Promise.allSettled([
+      const [reports] = await Promise.allSettled([
         controller.training.findReports(institution.id),
-        controller.training.findAll({
-          institutionId: institution.id,
-          from: startOfDay(new Date()),
-          populate: true,
-          limit: 100,
-        }),
       ]);
 
-      setTrainings({
-        data: trainings.status === 'fulfilled' ? trainings.value : [],
-        loading: false,
-        error:
-          trainings.status === 'rejected' ? trainings.reason.message : null,
-      });
-
-      setReports({
-        data: reports.status === 'fulfilled' ? reports.value : [],
-        loading: false,
-        error: reports.status === 'rejected' ? reports.reason.message : null,
-      });
+      setReports(settleState(reports, []));
     };
 
     fetchData().then();
@@ -102,8 +75,6 @@ export function AthleteProvider(props: React.PropsWithChildren) {
     setHasJustLoggedIn,
     filter,
     setFilter,
-    trainings,
-    setTrainings,
     reports,
   };
 

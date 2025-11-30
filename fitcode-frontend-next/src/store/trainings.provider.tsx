@@ -8,17 +8,12 @@ import { useMain } from './main.provider';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
-export interface TrainingsProviderProps {
-  reports: TrainingReport[];
-}
-
-interface ITrainingsContextProps extends TrainingsProviderProps {
+interface ITrainingsContextProps {
   clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
@@ -42,11 +37,9 @@ export type ITrainingsContextDefined = Omit<
   trainingInProgress: TrainingInProgress;
 };
 
-export const TrainingsProvider = (
-  props: TrainingsProviderProps & React.PropsWithChildren
-) => {
+export const TrainingsProvider = (props: React.PropsWithChildren) => {
+  const { children } = props;
   const { activeTraining } = useMain();
-  const { children, reports } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
@@ -165,7 +158,6 @@ export const TrainingsProvider = (
   return (
     <TrainingsContext.Provider
       value={{
-        reports,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,

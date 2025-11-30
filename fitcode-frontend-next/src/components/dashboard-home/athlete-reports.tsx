@@ -5,23 +5,23 @@ import { useState } from 'react';
 import TrainingReportCard from '../athlete/training-report-card';
 import { theme } from '@/app/style';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
-import { useTrainings } from '@/store/trainings.provider';
+import { useAthlete } from '@/store/athlete.provider';
 
 export default function AthleteReports() {
-  const { reports } = useTrainings();
+  const { reports } = useAthlete();
 
   const [filteredReports, setFilteredReports] = useState<TrainingReport[]>(
-    reports.length ? [reports[0]] : []
+    reports.data.length ? [reports.data[0]] : []
   );
 
   const loadMoreReports = () => {
     const currentLength = filteredReports.length;
-    const moreReports = reports.slice(currentLength, currentLength + 1);
+    const moreReports = reports.data.slice(currentLength, currentLength + 1);
     setFilteredReports([...filteredReports, ...moreReports]);
   };
 
   const showLessReports = () => {
-    setFilteredReports(reports.slice(0, 1));
+    setFilteredReports(reports.data.slice(0, 1));
   };
 
   return (
@@ -39,7 +39,7 @@ export default function AthleteReports() {
       <IconButton
         sx={{ p: 0, m: 0, mt: 1 }}
         onClick={() => {
-          if (reports.length > filteredReports.length) {
+          if (reports.data.length > filteredReports.length) {
             loadMoreReports();
             return;
           }
@@ -58,7 +58,7 @@ export default function AthleteReports() {
             p: 0.5,
           }}
         >
-          {reports.length > filteredReports.length ? (
+          {reports.data.length > filteredReports.length ? (
             <>
               <ExpandMoreOutlined sx={{ fontSize: 12 }} />
               <Typography fontSize={12}>Load more</Typography>

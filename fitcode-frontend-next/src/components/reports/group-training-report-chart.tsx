@@ -10,6 +10,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { GroupTrainingReportItem } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 type AttendanceData = Record<string, GroupTrainingReportItem>;
 
@@ -22,7 +23,8 @@ const cache = new Map<string, AttendanceData>();
 export default function GroupTrainingReportChart({
   selectedComponentId,
 }: Props) {
-  const { selectedGroups, trainings } = useDashboard();
+  const { trainings } = useMain();
+  const { selectedGroups } = useDashboard();
 
   const members = lib.common.generic.getUnique(
     selectedGroups.flatMap((g) => g.members || []),
@@ -76,7 +78,7 @@ export default function GroupTrainingReportChart({
           isBefore(t.from, endOfDay(new Date()));
 
         const attended = attendanceData[m.uid]?.attended || 0;
-        const prescribed = trainings.filter((t) =>
+        const prescribed = trainings.data.filter((t) =>
           selectedComponentId
             ? filterByUser(t) &&
               filterByDate(t) &&
