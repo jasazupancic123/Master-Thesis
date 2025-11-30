@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { addDays, endOfDay, startOfDay, subDays } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { DateFilterDto } from '@src/common/dto/date-filter.dto';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirestoreEntity } from '@src/common/type/entity.type';
@@ -54,10 +55,14 @@ export class WellnessRepository extends FirestoreRepository<
       to = addDays(endOfDay(new Date()), 1), // default to now
     } = range || {};
 
-    await this.parent.findManyOrCreate(institution.athleteIds);
+    const athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    await this.parent.findManyOrCreate(athleteIds);
     return await this.firebase.batchIn<Wellness>(
       'userId',
-      institution.athleteIds,
+      athleteIds,
       this.collectionGroup(),
       (q) => q.where('date', '>=', from).where('date', '<=', to),
     );

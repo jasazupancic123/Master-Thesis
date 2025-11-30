@@ -1,9 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Length,
   ValidateNested,
 } from 'class-validator';
 
@@ -32,10 +33,11 @@ export class Group extends BaseEntity {
   name: string;
 
   @IsString()
-  @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty()
+  @Length(1, 4)
+  @ApiProperty({ minLength: 1, maxLength: 4 })
   @Expose()
-  shortName?: string;
+  shortName: string;
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })

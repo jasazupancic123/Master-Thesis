@@ -28,7 +28,10 @@ import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMemberDto } from '../dto/update-institution-members.dto';
 import { Group } from '../entity/group.entity';
 import { InitInstitution, Institution } from '../entity/institution.entity';
-import { InstitutionMember } from '../entity/institution-member.entity';
+import {
+  InstitutionMember,
+  PartialInstitutionMember,
+} from '../entity/institution-member.entity';
 import { GroupRepository } from '../repository/group.repository';
 import { InstitutionRepository } from '../repository/institution.repository';
 import { InstitutionMembersRepository } from '../repository/institution-members.repository';
@@ -91,8 +94,7 @@ export class InstitutionService implements Permission<Institution> {
   @LogMethod()
   async findAllGroups(user: User, institutionId: string): Promise<Group[]> {
     await this.findByIdOrFail(user, institutionId);
-    const ref: InstitutionRef = { institutionId };
-    return await this.groupRepository.getAllByInstitution(ref);
+    return await this.groupRepository.getAllByInstitution({ institutionId });
   }
 
   @LogMethod()
@@ -147,7 +149,7 @@ export class InstitutionService implements Permission<Institution> {
         'Owner of the institution must be a manager',
       );
 
-    const data: Create<Omit<Institution, 'trainerIds' | 'athleteIds'>> = {
+    const data: Create<Omit<Institution, 'members'>> = {
       id: null,
       ownerId: input.ownerId,
       name: input.name,
@@ -162,8 +164,7 @@ export class InstitutionService implements Permission<Institution> {
     return {
       ...data,
       id,
-      trainerIds: [],
-      athleteIds: [],
+      members: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -203,29 +204,63 @@ export class InstitutionService implements Permission<Institution> {
     await this.membersRepository.addMember(data, ref);
   }
 
+  getMemberIds(institution: Institution): string[] {
+    return [institution.ownerId, ...institution.members.map((m) => m.id)];
+  }
+
+  getTrainers(institution: Institution): PartialInstitutionMember[] {
+    return institution.members.filter((m) => m.role === UserRole.TRAINER);
+  }
+
+  getAthletes(institution: Institution): PartialInstitutionMember[] {
+    return institution.members.filter((m) => m.role === UserRole.ATHLETE);
+  }
+
+  isManager(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return this.firebase.isManager(user) && institution.ownerId === user.uid;
+  }
+
+  isTrainer(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return (
+      this.firebase.isTrainer(user) &&
+      this.getTrainers(institution).some((t) => t.id === user.uid)
+    );
+  }
+
+  isAthlete(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return (
+      this.firebase.isAthlete(user) &&
+      this.getAthletes(institution).some((a) => a.id === user.uid)
+    );
+  }
+
   canView(user: User, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
-    if (institution.ownerId === user.uid) return true;
-    if (institution.trainerIds.includes(user.uid)) return true;
-    if (institution.athleteIds.includes(user.uid)) return true;
+    if (this.isManager(institution, user)) return true;
+    if (this.isTrainer(institution, user)) return true;
+    if (this.isAthlete(institution, user)) return true;
     return false;
   }
 
   canEdit(user: User, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
-    if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-      return true;
-
+    if (this.isManager(institution, user)) return true;
     return false;
   }
 
-  canEditExtended(user: User, institution: Institution) {
-    if (
-      this.firebase.isTrainer(user) &&
-      institution.trainerIds.includes(user.uid)
-    )
-      return true;
-
+  canEditExtended(
+    user: User,
+    institution: Institution,
+    options?: {
+      allowTrainer?: boolean;
+      allowAthlete?: boolean;
+    },
+  ) {
+    if (options?.allowTrainer && this.isTrainer(institution, user)) return true;
+    if (options?.allowAthlete && this.isAthlete(institution, user)) return true;
     return this.canEdit(user, institution);
   }
 }

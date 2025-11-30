@@ -3,22 +3,22 @@ import {
   CollectionGroup,
   CollectionReference,
   DocumentReference,
+  FieldValue,
   Query,
 } from 'firebase-admin/firestore';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import { Create } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import {
   FirestoreRepository,
   InstitutionMemberRef,
   InstitutionRef,
 } from '@src/common/type/firestore.type';
-import {
-  BatchDeleteOperation,
-  BatchWriteOperation,
-} from '@src/common/type/orm.type';
+import { BatchOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { Institution } from '../entity/institution.entity';
 import { InstitutionMember } from '../entity/institution-member.entity';
 
 @Injectable()
@@ -32,11 +32,14 @@ export class InstitutionMembersRepository extends FirestoreRepository<
     super(firebase);
   }
 
-  collection(ref: InstitutionRef): CollectionReference {
+  parent(ref: InstitutionRef): DocumentReference {
     return this.firebase.firestore
       .collection(FirestoreCollection.INSTITUTION)
-      .doc(ref.institutionId)
-      .collection(this.collectionName);
+      .doc(ref.institutionId);
+  }
+
+  collection(ref: InstitutionRef): CollectionReference {
+    return this.parent(ref).collection(this.collectionName);
   }
 
   collectionGroup(): CollectionGroup {
@@ -71,7 +74,18 @@ export class InstitutionMembersRepository extends FirestoreRepository<
       { timestamps: true },
     );
 
-    await this.doc(ref).set(query);
+    await this.firebase.paginateBatches<unknown>([
+      { operation: 'set', ref: this.doc(ref), data: query }, // add institution member to subcollection
+      {
+        // add to institution entity's members array
+        operation: 'update',
+        ref: this.parent(ref),
+        data: {
+          members: FieldValue.arrayUnion({ id: ref.uid, role: data.role }),
+        },
+      },
+    ]);
+
     return ref.uid;
   }
 
@@ -80,8 +94,18 @@ export class InstitutionMembersRepository extends FirestoreRepository<
     await this.doc(ref).update(query);
   }
 
-  async delete(ref: InstitutionMemberRef) {
-    await this.doc(ref).delete();
+  async delete(ref: InstitutionMemberRef & { role: UserRole }) {
+    await this.firebase.paginateBatches([
+      { operation: 'delete', ref: this.doc(ref) }, // remove institution member from subcollection
+      {
+        // remove from institution entity's members array
+        operation: 'update',
+        ref: this.parent(ref),
+        data: {
+          members: FieldValue.arrayRemove({ id: ref.uid, role: ref.role }),
+        },
+      },
+    ]);
   }
 
   async addMember(
@@ -91,33 +115,62 @@ export class InstitutionMembersRepository extends FirestoreRepository<
     return await this.save(data, ref);
   }
 
-  async removeMember(ref: InstitutionMemberRef) {
-    return await this.delete(ref);
+  async removeMember(ref: InstitutionMemberRef, role: UserRole) {
+    return await this.delete({ ...ref, role });
   }
 
   getAddMembersOperation(
     ref: InstitutionRef,
     data: Create<Omit<InstitutionMember, 'institutionId'>>[],
-  ): BatchWriteOperation<InstitutionMember>[] {
+  ): BatchOperation<InstitutionMember | Institution>[] {
     const { institutionId } = ref;
-    return data.map((member) => ({
-      operation: 'set',
-      ref: this.doc({ institutionId, uid: member.id }),
-      data: this.firebase.buildCreateQuery<InstitutionMember>(
-        { institutionId, id: member.id, role: member.role },
-        { timestamps: true },
-      ),
-    }));
+    return data.flatMap((member) => {
+      const subDocRef = this.doc({ institutionId, uid: member.id });
+      const parentRef = this.parent(ref);
+
+      return [
+        {
+          operation: 'set',
+          ref: subDocRef,
+          data: this.firebase.buildCreateQuery<InstitutionMember>(
+            { id: member.id, role: member.role, institutionId },
+            { timestamps: true },
+          ),
+        },
+        {
+          operation: 'update',
+          ref: parentRef,
+          data: {
+            members: FieldValue.arrayUnion({
+              id: member.id,
+              role: member.role,
+            }),
+          } as unknown as FirestoreEntity<Partial<Institution>>,
+        },
+      ];
+    });
   }
 
   getRemoveMembersOperation(
     ref: InstitutionRef,
     uids: string[],
-  ): BatchDeleteOperation[] {
+    role: UserRole,
+  ): BatchOperation<InstitutionMember | Institution>[] {
     const { institutionId } = ref;
-    return uids.map((uid) => ({
-      operation: 'delete',
-      ref: this.doc({ institutionId, uid }),
-    }));
+    return uids.flatMap((uid) => {
+      const subDocRef = this.doc({ institutionId, uid });
+      const parentRef = this.parent(ref);
+
+      return [
+        { operation: 'delete', ref: subDocRef },
+        {
+          operation: 'update',
+          ref: parentRef,
+          data: {
+            members: FieldValue.arrayRemove({ id: uid, role }),
+          } as unknown as FirestoreEntity<Partial<Institution>>,
+        },
+      ];
+    });
   }
 }

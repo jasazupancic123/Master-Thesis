@@ -14,11 +14,10 @@ import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { Create } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
-import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
-import { InstitutionMember } from '@src/institution/entity/institution-member.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { MemberService } from '@src/institution/service/member.service';
 
@@ -136,15 +135,14 @@ export class ProfileService implements Permission<Profile, Institution> {
     );
 
     // add users to institution
-    const institutionOperations: BatchWriteOperation<InstitutionMember>[] =
-      successfulUsers
-        .map(({ uid, role }) =>
-          this.memberService.buildAddMembersOperation(
-            { institutionId: institution.id },
-            [{ id: uid, role }],
-          ),
-        )
-        .flat();
+    const institutionOperations = successfulUsers
+      .map(({ uid, role }) =>
+        this.memberService.buildAddMembersOperation(
+          { institutionId: institution.id },
+          [{ id: uid, role }],
+        ),
+      )
+      .flat();
 
     await this.firebase.paginateBatches([
       ...(profileOperations.filter(Boolean) as BatchOperation<unknown>[]),
@@ -170,9 +168,7 @@ export class ProfileService implements Permission<Profile, Institution> {
     if (user.uid === entity.uid) return true; // user can view their own profile
 
     if (institution) {
-      const members = institution.trainerIds
-        .concat(institution.athleteIds)
-        .concat([institution.ownerId]);
+      const members = this.institutionService.getMemberIds(institution);
 
       if (!members.includes(user.uid) || !members.includes(entity.uid))
         return false;
@@ -188,7 +184,13 @@ export class ProfileService implements Permission<Profile, Institution> {
     if (user.uid === entity.uid) return true; // user can edit their own profile
 
     if (institution) {
-      const members = institution.trainerIds.concat(institution.athleteIds); // no owner
+      const members = this.institutionService
+        .getMemberIds(institution)
+        .filter((id) => id !== institution.ownerId); // exclude owner
+
+      const athletes = this.institutionService
+        .getAthletes(institution)
+        .map((a) => a.id);
 
       if (
         this.firebase.isManager(user) &&
@@ -197,10 +199,7 @@ export class ProfileService implements Permission<Profile, Institution> {
       )
         return true; // manager can edit institution members
 
-      if (
-        this.firebase.isTrainer(user) &&
-        institution.athleteIds.includes(entity.uid)
-      )
+      if (this.firebase.isTrainer(user) && athletes.includes(user.uid))
         return true; // trainer can edit athletes
     }
 

@@ -33,8 +33,7 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
   async findAllByInstitution(institution: Institution) {
     const userIds = [
       institution.ownerId,
-      ...(institution.trainerIds || []),
-      ...(institution.athleteIds || []),
+      ...(institution.members.map((m) => m.id) || []),
     ];
 
     const uniqueUserIds = Array.from(new Set(userIds));

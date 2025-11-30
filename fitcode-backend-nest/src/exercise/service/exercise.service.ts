@@ -393,11 +393,11 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (exercise.ownerId === GLOBAL_EXERCISE_OWNER) return true;
     if (exercise.ownerId === user.uid) return true;
 
-    if (institution) {
-      if (user.uid === institution.ownerId) return true;
-      if (institution.trainerIds.includes(user.uid)) return true;
-      if (institution.athleteIds.includes(user.uid)) return true;
-    }
+    if (institution)
+      return this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+        allowAthlete: true,
+      });
 
     return false;
   }
@@ -405,16 +405,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   canEdit(user: User, _exercise: Exercise, institution?: Institution) {
     if (this.firebase.isAdmin(user)) return true;
 
-    if (institution) {
-      if (this.firebase.isManager(user) && user.uid === institution.ownerId)
-        return true;
-
-      if (
-        this.firebase.isTrainer(user) &&
-        institution.trainerIds.includes(user.uid)
-      )
-        return true;
-    }
+    if (institution)
+      return this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+      });
 
     return false;
   }

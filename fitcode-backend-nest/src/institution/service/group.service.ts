@@ -24,10 +24,7 @@ import { INSTITUTION_ATHLETE_EVENT } from '@src/institution/constant/update-inst
 import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-institution-athlete.event';
 
 import { DELETE_GROUP_EVENT } from '../constant/delete-group-event.constant';
-import {
-  SHORT_GROUP_NAME_MAX_LENGTH,
-  SHORT_GROUP_NAME_MIN_LENGTH,
-} from '../constant/short-name-length.constant';
+import { SHORT_GROUP_NAME_MAX_LENGTH } from '../constant/short-name-length.constant';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import {
   BatchUpdateOneGroupDto,
@@ -91,12 +88,6 @@ export class GroupService implements Permission<Group, Institution> {
         'You are not allowed to create group in this institution',
       );
 
-    if (shortName)
-      if (!this.checkShortName(shortName))
-        throw new BadRequestException(
-          `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
-        );
-
     const data: Create<Group> = {
       id: null,
       name,
@@ -147,12 +138,6 @@ export class GroupService implements Permission<Group, Institution> {
         group.institution.ownerId !== user.uid
       )
         throw new UnauthorizedException('You are not allowed to update owner');
-
-    if (!this.checkShortName(input.shortName)) {
-      throw new BadRequestException(
-        `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
-      );
-    }
 
     // update group
     const data: Update<Group> = {
@@ -213,11 +198,6 @@ export class GroupService implements Permission<Group, Institution> {
           `Cycles in group ${existingGroup.name} cannot overlap`,
         );
 
-      if (!this.checkShortName(shortName)) {
-        throw new BadRequestException(
-          `Short name must be between ${SHORT_GROUP_NAME_MIN_LENGTH} and ${SHORT_GROUP_NAME_MAX_LENGTH} characters long`,
-        );
-      }
       const ref: GroupRef = {
         institutionId: existingGroup.institutionId,
         groupId: existingGroup.id,
@@ -309,11 +289,11 @@ export class GroupService implements Permission<Group, Institution> {
       throw new BadRequestException(`Member is already in the group`);
 
     // check if member is in institution
-    if (!group.institution.athleteIds.includes(member.uid))
+    if (!this.institutionService.isAthlete(group.institution, member))
       throw new BadRequestException(`Member is not part of the institution`);
 
     // update group members
-    const operations: BatchWriteOperation<{ membersIds: string[] }>[] = [
+    const operations = [
       // update member in group
       this.repository.getUpdateMemberOperation(ref, member.uid, add),
     ];
@@ -444,45 +424,22 @@ export class GroupService implements Permission<Group, Institution> {
     return false;
   }
 
-  private checkShortName(shortName: string): boolean {
-    if (
-      shortName.length < SHORT_GROUP_NAME_MIN_LENGTH ||
-      shortName.length > SHORT_GROUP_NAME_MAX_LENGTH
-    )
-      return false;
-
-    return true;
-  }
-
   canView(user: User, group: Group, institution?: Institution) {
     if (group.membersIds.includes(user.uid)) return true; // athlete is member
     if (group.trainerIds.includes(user.uid)) return true; // trainer is owner
-
-    if (institution) {
-      if (institution.ownerId === user.uid) return true; // institution owner
-
-      // other institution members can view other groups
-      if (
-        institution.athleteIds.includes(user.uid) ||
-        institution.trainerIds.includes(user.uid)
-      )
-        return true;
-    }
-
+    if (institution) return this.institutionService.canView(user, institution);
     return false;
   }
 
   canEdit(user: User, group: Group, institution: Institution) {
-    if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-      return true; // manager can edit all groups
-
+    if (this.institutionService.isManager(institution, user)) return true; // institution manager can edit group
     if (group.trainerIds.includes(user.uid)) return true; // owner of the group (trainer) can edit group
     return false;
   }
 
   canDelete(user: User, entity: Group, root?: Institution) {
     // only if user is manager and institution owner
-    if (this.firebase.isManager(user) && root?.ownerId === user.uid)
-      return true;
+    if (this.institutionService.isManager(root!, user)) return true;
+    return false;
   }
 }

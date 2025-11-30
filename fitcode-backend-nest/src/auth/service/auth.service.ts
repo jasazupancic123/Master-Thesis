@@ -87,7 +87,7 @@ export class AuthService {
     const institutions = await this.institutionService.findAll(user);
     if (
       !institutions.some((institution) =>
-        institution.athleteIds.includes(found.uid),
+        institution.members.some((member) => member.id === found.uid),
       )
     )
       throw new ForbiddenException('Cannot create link for this user');
@@ -145,11 +145,7 @@ export class AuthService {
 
   async findAllByInstitution(institution: Institution): Promise<User[]> {
     return await this.firebase.authUsers({
-      ids: [
-        institution.ownerId,
-        ...institution.trainerIds,
-        ...institution.athleteIds,
-      ],
+      ids: [institution.ownerId, ...institution.members.map((m) => m.id)],
     });
   }
 
@@ -160,11 +156,9 @@ export class AuthService {
     const institutions = await this.institutionService.findAll(user);
     const users = allUsers.filter((u) =>
       institutions.some((institution) =>
-        [
-          ...institution.trainerIds,
-          ...institution.athleteIds,
-          institution.ownerId,
-        ].includes(u.uid),
+        [institution.ownerId, ...institution.members.map((m) => m.id)].includes(
+          u.uid,
+        ),
       ),
     );
 
@@ -367,16 +361,10 @@ export class AuthService {
       const institution = institutions.find((i) => i.ownerId === mainUser.uid);
       if (!institution) return false;
 
-      if (
-        this.firebase.isTrainer(userToUpdate) &&
-        institution.trainerIds.includes(userToUpdate.uid)
-      )
+      if (this.institutionService.isTrainer(institution, userToUpdate))
         return true;
 
-      if (
-        this.firebase.isAthlete(userToUpdate) &&
-        institution.athleteIds.includes(userToUpdate.uid)
-      )
+      if (this.institutionService.isAthlete(institution, userToUpdate))
         return true;
 
       return mainUser.uid === userToUpdate.uid;
@@ -384,12 +372,14 @@ export class AuthService {
 
     if (this.firebase.isTrainer(mainUser)) {
       const trainerInstitutions = institutions.filter((i) =>
-        i.trainerIds.includes(mainUser.uid),
+        i.members.some((m) => m.id === mainUser.uid),
       );
 
       if (
         this.firebase.isAthlete(userToUpdate) &&
-        trainerInstitutions.some((i) => i.athleteIds.includes(userToUpdate.uid))
+        trainerInstitutions.some((i) =>
+          i.members.some((m) => m.id === userToUpdate.uid),
+        )
       )
         return true;
 

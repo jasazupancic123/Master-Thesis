@@ -1,10 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { BaseEntity } from '@src/common/entity/base.entity';
 
 import { Group } from './group.entity';
+import { PartialInstitutionMember } from './institution-member.entity';
 
 export class Institution extends BaseEntity {
   @IsString()
@@ -33,8 +40,11 @@ export class Institution extends BaseEntity {
   exerciseRevisions?: number;
 
   // virtual, must be populated
-  trainerIds: string[];
-  athleteIds: string[];
+  @ValidateNested({ each: true })
+  @Type(() => PartialInstitutionMember)
+  @ApiProperty({ type: PartialInstitutionMember, isArray: true })
+  @Expose()
+  members: PartialInstitutionMember[];
 }
 
 export type InitInstitution = Institution & {
