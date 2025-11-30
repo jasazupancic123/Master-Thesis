@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 
 import type { Training } from '@/core/training/type/training.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useTrainingPlan() {
-  const { trainings, selectedGroups } = useDashboard();
+  const { trainings } = useMain();
+  const { selectedGroups } = useDashboard();
 
   const [completedTrainings, setCompletedTrainings] = useState<Training[]>([]);
   const [upcomingTrainings, setUpcomingTrainings] = useState<Training[]>([]);
@@ -14,7 +16,7 @@ export default function useTrainingPlan() {
     const completed: Training[] = [];
     const upcoming: Training[] = [];
 
-    trainings
+    trainings.data
       .filter((t) => selectedGroups.some((g) => g.id === t.groupId))
       .forEach((t) => {
         const isUpcoming = dayjs(t.from).isAfter(dayjs());

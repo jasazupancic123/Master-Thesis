@@ -8,11 +8,11 @@ import AthleteTrainingCard from '@/components/athlete/athlete-training-card';
 import TrainingReportCard from '@/components/athlete/training-report-card';
 import { CompletedPlanned } from '@/core/training/enum/completed-planned.enum';
 import { useAthlete } from '@/store/athlete.provider';
-import { useTrainings } from '@/store/trainings.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function TrainingPage() {
-  const { trainings } = useAthlete();
-  const { reports } = useTrainings();
+  const { reports } = useAthlete();
+  const { trainings } = useMain();
 
   const [filter, setFilter] = useState<CompletedPlanned>(
     CompletedPlanned.PLANNED
@@ -44,7 +44,7 @@ export default function TrainingPage() {
             ? trainings.data.map((training) => (
                 <AthleteTrainingCard key={training.id} training={training} />
               ))
-            : reports.map((report, i) => (
+            : reports.data.map((report, i) => (
                 <TrainingReportCard key={i} report={report} />
               ))}
           <Box ref={sentinelRef} height={'1px'} />

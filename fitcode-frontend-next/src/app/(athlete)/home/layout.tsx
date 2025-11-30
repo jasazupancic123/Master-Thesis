@@ -10,12 +10,15 @@ import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { AthleteHeaderProvider } from '@/store/athlete-header.provider';
 import { useMain } from '@/store/main.provider';
+import { TrainingsProvider } from '@/store/trainings.provider';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
     <AthleteHeaderProvider>
       <Box bgcolor="background.default" minHeight="100vh">
-        <TrainingContent>{children}</TrainingContent>
+        <TrainingsProvider>
+          <TrainingContent>{children}</TrainingContent>
+        </TrainingsProvider>
       </Box>
     </AthleteHeaderProvider>
   );

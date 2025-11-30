@@ -74,7 +74,6 @@ export default function TodaySessionsComponent(props: Props) {
           return;
 
         if (!trainingsContext) return;
-
         if (!training) return;
 
         setSelectedTraining(training);

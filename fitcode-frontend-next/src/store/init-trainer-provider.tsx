@@ -20,12 +20,8 @@ export default async function InitTrainerProvider({
     if (!session) redirect(LINK_SIGN_IN.href);
 
     const controller = Controller.getInstance();
-    const {
-      profile,
-      institutions,
-      exerciseAiPrescriptions,
-      globalExercisesRevision,
-    } = await controller.app.init({ session });
+    const { profile, institutions, exerciseAiPrescriptions } =
+      await controller.app.init({ session });
 
     if (lib.firebase.auth.isAthlete(profile.role))
       throw new Error('Not a trainer or manager');
@@ -40,7 +36,6 @@ export default async function InitTrainerProvider({
       institutions,
       institution,
       exerciseAiPrescriptions,
-      globalExercisesRevision,
       activeTraining: null,
     };
 

@@ -3,22 +3,20 @@ import { useMemo, useState } from 'react';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportExercises(
   selectedAthlete: AuthUser | null,
   passedExerciseId?: string
 ) {
-  const { exercises } = useMain();
-  const { trainings } = useDashboard();
+  const { exercises, trainings } = useMain();
 
   const athleteTrainings = core.training.getPotentiallyCompletedTrainings(
     selectedAthlete
-      ? trainings.filter((t) =>
+      ? trainings.data.filter((t) =>
           t.membersIds.some((id) => id === selectedAthlete.uid)
         )
-      : trainings
+      : trainings.data
   );
 
   const uniqueExerciseIds = [

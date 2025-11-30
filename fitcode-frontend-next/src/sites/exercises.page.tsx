@@ -249,6 +249,7 @@ export default function ExercisesPage() {
         justifyContent="center"
       >
         <Box width="25%" />
+
         <Box
           sx={{ py: 2, width: '50%', minWidth: 240, maxWidth: 400, mx: 'auto' }}
         >
@@ -259,6 +260,7 @@ export default function ExercisesPage() {
             maxWidth="100%"
           />
         </Box>
+
         <Box
           width={isSmallSize ? '100%' : '25%'}
           display="flex"

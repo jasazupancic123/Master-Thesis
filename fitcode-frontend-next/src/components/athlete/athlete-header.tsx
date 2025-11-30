@@ -54,13 +54,10 @@ export default function AthleteHeader(props: Props) {
   const pathname = usePathname();
 
   const { user, role, logout } = useAuthenticatedAuth();
-  const { exercises } = useMain();
-  const { filter, setTrainings, setFilter } = useAthlete() || {};
-
+  const { exercises, setTrainings } = useMain();
+  const { filter, setFilter } = useAthlete() || {};
   const { selectedTrackingMethod } = useAthleteHeader() || {};
-
   const trainingContext = useTrainings();
-
   const { trainingInProgress } = trainingContext || {};
 
   const {
@@ -304,19 +301,18 @@ export default function AthleteHeader(props: Props) {
           </Box>
         )}
       </Box>
+
       <CreateTrainingModal
         open={openCreateTrainingModal}
         setOpen={setOpenCreateTrainingModal}
         onCreateTraining={(training) => {
           training = TrainingService.mapTraining(training, { exercises });
-
-          if (setTrainings)
-            setTrainings((prev) => ({
-              ...prev,
-              data: [...prev.data, training].sort((a, b) =>
-                dayjs(a.from).diff(dayjs(b.from))
-              ),
-            }));
+          setTrainings((prev) => ({
+            ...prev,
+            data: [...prev.data, training].sort((a, b) =>
+              dayjs(a.from).diff(dayjs(b.from))
+            ),
+          }));
         }}
       />
     </>

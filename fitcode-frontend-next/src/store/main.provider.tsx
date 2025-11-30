@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { withAuth } from './auth.provider';
+import { useAuthenticatedAuth, withAuth } from './auth.provider';
 import type { AuthProfileMerged, AuthUser } from '@/core/auth/type/user.type';
 import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
@@ -24,13 +24,13 @@ import type {
   Training,
 } from '@/core/training/type/training.type';
 import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
+import { lib } from '@/lib';
 import type { Fetch } from '@/lib/common/type/fetch.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { initFetch, settleState } from '@/lib/common/util/state.util';
 
 export interface MainProviderProps extends React.PropsWithChildren {
   profile: AuthProfileMerged;
-  globalExercisesRevision: number;
   institutions: Institution[];
   activeTraining: ActiveTraining | null;
   exerciseAiPrescriptions: ExerciseAiPrescription[];
@@ -51,8 +51,10 @@ export interface IMainContext extends MainProviderProps {
   setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
   wellness: WellnessZScore[];
   trainings: Fetch<Training[]>;
+  setTrainings: SetState<Fetch<Training[]>>;
   protocols: Fetch<TrainingProtocol[]>;
   setProtocols: SetState<Fetch<TrainingProtocol[]>>;
+  reloadExercises: () => Promise<void>;
 }
 
 const MainContext = createContext<IMainContext | null>(null);
@@ -69,6 +71,7 @@ export const CoachMainProvider = withAuth(MainProvider, [
 export default function MainProvider(props: MainProviderProps) {
   const { institution: _institution, children } = props;
   const institutionId = _institution.id;
+  const { role } = useAuthenticatedAuth();
 
   const [profile, setProfile] = useState(props.profile);
   const [institution, setInstitution] = useState(_institution);
@@ -87,6 +90,21 @@ export default function MainProvider(props: MainProviderProps) {
     () => TrainingService.mapActiveTraining(props.activeTraining, { exercises })
   );
 
+  async function reloadExercises() {
+    // delete index db cache and reload exercises
+    try {
+      await core.exercise.deleteCacheByInstitution(institutionId);
+      const exercises =
+        await ExerciseController.getInstance().findAll(institutionId);
+
+      setExercises(exercises);
+      toast.success('Exercises reloaded');
+    } catch (e) {
+      console.error('Failed to reload exercises', e);
+      toast.error('Failed to reload exercises');
+    }
+  }
+
   // map users on fetch
   useEffect(() => {
     setGroups(institution.groups.map((g) => core.group.mapMembers(g, users)));
@@ -95,43 +113,45 @@ export default function MainProvider(props: MainProviderProps) {
 
   // load exercises (from cache or from server)
   useEffect(() => {
+    const isAdmin = lib.firebase.auth.isAdmin(role);
+
     async function fetchExercises() {
-      const serverGlobalRevision = props.globalExercisesRevision;
       const serverInstitutionRevision =
         props.institution.exerciseRevisions || 0;
 
       try {
-        const cachedExercises = await core.exercise.getCached(institutionId);
-        if (cachedExercises) setExercises(cachedExercises);
+        if (isAdmin) {
+          const exercises =
+            await ExerciseController.getInstance().findAllGlobal();
+          setExercises(exercises);
+        } else {
+          const cachedExercises =
+            await core.exercise.getCachedByInstitution(institutionId);
+          if (cachedExercises) setExercises(cachedExercises);
 
-        const cachedGlobalRevision =
-          await core.exercise.getCachedGlobalRevision();
-        const cachedInstitutionRevision =
-          await core.exercise.getCachedInstitutionRevision(institutionId);
+          const cachedExercisesRevision =
+            await core.exercise.getCachedByInstitutionExerciseRevisions(
+              institutionId
+            );
 
-        if (
-          cachedGlobalRevision === serverGlobalRevision &&
-          cachedInstitutionRevision === serverInstitutionRevision
-        ) {
-          console.log('Exercises are up to date, no need to fetch');
-          return;
+          if (cachedExercisesRevision === serverInstitutionRevision) {
+            console.log('Exercises are up to date, no need to fetch');
+            return;
+          }
+
+          console.log('Fetching updated exercises from server');
+          const exercises =
+            await ExerciseController.getInstance().findAll(institutionId);
+          setExercises(exercises);
+
+          await Promise.all([
+            core.exercise.saveToCache(institutionId, exercises),
+            core.exercise.saveInstitutionExerciseRevisionsToCache(
+              institutionId,
+              serverInstitutionRevision
+            ),
+          ]);
         }
-
-        console.log('Fetching updated exercises from server');
-
-        const exercises =
-          await ExerciseController.getInstance().findAll(institutionId);
-
-        setExercises(exercises);
-
-        await Promise.all([
-          core.exercise.saveToCache(institutionId, exercises),
-          core.exercise.saveGlobalRevisionToCache(serverGlobalRevision),
-          core.exercise.saveInstitutionRevisionToCache(
-            institutionId,
-            serverInstitutionRevision
-          ),
-        ]);
       } catch (e) {
         console.error('Failed to fetch exercises', e);
         toast.error('Failed to fetch exercises');
@@ -187,6 +207,25 @@ export default function MainProvider(props: MainProviderProps) {
     fetchData().then();
   }, []);
 
+  // map active training and trainings
+  useEffect(() => {
+    if (!exercises.length || trainings.loading) return;
+
+    setActiveTraining(
+      TrainingService.mapActiveTraining(activeTraining, { exercises })
+    );
+
+    setTrainings((prev) => {
+      if (prev.loading || prev.error) return prev;
+      return {
+        ...prev,
+        data: prev.data.map((training) =>
+          TrainingService.mapTraining(training, { exercises })
+        ),
+      };
+    });
+  }, [exercises, trainings.loading, activeTraining?.id]);
+
   const value: IMainContext = {
     profile,
     setProfile,
@@ -196,21 +235,20 @@ export default function MainProvider(props: MainProviderProps) {
     setUsers,
     exercises,
     setExercises,
+    reloadExercises,
     groups,
     setGroups,
     setActiveTraining,
     exerciseAiPrescriptions,
     setExerciseAiPrescriptions,
     trainings,
+    setTrainings,
     protocols,
     setProtocols,
     institutions: props.institutions,
     institution: props.institution,
     wellness: profiles.map((p) => p.wellness).flat(),
-    globalExercisesRevision: props.globalExercisesRevision,
-    activeTraining: TrainingService.mapActiveTraining(activeTraining, {
-      exercises,
-    }),
+    activeTraining,
   };
 
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>;

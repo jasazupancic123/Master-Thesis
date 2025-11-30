@@ -21,13 +21,8 @@ export default async function InitAthleteProvider({
     if (!session) redirect(LINK_SIGN_IN.href);
 
     const controller = Controller.getInstance();
-    const {
-      profile,
-      institutions,
-      activeTraining,
-      exerciseAiPrescriptions,
-      globalExercisesRevision,
-    } = await controller.app.init({ session });
+    const { profile, institutions, activeTraining, exerciseAiPrescriptions } =
+      await controller.app.init({ session });
 
     if (!lib.firebase.auth.isAthlete(profile.role))
       throw new Error('Not an athlete');
@@ -43,7 +38,6 @@ export default async function InitAthleteProvider({
       institution,
       activeTraining,
       exerciseAiPrescriptions,
-      globalExercisesRevision,
     };
 
     return (
