@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { TrainingController } from '@/core/training/training.controller';
 import type { UserTrainingRealizationReportItem } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 type Props = {
   institutionId: string;
@@ -20,7 +20,7 @@ export default function AthleteTrainingsRealizationChart({
   athleteId,
   componentId,
 }: Props) {
-  const { trainings } = useDashboard();
+  const { trainings } = useMain();
   const [data, setData] = useState<UserTrainingRealizationReportItem[]>([]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function AthleteTrainingsRealizationChart({
           componentId
         );
 
-      const prescribed = trainings.filter(
+      const prescribed = trainings.data.filter(
         (t) =>
           t.membersIds.includes(athleteId) &&
           isBefore(t.from, endOfDay(new Date()))

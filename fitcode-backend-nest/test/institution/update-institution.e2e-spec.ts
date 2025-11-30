@@ -141,8 +141,9 @@ describe('Update Institution (e2e)', () => {
       expect(response.status).toBe(200);
 
       const institution = await db.institutions.findById(institutionId);
-      expect(institution.athleteIds).toHaveLength(2);
-      expect(institution.athleteIds).toContain(userId);
+      const members = institution.members.map((m) => m.id);
+      expect(members).toHaveLength(3);
+      expect(members).toContain(userId);
     });
 
     it('should successfully add an athlete to the institution but not its groups and trainings', async () => {
@@ -219,8 +220,10 @@ describe('Update Institution (e2e)', () => {
       expect(response.status).toBe(200);
 
       const institution = await db.institutions.findById(institutionId);
-      expect(institution.athleteIds).toHaveLength(3);
-      expect(institution.athleteIds).toContain(newAthlete.uid);
+      const members = institution.members.map((m) => m.id);
+
+      expect(members).toHaveLength(4);
+      expect(members).toContain(newAthlete.uid);
 
       for (const serviceSpy of [groupServiceSpy, trainingServiceSpy]) {
         expect(serviceSpy).not.toHaveBeenCalledWith(
@@ -327,8 +330,10 @@ describe('Update Institution (e2e)', () => {
 
       expect(response.status).toBe(200);
       const found = await db.institutions.findById(institutionId);
-      expect(found.athleteIds).toHaveLength(1);
-      expect(found.athleteIds).not.toContain(userId);
+      const members = found.members.map((m) => m.id);
+
+      expect(members).toHaveLength(2);
+      expect(members).not.toContain(userId);
 
       const groups = await db.groups.getAllByInstitution({ institutionId });
       expect(groups).toHaveLength(3);
@@ -393,14 +398,16 @@ describe('Update Institution (e2e)', () => {
 
       expect(response.status).toBe(200);
       const institution = await db.institutions.findById(institutionId);
-      expect(institution.trainerIds).toContain(newTrainer.uid);
-      expect(institution.trainerIds).toHaveLength(2);
+
+      const members = institution.members.map((m) => m.id);
+      expect(members).toHaveLength(3);
+      expect(members).toContain(newTrainer.uid);
 
       await testApp.auth.deleteUsers([newTrainer.uid]);
-      await db.institutions.members.removeMember({
-        institutionId,
-        uid: newTrainer.uid,
-      });
+      await db.institutions.members.removeMember(
+        { institutionId, uid: newTrainer.uid },
+        UserRole.TRAINER,
+      );
     });
 
     it('should successfully remove a trainer from the institution', async () => {
@@ -413,8 +420,10 @@ describe('Update Institution (e2e)', () => {
 
       expect(response.status).toBe(200);
       const institution = await db.institutions.findById(institutionId);
-      expect(institution.trainerIds).not.toContain(trainer.uid);
-      expect(institution.trainerIds).toHaveLength(0);
+      const members = institution.members.map((m) => m.id);
+
+      expect(members).toHaveLength(1);
+      expect(members).not.toContain(trainer.uid);
 
       await db.institutions.members.addMember(
         { role: UserRole.TRAINER },

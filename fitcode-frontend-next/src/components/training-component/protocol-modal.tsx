@@ -62,7 +62,7 @@ export default function ProtocolModal({
     setData(null); // close modal
   }
 
-  const exists = protocols.find((p) => p.id === data?.id);
+  const exists = protocols.data.find((p) => p.id === data?.id);
   return (
     <Box>
       <MyModal

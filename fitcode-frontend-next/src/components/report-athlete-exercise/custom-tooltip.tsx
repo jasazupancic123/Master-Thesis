@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   openWorkloadModal: boolean;
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function AthleteExerciseChartTooltip(props: Props) {
-  const { trainings } = useDashboard();
+  const { trainings } = useMain();
 
   const { openWorkloadModal, data, reportType, groupByTraining } = props;
 
@@ -41,7 +41,7 @@ export default function AthleteExerciseChartTooltip(props: Props) {
 
   if (!workload) return null;
 
-  const training = trainings.find((t) => t.id === workload.trainingId);
+  const training = trainings.data.find((t) => t.id === workload.trainingId);
 
   if (training) workload.from = training.from;
 

@@ -11,7 +11,6 @@ import useDashboardHomeComponents from './hooks/use-components.hook';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
-import type { Training } from '@/core/training/type/training.type';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { useAthlete } from '@/store/athlete.provider';
@@ -20,30 +19,22 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
-interface Props {
-  trainings: Training[];
-}
-
-export default function DashboardHome(props: Props) {
+export default function DashboardHome() {
   const screenSize = useScreenSize();
-
   const { user } = useAuthenticatedAuth();
 
   const mainContext = useMain();
   const dashboardContext = useDashboard();
   const athleteContext = useAthlete();
 
-  const { activeTraining } = mainContext;
-
-  const { trainings } = props;
-
+  const { activeTraining, trainings } = mainContext;
   const selectedGroups = dashboardContext
     ? dashboardContext.selectedGroups
     : mainContext.groups;
 
   const { componentItems, activeComponent } = useDashboardHomeComponents(
     selectedGroups,
-    trainings
+    trainings.data
   );
 
   const [mounted, setMounted] = useState(false);
@@ -76,7 +67,7 @@ export default function DashboardHome(props: Props) {
   const startOfWeek = dayjs().startOf('week');
   const endOfWeek = dayjs().endOf('week');
 
-  const thisWeekSessions = trainings
+  const thisWeekSessions = trainings.data
     .filter((t) => selectedGroups.some((group) => group.id === t.groupId))
     .filter((training) => {
       const trainingDate = dayjs(training.from);
@@ -251,7 +242,7 @@ export default function DashboardHome(props: Props) {
                   groupId: activeTraining.groupId,
                   trainingId: activeTraining.id,
                 }}
-                trainings={trainings}
+                trainings={trainings.data}
                 index={0}
               />
             </Grid2>
@@ -269,13 +260,12 @@ export default function DashboardHome(props: Props) {
             </Typography>
 
             <TodaySessions
-              trainings={trainings}
+              trainings={trainings.data.filter((t) =>
+                dayjs(t.from).isSame(dayjs(), 'day')
+              )}
               activeComponent={
                 activeComponent
-                  ? {
-                      ...activeComponent,
-                      trainingId: activeTraining?.id || '',
-                    }
+                  ? { ...activeComponent, trainingId: activeTraining?.id || '' }
                   : null
               }
             />

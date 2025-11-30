@@ -4,11 +4,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FieldValue } from 'firebase-admin/firestore';
 
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
-import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
@@ -377,27 +375,36 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   private async incrementExerciseRevisions(user: User, institutionId?: string) {
-    if (this.firebase.isAdmin(user)) {
-      const doc = this.firebase.firestore
-        .collection(FirestoreCollection.META)
-        .doc('exercises');
+    let operations: BatchUpdateOperation<Institution>[] = [];
 
-      const snapshot = await doc.get();
-      if (!snapshot.exists) await doc.set({ revision: 1 });
-      else await doc.update({ revision: FieldValue.increment(1) });
+    if (this.firebase.isAdmin(user)) {
+      // update exercise revisions for all institutions
+      const institutions = await this.institutionService.findAll(user);
+      operations = institutions.map((institution) =>
+        this.institutionService.getIncrementExerciseRevisionsOperation(
+          institution.id,
+        ),
+      );
     } else if (institutionId)
-      await this.institutionService.incrementExerciseRevisions(institutionId);
+      operations = [
+        this.institutionService.getIncrementExerciseRevisionsOperation(
+          institutionId,
+        ),
+      ];
+
+    if (operations.length > 0)
+      await this.firebase.paginateBatches<Institution>(operations);
   }
 
   canView(user: User, exercise: Exercise, institution?: Institution) {
     if (exercise.ownerId === GLOBAL_EXERCISE_OWNER) return true;
     if (exercise.ownerId === user.uid) return true;
 
-    if (institution) {
-      if (user.uid === institution.ownerId) return true;
-      if (institution.trainerIds.includes(user.uid)) return true;
-      if (institution.athleteIds.includes(user.uid)) return true;
-    }
+    if (institution)
+      return this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+        allowAthlete: true,
+      });
 
     return false;
   }
@@ -405,16 +412,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   canEdit(user: User, _exercise: Exercise, institution?: Institution) {
     if (this.firebase.isAdmin(user)) return true;
 
-    if (institution) {
-      if (this.firebase.isManager(user) && user.uid === institution.ownerId)
-        return true;
-
-      if (
-        this.firebase.isTrainer(user) &&
-        institution.trainerIds.includes(user.uid)
-      )
-        return true;
-    }
+    if (institution)
+      return this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+      });
 
     return false;
   }

@@ -6,6 +6,7 @@ import { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { TestAuth } from '@src/common/utils/test-auth.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Institution } from '@src/institution/entity/institution.entity';
+import { PartialInstitutionMember } from '@src/institution/entity/institution-member.entity';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { InstitutionRepository } from '@src/institution/repository/institution.repository';
 import { InstitutionMembersRepository } from '@src/institution/repository/institution-members.repository';
@@ -58,6 +59,11 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
     if (!athletes.length) athletes.push(global.athlete);
     if (!trainers.length) trainers.push(global.trainer);
 
+    const members: PartialInstitutionMember[] = [
+      ...trainers.map((t) => ({ id: t.uid, role: UserRole.TRAINER })),
+      ...athletes.map((a) => ({ id: a.uid, role: UserRole.ATHLETE })),
+    ];
+
     const institutionId = await this.save(
       generateInstitutionStub({ ownerId: manager.uid }),
     );
@@ -66,10 +72,7 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
     await this.firebase.paginateBatches(
       this.institutionMembersRepository.getAddMembersOperation(
         { institutionId },
-        [
-          ...trainers.map((t) => ({ id: t.uid, role: UserRole.TRAINER })),
-          ...athletes.map((a) => ({ id: a.uid, role: UserRole.ATHLETE })),
-        ],
+        members,
       ),
     );
 
@@ -79,26 +82,20 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
       manager,
       trainers,
       athletes,
-      trainerIds: trainers.map((t) => t.uid),
-      athleteIds: athletes.map((a) => a.uid),
+      members: [
+        ...trainers.map((t) => ({ id: t.uid, role: UserRole.TRAINER })),
+        ...athletes.map((a) => ({ id: a.uid, role: UserRole.ATHLETE })),
+      ],
     };
   }
 
   async remove(institutionId: string) {
     // remove associated users (but not global ones)
     const institution = await this.findById(institutionId);
-    const members =
-      await this.institutionMembersRepository.findAllMembers(institutionId);
-
-    const athleteIds = members
-      .filter((m) => m.role === UserRole.ATHLETE)
-      .map((m) => m.id);
-
-    const trainerIds = members
-      .filter((m) => m.role === UserRole.TRAINER)
-      .map((m) => m.id);
-
-    const userIds = [...athleteIds, ...trainerIds, institution.ownerId].filter(
+    const userIds = [
+      ...institution.members.map((m) => m.id),
+      institution.ownerId,
+    ].filter(
       (uid) =>
         ![
           global.athlete.uid,

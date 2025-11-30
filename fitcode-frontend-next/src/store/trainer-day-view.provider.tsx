@@ -217,10 +217,9 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     const member: Profile = {
       uid: user.uid,
       email: user.email!,
-      height: 0,
-      weight: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
+      wellness: { userId: user.uid, date: new Date() },
     };
 
     const prevState = {

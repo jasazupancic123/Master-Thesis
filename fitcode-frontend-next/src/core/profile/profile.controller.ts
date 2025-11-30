@@ -1,12 +1,7 @@
 import type { AuthUser } from '../auth/type/user.type';
 import { BaseController } from '../base.controller';
 import type { ImportProfiles, Profile, UpdateProfile } from './type/user.type';
-import type {
-  CreateWellness,
-  Wellness,
-  WellnessZScore,
-} from './type/wellness.type';
-import type { FetchOptions } from '@/lib/common/type/api.type';
+import type { CreateWellness, Wellness } from './type/wellness.type';
 import type { ValidateRowError } from '@/lib/common/type/validate-row-error.type';
 
 export class ProfileController extends BaseController {
@@ -38,19 +33,5 @@ export class ProfileController extends BaseController {
 
   async upsertWellness(body: CreateWellness) {
     return this.api.post<Wellness>('/', body);
-  }
-
-  async getLatestWellnessByUser() {
-    return this.api.get<Wellness>('/wellness');
-  }
-
-  async getWellnessByInstitution(
-    institutionId: string,
-    options?: FetchOptions
-  ) {
-    return this.api.get<WellnessZScore[]>(
-      `/wellness/institution/${institutionId}`,
-      options
-    );
   }
 }

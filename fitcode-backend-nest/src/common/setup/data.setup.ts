@@ -233,15 +233,12 @@ export class DataSetup extends BaseSetup {
         await userRepository.save({
           uid: user.uid,
           email: user.email,
-          height: 0,
-          weight: 0,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
         // 10 wellness data for each user
-        Array.from({
-          length: user.email === 'mike.tyson@mail.com' ? 1 : 10,
-        }).forEach(async (_, j) => {
+        const days = user.email === 'mike.tyson@mail.com' ? 1 : 10;
+        for (let j = days - 1; j >= 0; j--) {
           await this.wellnessService.upsert(
             { uid: user.uid, date: subDays(new Date(), j) },
             {
@@ -254,7 +251,7 @@ export class DataSetup extends BaseSetup {
               comment: 'Average day today',
             },
           );
-        });
+        }
       }),
     );
 

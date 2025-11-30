@@ -1,5 +1,6 @@
+import type { AuthProfileMerged } from '../auth/type/user.type';
 import { BaseController } from '../base.controller';
-import type { Profile } from '../profile/type/user.type';
+import type { TrainingProtocol } from '../training/type/training-protocol.type';
 import type { Cycle } from './type/cycle.type';
 import type {
   BatchUpdateGroups,
@@ -45,7 +46,7 @@ export class InstitutionController extends BaseController {
   }
 
   async findAllMembersByInstitution(institutionId: string) {
-    return this.api.get<Profile[]>(`/${institutionId}/member`);
+    return this.api.get<AuthProfileMerged[]>(`/${institutionId}/member`);
   }
 
   async addAthlete(institutionId: string, body: UserId) {
@@ -119,6 +120,6 @@ export class InstitutionController extends BaseController {
   }
 
   async findAllProtocolsByInstitution(institutionId: string) {
-    return this.api.get(`/${institutionId}/protocol`);
+    return this.api.get<TrainingProtocol[]>(`/${institutionId}/protocol`);
   }
 }

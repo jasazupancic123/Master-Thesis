@@ -208,7 +208,7 @@ export default function TrainingComponentHeaderMenu() {
             selectedItemSize={12}
             selectSize="small"
             sx={{ maxWidth: 75 }}
-            items={protocols.filter((p) => p.componentId === component.id)}
+            items={protocols.data.filter((p) => p.componentId === component.id)}
             itemKey="id"
             itemName="name"
             placeholder="None"
@@ -217,7 +217,7 @@ export default function TrainingComponentHeaderMenu() {
               if (protocolId === TEMP_PROTOCOL_ID) return;
 
               setDetectedChanges(true);
-              const protocol = protocols.find((g) => g.id === protocolId)!;
+              const protocol = protocols.data.find((g) => g.id === protocolId)!;
               setProtocol(protocol);
             }}
             onCreateNew={() => {
@@ -257,11 +257,11 @@ export default function TrainingComponentHeaderMenu() {
                   }
                 );
 
-                const updatedProtocols = protocols.map((p) =>
+                const updatedProtocols = protocols.data.map((p) =>
                   p.id === data.id ? data : p
                 );
 
-                setProtocols(updatedProtocols);
+                setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
                 setProtocol(null);
                 toast.success('Protocol updated successfully');
                 return;
@@ -274,7 +274,11 @@ export default function TrainingComponentHeaderMenu() {
                   data
                 );
 
-              setProtocols((prev) => [...prev, protocol]);
+              setProtocols((prev) => ({
+                ...prev,
+                data: [...prev.data, protocol],
+              }));
+
               setProtocol(null);
               toast.success('Protocol created successfully');
             } catch (e) {
@@ -284,11 +288,11 @@ export default function TrainingComponentHeaderMenu() {
           }}
           onDelete={async (protocolId) => {
             if (protocolId === TEMP_PROTOCOL_ID) {
-              const updatedProtocols = protocols.filter(
+              const updatedProtocols = protocols.data.filter(
                 (p) => p.id !== TEMP_PROTOCOL_ID
               );
 
-              setProtocols(updatedProtocols);
+              setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
               setProtocol(null);
               return;
             }
@@ -299,11 +303,11 @@ export default function TrainingComponentHeaderMenu() {
                 protocolId
               );
 
-              const updatedProtocols = protocols.filter(
+              const updatedProtocols = protocols.data.filter(
                 (p) => p.id !== protocolId
               );
 
-              setProtocols(updatedProtocols);
+              setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
               setProtocol(null);
               toast.success('Protocol deleted successfully');
             } catch (e) {

@@ -1,7 +1,7 @@
-import { IntersectionType } from '@nestjs/mapped-types';
 import {
   ApiProperty,
   ApiPropertyOptional,
+  IntersectionType,
   OmitType,
   PickType,
 } from '@nestjs/swagger';
