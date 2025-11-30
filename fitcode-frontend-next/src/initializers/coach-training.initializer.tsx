@@ -10,10 +10,13 @@ import { CoachTrainingProvider } from '@/store/coach-training.provider';
 import { useMain } from '@/store/main.provider';
 import Alert from '@/ui/alert';
 
-export default function TrainingInitializer({
+export default function CoachTrainingInitializer({
   children,
 }: React.PropsWithChildren) {
   const pathname = usePathname();
+
+  const { groups } = useMain();
+
   const [state, setState] = useState<TrainingIdPageProps | null>(null);
 
   const { users, institutions, exercises } = useMain();
@@ -25,19 +28,29 @@ export default function TrainingInitializer({
 
       const training = await controller.training.findById(trainingId);
 
+      console.log('training', training);
       if (!training) return notFound();
 
       const institution = institutions.find(
         (i) => i.id === training.institutionId
       );
 
+      console.log('institution', institution);
+
       if (!institution) return notFound();
+
+      const group = groups.find((g) => g.id === training.groupId);
+
+      console.log('group', group);
+
+      if (!group) return notFound();
 
       const mapped = TrainingService.mapData(training, { exercises, users });
 
       const context: TrainingIdPageProps = {
         training: mapped,
         institution,
+        group,
       };
 
       setState(context);
@@ -47,7 +60,7 @@ export default function TrainingInitializer({
   }, []);
 
   if (!state) {
-    console.log('Loading in training.initializer.tsx');
+    console.log('Loading in coach-training.initializer.tsx');
     return <Alert type="loading" />;
   }
 
