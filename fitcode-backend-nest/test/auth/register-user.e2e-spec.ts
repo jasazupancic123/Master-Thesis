@@ -107,10 +107,10 @@ describe('Register User (e2e)', () => {
 
         // delete user
         await testApp.auth.deleteUsers([dbUser!.uid]);
-        await db.institutions.institutionMembersRepository.removeMember({
-          institutionId: dbInstitution.id,
-          uid: dbUser!.uid,
-        });
+        await db.institutions.institutionMembersRepository.removeMember(
+          { institutionId: dbInstitution.id, uid: dbUser!.uid },
+          role,
+        );
       },
     );
 
@@ -144,10 +144,10 @@ describe('Register User (e2e)', () => {
 
         // delete user
         await testApp.auth.deleteUsers([existingUser.uid]);
-        await db.institutions.institutionMembersRepository.removeMember({
-          institutionId: dbInstitutionAfter.id,
-          uid: existingUser.uid,
-        });
+        await db.institutions.institutionMembersRepository.removeMember(
+          { institutionId: dbInstitutionAfter.id, uid: existingUser.uid },
+          role,
+        );
       },
     );
 
