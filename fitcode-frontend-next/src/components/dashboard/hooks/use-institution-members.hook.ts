@@ -22,8 +22,7 @@ export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 export default function useInstitutionMembers() {
   const { users, profiles, setProfiles, setUsers, groups, setGroups } =
     useMain();
-  const { setFormData, } =
-    useRegisterMemberForm();
+  const { setFormData } = useRegisterMemberForm();
 
   const {
     selectedInstitution,
