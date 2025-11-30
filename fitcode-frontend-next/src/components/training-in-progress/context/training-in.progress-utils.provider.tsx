@@ -22,6 +22,8 @@ export interface ITrainingInProgressUtilsCtx {
   setOpenCancelTrainingModal: SetState<boolean>;
   openFinishTrainingModal: boolean;
   setOpenFinishTrainingModal: SetState<boolean>;
+  openAddExerciseModal: boolean;
+  setOpenAddExerciseModal: SetState<boolean>;
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   open: boolean;
@@ -56,6 +58,7 @@ export function TrainingInProgressUtilsProvider({
   const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
+  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
@@ -140,6 +143,18 @@ export function TrainingInProgressUtilsProvider({
   };
 
   const handleEdit = () => {
+    if (trainingInProgress) {
+      const isTrainingEmpty = trainingInProgress.supersets.every(
+        (superset) => superset.exercises.length === 0
+      );
+
+      if (isTrainingEmpty) {
+        setOpenAddExerciseModal(true);
+        setEdit(true);
+        return;
+      }
+    }
+
     handleCloseMenu();
     setEdit((prev) => !prev);
   };
@@ -156,6 +171,8 @@ export function TrainingInProgressUtilsProvider({
     setOpenCancelTrainingModal,
     openFinishTrainingModal,
     setOpenFinishTrainingModal,
+    openAddExerciseModal,
+    setOpenAddExerciseModal,
     anchorEl,
     setAnchorEl,
     open,

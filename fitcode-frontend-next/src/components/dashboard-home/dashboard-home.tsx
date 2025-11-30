@@ -1,14 +1,13 @@
 import type { SxProps } from '@mui/material';
-import { Box, Grid2, Typography } from '@mui/material';
+import { Box, Grid2, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
 import FlaggedAthletes from './flagged-athletes';
 import useDashboardHomeComponents from './hooks/use-components.hook';
-import SelectedTrainingComponentModal from './modals/selected-training-component-modal';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
@@ -42,21 +41,12 @@ export default function DashboardHome(props: Props) {
     ? dashboardContext.selectedGroups
     : mainContext.groups;
 
-  const {
-    selectedTrainingComponent,
-    setSelectedTrainingComponent,
-    selectedTraining,
-    setSelectedTraining,
-    componentItems,
-    activeComponent,
-  } = useDashboardHomeComponents(selectedGroups, trainings);
-
-  const [openTrainingComponentModal, setOpenTrainingComponentModal] =
-    useState(false);
+  const { componentItems, activeComponent } = useDashboardHomeComponents(
+    selectedGroups,
+    trainings
+  );
 
   const [mounted, setMounted] = useState(false);
-
-  const hasPlayedAudioRef = useRef(false);
 
   useEffect(() => {
     // small timeout is optional, just to ensure it's after first paint
@@ -136,6 +126,9 @@ export default function DashboardHome(props: Props) {
             <Box
               width={COMPONENT_ITEMS_CONTAINER_WIDTH}
               display="flex"
+              flexWrap={
+                screenSize.isMobile || screenSize.isTablet ? 'wrap' : undefined
+              }
               alignItems="center"
               gap={0.5}
             >
@@ -149,6 +142,7 @@ export default function DashboardHome(props: Props) {
                   <Box
                     key={item.id}
                     width={`${item.percentage}%`}
+                    minWidth={80}
                     display="flex"
                     flexDirection="column"
                     alignItems="flex-start"
@@ -169,33 +163,42 @@ export default function DashboardHome(props: Props) {
                         : ''}
                     </Typography>
 
-                    <Box
-                      width="100%"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="flex-start"
-                      sx={{
-                        p: 2,
-                        py: 1,
-                        borderRadius: 4,
-                        backgroundColor: colors.backgroundColor,
-                        transformOrigin: 'left center',
-                        transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
-                        transition: 'transform 0.5s ease-out',
-                      }}
+                    <Tooltip
+                      title={item.id[0].toUpperCase() + item.id.slice(1)}
                     >
-                      <Typography
-                        fontWeight={500}
-                        sx={{ color: colors.textColor }}
+                      <Box
+                        width="100%"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="flex-start"
+                        sx={{
+                          p: 2,
+                          py: 1,
+                          borderRadius: 4,
+                          backgroundColor: colors.backgroundColor,
+                          transformOrigin: 'left center',
+                          transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
+                          transition: 'transform 0.5s ease-out',
+                        }}
                       >
-                        {item.value}
-                      </Typography>
-                    </Box>
+                        <Typography
+                          fontWeight={500}
+                          sx={{ color: colors.textColor }}
+                        >
+                          {item.value}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
                   </Box>
                 );
               })}
             </Box>
-            <Box display="flex" justifyContent="flex-end" alignItems="center">
+            <Box
+              width="20%"
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+            >
               <Box
                 display="flex"
                 flexDirection="column"
@@ -250,9 +253,6 @@ export default function DashboardHome(props: Props) {
                 }}
                 trainings={trainings}
                 index={0}
-                setSelectedTraining={setSelectedTraining}
-                setSelectedTrainingComponent={setSelectedTrainingComponent}
-                setOpenTrainingComponentModal={setOpenTrainingComponentModal}
               />
             </Grid2>
           )}
@@ -278,9 +278,6 @@ export default function DashboardHome(props: Props) {
                     }
                   : null
               }
-              setSelectedTraining={setSelectedTraining}
-              setSelectedTrainingComponent={setSelectedTrainingComponent}
-              setOpenTrainingComponentModal={setOpenTrainingComponentModal}
             />
           </Grid2>
           <Grid2
@@ -325,18 +322,6 @@ export default function DashboardHome(props: Props) {
           </Grid2>
         </Grid2>
       </Box>
-
-      {selectedTraining && selectedTrainingComponent && (
-        <SelectedTrainingComponentModal
-          open={openTrainingComponentModal}
-          setOpen={setOpenTrainingComponentModal}
-          training={selectedTraining}
-          setTraining={setSelectedTraining}
-          component={selectedTrainingComponent}
-          setComponent={setSelectedTrainingComponent}
-          hasPlayedAudioRef={hasPlayedAudioRef}
-        />
-      )}
     </DashboardPageContainer>
   );
 }

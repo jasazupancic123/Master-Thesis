@@ -35,6 +35,7 @@ export class ExerciseSetService {
       trainingId: string;
       componentId: string;
       exerciseId?: string;
+      supersetIndex?: number;
     },
     workloads: Workload[]
   ): Workload | undefined {
@@ -43,7 +44,8 @@ export class ExerciseSetService {
         (w) =>
           w.trainingId === id.trainingId &&
           w.componentId === id.componentId &&
-          (id.exerciseId ? w.exerciseId === id.exerciseId : true)
+          (id.exerciseId ? w.exerciseId === id.exerciseId : true) &&
+          (id.supersetIndex ? w.supersetIndex === id.supersetIndex : true)
       )
       .sort(
         (a, b) =>

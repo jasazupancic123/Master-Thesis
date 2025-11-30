@@ -145,7 +145,7 @@ export default function SelectedTrainingComponentModal(
                       ? 'Warmup'
                       : superset.cooldown
                         ? 'Cooldown'
-                        : `Superset ${hasGotWarmup + i + 1}`}
+                        : `Block ${hasGotWarmup ? -1 : 0 + i + 1}`}
                   </Typography>
                   {superset.exercises.map((exercise) => (
                     <Box
