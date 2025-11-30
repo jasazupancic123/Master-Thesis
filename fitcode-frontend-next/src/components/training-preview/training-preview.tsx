@@ -2,11 +2,11 @@
 
 import { Box } from '@mui/material';
 
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import TrainingPreviewInfoHeader from './training-preview-info-header';
 import TrainingPreviewMembers from './training-preview-members';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import VerticalLinesBorders from '@/ui/vertical-lines-borders';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import TrainingPreviewInfoHeader from './training-preview-info-header';
 
 export default function TrainingPreview() {
   const { training } = useCoachTraining();

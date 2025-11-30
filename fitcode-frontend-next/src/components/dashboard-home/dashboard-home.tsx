@@ -1,14 +1,13 @@
 import type { SxProps } from '@mui/material';
 import { Box, Grid2, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
 import FlaggedAthletes from './flagged-athletes';
 import useDashboardHomeComponents from './hooks/use-components.hook';
-import SelectedTrainingComponentModal from './modals/selected-training-component-modal';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';

@@ -1,15 +1,15 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
+import { INVALID_RECOVERY_TIME } from '@/components/training-in-progress/training-in-progress-exercise-header-card';
 import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { Workload } from '@/core/training/type/workload.type';
-import { INVALID_RECOVERY_TIME } from '@/components/training-in-progress/training-in-progress-exercise-header-card';
 
 export default function useRecoveryTime(
   selected: string,

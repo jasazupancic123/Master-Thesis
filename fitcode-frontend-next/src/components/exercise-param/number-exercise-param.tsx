@@ -7,7 +7,6 @@ import {
   exerciseCardSetAttributeSx,
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import ExerciseParamValueText from './exercise-param-value-text';
-import useRecoveryTime from '../training-in-progress/hooks/use-recovery-time';
 import NumericParamInputBoxModal from './numeric-param-input-box';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';

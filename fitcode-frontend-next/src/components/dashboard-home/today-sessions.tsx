@@ -5,7 +5,6 @@ import TodaySessionsComponent from './today-sessions-component';
 import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {

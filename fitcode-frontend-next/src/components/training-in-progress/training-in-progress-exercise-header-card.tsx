@@ -1,25 +1,25 @@
-import { theme } from '@/app/style';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import {
   Box,
   LinearProgress,
   linearProgressClasses,
   Typography,
 } from '@mui/material';
+import Image from 'next/image';
+import type { RefCallback } from 'react';
+import { useState } from 'react';
+
+import useRecoveryTime from './hooks/use-recovery-time';
+import { theme } from '@/app/style';
+import { core } from '@/core/core.service';
+import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import type { Superset } from '@/core/training/type/superset.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { lib } from '@/lib';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
+import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import { useMain } from '@/store/main.provider';
-import { RefCallback, RefObject, useState } from 'react';
-import { Superset } from '@/core/training/type/superset.type';
-import Image from 'next/image';
-import { lib } from '@/lib';
-import useRecoveryTime from './hooks/use-recovery-time';
-import { ExerciseParamFieldEnum } from '@/core/exercise/enum/exercise-param-field.enum';
-import { core } from '@/core/core.service';
-import { ChartsTooltip, PieChart } from '@mui/x-charts';
-import { PieCenterLabel } from '@/ui/mui-charts';
 
 interface Props {
   exercise: TrainingExercise;

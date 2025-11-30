@@ -9,9 +9,9 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
-import { Workload } from '@/core/training/type/workload.type';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 

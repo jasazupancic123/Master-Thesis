@@ -1,5 +1,6 @@
-import TrainerTrainingInProgressHeader from '@/components/trainer-training-in-progress/trainer-training-in-progress-header';
 import { Box, Container } from '@mui/material';
+
+import TrainerTrainingInProgressHeader from '@/components/trainer-training-in-progress/trainer-training-in-progress-header';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const styles = {

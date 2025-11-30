@@ -1,4 +1,5 @@
-import { styled, SxProps } from '@mui/material/styles';
+import type { SxProps } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 
 const StyledText = styled('text')(({ theme }) => ({

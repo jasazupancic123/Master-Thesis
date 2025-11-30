@@ -28,20 +28,15 @@ export default function CoachTrainingInitializer({
 
       const training = await controller.training.findById(trainingId);
 
-      console.log('training', training);
       if (!training) return notFound();
 
       const institution = institutions.find(
         (i) => i.id === training.institutionId
       );
 
-      console.log('institution', institution);
-
       if (!institution) return notFound();
 
       const group = groups.find((g) => g.id === training.groupId);
-
-      console.log('group', group);
 
       if (!group) return notFound();
 

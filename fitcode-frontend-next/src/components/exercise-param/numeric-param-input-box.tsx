@@ -1,10 +1,10 @@
 import { Box, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import MyModal from '@/ui/modal';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 interface Props extends ModalProps {
   value: number;
