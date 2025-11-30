@@ -8,7 +8,7 @@ import {
 } from '../trainer-group-day-view/style/exercise-card-set-attribute.style';
 import ExerciseParamValueText from './exercise-param-value-text';
 import useRecoveryTime from '../training-in-progress/hooks/use-recovery-time';
-import NumericParamInputBox from './numeric-param-input-box';
+import NumericParamInputBoxModal from './numeric-param-input-box';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import { KG, SETS } from '@/core/exercise/constant/exercise-param.constant';
@@ -35,12 +35,14 @@ interface Props {
   readOnly?: boolean;
   disableOptions?: boolean;
   disable?: boolean;
+  setIndex?: number;
 }
 
 export function NumberExerciseParam(props: Props) {
   const theme = useTheme();
 
   const {
+    exercise,
     options,
     selected,
     value: initValue,
@@ -55,6 +57,7 @@ export function NumberExerciseParam(props: Props) {
     disableOptions = false,
     disable = false,
     readOnly = false,
+    setIndex,
   } = props;
 
   const group = useGroup() ?? {};
@@ -234,9 +237,11 @@ export function NumberExerciseParam(props: Props) {
           </Box>
 
           {open && onInputChange && typeof value === 'number' && (
-            <NumericParamInputBox
-              anchorEl={anchorEl.current}
+            <NumericParamInputBoxModal
               value={value}
+              exercise={exercise}
+              setNumber={setIndex !== undefined ? setIndex + 1 : undefined}
+              param={exerciseParam.name}
               open={open}
               setOpen={setOpen}
               onSubOptionChange={onInputChange}

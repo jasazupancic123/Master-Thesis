@@ -21,7 +21,8 @@ interface Props {
 export default function TrainingInProgressExerciseSet(props: Props) {
   const { activeTraining } = useMain();
 
-  const { trainingInProgress, updateTrainingInProgress } = useTrainings();
+  const { trainingInProgress, updateTrainingInProgress, updateWorkloadValue } =
+    useTrainings();
 
   const { supersetIndex, selectedExercise } = useTrainingInProgress();
 
@@ -29,6 +30,16 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
   if (!selectedExercise || supersetIndex === undefined || !activeTraining)
     return null;
+
+  const foundWorkload = activeTraining.workloads.find((wl) => {
+    return (
+      wl.trainingId === trainingInProgress?.training.id &&
+      wl.componentId === trainingInProgress?.selectedComponent.id &&
+      wl.exerciseId === exercise.id &&
+      wl.supersetIndex === supersetIndex &&
+      wl.setNumber === setIndex + 1
+    );
+  });
 
   const uni = exercise.exercise?.isUnilateral;
   const volType = core.training.set.getVolType(exercise.sets[0]);
@@ -83,14 +94,13 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 <LeftRightExerciseText title="L" />
               </Box>
             )}
-
             {effTempoParam ? (
               effType === 'tempoEcc' ? (
                 <TempoExerciseParam
                   options={effOptions}
                   selected={effType}
                   value={core.training.set.getTempo(
-                    exercise.sets[setIndex],
+                    foundWorkload || exercise.sets[setIndex],
                     true
                   )}
                   exercise={exercise}
@@ -111,7 +121,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 <NumberExerciseParam
                   options={effOptions}
                   selected={effType}
-                  value={exercise.sets[setIndex]?.[effType] || 0}
+                  value={
+                    foundWorkload?.[effType] ||
+                    exercise.sets[setIndex]?.[effType] ||
+                    0
+                  }
                   exercise={exercise}
                   showOptions={!uni}
                   disableOptions
@@ -120,17 +134,33 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                   onInputChange={(value) => {
                     exercise.sets[setIndex][effType] = +value;
                     updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                    updateWorkloadValue(
+                      {
+                        trainingId: trainingInProgress.training.id,
+                        componentId: trainingInProgress.selectedComponent.id,
+                        exerciseId: exercise.id,
+                        supersetIndex: supersetIndex || 0,
+                        setNumber: setIndex + 1,
+                      },
+                      effType,
+                      +value
+                    );
                   }}
+                  setIndex={setIndex}
                 />
               )
             ) : null}
-
             <Box display="flex" alignItems="center">
               {volParam && (
                 <NumberExerciseParam
                   options={volOptions}
                   selected={volType}
-                  value={exercise.sets[setIndex]?.[volType] || 0}
+                  value={
+                    foundWorkload?.[volType] ||
+                    exercise.sets[setIndex]?.[volType] ||
+                    0
+                  }
                   exercise={exercise}
                   showOptions={!uni}
                   trainingInProgressPrimaryItem
@@ -139,7 +169,20 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     exercise.sets[setIndex][volType] = +value;
 
                     updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                    updateWorkloadValue(
+                      {
+                        trainingId: trainingInProgress.training.id,
+                        componentId: trainingInProgress.selectedComponent.id,
+                        exerciseId: exercise.id,
+                        supersetIndex: supersetIndex || 0,
+                        setNumber: setIndex + 1,
+                      },
+                      volType,
+                      +value
+                    );
                   }}
+                  setIndex={setIndex}
                 />
               )}
 
@@ -160,7 +203,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 <NumberExerciseParam
                   options={[KG]}
                   selected={KG.field}
-                  value={exercise.sets[setIndex]?.[KG.field] || 0}
+                  value={
+                    foundWorkload?.[KG.field] ||
+                    exercise.sets[setIndex]?.[KG.field] ||
+                    0
+                  }
                   exercise={exercise}
                   showOptions={!uni}
                   trainingInProgressPrimaryItem
@@ -169,16 +216,32 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     exercise.sets[setIndex][KG.field] = +value as never;
 
                     updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                    updateWorkloadValue(
+                      {
+                        trainingId: trainingInProgress.training.id,
+                        componentId: trainingInProgress.selectedComponent.id,
+                        exerciseId: exercise.id,
+                        supersetIndex: supersetIndex || 0,
+                        setNumber: setIndex + 1,
+                      },
+                      KG.field,
+                      +value
+                    );
                   }}
+                  setIndex={setIndex}
                 />
               )}
             </Box>
-
             {recParam && (
               <NumberExerciseParam
                 options={recOptions}
                 selected={recType}
-                value={exercise.sets[setIndex][recType] || 0}
+                value={
+                  foundWorkload?.[recType] ||
+                  exercise.sets[setIndex][recType] ||
+                  0
+                }
                 exercise={exercise}
                 disableOptions
                 disable
@@ -186,9 +249,24 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 renderIconOnly={!uni}
                 showOptions={!uni}
                 onInputChange={(value) => {
+                  if (!trainingInProgress) return;
+
                   exercise.sets[setIndex][recType] = +value;
                   updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                  updateWorkloadValue(
+                    {
+                      trainingId: trainingInProgress.training.id,
+                      componentId: trainingInProgress.selectedComponent.id,
+                      exerciseId: exercise.id,
+                      supersetIndex: supersetIndex || 0,
+                      setNumber: setIndex + 1,
+                    },
+                    recType,
+                    +value
+                  );
                 }}
+                setIndex={setIndex}
               />
             )}
           </Box>
@@ -231,7 +309,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                         options={effOptions}
                         selected={effType}
                         value={core.training.set.getTempoR(
-                          exercise.sets[setIndex],
+                          foundWorkload || exercise.sets[setIndex],
                           true
                         )}
                         exercise={exercise}
@@ -256,9 +334,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                         options={effOptions}
                         selected={effType}
                         value={
+                          foundWorkload?.[core.exercise.param.pairs[effType]] ||
                           exercise.sets[setIndex]?.[
                             core.exercise.param.pairs[effType]
-                          ] || 0
+                          ] ||
+                          0
                         }
                         exercise={exercise}
                         showOptions={false}
@@ -267,12 +347,27 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                         trainingInProgressSecondaryItem
                         onInputChange={(value) => {
                           const field = core.exercise.param.pairs[effType];
+
                           exercise.sets[setIndex][field] = +value as never;
                           updateTrainingInProgress(
                             exercise,
                             supersetIndex || 0
                           );
+
+                          updateWorkloadValue(
+                            {
+                              trainingId: trainingInProgress.training.id,
+                              componentId:
+                                trainingInProgress.selectedComponent.id,
+                              exerciseId: exercise.id,
+                              supersetIndex: supersetIndex || 0,
+                              setNumber: setIndex + 1,
+                            },
+                            field,
+                            +value
+                          );
                         }}
+                        setIndex={setIndex}
                       />
                     )}
                   </>
@@ -284,9 +379,10 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       options={volOptions}
                       selected={volType}
                       value={
-                        exercise.sets[setIndex]?.[
+                        foundWorkload?.[core.exercise.param.pairs[volType]] ||
+                        (exercise.sets[setIndex]?.[
                           core.exercise.param.pairs[volType]
-                        ] as number
+                        ] as number)
                       }
                       trainingInProgressPrimaryItem
                       disableOptions
@@ -299,7 +395,21 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
                         exercise.sets[setIndex][field] = +value;
                         updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                        updateWorkloadValue(
+                          {
+                            trainingId: trainingInProgress.training.id,
+                            componentId:
+                              trainingInProgress.selectedComponent.id,
+                            exerciseId: exercise.id,
+                            supersetIndex: supersetIndex || 0,
+                            setNumber: setIndex + 1,
+                          },
+                          field,
+                          +value
+                        );
                       }}
+                      setIndex={setIndex}
                     />
                   )}
 
@@ -321,9 +431,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       options={[KG]}
                       selected={KG.field}
                       value={
+                        foundWorkload?.[core.exercise.param.pairs['loadKg']] ||
                         exercise.sets[setIndex]?.[
                           core.exercise.param.pairs['loadKg']
-                        ] || 0
+                        ] ||
+                        0
                       }
                       exercise={exercise}
                       showOptions={false}
@@ -331,9 +443,24 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       disableOptions
                       onInputChange={(value) => {
                         const field = core.exercise.param.pairs['loadKg'];
+
                         exercise.sets[setIndex][field] = +value;
                         updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                        updateWorkloadValue(
+                          {
+                            trainingId: trainingInProgress.training.id,
+                            componentId:
+                              trainingInProgress.selectedComponent.id,
+                            exerciseId: exercise.id,
+                            supersetIndex: supersetIndex || 0,
+                            setNumber: setIndex + 1,
+                          },
+                          field,
+                          +value
+                        );
                       }}
+                      setIndex={setIndex}
                     />
                   )}
                 </Box>
@@ -343,9 +470,11 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     options={recOptions}
                     selected={recType}
                     value={
+                      foundWorkload?.[core.exercise.param.pairs[recType]] ||
                       exercise.sets[setIndex][
                         core.exercise.param.pairs[recType]
-                      ] || 0
+                      ] ||
+                      0
                     }
                     exercise={exercise}
                     showOptions={false}
@@ -354,9 +483,23 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                     trainingInProgressSecondaryItem
                     onInputChange={(value) => {
                       const field = core.exercise.param.pairs[recType];
+
                       exercise.sets[setIndex][field] = +value;
                       updateTrainingInProgress(exercise, supersetIndex || 0);
+
+                      updateWorkloadValue(
+                        {
+                          trainingId: trainingInProgress.training.id,
+                          componentId: trainingInProgress.selectedComponent.id,
+                          exerciseId: exercise.id,
+                          supersetIndex: supersetIndex || 0,
+                          setNumber: setIndex + 1,
+                        },
+                        field,
+                        +value
+                      );
                     }}
+                    setIndex={setIndex}
                   />
                 )}
               </Box>

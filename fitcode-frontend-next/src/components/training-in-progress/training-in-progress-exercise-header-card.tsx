@@ -128,8 +128,7 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
 
         if (newSupersetIndex === -1) return;
 
-        if (supersetIndex !== newSupersetIndex)
-          setSupersetIndex(newSupersetIndex);
+        setSupersetIndex(supersetIndex);
 
         setSetIndex(0);
 
@@ -208,7 +207,7 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
               },
             ]}
             slotProps={{
-              tooltip: { trigger: 'none' }, 
+              tooltip: { trigger: 'none' },
             }}
             colors={[
               theme.palette.primary.main,

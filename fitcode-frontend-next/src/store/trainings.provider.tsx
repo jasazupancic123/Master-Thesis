@@ -11,6 +11,7 @@ import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
+import { Workload } from '@/core/training/type/workload.type';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
@@ -26,6 +27,17 @@ interface ITrainingsContextProps extends TrainingsProviderProps {
   updateTrainingInProgress: (
     exercise: TrainingExercise,
     supersetIndex: number
+  ) => void;
+  updateWorkloadValue: (
+    id: {
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+      setNumber: number;
+    },
+    field: keyof Workload,
+    value: Workload[keyof Workload]
   ) => void;
 }
 
@@ -45,7 +57,7 @@ export type ITrainingsContextDefined = Omit<
 export const TrainingsProvider = (
   props: TrainingsProviderProps & React.PropsWithChildren
 ) => {
-  const { activeTraining } = useMain();
+  const { activeTraining, setActiveTraining } = useMain();
   const { children, reports } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
@@ -130,6 +142,47 @@ export const TrainingsProvider = (
     await lib.common.indexedDb.items.delete(STORED_TRAINING_IN_PROGRESS);
   };
 
+  const updateWorkloadValue = <K extends keyof Workload>(
+    id: {
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+      setNumber: number;
+    },
+    field: K,
+    value: Workload[K]
+  ) => {
+    if (!activeTraining) return;
+
+    const workload = activeTraining.workloads.find(
+      (w) =>
+        w.trainingId === id.trainingId &&
+        w.componentId === id.componentId &&
+        w.exerciseId === id.exerciseId &&
+        w.supersetIndex === id.supersetIndex &&
+        w.setNumber === id.setNumber
+    );
+
+    if (!workload) return;
+
+    if (!(field in workload)) return;
+
+    // TS now knows this is safe:
+    workload[field] = value;
+
+    setActiveTraining((prev) =>
+      !prev
+        ? prev
+        : {
+            ...prev,
+            workloads: (prev.workloads || []).map((wl) =>
+              wl.id === workload.id ? workload : wl
+            ),
+          }
+    );
+  };
+
   const updateTrainingInProgress = (
     exercise: TrainingExercise,
     supersetIndex: number
@@ -173,6 +226,7 @@ export const TrainingsProvider = (
         setTrainingInProgress,
         isLoaded,
         updateTrainingInProgress,
+        updateWorkloadValue,
       }}
     >
       {children}
