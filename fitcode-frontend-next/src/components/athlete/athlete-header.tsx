@@ -90,7 +90,7 @@ export default function AthleteHeader(props: Props) {
   const mobileDisplay = screenSize.isMobile || screenSize.isLandscapeMobile;
 
   const DrawerList = role && (
-    <Box sx={{ width: 250 }} role="presentation" onClick={toggle(false)}>
+    <Box sx={{ width: 140 }} role="presentation" onClick={toggle(false)}>
       <List sx={{ pt: 0 }}>
         {(!mobileDisplay
           ? lib.common.nav.getSidebarLinksByUserRole(role) // for desktop, use all links
