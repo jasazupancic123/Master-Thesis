@@ -30,6 +30,7 @@ export async function handleClickDateCell(
     selectedTargets?: { componentId: string; target: Target }[];
     setOpenOverwriteModal?: SetState<boolean>;
     setTrainingInPeriodForModal?: SetState<Training | null>;
+    setIsCreatingTraining?: SetState<boolean>;
   },
   groupCtx: IGroupCtx,
   mainCtx: IMainContext
@@ -44,6 +45,7 @@ export async function handleClickDateCell(
     trainingComponent,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
+    setIsCreatingTraining,
   } = input;
 
   const { cycle, trainings } = groupCtx;
@@ -80,7 +82,13 @@ export async function handleClickDateCell(
 
     handleAddTraining(
       userId,
-      { date, period: period as 'AM' | 'PM', selected, selectedTargets },
+      {
+        date,
+        period: period as 'AM' | 'PM',
+        selected,
+        selectedTargets,
+        setIsCreatingTraining,
+      },
       groupCtx,
       mainCtx
     );
@@ -187,11 +195,13 @@ function handleAddTraining(
     period: 'AM' | 'PM';
     selected?: Component[];
     selectedTargets?: { componentId: string; target: Target }[];
+    setIsCreatingTraining?: SetState<boolean>;
   },
   groupCtx: IGroupCtx,
   mainCtx: IMainContext
 ) {
-  const { date, period, selected, selectedTargets } = input;
+  const { date, period, selected, selectedTargets, setIsCreatingTraining } =
+    input;
 
   if (!selected) {
     toast.error('Please select at least one component to add');
@@ -217,6 +227,7 @@ function handleAddTraining(
           ?.target?.field as string,
       })),
     },
+    setIsCreatingTraining,
     groupCtx,
     mainCtx
   );
@@ -230,6 +241,7 @@ async function handleCreateTraining(
     period: 'AM' | 'PM';
     selectedComponents: TrainingComponent[];
   },
+  setIsCreatingTraining: SetState<boolean> | undefined,
   groupCtx: IGroupCtx,
   mainCtx: IMainContext
 ) {
@@ -265,6 +277,8 @@ async function handleCreateTraining(
   const state = { trainings: [...trainings] };
   const tempId = 'training-id';
 
+  setIsCreatingTraining?.(true);
+
   await lib.common.generic.optimisticUpdate(
     () => {
       // Optimistically add the new training to the state
@@ -286,6 +300,7 @@ async function handleCreateTraining(
       );
     },
     (snapshot) => {
+      setIsCreatingTraining?.(false);
       setTrainings(snapshot.trainings);
     },
     async () =>
@@ -309,6 +324,8 @@ async function handleCreateTraining(
       );
 
       toast.success('Training created successfully');
+
+      setIsCreatingTraining?.(false);
     }
   );
 }

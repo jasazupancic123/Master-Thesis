@@ -129,6 +129,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                               DEFAULT_SUBGROUP_ID,
                               trainerDayViewContext
                             );
+
+                            console.log(member.displayName, member.uid);
                           }}
                           zIndex={1000}
                         >
