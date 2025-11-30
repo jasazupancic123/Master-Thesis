@@ -6,18 +6,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
-import { Create } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionMemberRef,
   InstitutionRef,
 } from '@src/common/type/firestore.type';
+import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
@@ -129,10 +131,6 @@ export class InstitutionService implements Permission<Institution> {
     return { ...institution, groups };
   }
 
-  async incrementExerciseRevisions(institutionId: string) {
-    await this.repository.incrementExerciseRevisions(institutionId);
-  }
-
   @LogMethod()
   async create(user: User, input: CreateInstitutionDto): Promise<Institution> {
     if (!this.firebase.isAdmin(user))
@@ -204,6 +202,18 @@ export class InstitutionService implements Permission<Institution> {
     await this.membersRepository.addMember(data, ref);
   }
 
+  getIncrementExerciseRevisionsOperation(
+    institutionId: string,
+  ): BatchUpdateOperation<Institution> {
+    return {
+      operation: 'update',
+      ref: this.repository.collection().doc(institutionId),
+      data: {
+        exerciseRevisions: FieldValue.increment(1),
+      } as unknown as FirestoreEntity<Institution>,
+    };
+  }
+
   getMemberIds(institution: Institution): string[] {
     return [institution.ownerId, ...institution.members.map((m) => m.id)];
   }
@@ -254,10 +264,7 @@ export class InstitutionService implements Permission<Institution> {
   canEditExtended(
     user: User,
     institution: Institution,
-    options?: {
-      allowTrainer?: boolean;
-      allowAthlete?: boolean;
-    },
+    options?: { allowTrainer?: boolean; allowAthlete?: boolean },
   ) {
     if (options?.allowTrainer && this.isTrainer(institution, user)) return true;
     if (options?.allowAthlete && this.isAthlete(institution, user)) return true;
