@@ -27,6 +27,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     copyComponent,
     addTrainingComponent,
     deleteTrainingComponent,
+    setIsCreatingTraining,
   } = props;
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
@@ -75,6 +76,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 setTrainingInPeriodForModal={setTrainingInPeriodForModal}
                 addTrainingComponent={addTrainingComponent}
                 deleteTrainingComponent={deleteTrainingComponent}
+                setIsCreatingTraining={setIsCreatingTraining}
               />
             </Box>
           </Box>
