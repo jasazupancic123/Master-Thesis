@@ -22,6 +22,7 @@ import {
   VEL,
 } from '@/core/exercise/constant/exercise-param.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import { Workload } from '../type/workload.type';
 
 type ExerciseMainParamNoSets = Exclude<ExerciseMainParamField, 'sets'>;
 type ExerciseParamNoSets = Exclude<ExerciseParamFieldExtended, 'sets'>;
@@ -122,7 +123,7 @@ export class TrainingExerciseSetUtil {
   }
 
   getTempo(
-    set?: ExerciseSet,
+    set?: ExerciseSet | Workload,
     removeIdle?: boolean
   ): [number, number, number, number] | [number, number, number] {
     if (!set) return [2, 0, 0, 0];
