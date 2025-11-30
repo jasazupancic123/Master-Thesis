@@ -35,7 +35,11 @@ export class TrainingProtocolService {
       institutionId,
     );
 
-    if (!this.institutionService.canEditExtended(user, institution))
+    if (
+      !this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+      })
+    )
       throw new ForbiddenException('You cannot create training protocols');
 
     const component = Components.find((c) => c.field === input.componentId);
@@ -78,7 +82,11 @@ export class TrainingProtocolService {
       ref.institutionId,
     );
 
-    if (!this.institutionService.canEditExtended(user, institution))
+    if (
+      !this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+      })
+    )
       throw new ForbiddenException('You cannot edit training protocols');
 
     let supersets: Superset[];
@@ -107,7 +115,11 @@ export class TrainingProtocolService {
       ref.institutionId,
     );
 
-    if (!this.institutionService.canEditExtended(user, institution))
+    if (
+      !this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+      })
+    )
       throw new ForbiddenException('You cannot edit training protocols');
 
     await this.protocolService.delete(institution, ref.protocolId);

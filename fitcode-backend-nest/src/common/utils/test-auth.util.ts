@@ -26,7 +26,11 @@ export class TestAuth {
     await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
 
     const createUserQuery = this.firebase.buildCreateQuery<Profile>(
-      { uid: user.uid, email: user.email, height: 0, weight: 0 },
+      {
+        uid: user.uid,
+        email: user.email,
+        wellness: { userId: user.uid, date: new Date() },
+      },
       { timestamps: true },
     );
 

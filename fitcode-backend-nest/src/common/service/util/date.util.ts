@@ -21,7 +21,7 @@ export class DateUtil {
     return isEqual(date, compare);
   }
 
-  getIsoWeek(date: Date): number {
+  /* getIsoWeek(date: Date): number {
     const target = new Date(date.valueOf());
 
     // Set to nearest Thursday: ISO week starts on Monday, week 1 is the week with the first Thursday
@@ -37,6 +37,24 @@ export class DateUtil {
 
     // Calculate ISO week number
     return Math.floor(daysDiff / 7) + 1;
+  } */
+
+  getIsoWeekAndYear(date: Date): { week: number; year: number } {
+    const tmp = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
+
+    // Thursday of this week
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+
+    // January 1 of ISO year
+    const year = tmp.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil(
+      ((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
+
+    return { week, year };
   }
 
   doRangesOverlap(

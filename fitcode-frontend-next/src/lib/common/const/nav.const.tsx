@@ -224,9 +224,18 @@ export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
     LINK_DASHBOARD_PLANNING,
   ];
 
-  if (role === UserRole.ADMIN) links.push(LINK_DASHBOARD_ADD_INSTITUTION);
+  const mapper: Record<UserRole, ILink[]> = {
+    [UserRole.ATHLETE]: links,
+    [UserRole.TRAINER]: links,
+    [UserRole.MANAGER]: links,
+    [UserRole.ADMIN]: [
+      LINK_DASHBOARD_EXERCISES,
+      LINK_DASHBOARD_SETTINGS,
+      LINK_DASHBOARD_ADD_INSTITUTION,
+    ],
+  };
 
-  return links;
+  return mapper[role];
 };
 
 export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {

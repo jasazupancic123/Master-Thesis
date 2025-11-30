@@ -13,7 +13,7 @@ import {
   InstitutionMemberRef,
   InstitutionRef,
 } from '@src/common/type/firestore.type';
-import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { ProfileService } from '@src/profile/service/profile.service';
@@ -68,16 +68,20 @@ export class MemberService {
         );
 
       // updating trainer
-      if (!add) await this.repository.removeMember(memberRef);
+      if (!add) await this.repository.removeMember(memberRef, UserRole.TRAINER);
       else
         await this.repository.addMember({ role: UserRole.TRAINER }, memberRef);
     } else {
       // updating athlete
-      const operations: BatchOperation<InstitutionMember>[] = add
+      const operations: BatchOperation<InstitutionMember | Institution>[] = add
         ? this.repository.getAddMembersOperation(memberRef, [
             { id: member.uid, role: UserRole.ATHLETE },
           ])
-        : this.repository.getRemoveMembersOperation(memberRef, [member.uid]);
+        : this.repository.getRemoveMembersOperation(
+            memberRef,
+            [member.uid],
+            UserRole.ATHLETE,
+          );
 
       // remove athlete in all groups & trainings
       if (!add)
@@ -94,10 +98,11 @@ export class MemberService {
       await this.firebase.paginateBatches(operations);
     }
   }
+
   buildAddMembersOperation(
     ref: InstitutionRef,
     data: Create<Omit<InstitutionMember, 'institutionId'>>[],
-  ): BatchWriteOperation<InstitutionMember>[] {
+  ): BatchOperation<InstitutionMember | Institution>[] {
     return this.repository.getAddMembersOperation(ref, data);
   }
 }

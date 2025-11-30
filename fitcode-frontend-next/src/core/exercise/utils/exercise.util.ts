@@ -15,7 +15,9 @@ export class ExerciseUtil {
     this.muscle = new MuscleUtil();
   }
 
-  async getCached(institutionId: string): Promise<Exercise[] | null> {
+  async getCachedByInstitution(
+    institutionId: string
+  ): Promise<Exercise[] | null> {
     const cached = await lib.common.indexedDb.items.get(
       `exercises-${institutionId}`
     );
@@ -34,7 +36,7 @@ export class ExerciseUtil {
     });
   }
 
-  async getCachedInstitutionRevision(
+  async getCachedByInstitutionExerciseRevisions(
     institutionId: string
   ): Promise<number | null> {
     const cached = await lib.common.indexedDb.items.get(
@@ -44,15 +46,7 @@ export class ExerciseUtil {
     return cached?.payload ? +cached.payload : null;
   }
 
-  async getCachedGlobalRevision(): Promise<number | null> {
-    const cached = await lib.common.indexedDb.items.get(
-      `exercises-global-revision`
-    );
-
-    return cached?.payload ? +cached.payload : null;
-  }
-
-  async saveInstitutionRevisionToCache(
+  async saveInstitutionExerciseRevisionsToCache(
     institutionId: string,
     revision: number
   ): Promise<void> {
@@ -63,11 +57,10 @@ export class ExerciseUtil {
     });
   }
 
-  async saveGlobalRevisionToCache(revision: number): Promise<void> {
-    await lib.common.indexedDb.items.put({
-      id: `exercises-global-revision`,
-      payload: revision.toString(),
-      updatedAt: Date.now(),
-    });
+  async deleteCacheByInstitution(institutionId: string): Promise<void> {
+    await lib.common.indexedDb.items.delete(`exercises-${institutionId}`);
+    await lib.common.indexedDb.items.delete(
+      `exercises-revision-${institutionId}`
+    );
   }
 }

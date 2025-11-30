@@ -2,6 +2,7 @@ import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, startOfDay, subDays } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
 import { getTime } from '@src/common/service/util';
 import type { TestInstitution } from '@src/common/type/entity.type';
@@ -40,12 +41,17 @@ describe('Update Training (e2e)', () => {
 
     institution = await db.institutions.createTest();
     group = await db.groups.createTest(institution);
+
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     trainingId = await db.trainings.save(
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        ownerId: institution.trainerIds[0],
+        ownerId: trainerIds[0],
         membersIds: [],
         from: trainingDate,
         components: [generateTrainingComponent({ id: 'c1' })],
@@ -180,6 +186,10 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should throw error if new `to` extends beyond next components `to`', async () => {
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     const trainingDate = addDays(startOfDay(new Date()), 4);
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -187,7 +197,7 @@ describe('Update Training (e2e)', () => {
           institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[0].id,
-          ownerId: institution.trainerIds[0],
+          ownerId: trainerIds[0],
           membersIds: [],
           from: trainingDate,
           components: [
@@ -222,6 +232,10 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should throw error if new `from` is before previous components `from`', async () => {
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     const trainingDate = addDays(startOfDay(new Date()), 4);
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -229,7 +243,7 @@ describe('Update Training (e2e)', () => {
           institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[0].id,
-          ownerId: institution.trainerIds[0],
+          ownerId: trainerIds[0],
           membersIds: [],
           from: trainingDate,
           components: [
@@ -264,6 +278,10 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should successfully update first component', async () => {
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     const trainingDate = new Date();
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -271,7 +289,7 @@ describe('Update Training (e2e)', () => {
           institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[0].id,
-          ownerId: institution.trainerIds[0],
+          ownerId: trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           to: getTime(trainingDate, 9, 0),
@@ -328,6 +346,10 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should successfully update last component', async () => {
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     const trainingDate = new Date();
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -335,7 +357,7 @@ describe('Update Training (e2e)', () => {
           institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[0].id,
-          ownerId: institution.trainerIds[0],
+          ownerId: trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           to: getTime(trainingDate, 9, 0),
@@ -389,6 +411,10 @@ describe('Update Training (e2e)', () => {
   });
 
   it('should successfully update middle component and adjust only immediate neighbors', async () => {
+    const trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
     const trainingDate = new Date();
     const newTrainingId = await db.trainings.save(
       generateTrainingStub(
@@ -396,7 +422,7 @@ describe('Update Training (e2e)', () => {
           institutionId: institution.id,
           groupId: group.id,
           cycleId: group.cycles[0].id,
-          ownerId: institution.trainerIds[0],
+          ownerId: trainerIds[0],
           membersIds: [],
           from: getTime(trainingDate, 8, 0),
           to: getTime(trainingDate, 9, 30),

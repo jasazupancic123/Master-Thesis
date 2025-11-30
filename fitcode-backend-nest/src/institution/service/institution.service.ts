@@ -6,18 +6,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
-import { Create } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionMemberRef,
   InstitutionRef,
 } from '@src/common/type/firestore.type';
+import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
@@ -28,7 +30,10 @@ import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMemberDto } from '../dto/update-institution-members.dto';
 import { Group } from '../entity/group.entity';
 import { InitInstitution, Institution } from '../entity/institution.entity';
-import { InstitutionMember } from '../entity/institution-member.entity';
+import {
+  InstitutionMember,
+  PartialInstitutionMember,
+} from '../entity/institution-member.entity';
 import { GroupRepository } from '../repository/group.repository';
 import { InstitutionRepository } from '../repository/institution.repository';
 import { InstitutionMembersRepository } from '../repository/institution-members.repository';
@@ -91,8 +96,7 @@ export class InstitutionService implements Permission<Institution> {
   @LogMethod()
   async findAllGroups(user: User, institutionId: string): Promise<Group[]> {
     await this.findByIdOrFail(user, institutionId);
-    const ref: InstitutionRef = { institutionId };
-    return await this.groupRepository.getAllByInstitution(ref);
+    return await this.groupRepository.getAllByInstitution({ institutionId });
   }
 
   @LogMethod()
@@ -119,33 +123,12 @@ export class InstitutionService implements Permission<Institution> {
 
   @LogMethod()
   async init(user: User, institutionId: string): Promise<InitInstitution> {
-    // used for initializing institution-related data
-    const ref: InstitutionRef = { institutionId };
     const institution = await this.findByIdOrFail(user, institutionId);
+    const groups = await this.groupRepository.getAllByInstitution({
+      institutionId,
+    });
 
-    let groups: Group[] = [];
-    let protocols: TrainingProtocol[] = [];
-    let users: AuthProfileMerged[] = [];
-
-    await this.common.generic.measure(
-      'InstitutionService.init (groups, protocols, members)',
-      async () => {
-        [groups, protocols, users] = await Promise.all([
-          this.groupRepository.getAllByInstitution(ref),
-          this.protocolRepository.getAllByInstitution(ref),
-          this.memberService.findAllByInstitution(institution, [
-            'faceEmbedding',
-            'photoURLBase64',
-          ]),
-        ]);
-      },
-    );
-
-    return { ...institution, groups, users, protocols };
-  }
-
-  async incrementExerciseRevisions(institutionId: string) {
-    await this.repository.incrementExerciseRevisions(institutionId);
+    return { ...institution, groups };
   }
 
   @LogMethod()
@@ -164,7 +147,7 @@ export class InstitutionService implements Permission<Institution> {
         'Owner of the institution must be a manager',
       );
 
-    const data: Create<Omit<Institution, 'trainerIds' | 'athleteIds'>> = {
+    const data: Create<Omit<Institution, 'members'>> = {
       id: null,
       ownerId: input.ownerId,
       name: input.name,
@@ -179,8 +162,7 @@ export class InstitutionService implements Permission<Institution> {
     return {
       ...data,
       id,
-      trainerIds: [],
-      athleteIds: [],
+      members: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -220,29 +202,72 @@ export class InstitutionService implements Permission<Institution> {
     await this.membersRepository.addMember(data, ref);
   }
 
+  getIncrementExerciseRevisionsOperation(
+    institutionId: string,
+  ): BatchUpdateOperation<Institution> {
+    return {
+      operation: 'update',
+      ref: this.repository.collection().doc(institutionId),
+      data: {
+        exerciseRevisions: FieldValue.increment(1),
+      } as unknown as FirestoreEntity<Institution>,
+    };
+  }
+
+  getMemberIds(institution: Institution): string[] {
+    return [institution.ownerId, ...institution.members.map((m) => m.id)];
+  }
+
+  getTrainers(institution: Institution): PartialInstitutionMember[] {
+    return institution.members.filter((m) => m.role === UserRole.TRAINER);
+  }
+
+  getAthletes(institution: Institution): PartialInstitutionMember[] {
+    return institution.members.filter((m) => m.role === UserRole.ATHLETE);
+  }
+
+  isManager(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return this.firebase.isManager(user) && institution.ownerId === user.uid;
+  }
+
+  isTrainer(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return (
+      this.firebase.isTrainer(user) &&
+      this.getTrainers(institution).some((t) => t.id === user.uid)
+    );
+  }
+
+  isAthlete(institution: Institution, user: User): boolean {
+    if (!institution) return false;
+    return (
+      this.firebase.isAthlete(user) &&
+      this.getAthletes(institution).some((a) => a.id === user.uid)
+    );
+  }
+
   canView(user: User, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
-    if (institution.ownerId === user.uid) return true;
-    if (institution.trainerIds.includes(user.uid)) return true;
-    if (institution.athleteIds.includes(user.uid)) return true;
+    if (this.isManager(institution, user)) return true;
+    if (this.isTrainer(institution, user)) return true;
+    if (this.isAthlete(institution, user)) return true;
     return false;
   }
 
   canEdit(user: User, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
-    if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-      return true;
-
+    if (this.isManager(institution, user)) return true;
     return false;
   }
 
-  canEditExtended(user: User, institution: Institution) {
-    if (
-      this.firebase.isTrainer(user) &&
-      institution.trainerIds.includes(user.uid)
-    )
-      return true;
-
+  canEditExtended(
+    user: User,
+    institution: Institution,
+    options?: { allowTrainer?: boolean; allowAthlete?: boolean },
+  ) {
+    if (options?.allowTrainer && this.isTrainer(institution, user)) return true;
+    if (options?.allowAthlete && this.isAthlete(institution, user)) return true;
     return this.canEdit(user, institution);
   }
 }

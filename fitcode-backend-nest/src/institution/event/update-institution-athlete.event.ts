@@ -2,12 +2,17 @@ import { Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { BatchOperation } from '@src/common/type/orm.type';
+import { Training } from '@src/training/entity/training.entity';
 
+import { Group } from '../entity/group.entity';
+import { Institution } from '../entity/institution.entity';
 import { InstitutionMember } from '../entity/institution-member.entity';
 
 export class UpdateInstitutionAthleteEvent {
   @Expose()
-  operations: BatchOperation<InstitutionMember | { membersIds: string[] }>[];
+  operations: BatchOperation<
+    InstitutionMember | Institution | Group | Training
+  >[];
 
   @IsString()
   @IsNotEmpty()

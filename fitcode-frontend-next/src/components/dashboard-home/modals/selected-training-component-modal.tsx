@@ -147,6 +147,7 @@ export default function SelectedTrainingComponentModal(
                         ? 'Cooldown'
                         : `Block ${hasGotWarmup ? -1 : 0 + i + 1}`}
                   </Typography>
+
                   {superset.exercises.map((exercise) => (
                     <Box
                       key={exercise.id}
@@ -159,6 +160,7 @@ export default function SelectedTrainingComponentModal(
                       <Typography>
                         {exercise.exercise?.name || 'Unknown exercise'}
                       </Typography>
+
                       <Typography textAlign="center">
                         {exercise.sets.length} sets
                       </Typography>

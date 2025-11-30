@@ -103,7 +103,11 @@ describe('Import Users (e2e)', () => {
 
     // it should add members to institution
     let institution = await db.institutions.findById(institutionId);
-    expect(institution.athleteIds).toHaveLength(5 + 1); // +1 for global.athlete
+    const athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(athleteIds).toHaveLength(5 + 1); // +1 for global.athlete
 
     const allProfilesAfter = await db.profiles.findAll();
     expect(allProfilesAfter).toHaveLength(9); // 4 + 5 new
@@ -116,12 +120,12 @@ describe('Import Users (e2e)', () => {
         .map((u) => u.uid),
     );
 
-    for (const uid of institution.athleteIds)
+    for (const uid of athleteIds)
       if (uid !== global.athlete.uid)
-        await db.institutions.members.removeMember({
-          institutionId,
-          uid,
-        });
+        await db.institutions.members.removeMember(
+          { institutionId, uid },
+          UserRole.ATHLETE,
+        );
   });
 
   it('should successfully import all users', async () => {
@@ -129,7 +133,11 @@ describe('Import Users (e2e)', () => {
     expect(allProfilesBefore).toHaveLength(4); // global test profiles
 
     let institution = await db.institutions.findById(institutionId);
-    expect(institution.athleteIds).toHaveLength(1); // only global.athlete
+    let athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(athleteIds).toHaveLength(1); // only global.athlete
 
     const auth = testApp.module.get(AuthService);
     const spy = jest.spyOn(auth, 'importUsers');
@@ -157,7 +165,11 @@ describe('Import Users (e2e)', () => {
 
     // it should add members to institution
     institution = await db.institutions.findById(institutionId);
-    expect(institution.athleteIds).toHaveLength(50 + 1); // +1 for global.athlete
+    athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(athleteIds).toHaveLength(50 + 1); // +1 for global.athlete
 
     const allProfilesAfter = await db.profiles.findAll();
     expect(allProfilesAfter).toHaveLength(54); // 4 + 50 new
@@ -170,12 +182,12 @@ describe('Import Users (e2e)', () => {
         .map((u) => u.uid),
     );
 
-    for (const uid of institution.athleteIds)
+    for (const uid of athleteIds)
       if (uid !== global.athlete.uid)
-        await db.institutions.members.removeMember({
-          institutionId,
-          uid,
-        });
+        await db.institutions.members.removeMember(
+          { institutionId, uid },
+          UserRole.ATHLETE,
+        );
   });
 
   it('should not throw error if users already exist', async () => {
@@ -203,7 +215,11 @@ describe('Import Users (e2e)', () => {
     expect(body.errors).toHaveLength(0);
 
     let institution = await db.institutions.findById(institutionId);
-    expect(institution.athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
+    let athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
 
     const allProfilesAfterFirst = await db.profiles.findAll();
     expect(allProfilesAfterFirst).toHaveLength(14); // 4 + 10 new
@@ -230,7 +246,11 @@ describe('Import Users (e2e)', () => {
     });
 
     institution = await db.institutions.findById(institutionId);
-    expect(institution.athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
+    athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(athleteIds).toHaveLength(10 + 1); // +1 for global.athlete
 
     const allProfilesAfterSecond = await db.profiles.findAll();
     expect(allProfilesAfterSecond).toHaveLength(14); // no new profiles
@@ -244,7 +264,10 @@ describe('Import Users (e2e)', () => {
     );
 
     await db.institutions.update(institutionId, {
-      athleteIds: [global.athlete.uid], // reset members
+      members: [
+        { id: global.athlete.uid, role: UserRole.ATHLETE },
+        { id: global.trainer.uid, role: UserRole.TRAINER },
+      ],
     });
   });
 
@@ -274,11 +297,20 @@ describe('Import Users (e2e)', () => {
     expect(body.errors).toHaveLength(0);
 
     const institution = await db.institutions.findById(institutionId);
-    expect(institution.trainerIds).toContain(
+
+    let trainerIds = institution.members
+      .filter((m) => m.role === UserRole.TRAINER)
+      .map((m) => m.id);
+
+    let athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    expect(trainerIds).toContain(
       body.successful.find((u) => u.email === 'trainer@mail.com')!.uid,
     );
 
-    expect(institution.athleteIds).toContain(
+    expect(athleteIds).toContain(
       body.successful.find((u) => u.email === 'athlete@mail.com')!.uid,
     );
 
@@ -294,8 +326,10 @@ describe('Import Users (e2e)', () => {
     );
 
     await db.institutions.update(institutionId, {
-      trainerIds: [global.trainer.uid], // reset trainers
-      athleteIds: [global.athlete.uid], // reset members
+      members: [
+        { id: global.athlete.uid, role: UserRole.ATHLETE },
+        { id: global.trainer.uid, role: UserRole.TRAINER },
+      ],
     });
   });
 

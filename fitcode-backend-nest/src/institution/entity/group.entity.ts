@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Length,
   ValidateNested,
 } from 'class-validator';
 
@@ -32,7 +33,9 @@ export class Group extends BaseEntity {
   name: string;
 
   @IsString()
-  @ApiProperty()
+  @IsNotEmpty()
+  @Length(1, 4)
+  @ApiProperty({ minLength: 1, maxLength: 4 })
   @Expose()
   shortName: string;
 

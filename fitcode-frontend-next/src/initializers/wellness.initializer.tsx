@@ -7,27 +7,22 @@ import {
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
 import Alert from '../ui/alert';
-import { ProfileController } from '@/core/profile/profile.controller';
 import type { Wellness } from '@/core/profile/type/wellness.type';
+import { useMain } from '@/store/main.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer(props: React.PropsWithChildren) {
   const { children } = props;
-  const controller = ProfileController.getInstance();
 
+  const { profile } = useMain();
   const [wellness, setWellness] = useState<Wellness | null>(
     getCachedWellness()
   );
 
   useEffect(() => {
-    async function init() {
-      if (wellness) return; // already cached
-      const fetchedWellness = await controller.getLatestWellnessByUser();
-      setCachedWellness(fetchedWellness);
-      setWellness(fetchedWellness);
-    }
-
-    init();
+    if (wellness) return; // already cached
+    setCachedWellness(profile.wellness);
+    setWellness(profile.wellness);
   }, [wellness]);
 
   if (!wellness) {

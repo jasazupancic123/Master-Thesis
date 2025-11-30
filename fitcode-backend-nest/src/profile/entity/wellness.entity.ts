@@ -6,6 +6,8 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class Wellness {
@@ -25,12 +27,16 @@ export class Wellness {
   @IsNumber()
   @Expose()
   @ApiPropertyOptional()
+  @Min(0)
+  @Max(500)
   weight?: number;
 
   @IsOptional()
   @IsNumber()
   @Expose()
   @ApiPropertyOptional()
+  @Min(0)
+  @Max(250)
   height?: number;
 
   @IsOptional()

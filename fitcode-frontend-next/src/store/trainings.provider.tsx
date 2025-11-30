@@ -3,23 +3,19 @@
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import { useAthlete } from './athlete.provider';
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { TrainingReport } from '@/core/training/type/training-report.type';
 import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
 export const TRAINING_IN_PROGRESS_STORAGE_KEY = 'blindoff_training_in_progress';
 
-export interface TrainingsProviderProps {
-  reports: TrainingReport[];
-}
-
-interface ITrainingsContextProps extends TrainingsProviderProps {
+interface ITrainingsContextProps {
   clearTrainingState: () => Promise<void>;
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
@@ -54,20 +50,17 @@ export type ITrainingsContextDefined = Omit<
   trainingInProgress: TrainingInProgress;
 };
 
-export const TrainingsProvider = (
-  props: TrainingsProviderProps & React.PropsWithChildren
-) => {
+export const TrainingsProvider = (props: React.PropsWithChildren) => {
   const { activeTraining, setActiveTraining } = useMain();
-  const { children, reports } = props;
+  const { reports } = useAthlete();
+  const { children } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
     useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { user } = useAuthenticatedAuth();
-
   const pathname = usePathname();
-
   const trainingId = pathname.split('/')[2];
   const componentId = pathname.split('/').pop() || '';
 
@@ -220,7 +213,6 @@ export const TrainingsProvider = (
   return (
     <TrainingsContext.Provider
       value={{
-        reports,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,

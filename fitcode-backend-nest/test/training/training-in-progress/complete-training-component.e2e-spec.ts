@@ -109,10 +109,10 @@ describe('Complete Training Component (e2e)', () => {
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this training');
 
-    await db.institutions.institutionMembersRepository.removeMember({
-      institutionId: institution1.id,
-      uid: newAthlete.uid,
-    });
+    await db.institutions.institutionMembersRepository.removeMember(
+      { institutionId: institution1.id, uid: newAthlete.uid },
+      UserRole.ATHLETE,
+    );
 
     await testApp.auth.deleteUser(newAthlete.uid);
   });
