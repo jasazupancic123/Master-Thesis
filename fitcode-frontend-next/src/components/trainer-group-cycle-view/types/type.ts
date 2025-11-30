@@ -29,6 +29,7 @@ export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   selectedTarget?: Target;
   copyComponent?: boolean;
   day?: Day;
+  setIsCreatingTraining?: SetState<boolean>;
 };
 
 export type TrainingCycleViewGridItemProps = TrainingCycleViewCommonProps & {
