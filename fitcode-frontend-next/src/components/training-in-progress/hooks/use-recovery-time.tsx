@@ -74,17 +74,11 @@ export default function useRecoveryTime(
     // here update every second and every second decrease value by 1 until 0
     const intervalId: NodeJS.Timeout = setInterval(() => {
       setValue(() => {
-        const elapsedSinceLastSet = Math.max(
-          0,
-          Math.floor(dayjs().diff(dayjs(lastSetCompletedAt), 'second'))
+        const elapsedSinceLastSet = Math.floor(
+          dayjs().diff(dayjs(lastSetCompletedAt), 'second')
         );
 
-        const remaining = Math.max(
-          0,
-          (initValue as number) - elapsedSinceLastSet
-        );
-
-        if (remaining <= 0) return 0;
+        const remaining = (initValue as number) - elapsedSinceLastSet;
 
         return remaining;
       });

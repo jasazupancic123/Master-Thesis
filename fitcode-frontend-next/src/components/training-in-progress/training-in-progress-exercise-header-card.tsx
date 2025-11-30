@@ -115,14 +115,16 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
     initValue !== INVALID_RECOVERY_TIME &&
     progress !== 100 &&
     progress > 0 &&
-    typeof value === 'number' &&
-    value > 0;
+    typeof value === 'number';
 
   return (
     <Box
       component="div"
       key={exercise.id}
       ref={getExerciseRef(exercise.id)}
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
       onClick={() => {
         const newSupersetIndex = trainingInProgress.supersets.indexOf(superset);
 
@@ -165,7 +167,6 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
             style={{
               objectFit: 'cover',
               display: 'block',
-              opacity: showRecoveryTime ? 0.5 : 1,
             }}
           />
         ) : (
@@ -176,7 +177,6 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              opacity: showRecoveryTime ? 0.5 : 1,
             }}
             controls={false}
             src={exerciseObject.videoUrl!}
@@ -185,45 +185,24 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
             playsInline
           />
         )}
-
-        {showRecoveryTime && (
-          <PieChart
-            height={45}
-            width={40}
-            hideLegend
-            series={[
-              {
-                data: [
-                  {
-                    value: 100 - value * (100 / initValue),
-                    label: '',
-                  },
-                  {
-                    value: value * (100 / initValue),
-                    label: '',
-                  },
-                ],
-                innerRadius: 18,
-              },
-            ]}
-            slotProps={{
-              tooltip: { trigger: 'none' },
-            }}
-            colors={[
-              theme.palette.primary.main,
-              theme.palette.background.light,
-            ]}
-            sx={{
-              position: 'absolute',
-              left: '50%',
-              top: '45%',
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            <PieCenterLabel label={value.toString()} sx={{ fontWeight: 500 }} />
-          </PieChart>
-        )}
       </Box>
+
+      {showRecoveryTime && (
+        <Typography
+          fontSize={10}
+          textAlign="center"
+          sx={{
+            zIndex: 10,
+            backgroundColor: theme.palette.background.default,
+            px: 0.5,
+            borderRadius: 1,
+            color: value < 0 ? theme.palette.primary.main : undefined,
+          }}
+        >
+          {value}s
+        </Typography>
+      )}
+
       <LinearProgress
         variant="determinate"
         value={progress}
