@@ -50,4 +50,6 @@ export type BatchWriteOperation<T> =
   | BatchSetOperation<T>
   | BatchUpdateOperation<T>;
 
-export type BatchOperation<T> = BatchWriteOperation<T> | BatchDeleteOperation;
+export type BatchOperation<T = unknown> =
+  | BatchWriteOperation<T>
+  | BatchDeleteOperation;

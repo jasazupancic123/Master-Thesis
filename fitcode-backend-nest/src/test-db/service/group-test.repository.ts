@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { addDays, addWeeks, subDays } from 'date-fns';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { TestInstitution, TestUser } from '@src/common/type/entity.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 import { Group } from '@src/institution/entity/group.entity';
@@ -24,8 +25,12 @@ export class GroupTestRepository extends TestRepositoryMixin<Group, GroupRef>()(
     },
   ) {
     const {
-      trainerIds = institution.trainerIds,
-      membersIds = institution.athleteIds,
+      trainerIds = institution.members
+        .filter((m) => m.role === UserRole.TRAINER)
+        .map((t) => t.id),
+      membersIds = institution.members
+        .filter((m) => m.role === UserRole.ATHLETE)
+        .map((t) => t.id),
       cycleLengthInWeeks = 1,
     } = input || {};
 

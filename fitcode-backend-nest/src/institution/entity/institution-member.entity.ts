@@ -1,4 +1,4 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
+import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
@@ -17,3 +17,9 @@ export class InstitutionMember extends IntersectionType(BaseEntity) {
   @Expose()
   institutionId: string;
 }
+
+// for cached members list on institution entity
+export class PartialInstitutionMember extends PickType(InstitutionMember, [
+  'id',
+  'role',
+] as const) {}

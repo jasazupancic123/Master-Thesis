@@ -1,5 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
 import { ProfileService } from '@src/profile/service/profile.service';
@@ -68,8 +69,12 @@ describe('Find Profiles (e2e)', () => {
     const profiles = await profileService.findAllByInstitution(
       generateInstitutionStub({
         ownerId: users[0].uid,
-        trainerIds: users.slice(1, 5).map((u) => u.uid),
-        athleteIds: users.slice(5).map((u) => u.uid),
+        members: [
+          ...users
+            .slice(1, 5)
+            .map((u) => ({ id: u.uid, role: UserRole.TRAINER })),
+          ...users.slice(5).map((u) => ({ id: u.uid, role: UserRole.ATHLETE })),
+        ],
       }),
     );
 

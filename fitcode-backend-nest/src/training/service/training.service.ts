@@ -462,7 +462,7 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException('Member is already in the training');
 
     // check if member is in institution
-    if (!training.institution!.athleteIds.includes(member.uid))
+    if (!training.institution!.members.some((m) => m.id === member.uid))
       throw new BadRequestException('Member is not part of the institution');
 
     // update members
@@ -1270,10 +1270,18 @@ export class TrainingService implements Permission<Training, Institution> {
     if (training.membersIds.includes(user.uid)) return true;
 
     if (institution) {
+      const trainerIds = this.institutionService
+        .getTrainers(institution)
+        .map((m) => m.id);
+
+      const athleteIds = this.institutionService
+        .getAthletes(institution)
+        .map((m) => m.id);
+
       if (institution.ownerId === user.uid) return true;
-      if (institution.trainerIds.includes(user.uid)) return true;
+      if (trainerIds.includes(user.uid)) return true;
       if (
-        institution.athleteIds.includes(user.uid) &&
+        athleteIds.includes(user.uid) &&
         training.membersIds.includes(user.uid)
       )
         return true;
@@ -1287,12 +1295,10 @@ export class TrainingService implements Permission<Training, Institution> {
       return true;
 
     if (institution) {
-      if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-        return true;
-
       if (
-        this.firebase.isTrainer(user) &&
-        institution.trainerIds.includes(user.uid)
+        this.institutionService.canEditExtended(user, institution, {
+          allowTrainer: true,
+        })
       )
         return true;
     }
@@ -1301,24 +1307,11 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   canAdd(user: User, institution?: Institution) {
-    if (this.firebase.isTrainer(user)) return true;
-
-    if (institution) {
-      if (this.firebase.isManager(user) && institution.ownerId === user.uid)
-        return true;
-
-      if (
-        this.firebase.isTrainer(user) &&
-        institution.trainerIds.includes(user.uid)
-      )
-        return true;
-
-      if (
-        this.firebase.isAthlete(user) &&
-        institution.athleteIds.includes(user.uid)
-      )
-        return true;
-    }
+    if (institution)
+      return this.institutionService.canEditExtended(user, institution, {
+        allowTrainer: true,
+        allowAthlete: true,
+      });
 
     return false;
   }

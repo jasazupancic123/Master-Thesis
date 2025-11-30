@@ -6,7 +6,6 @@ import {
   Query,
 } from 'firebase-admin/firestore';
 
-import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, Update } from '@src/common/type/entity.type';
 import { FirestoreRepository } from '@src/common/type/firestore.type';
@@ -37,42 +36,14 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
   async findById(ref: string): Promise<Institution | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-
-    const institution = this.serialize(snapshot);
-    const members = await this.members.findAllMembers(institution.id);
-
-    return {
-      ...institution,
-      trainerIds: members
-        .filter((m) => m.role === UserRole.TRAINER)
-        .map((m) => m.id),
-      athleteIds: members
-        .filter((m) => m.role === UserRole.ATHLETE)
-        .map((m) => m.id),
-    };
+    return this.serialize(snapshot);
   }
 
   async findAll(
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<Institution[]> {
     const snapshot = await query(this.collection()).get();
-    const institutions = snapshot.docs.map((doc) => this.serialize(doc));
-
-    // for each institution, fetch members
-    return await Promise.all(
-      institutions.map(async (institution) => {
-        const members = await this.members.findAllMembers(institution.id);
-        return {
-          ...institution,
-          trainerIds: members
-            .filter((m) => m.role === UserRole.TRAINER)
-            .map((m) => m.id),
-          athleteIds: members
-            .filter((m) => m.role === UserRole.ATHLETE)
-            .map((m) => m.id),
-        };
-      }),
-    );
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async findOneByManager(managerId: string) {
@@ -89,9 +60,7 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
     return await this.findAll((q) => q.where('id', 'in', institutionIds));
   }
 
-  async save(
-    input: Create<Omit<Institution, 'trainerIds' | 'athleteIds'>>,
-  ): Promise<string> {
+  async save(input: Create<Omit<Institution, 'members'>>): Promise<string> {
     const { id } = this.collection().doc();
     const query = this.firebase.buildCreateQuery<
       Omit<Institution, 'trainerIds' | 'athleteIds'>
@@ -100,6 +69,7 @@ export class InstitutionRepository extends FirestoreRepository<Institution> {
       ownerId: input.ownerId,
       name: input.name,
       imageUrl: input.imageUrl,
+      members: [],
     });
 
     const ref = this.doc(id);

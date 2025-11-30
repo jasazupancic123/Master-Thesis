@@ -102,10 +102,8 @@ describe('Register User (e2e)', () => {
 
         // it should add them to institution
         const dbInstitution = await db.institutions.findById(institution.id);
-        if (role === UserRole.TRAINER)
-          expect(dbInstitution.trainerIds).toContain(dbUser!.uid);
-        if (role === UserRole.ATHLETE)
-          expect(dbInstitution.athleteIds).toContain(dbUser!.uid);
+        const memberIds = dbInstitution.members.map((m) => m.id);
+        expect(memberIds).toContain(dbUser!.uid);
 
         // delete user
         await testApp.auth.deleteUsers([dbUser!.uid]);
@@ -130,14 +128,8 @@ describe('Register User (e2e)', () => {
           institution.id,
         );
 
-        if (role === UserRole.TRAINER)
-          expect(dbInstitutionBefore.trainerIds).not.toContain(
-            existingUser.uid,
-          );
-        if (role === UserRole.ATHLETE)
-          expect(dbInstitutionBefore.athleteIds).not.toContain(
-            existingUser.uid,
-          );
+        const memberIds = dbInstitutionBefore.members.map((m) => m.id);
+        expect(memberIds).not.toContain(existingUser.uid);
 
         const res = await req(global.manager.token, input);
         expect(res.status).toBe(201);
@@ -147,10 +139,8 @@ describe('Register User (e2e)', () => {
           institution.id,
         );
 
-        if (role === UserRole.TRAINER)
-          expect(dbInstitutionAfter.trainerIds).toContain(existingUser.uid);
-        if (role === UserRole.ATHLETE)
-          expect(dbInstitutionAfter.athleteIds).toContain(existingUser.uid);
+        const memberIdsAfter = dbInstitutionAfter.members.map((m) => m.id);
+        expect(memberIdsAfter).toContain(existingUser.uid);
 
         // delete user
         await testApp.auth.deleteUsers([existingUser.uid]);

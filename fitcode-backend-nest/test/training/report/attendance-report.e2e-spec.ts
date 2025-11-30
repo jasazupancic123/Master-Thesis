@@ -1,5 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
@@ -109,8 +110,12 @@ describe('Attendance Report', () => {
 
   it('should count multiple athletes correctly', async () => {
     // athlete 1 has completed 2 trainings, athlete 2 has completed 3 training
-    const athlete1Id = institution.athleteIds[0];
-    const athlete2Id = institution.athleteIds[1];
+    const athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    const athlete1Id = athleteIds[0];
+    const athlete2Id = athleteIds[1];
     const data = { groupId: group.id, status: TrainingStatus.COMPLETED };
 
     await db.trainingComponentUserStatus.save(
@@ -167,8 +172,12 @@ describe('Attendance Report', () => {
   });
 
   it('should fetch attendance for specific component', async () => {
-    const athlete1Id = institution.athleteIds[0];
-    const athlete2Id = institution.athleteIds[1];
+    const athleteIds = institution.members
+      .filter((m) => m.role === UserRole.ATHLETE)
+      .map((m) => m.id);
+
+    const athlete1Id = athleteIds[0];
+    const athlete2Id = athleteIds[1];
     const data = { groupId: group.id, status: TrainingStatus.COMPLETED };
 
     // component c1
