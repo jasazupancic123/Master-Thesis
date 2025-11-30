@@ -1,5 +1,5 @@
 import type { SxProps } from '@mui/material';
-import { Box, Grid2, Typography } from '@mui/material';
+import { Box, Grid2, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 
@@ -169,28 +169,32 @@ export default function DashboardHome(props: Props) {
                         : ''}
                     </Typography>
 
-                    <Box
-                      width="100%"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="flex-start"
-                      sx={{
-                        p: 2,
-                        py: 1,
-                        borderRadius: 4,
-                        backgroundColor: colors.backgroundColor,
-                        transformOrigin: 'left center',
-                        transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
-                        transition: 'transform 0.5s ease-out',
-                      }}
+                    <Tooltip
+                      title={item.id[0].toUpperCase() + item.id.slice(1)}
                     >
-                      <Typography
-                        fontWeight={500}
-                        sx={{ color: colors.textColor }}
+                      <Box
+                        width="100%"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="flex-start"
+                        sx={{
+                          p: 2,
+                          py: 1,
+                          borderRadius: 4,
+                          backgroundColor: colors.backgroundColor,
+                          transformOrigin: 'left center',
+                          transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
+                          transition: 'transform 0.5s ease-out',
+                        }}
                       >
-                        {item.value}
-                      </Typography>
-                    </Box>
+                        <Typography
+                          fontWeight={500}
+                          sx={{ color: colors.textColor }}
+                        >
+                          {item.value}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
                   </Box>
                 );
               })}

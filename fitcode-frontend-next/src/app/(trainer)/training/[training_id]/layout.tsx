@@ -1,11 +1,11 @@
 import { Box } from '@mui/material';
 
-import TrainingInitializer from '@/initializers/training.initializer';
+import CoachTrainingInitializer from '@/initializers/coach-training.initializer';
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
-    <Box bgcolor="background.default" minHeight="100dvh">
-      <TrainingInitializer>{children}</TrainingInitializer>
+    <Box bgcolor="background.default">
+      <CoachTrainingInitializer>{children}</CoachTrainingInitializer>
     </Box>
   );
 }
