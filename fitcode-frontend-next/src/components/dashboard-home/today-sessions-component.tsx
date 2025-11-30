@@ -14,21 +14,20 @@ import {
   Typography,
 } from '@mui/material';
 import dayjs from 'dayjs';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 
+import { startTrainingComponent } from '../athlete/actions/actions-training-component';
 import { theme } from '@/app/style';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
-import type { SetState } from '@/lib/common/type/state.type';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import { RefObject, useRef, useState } from 'react';
-import Image from 'next/image';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { startTrainingComponent } from '../athlete/actions/actions-training-component';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useRouter } from 'next/navigation';
 
 interface Props {
   component: TrainingComponent & { groupId?: string; trainingId: string };
@@ -272,7 +271,7 @@ export default function TodaySessionsComponent(props: Props) {
                             borderRadius: 2,
                           }}
                           controls={false}
-                          src={exerciseObject?.videoUrl!}
+                          src={exerciseObject?.videoUrl}
                           muted
                           loop
                           playsInline

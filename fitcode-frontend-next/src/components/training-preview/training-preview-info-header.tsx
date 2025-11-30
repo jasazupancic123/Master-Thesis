@@ -1,6 +1,7 @@
-import { useCoachTraining } from '@/store/coach-training.provider';
 import { Box, Grid2, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+
+import { useCoachTraining } from '@/store/coach-training.provider';
 
 export default function TrainingPreviewInfoHeader() {
   const { training, group } = useCoachTraining();

@@ -1,16 +1,7 @@
 import { Add, Circle } from '@mui/icons-material';
-import {
-  Box,
-  IconButton,
-  LinearProgress,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
-import { linearProgressClasses } from '@mui/material';
+import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import React, {
   useCallback,
@@ -27,13 +18,11 @@ import { useUndoneExercises } from './context/undone-exercises.provider';
 import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import TrainingInProgressExerciseHeaderCard from './training-in-progress-exercise-header-card';
 import { preloadPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { lib } from '@/lib';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -42,8 +31,6 @@ import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import MyModal from '@/ui/modal';
 import { SearchBar } from '@/ui/search-bar/search-bar';
-import TrainingInProgressExerciseCard from './training-in-progress-exercise-card';
-import TrainingInProgressExerciseHeaderCard from './training-in-progress-exercise-header-card';
 
 export default function TrainingInProgress() {
   const theme = useTheme();
@@ -66,14 +53,7 @@ export default function TrainingInProgress() {
 
   const { trainingInProgress, clearTrainingState } = trainingContext;
 
-  const {
-    supersetIndex,
-    setSupersetIndex,
-    selectedExercise,
-    setSelectedExercise,
-    setSetIndex,
-    setIndex,
-  } = trainingInProgressContext;
+  const { supersetIndex, selectedExercise } = trainingInProgressContext;
 
   const {
     openCancelTrainingModal,

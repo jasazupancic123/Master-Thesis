@@ -3,6 +3,7 @@ import type {
   ExerciseParamFieldExtended,
   ExerciseSet,
 } from '../type/exercise-set.type';
+import type { Workload } from '../type/workload.type';
 import type { Attribute } from '@/core/attribute/type/attribute.type';
 import { core } from '@/core/core.service';
 import {
@@ -22,7 +23,6 @@ import {
   VEL,
 } from '@/core/exercise/constant/exercise-param.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
-import { Workload } from '../type/workload.type';
 
 type ExerciseMainParamNoSets = Exclude<ExerciseMainParamField, 'sets'>;
 type ExerciseParamNoSets = Exclude<ExerciseParamFieldExtended, 'sets'>;

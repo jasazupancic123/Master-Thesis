@@ -1,9 +1,9 @@
 import { createContext, useContext, useState } from 'react';
 
+import type { Group } from '@/core/institution/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { Group } from '@/core/institution/type/group.type';
 
 export type TrainingIdPageProps = {
   training: Training;
