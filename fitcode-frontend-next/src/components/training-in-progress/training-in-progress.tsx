@@ -1,16 +1,7 @@
 import { Add, Circle } from '@mui/icons-material';
-import {
-  Box,
-  IconButton,
-  LinearProgress,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
-import { linearProgressClasses } from '@mui/material';
+import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import React, {
   useCallback,
@@ -27,13 +18,11 @@ import { useUndoneExercises } from './context/undone-exercises.provider';
 import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
 import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import TrainingInProgressExerciseHeaderCard from './training-in-progress-exercise-header-card';
 import { preloadPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { lib } from '@/lib';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -57,7 +46,6 @@ export default function TrainingInProgress() {
   const undoneExercisesContext = useUndoneExercises();
 
   // add exercises modal
-  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [searchExercisesText, setSearchExercisesText] = useState('');
   const filteredExercises = exercises.filter((exercise) =>
     exercise.name.toLowerCase().includes(searchExercisesText.toLowerCase())
@@ -65,18 +53,15 @@ export default function TrainingInProgress() {
 
   const { trainingInProgress, clearTrainingState } = trainingContext;
 
-  const {
-    supersetIndex,
-    setSupersetIndex,
-    selectedExercise,
-    setSelectedExercise,
-  } = trainingInProgressContext;
+  const { supersetIndex, selectedExercise } = trainingInProgressContext;
 
   const {
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
     openFinishTrainingModal,
     setOpenFinishTrainingModal,
+    openAddExerciseModal,
+    setOpenAddExerciseModal,
     showUndoneSetsError,
     setShowUndoneSetsError,
     edit,
@@ -281,124 +266,15 @@ export default function TrainingInProgress() {
                   />
 
                   <Box display="flex" justifyContent="center" gap={0.5}>
-                    {superset.exercises.map((e) => {
-                      const isSelected = selectedExercise?.id === e.id;
-
-                      const exercise = e.exercise;
-
-                      if (
-                        !exercise ||
-                        supersetIndex === undefined ||
-                        !activeTraining
-                      )
-                        return null;
-
-                      const width = 75;
-                      const height = 50;
-
-                      const completedSets =
-                        ExerciseSetService.getCompletedExerciseSetsCount(
-                          {
-                            trainingId: trainingInProgress.training.id,
-                            componentId:
-                              trainingInProgress.selectedComponent.id,
-                            exerciseId: e.id,
-                            supersetIndex: i,
-                          },
-                          activeTraining.workloads
-                        );
-
-                      const progress = (completedSets / e.sets.length) * 100;
-
-                      return (
-                        <Box
-                          component="div"
-                          key={e.id}
-                          ref={getExerciseRef(e.id)}
-                          onClick={() => {
-                            const newSupersetIndex =
-                              trainingInProgress.supersets.indexOf(superset);
-
-                            if (newSupersetIndex === -1) return;
-
-                            if (supersetIndex !== newSupersetIndex)
-                              setSupersetIndex(newSupersetIndex);
-
-                            setSelectedExercise(e);
-                          }}
-                          sx={{
-                            border: isSelected
-                              ? `2px solid ${theme.palette.primary.main}`
-                              : '1px solid transparent',
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                            width,
-                            height,
-                            flex: '0 0 auto',
-                            position: 'relative',
-                            scrollBehavior: 'smooth',
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              filter: 'grayscale(100%)',
-                              width: '100%',
-                              height: '100%',
-                            }}
-                          >
-                            {exercise.imageUrl || !exercise.videoUrl ? (
-                              <Image
-                                src={
-                                  exercise.imageUrl || EXERCISE_DEFAULT_IMG_URL
-                                }
-                                alt={exercise.name}
-                                width={width}
-                                height={height}
-                                unoptimized={lib.common.env.unoptimizeImages()}
-                                style={{ objectFit: 'cover', display: 'block' }}
-                              />
-                            ) : (
-                              <Box
-                                component="video"
-                                sx={{
-                                  inset: 0,
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                }}
-                                controls={false}
-                                src={exercise.videoUrl!}
-                                muted
-                                loop
-                                playsInline
-                              />
-                            )}
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                            sx={{
-                              display: progress > 0 ? undefined : 'none',
-                              position: 'absolute',
-                              bottom: 2,
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              width: '90%',
-                              height: 5,
-                              borderRadius: 5,
-                              border: `1px solid ${theme.palette.primary.main}`,
-                              bgcolor: 'rgba(0, 0, 0, 0.3)',
-                              [`&.${linearProgressClasses.bar}`]: {
-                                bgcolor: theme.palette.primary.main,
-                              },
-                              [`&.${linearProgressClasses.colorPrimary}`]: {
-                                bgcolor: theme.palette.background.default,
-                              },
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
+                    {superset.exercises.map((e) => (
+                      <TrainingInProgressExerciseHeaderCard
+                        key={`${e.id}-${supersetIndex}`}
+                        exercise={e}
+                        superset={superset}
+                        supersetIndex={i}
+                        getExerciseRef={getExerciseRef}
+                      />
+                    ))}
 
                     {/* Button to add new exercise */}
                     {edit && (
