@@ -20,7 +20,10 @@ export class MemberController {
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return await this.institutionService.findAllMembers(user, institutionId);
+    return await this.institutionService.findAllMembers(user, institutionId, [
+      'photoURLBase64',
+      'faceEmbedding',
+    ]);
   }
 
   @Patch('athlete')
