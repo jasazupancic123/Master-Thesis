@@ -26,7 +26,11 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { DateRangeDto } from '@src/common/dto/date-range.dto';
-import { OptionalUserIdDto, UserIdDto } from '@src/common/dto/user-id.dto';
+import {
+  OptionalUserIdDto,
+  UserIdDto,
+  UserIdsDto,
+} from '@src/common/dto/user-id.dto';
 import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
@@ -266,19 +270,6 @@ export class TrainingController {
     return {};
   }
 
-  @Get(':trainingId/athlete/:athleteId/workloads')
-  @Auth()
-  async findCompletedAthleteWorkloads(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('athleteId') athleteId: string,
-  ) {
-    return await this.trainingService.findCompletedAthleteWorkloads(user, {
-      trainingId,
-      uid: athleteId,
-    });
-  }
-
   @Post()
   @Auth()
   async create(
@@ -485,13 +476,13 @@ export class TrainingController {
 
   @Get('report/group')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getGroupReport(
+  async getGroupAttendanceReport(
     @RequestUser() user: User,
     @Query('institutionId') institutionId: string,
     @Query('groupId') groupId: string,
     @Query('componentId') componentId: string,
   ) {
-    return await this.trainingReportService.getGroupReport(
+    return await this.trainingReportService.getGroupAttendanceReport(
       user,
       { institutionId, groupId },
       componentId,
@@ -500,13 +491,13 @@ export class TrainingController {
 
   @Get('report/athlete/trainings-realization')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async getUserTrainingsRealizationReport(
+  async getTrainingsRealizationReportByUser(
     @RequestUser() user: User,
     @Query('institutionId') institutionId: string,
     @Query('athleteId') athleteId: string,
     @Query('componentId') componentId?: string,
   ) {
-    return await this.trainingReportService.getTrainingsRealizationReport(
+    return await this.trainingReportService.getTrainingsRealizationReportByUser(
       user,
       institutionId,
       athleteId,
@@ -514,19 +505,46 @@ export class TrainingController {
     );
   }
 
-  @Get('report/athlete/exercise/:exerciseId')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
-  async getUserExerciseReport(
+  @Get('report/exercise/:exerciseId')
+  @Auth([UserRole.ATHLETE])
+  async getExerciseWorkloadsByUser(
     @RequestUser() user: User,
     @Param('exerciseId') exerciseId: string,
     @Query('institutionId') institutionId: string,
-    @Query('athleteId') athleteId: string,
   ) {
-    return await this.trainingReportService.getUserExerciseReport(
+    return await this.trainingReportService.getExerciseWorkloadsByManyUsers(
       user,
       institutionId,
       exerciseId,
-      athleteId,
+      [user.uid],
+    );
+  }
+
+  @Post('report/exercise/:exerciseId')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async getExerciseWorkloadsByManyUsers(
+    @RequestUser() user: User,
+    @Param('exerciseId') exerciseId: string,
+    @Query('institutionId') institutionId: string,
+    @Body() { userIds }: UserIdsDto,
+  ) {
+    return await this.trainingReportService.getExerciseWorkloadsByManyUsers(
+      user,
+      institutionId,
+      exerciseId,
+      userIds,
+    );
+  }
+
+  @Get(':trainingId/workload')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async getTrainingWorkloads(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ) {
+    return await this.trainingReportService.getTrainingWorkloads(
+      user,
+      trainingId,
     );
   }
 
