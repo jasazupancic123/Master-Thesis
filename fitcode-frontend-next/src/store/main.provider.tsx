@@ -173,8 +173,12 @@ export default function MainProvider(props: MainProviderProps) {
 
       const controller = Controller.getInstance();
       const [authProfiles, protocols, trainings] = await Promise.allSettled([
-        controller.institution.findAllMembersByInstitution(institutionId),
-        controller.institution.findAllProtocolsByInstitution(institutionId),
+        lib.firebase.auth.isAthlete(role)
+          ? Promise.resolve([])
+          : controller.institution.findAllMembersByInstitution(institutionId),
+        lib.firebase.auth.isAthlete(role)
+          ? Promise.resolve([])
+          : controller.institution.findAllProtocolsByInstitution(institutionId),
         controller.training.findAll({ institutionId }),
       ]);
 
