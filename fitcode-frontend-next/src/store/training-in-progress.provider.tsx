@@ -244,8 +244,6 @@ export const TrainingInProgressProvider = ({
       }
     }
 
-    console.log('body:', { ...body, userId: trainingInProgress.userId });
-
     handleApiRequest(
       router,
       () =>
