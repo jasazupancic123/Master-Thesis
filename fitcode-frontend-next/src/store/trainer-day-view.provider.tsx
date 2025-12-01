@@ -209,7 +209,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     );
 
     return () => unsub();
-  }, [training]);
+  }, [training?.id]);
 
   async function handleAddMember(user: AuthUser) {
     if (!training) return;
