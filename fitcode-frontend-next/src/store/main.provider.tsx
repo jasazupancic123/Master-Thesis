@@ -107,6 +107,7 @@ export default function MainProvider(props: MainProviderProps) {
 
   // map users on fetch
   useEffect(() => {
+    if (!users.length) return;
     setGroups(institution.groups.map((g) => core.group.mapMembers(g, users)));
     setInstitution((prev) => core.institution.mapUsers([prev], users)[0]);
   }, [users]);
@@ -135,6 +136,9 @@ export default function MainProvider(props: MainProviderProps) {
             );
 
           if (cachedExercisesRevision === serverInstitutionRevision) {
+            console.log('cached revision:', cachedExercisesRevision);
+            console.log('server revision:', serverInstitutionRevision);
+            console.log('cached exercises length:', cachedExercises?.length);
             console.log('Exercises are up to date, no need to fetch');
             return;
           }
