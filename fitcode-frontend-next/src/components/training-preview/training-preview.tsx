@@ -6,8 +6,11 @@ import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constan
 import TrainingPreviewInfoHeader from './training-preview-info-header';
 import TrainingPreviewMembers from './training-preview-members';
 import VerticalLinesBorders from '@/ui/vertical-lines-borders';
+import { useTrainingPreview } from '@/store/training-preview.provider';
 
 export default function TrainingPreview() {
+  const { selectedComponent } = useTrainingPreview();
+
   return (
     <Box
       width={MAX_WIDTH}

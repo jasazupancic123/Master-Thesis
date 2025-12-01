@@ -1,0 +1,348 @@
+'use client';
+
+import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import TrainingStationInit from './training-station-init';
+import { alpha, Avatar, Box, Grid2, Typography } from '@mui/material';
+import TrainingStationMembers from './training-station-members';
+import TrainingStationExercises from './training-station-exercises';
+import Image from 'next/image';
+import {
+  EXERCISE_DEFAULT_IMG_URL,
+  USER_AVATAR_IMG_URL,
+} from '@/lib/common/const/image.const';
+import { lib } from '@/lib';
+import { theme } from '@/app/style';
+import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
+import TrainingStationExerciseSet from './training-station-exercise-set';
+import { getSupersetIndex } from './actions/actions-superset-index';
+import { core } from '@/core/core.service';
+import { useRouter } from 'next/navigation';
+import { Workload } from '@/core/training/type/workload.type';
+
+export default function TrainingStation() {
+  const router = useRouter();
+
+  const {
+    station,
+    individualTrainings,
+    component,
+    selectedUser,
+    selectedExercise,
+    selectedSetIndex,
+    workloads,
+    setSelectedSetIndex,
+    handleUpsertSet,
+  } = useCoachTrainingStation();
+
+  const selectedImageWidth =
+    typeof window !== 'undefined'
+      ? Math.min(window.innerWidth * 0.9, 340)
+      : 340;
+
+  const individualTraining = individualTrainings.find(
+    (it) => it.userId === selectedUser?.uid
+  );
+
+  const individualExercise = individualTraining?.components
+    .find((c) => c.id === component?.id)
+    ?.supersets.flatMap((s) => s.exercises)
+    .find((e) => e.id === selectedExercise?.id);
+
+  const foundWorkload = workloads.find(
+    (w) =>
+      w.userId === selectedUser?.uid &&
+      w.exerciseId === selectedExercise?.id &&
+      w.setNumber === (selectedSetIndex || 0) + 1 &&
+      w.componentId === component?.id &&
+      w.trainingId === individualTraining?.id &&
+      w.supersetIndex ===
+        getSupersetIndex(
+          individualTraining,
+          component!.id,
+          selectedExercise!.id
+        )
+  );
+
+  // LOGIC: Workload only has id if returned from BE (means it's completed), on FE we handle "PartialWorkload" without id
+  const isSetCompleted = foundWorkload && foundWorkload.id !== undefined;
+
+  if (!station) {
+    return <TrainingStationInit />;
+  }
+
+  return (
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      gap={2}
+      pb={2}
+    >
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+      >
+        <Typography
+          textAlign="center"
+          fontSize={12}
+          sx={{ color: station.color, fontWeight: 'bold' }}
+        >
+          Training Station
+        </Typography>
+        <Typography variant="h4" textAlign="center">
+          {station.name}
+        </Typography>
+      </Box>
+      <Box width="100%" display="flex" justifyContent="center" gap={10}>
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Typography fontSize={12} textAlign="center">
+            Athletes
+          </Typography>
+          <Typography
+            width={20}
+            variant="h5"
+            fontWeight={500}
+            textAlign="center"
+            sx={{ borderBottom: `2px solid ${station.color}` }}
+          >
+            {station.users.length}
+          </Typography>
+        </Box>
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Typography fontSize={12} textAlign="center">
+            Exercises
+          </Typography>
+          <Typography
+            width={20}
+            variant="h5"
+            fontWeight={500}
+            textAlign="center"
+            sx={{ borderBottom: `2px solid ${station.color}` }}
+          >
+            {station.exercises.length}
+          </Typography>
+        </Box>
+      </Box>
+
+      <TrainingStationMembers />
+
+      <TrainingStationExercises />
+
+      <Box
+        maxWidth={selectedImageWidth}
+        sx={{
+          position: 'relative',
+        }}
+      >
+        <Image
+          src={selectedExercise?.exercise?.imageUrl || EXERCISE_DEFAULT_IMG_URL}
+          alt="Exercise Image"
+          width={selectedImageWidth}
+          height={0}
+          unoptimized={lib.common.env.unoptimizeImages()}
+          layout="intrinsic"
+          style={{
+            borderRadius: 6,
+          }}
+        />
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            p: 1,
+            backgroundColor: alpha(theme.palette.background.default, 0.5),
+          }}
+        >
+          <Typography
+            fontSize={18}
+            fontWeight={600}
+            color="white"
+            sx={{
+              textShadow: '0 0 5px rgba(0,0,0,0.8)',
+              color: theme.palette.primary.main,
+              textTransform: 'uppercase',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              display: '-webkit-box',
+            }}
+            textAlign="center"
+          >
+            {selectedExercise?.exercise?.name || 'Unknown Exercise'}
+          </Typography>
+        </Box>
+      </Box>
+
+      <Grid2 container spacing={2} sx={{ width: '100%' }}>
+        <Grid2
+          size={4}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Box
+            sx={{
+              border: `3px solid ${theme.palette.primary.main}`,
+              borderRadius: '50%',
+            }}
+          >
+            <Avatar
+              key={selectedUser?.uid}
+              src={selectedUser?.photoURL || USER_AVATAR_IMG_URL}
+              sx={{
+                width: 80,
+                height: 80,
+                cursor: 'pointer',
+                filter: 'grayscale(100%)',
+              }}
+            />
+          </Box>
+        </Grid2>
+        <Grid2
+          size={4}
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+        >
+          <Box width="100%" display="flex" justifyContent="center">
+            {selectedExercise &&
+              individualExercise?.sets.map((set, setIndex) => {
+                const isSetDone = false;
+
+                return (
+                  <TrainingExerciseSetBox
+                    key={setIndex}
+                    selectedExercise={selectedExercise}
+                    setSetIndex={setSelectedSetIndex}
+                    setIndex={setIndex}
+                    isSetSelected={selectedSetIndex === setIndex}
+                    isSetDone={isSetDone}
+                  />
+                );
+              })}
+          </Box>
+
+          {individualExercise && (
+            <TrainingStationExerciseSet exercise={individualExercise} />
+          )}
+        </Grid2>
+        <Grid2
+          size={4}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Box
+            width={80}
+            height={80}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            sx={{
+              borderRadius: '50%',
+              border: `1px solid ${theme.palette.primary.main}`,
+            }}
+          >
+            <Box
+              width={70}
+              height={70}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                borderRadius: '50%',
+                mx: 'auto',
+                backgroundColor: isSetCompleted
+                  ? theme.palette.primary.main
+                  : 'transparent',
+                cursor: 'pointer',
+              }}
+              onClick={async () => {
+                if (
+                  !selectedExercise ||
+                  !selectedUser ||
+                  !individualTraining ||
+                  !component ||
+                  selectedSetIndex === undefined
+                )
+                  return;
+
+                let foundWorkload: Workload | undefined | null = workloads.find(
+                  (w) =>
+                    w.userId === selectedUser.uid &&
+                    w.exerciseId === selectedExercise.id &&
+                    w.setNumber === selectedSetIndex + 1 &&
+                    w.componentId === component.id &&
+                    w.trainingId === individualTraining?.id &&
+                    w.supersetIndex ===
+                      getSupersetIndex(
+                        individualTraining,
+                        component!.id,
+                        selectedExercise!.id
+                      )
+                );
+
+                if (!foundWorkload) {
+                  const supersetIndex = getSupersetIndex(
+                    individualTraining,
+                    component.id,
+                    selectedExercise.id
+                  );
+
+                  if (supersetIndex === null) return;
+
+                  foundWorkload =
+                    core.training.workload.createEmptyWorkloadFromTraining(
+                      {
+                        trainingId: individualTraining.id,
+                        componentId: component.id,
+                        exerciseId: selectedExercise.id,
+                        supersetIndex,
+                        setNumber: (selectedSetIndex || 0) + 1,
+                        userId: selectedUser.uid,
+                      },
+                      individualTraining
+                    );
+                }
+
+                if (!foundWorkload) return;
+
+                await handleUpsertSet(
+                  foundWorkload,
+                  {
+                    exerciseId: selectedExercise.id,
+                    supersetIndex: foundWorkload.supersetIndex,
+                    setIndex: selectedSetIndex,
+                  },
+                  router
+                );
+              }}
+            >
+              <Typography
+                fontSize={12}
+                fontWeight={700}
+                textAlign="center"
+                sx={{
+                  color: isSetCompleted
+                    ? theme.palette.text.secondary
+                    : theme.palette.text.primary,
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                }}
+              >
+                {isSetCompleted ? 'Done' : 'Confirm'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid2>
+      </Grid2>
+    </Box>
+  );
+}
