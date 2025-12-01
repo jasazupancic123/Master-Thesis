@@ -88,6 +88,28 @@ export class WorkloadRepository extends FirestoreRepository<
     );
   }
 
+  async findAllByTraining(ref: TrainingRef): Promise<Workload[]> {
+    const snapshot = await this.collection(ref).get();
+    if (snapshot.empty) return [];
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
+    );
+  }
+
+  async findAllByTrainingByUser(
+    ref: TrainingRef,
+    userId: string,
+  ): Promise<Workload[]> {
+    const snapshot = await this.collection(ref)
+      .where('userId', '==', userId)
+      .get();
+
+    if (snapshot.empty) return [];
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
+    );
+  }
+
   getKey(ref: WorkloadRef) {
     return `${ref.trainingId}-${ref.userId}-${ref.componentId}-${ref.exerciseId}-${ref.supersetIndex}-${ref.setNumber}`;
   }

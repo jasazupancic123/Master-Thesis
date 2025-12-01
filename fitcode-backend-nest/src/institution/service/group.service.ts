@@ -337,7 +337,9 @@ export class GroupService implements Permission<Group, Institution> {
       throw new BadRequestException(`Trainer is not part of the institution`);
 
     // update group trainers
-    return this.repository.getUpdateTrainerOperation(ref, trainer.uid, add);
+    await this.firebase.paginateBatches([
+      this.repository.getUpdateTrainerOperation(ref, trainer.uid, add),
+    ]);
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })

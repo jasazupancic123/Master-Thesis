@@ -5,6 +5,7 @@ import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
@@ -32,6 +33,7 @@ import { WorkloadService } from './workload.service';
 @Injectable()
 export class TrainingReportService {
   constructor(
+    private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
@@ -72,7 +74,7 @@ export class TrainingReportService {
   }
 
   @LogMethod()
-  async getGroupReport(
+  async getGroupAttendanceReport(
     user: User,
     ref: GroupRef,
     componentId?: string,
@@ -85,7 +87,7 @@ export class TrainingReportService {
   }
 
   @LogMethod()
-  async getTrainingsRealizationReport(
+  async getTrainingsRealizationReportByUser(
     user: User,
     institutionId: string,
     uid: string, // athlete uid
@@ -110,27 +112,45 @@ export class TrainingReportService {
   }
 
   @LogMethod()
-  async getUserExerciseReport(
+  async getExerciseWorkloadsByManyUsers(
     user: User,
     institutionId: string,
     exerciseId: string,
-    uid: string, // athlete uid
+    userIds: string[],
   ): Promise<Workload[]> {
     const institution = await this.institutionService.findByIdOrFail(
       user,
       institutionId,
     );
 
-    const athlete = await this.trainingService.getAthlete(
-      user,
-      uid,
-      institution,
+    // check that all users belong to institution
+    const athletes = await Promise.all(
+      userIds.map((uid) =>
+        this.trainingService.getAthlete(user, uid, institution),
+      ),
     );
 
-    return await this.workloadService.getUserExerciseReport({
-      userId: athlete.uid,
+    return await this.workloadService.getExerciseReportByUsers({
+      userIds: athletes.map((a) => a.uid),
       exerciseId,
     });
+  }
+
+  @LogMethod()
+  async getTrainingWorkloads(
+    user: User,
+    trainingId: string,
+  ): Promise<Workload[]> {
+    const training = await this.trainingService.findOneByIdOrFail(user, {
+      trainingId,
+    });
+
+    return this.firebase.isAthlete(user)
+      ? await this.workloadService.getAllByTrainingByUser({
+          trainingId: training.id,
+          userId: user.uid,
+        })
+      : await this.workloadService.getAllByTraining(training.id);
   }
 
   getTrainingReportByUser(
