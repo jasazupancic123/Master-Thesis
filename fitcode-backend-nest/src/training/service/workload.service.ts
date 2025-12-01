@@ -155,7 +155,6 @@ export class WorkloadService {
     };
 
     const existing = await this.repository.findById(ref);
-    console.log('upserting workload', { ref, existing });
 
     if (existing) {
       delete workload.from;
@@ -224,12 +223,6 @@ export class WorkloadService {
         recTime: 0,
       };
     }
-
-    console.log('completing next set', {
-      componentId,
-      supersetIndex,
-      setNumber,
-    });
 
     if (componentId !== 'other')
       await this.checkTrainingStatus({
