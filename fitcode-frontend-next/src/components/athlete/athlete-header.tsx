@@ -116,7 +116,7 @@ export default function AthleteHeader(props: Props) {
           </ListItem>
         ))}
 
-        <ListItem disablePadding>
+        {/* <ListItem disablePadding>
           <ListItemButton
             sx={{ width: '100%' }}
             onClick={() => {
@@ -125,7 +125,7 @@ export default function AthleteHeader(props: Props) {
           >
             <ListItemText primary="Add training" />
           </ListItemButton>
-        </ListItem>
+        </ListItem> */}
 
         {trainingInProgress &&
           trainingInProgressUndoneExercisesContext &&
@@ -154,7 +154,7 @@ export default function AthleteHeader(props: Props) {
                 <Pause sx={{ marginRight: 1 }} />
                 Pause Training
               </ListItem>
-              <ListItem
+              {/* <ListItem
                 onClick={handleEdit}
                 sx={{
                   cursor: 'pointer',
@@ -162,12 +162,12 @@ export default function AthleteHeader(props: Props) {
               >
                 <Edit sx={{ marginRight: 1 }} />
                 {edit ? 'Disable' : 'Enable'} Editing
-              </ListItem>
+              </ListItem> */}
             </>
           )}
       </List>
 
-      <Divider />
+      {/* <Divider /> */}
 
       <List>
         <ListItem disablePadding>
@@ -270,7 +270,7 @@ export default function AthleteHeader(props: Props) {
                       <Pause sx={{ marginRight: 1 }} />
                       Pause Training
                     </MenuItem>
-                    <MenuItem
+                    {/* <MenuItem
                       onClick={handleEdit}
                       sx={{
                         cursor: 'pointer',
@@ -278,7 +278,7 @@ export default function AthleteHeader(props: Props) {
                     >
                       <Edit sx={{ marginRight: 1 }} />
                       {edit ? 'Disable' : 'Enable'} Editing
-                    </MenuItem>
+                    </MenuItem> */}
                   </Menu>
                 </>
               )}
