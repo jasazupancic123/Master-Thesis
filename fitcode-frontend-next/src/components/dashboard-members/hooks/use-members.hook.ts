@@ -18,7 +18,9 @@ export default function useDashboardMembers() {
   const [includeTrainers, setIncludeTrainers] = useState(true);
   const [includeAthletes, setIncludeAthletes] = useState(true);
 
-  const [allInstitutionMembers, setAllInstitutionMembers] = useState(
+  const [allInstitutionMembers, setAllInstitutionMembers] = useState<
+    AuthUser[]
+  >(
     (selectedInstitution?.trainers || [])
       .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
       .concat(
