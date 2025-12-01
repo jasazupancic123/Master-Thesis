@@ -96,8 +96,8 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
   )
     return null;
 
-  const width = 75;
-  const height = 50;
+  const width = 90;
+  const height = width * (2 / 3);
 
   const completedSets = ExerciseSetService.getCompletedExerciseSetsCount(
     {
@@ -189,7 +189,7 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
 
       {showRecoveryTime && (
         <Typography
-          fontSize={10}
+          fontSize={12}
           textAlign="center"
           sx={{
             zIndex: 10,
