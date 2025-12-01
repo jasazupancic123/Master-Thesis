@@ -1,5 +1,5 @@
 import { CloseOutlined } from '@mui/icons-material';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
@@ -12,6 +12,8 @@ interface Props {
   newAddedExercisesIds: string[];
   setNewAddedExercisesIds: SetState<string[]>;
   setSelectedExerciseIds: SetState<string[]>;
+  disableMargin?: boolean;
+  disableWrap?: boolean;
 }
 
 export default function SelectedExercisesList(props: Props) {
@@ -23,6 +25,8 @@ export default function SelectedExercisesList(props: Props) {
     newAddedExercisesIds,
     setNewAddedExercisesIds,
     setSelectedExerciseIds,
+    disableMargin,
+    disableWrap,
   } = props;
 
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
@@ -39,10 +43,16 @@ export default function SelectedExercisesList(props: Props) {
     <Box
       width="100%"
       display="flex"
-      flexWrap="wrap"
-      justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+      flexWrap={disableWrap ? undefined : 'wrap'}
+      justifyContent={
+        disableWrap ? undefined : screenSize.isMobile ? 'center' : 'flex-start'
+      }
       gap={1}
-      mb={1}
+      mb={disableMargin ? 0 : 1}
+      sx={{
+        overflowX: disableWrap ? 'auto' : undefined,
+        mx: disableWrap ? 'auto' : undefined,
+      }}
     >
       {selectedExercises.map((exercise) => (
         <Box
@@ -55,11 +65,17 @@ export default function SelectedExercisesList(props: Props) {
             borderRadius: 4,
             border: `1px solid ${theme.palette.primary.main}`,
             // backgroundColor: theme.palette.primary.main,
-            fontSize: 12,
-            fontWeight: 600,
           }}
         >
-          {exercise.name}
+          <Typography
+            noWrap={disableWrap}
+            sx={{
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {exercise.name}
+          </Typography>
           <IconButton
             sx={{
               p: 0,

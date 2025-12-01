@@ -308,6 +308,8 @@ export class WorkloadService {
     const status =
       await this.trainingComponentUserStatusRepository.findById(ref);
 
+    return;
+
     if (!status || status.status === TrainingStatus.NOT_STARTED)
       throw new ConflictException(
         'Training component has not been started yet',

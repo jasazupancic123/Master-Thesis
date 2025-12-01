@@ -15,14 +15,19 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_DASHBOARD } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import Logo from '@/ui/logo';
+import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 
 export default function TrainerTrainingInProgressHeader() {
   const router = useRouter();
 
   const { user } = useAuthenticatedAuth();
 
-  const { openProfileMenu, setOpenProfileMenu, setAnchorProfileEl } =
-    useTrainerGroupHeaderUtils();
+  const {
+    anchorProfileEl,
+    openProfileMenu,
+    setOpenProfileMenu,
+    setAnchorProfileEl,
+  } = useTrainerGroupHeaderUtils();
 
   return (
     <Box
@@ -98,6 +103,14 @@ export default function TrainerTrainingInProgressHeader() {
           <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
         </Tooltip>
       </Box>
+
+      {/* Profile dropdown menu*/}
+      <ProfileHeaderMenu
+        anchorEl={anchorProfileEl}
+        open={openProfileMenu}
+        setOpen={setOpenProfileMenu}
+        setAnchorEl={setAnchorProfileEl}
+      />
     </Box>
   );
 }
