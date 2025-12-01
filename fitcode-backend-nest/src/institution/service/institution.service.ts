@@ -103,9 +103,16 @@ export class InstitutionService implements Permission<Institution> {
   async findAllMembers(
     user: User,
     institutionId: string,
+    skipFields: (keyof AuthProfileMerged)[] = [
+      'photoURLBase64',
+      'faceEmbedding',
+    ],
   ): Promise<AuthProfileMerged[]> {
     const institution = await this.findByIdOrFail(user, institutionId);
-    return await this.memberService.findAllByInstitution(institution);
+    return await this.memberService.findAllByInstitution(
+      institution,
+      skipFields,
+    );
   }
 
   @LogMethod()
