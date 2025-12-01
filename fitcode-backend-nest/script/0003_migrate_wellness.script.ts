@@ -17,6 +17,8 @@ runScript('0003 Migrate Wellness', async () => {
     firebase.serialize(doc.data() as FirestoreEntity<Profile>),
   );
 
+  console.log(`Found ${profiles.length} profiles`);
+
   for (const profile of profiles) {
     const wellnessCollection = firebase.firestore
       .collection(FirestoreCollection.PROFILE)
@@ -53,6 +55,11 @@ runScript('0003 Migrate Wellness', async () => {
       .collection(FirestoreCollection.PROFILE)
       .doc(profile.uid)
       .update({ wellness });
+
+    // for each 50 profiles, log progress
+    if (profiles.indexOf(profile) % 50 === 0) {
+      console.log(`Migrated ${profiles.indexOf(profile)} / ${profiles.length}`);
+    }
   }
 })
   .then()
