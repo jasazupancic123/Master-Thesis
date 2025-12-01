@@ -1,9 +1,8 @@
 'use client';
 
-import { Done, Edit, Menu as MenuIcon, Pause } from '@mui/icons-material';
+import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
-  Divider,
   Drawer,
   IconButton,
   List,
