@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useAthlete } from './athlete.provider';
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
@@ -52,7 +51,6 @@ export type ITrainingsContextDefined = Omit<
 
 export const TrainingsProvider = (props: React.PropsWithChildren) => {
   const { activeTraining, setActiveTraining } = useMain();
-  const { reports } = useAthlete();
   const { children } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
