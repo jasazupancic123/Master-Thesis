@@ -196,7 +196,7 @@ export default function MainProvider(props: MainProviderProps) {
           level: u.level,
           gender: u.gender,
           birthDate: u.birthDate || new Date(),
-          wellness: u.wellness || [],
+          wellness: u.wellness || { date: new Date(), userId: u.uid },
         }));
 
         setUsers(users);
