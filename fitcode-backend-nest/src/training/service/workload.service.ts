@@ -155,6 +155,7 @@ export class WorkloadService {
     };
 
     const existing = await this.repository.findById(ref);
+
     if (existing) {
       delete workload.from;
       delete workload.to;

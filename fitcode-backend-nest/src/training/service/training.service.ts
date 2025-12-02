@@ -726,6 +726,13 @@ export class TrainingService implements Permission<Training, Institution> {
       exercise,
     );
 
+    this.logger.log('Completing next set for workload', {
+      trainingId: training.id,
+      athlete: athlete.email,
+      exerciseId: exercise.id,
+      errors: errors,
+    });
+
     if (errors.length) throw new BadRequestException(JSON.stringify(errors));
 
     if (
