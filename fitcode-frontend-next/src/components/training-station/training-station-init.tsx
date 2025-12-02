@@ -52,6 +52,9 @@ export default function TrainingStationInit() {
     ),
   ];
 
+  console.log('allExercises', allExercises);
+  console.log('component', component);
+
   const uniqueExercises = Array.from(
     new Set(allExercises.map((e) => e.id))
   ).map((id) => allExercises.find((e) => e.id === id)!);
@@ -183,6 +186,9 @@ export default function TrainingStationInit() {
                   height={0}
                   unoptimized={lib.common.env.unoptimizeImages()}
                   layout="intrinsic"
+                  style={{
+                    filter: 'grayscale(100%)',
+                  }}
                 />
                 <Box display="flex" flexDirection="column" gap={0.5}>
                   <Typography variant="h6">
