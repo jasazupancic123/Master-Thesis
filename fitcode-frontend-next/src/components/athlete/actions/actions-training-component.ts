@@ -9,6 +9,7 @@ import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
@@ -16,7 +17,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import type { IMainContext } from '@/store/main.provider';
 import type { ITrainingsContext } from '@/store/trainings.provider';
 import { TRAINING_IN_PROGRESS_STORAGE_KEY } from '@/store/trainings.provider';
-import { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 
 export async function startTrainingComponent(
   context: {
