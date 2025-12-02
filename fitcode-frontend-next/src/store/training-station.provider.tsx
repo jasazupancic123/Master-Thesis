@@ -218,7 +218,7 @@ export const TrainingStationProvider = (
     if (!(field in workload)) return;
 
     workload[field] = value;
-    // ignore any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (workload as any).id = undefined; // force update - remove id to make it "un-posted"
 
     setWorkloads((prev) =>
