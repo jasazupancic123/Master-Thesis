@@ -1,6 +1,6 @@
 'use client';
 
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import TrainingStationInit from './training-station-init';
 import { alpha, Avatar, Box, Button, Grid2, Typography } from '@mui/material';
 import TrainingStationMembers from './training-station-members';
@@ -15,9 +15,7 @@ import { theme } from '@/app/style';
 import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
 import TrainingStationExerciseSet from './training-station-exercise-set';
 import { getSupersetIndex } from './actions/actions-superset-index';
-import { core } from '@/core/core.service';
 import { useRouter } from 'next/navigation';
-import { Workload } from '@/core/training/type/workload.type';
 import TrainingStationHeader from './training-station-header';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { useState } from 'react';
@@ -53,15 +51,12 @@ export default function TrainingStation() {
   const [view, setView] = useState<TrackingMethod>(TrackingMethod.MANUAL);
   const [openNewStationModal, setOpenNewStationModal] = useState(false);
 
-  const selectedImageWidth =
-    typeof window !== 'undefined'
-      ? Math.min(window.innerWidth * 0.9, 340)
-      : 340;
-
+  // Individual training for selected user
   const individualTraining = individualTrainings.find(
     (it) => it.userId === selectedUser?.uid
   );
 
+  // Individual exercise with correct param, set values for the user
   const individualExercise = individualTraining?.components
     .find((c) => c.id === component?.id)
     ?.supersets.flatMap((s) => s.exercises)
@@ -86,6 +81,11 @@ export default function TrainingStation() {
   const isAiReady = exerciseAiPrescriptions.some((ep) =>
     ep.exerciseIds.includes(selectedExercise?.exercise?.id || 'UNKNOWN')
   );
+
+  const selectedImageWidth =
+    typeof window !== 'undefined'
+      ? Math.min(window.innerWidth * 0.9, 340)
+      : 340;
 
   if (!station) {
     return <TrainingStationInit />;

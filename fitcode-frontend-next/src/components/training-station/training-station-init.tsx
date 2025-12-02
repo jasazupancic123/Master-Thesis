@@ -1,4 +1,4 @@
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import {
   Box,
   Button,

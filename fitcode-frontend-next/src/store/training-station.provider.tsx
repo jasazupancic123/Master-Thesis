@@ -17,12 +17,15 @@ import { TrainingController } from '@/core/training/training.controller';
 import toast from 'react-hot-toast';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { INDEX_DB_TRAINING_STATIONS_ID } from '@/components/training-station/const/index-db-stations-id';
+import { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
+import { UserStatusesEvaluation } from '@/components/training-station/enum/user-statuses-evaluation';
+import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 
-export type CoachTrainingSessionProps = {
+export type TrainingStationProps = {
   individualTrainings: (Training & { userId: string })[];
 };
 
-interface ICoachTrainingStationProvider extends CoachTrainingSessionProps {
+interface TrainingStationProvider extends TrainingStationProps {
   setIndividualTrainings: SetState<(Training & { userId: string })[]>;
   station: TrainingStation | null;
   setStation: SetState<TrainingStation | null>;
@@ -36,6 +39,9 @@ interface ICoachTrainingStationProvider extends CoachTrainingSessionProps {
   setSelectedSetIndex: SetState<number | undefined>;
   workloads: Workload[];
   setWorkloads: SetState<Workload[]>;
+  userStatuses: TrainingComponentUserStatus[];
+  setUserStatuses: SetState<TrainingComponentUserStatus[]>;
+  userStatusesValidation: UserStatusesEvaluation;
   updateStationsWorkloadValue: (
     id: {
       trainingId: string;
@@ -60,12 +66,12 @@ interface ICoachTrainingStationProvider extends CoachTrainingSessionProps {
   ) => Promise<void>;
 }
 
-const CoachTrainingStationContext = createContext<
-  ICoachTrainingStationProvider | undefined
+const TrainingStationContext = createContext<
+  TrainingStationProvider | undefined
 >(undefined);
 
-export const CoachTrainingStationProvider = (
-  props: CoachTrainingSessionProps & React.PropsWithChildren
+export const TrainingStationProvider = (
+  props: TrainingStationProps & React.PropsWithChildren
 ) => {
   const pathname = usePathname();
   const { training } = useCoachTraining();
@@ -94,26 +100,11 @@ export const CoachTrainingStationProvider = (
   );
 
   const [workloads, setWorkloads] = useState<Workload[]>([]);
-
-  useEffect(() => {
-    if (!training) return;
-
-    const unsub = lib.firebase.firestore.listenCollection<Workload>(
-      `trainings/${training.id}/training-workload`,
-      (snapshot) => {
-        const data: Workload[] = snapshot.docs.map((doc) =>
-          lib.firebase.firestore.serialize(doc.data())
-        );
-
-        setWorkloads(data);
-      },
-      (error) => {
-        console.error('Error loading workloads:', error);
-      }
-    );
-
-    return () => unsub();
-  }, [training]);
+  const [userStatuses, setUserStatuses] = useState<
+    TrainingComponentUserStatus[]
+  >([]);
+  const [userStatusesValidation, setUserStatusesValidation] =
+    useState<UserStatusesEvaluation>(UserStatusesEvaluation.NONE_IN_PROGRESS);
 
   useEffect(() => {
     const setupStation = async () => {
@@ -136,6 +127,54 @@ export const CoachTrainingStationProvider = (
 
     setupStation();
   }, [training]);
+
+  // Workloads listener
+  useEffect(() => {
+    if (!training) return;
+
+    const unsub = lib.firebase.firestore.listenCollection<Workload>(
+      `trainings/${training.id}/training-workload`,
+      (snapshot) => {
+        const data: Workload[] = snapshot.docs.map((doc) =>
+          lib.firebase.firestore.serialize(doc.data())
+        );
+
+        setWorkloads(data);
+      },
+      (error) => {
+        console.error('Error loading workloads:', error);
+      }
+    );
+
+    return () => unsub();
+  }, [training]);
+
+  // Statuses listener
+  useEffect(() => {
+    if (!training) return;
+
+    const unsub =
+      lib.firebase.firestore.listenCollection<TrainingComponentUserStatus>(
+        `trainings/${training.id}/training-component-user-status`,
+        (snapshot) => {
+          const data: TrainingComponentUserStatus[] = snapshot.docs.map((doc) =>
+            lib.firebase.firestore.serialize(doc.data())
+          );
+
+          setUserStatuses(data);
+        },
+        (error) => {
+          console.error('Error loading user statuses:', error);
+        }
+      );
+
+    return () => unsub();
+  }, [training]);
+
+  // Validate statuses on change
+  useEffect(() => {
+    setUserStatusesValidation(validateUserStatuses());
+  }, [userStatuses]);
 
   const updateStationsWorkloadValue = <K extends keyof Workload>(
     id: {
@@ -237,7 +276,7 @@ export const CoachTrainingStationProvider = (
               stateSetIndex, // previous set (setNumber is 1-based, setIndex is 0-based)
               { ...prevWorkload, userId: body.userId }
             ),
-          (fetchedPrevWorkload) => {
+          (_) => {
             // We have listeners, no need to update state
           }
         );
@@ -255,15 +294,37 @@ export const CoachTrainingStationProvider = (
           stateSetIndex + 1,
           { ...body, userId: body.userId }
         ),
-      (workload) => {
+      (_) => {
         // We have listeners, no need to update state
         toast.success('Saved');
       }
     );
   }
 
+  const validateUserStatuses = (): UserStatusesEvaluation => {
+    if (!station || !userStatuses.length) return UserStatusesEvaluation.NONE_IN_PROGRESS;
+
+    const allInProgress =
+      userStatuses.every(
+        (status) => status.status === TrainingStatus.IN_PROGRESS
+      ) &&
+      station.users.every((u) =>
+        userStatuses.some((status) => status.userId === u.uid)
+      );
+
+    if (allInProgress) return UserStatusesEvaluation.ALL_IN_PROGRESS;
+
+    const noneInProgress = userStatuses.every(
+      (status) => status.status !== TrainingStatus.IN_PROGRESS
+    );
+
+    if (noneInProgress) return UserStatusesEvaluation.NONE_IN_PROGRESS;
+
+    return UserStatusesEvaluation.MIXED;
+  };
+
   return (
-    <CoachTrainingStationContext.Provider
+    <TrainingStationContext.Provider
       value={{
         station,
         setStation,
@@ -279,14 +340,17 @@ export const CoachTrainingStationProvider = (
         setSelectedSetIndex,
         workloads,
         setWorkloads,
+        userStatuses,
+        setUserStatuses,
+        userStatusesValidation,
         updateStationsWorkloadValue,
         handleUpsertSet,
       }}
     >
       {props.children}
-    </CoachTrainingStationContext.Provider>
+    </TrainingStationContext.Provider>
   );
 };
 
 export const useCoachTrainingStation = () =>
-  useContext(CoachTrainingStationContext)!;
+  useContext(TrainingStationContext)!;

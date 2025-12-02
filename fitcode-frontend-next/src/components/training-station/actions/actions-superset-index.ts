@@ -1,10 +1,8 @@
 import { Training } from '@/core/training/type/training.type';
 
 /**
- *
+ * 
  * @param training - Individual training of the selectedUser
- * @param componentId
- * @param exerciseId
  * @returns The superset index of the exercise in the component, or null if not found
  */
 export const getSupersetIndex = (

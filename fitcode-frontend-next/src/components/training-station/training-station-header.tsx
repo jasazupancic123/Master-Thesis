@@ -1,10 +1,21 @@
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { theme } from '@/app/style';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
-import { alpha, Box, Button, Typography } from '@mui/material';
+import { alpha, Box, Button, IconButton, Typography } from '@mui/material';
+import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
+import { CheckCircle, Close, Error, Warning } from '@mui/icons-material';
+import { useState } from 'react';
 
 export default function TrainingStationHeader() {
-  const { station, individualTrainings, component, workloads } =
-    useCoachTrainingStation();
+  const {
+    station,
+    individualTrainings,
+    component,
+    workloads,
+    userStatusesValidation,
+  } = useCoachTrainingStation();
+
+  const [showStatusInfo, setShowStatusInfo] = useState(true);
 
   if (!station) return null;
 
@@ -41,6 +52,52 @@ export default function TrainingStationHeader() {
       alignItems="center"
       gap={2}
     >
+      {/* User Statuses Info */}
+      {showStatusInfo && (
+        <Box
+          width={300}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={1}
+          sx={{
+            backgroundColor: alpha(theme.palette.background.light, 0.5),
+            borderRadius: 2,
+            p: 1,
+            py: 2,
+            position: 'relative',
+          }}
+        >
+          {/* Icon */}
+          {userStatusesValidation === UserStatusesEvaluation.ALL_IN_PROGRESS ? (
+            <CheckCircle sx={{ color: theme.palette.success.main }} />
+          ) : userStatusesValidation ===
+            UserStatusesEvaluation.NONE_IN_PROGRESS ? (
+            <Error sx={{ color: theme.palette.error.main }} />
+          ) : userStatusesValidation === UserStatusesEvaluation.MIXED ? (
+            <Warning sx={{ color: theme.palette.warning.main }} />
+          ) : null}
+
+          {/* Text */}
+          <Typography fontSize={14} lineHeight={1} mt={0.25}>
+            {userStatusesValidation === UserStatusesEvaluation.ALL_IN_PROGRESS
+              ? 'All athletes are in progress'
+              : userStatusesValidation ===
+                  UserStatusesEvaluation.NONE_IN_PROGRESS
+                ? 'No athletes are in progress'
+                : userStatusesValidation === UserStatusesEvaluation.MIXED
+                  ? 'Some athletes are not in progress'
+                  : ''}
+          </Typography>
+
+          <IconButton
+            sx={{ p: 0, m: 0, position: 'absolute', top: 4, right: 4 }}
+            onClick={() => setShowStatusInfo(false)}
+          >
+            <Close sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Box>
+      )}
       <Box
         width="70%"
         display="flex"
