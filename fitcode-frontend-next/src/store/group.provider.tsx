@@ -53,8 +53,8 @@ export function GroupProvider(
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
-  const [trainings, setTrainings] = useState(allTrainings);
-  const [filteredUsers, setFilteredUsers] = useState(allUsers);
+  const [trainings, setTrainings] = useState(() => allTrainings);
+  const [filteredUsers, setFilteredUsers] = useState(() => allUsers);
 
   async function handleMoveTraining(e: DragEndEvent) {
     const { over, active } = e;
@@ -121,6 +121,10 @@ export function GroupProvider(
     setDateFrom(dayjs(cycle.from));
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
+
+  useEffect(() => {
+    setTrainings(allTrainings);
+  }, [allTrainings]);
 
   const value: IGroupCtx = {
     filter,

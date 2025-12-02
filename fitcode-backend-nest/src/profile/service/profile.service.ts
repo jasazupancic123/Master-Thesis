@@ -61,18 +61,11 @@ export class ProfileService implements Permission<Profile, Institution> {
     if (!institution)
       throw new BadRequestException('User does not own any institution');
 
-    const [users, profiles] = await Promise.all([
-      this.authService.findAllByInstitution(institution),
-      this.repository.findAllByInstitution(institution),
-    ]);
-
-    return users
-      .map((user) => {
-        const profile = profiles.find((p) => p.uid === user.uid);
-        if (!profile) return null;
-        return this.mergeAuthProfile(user, profile);
-      })
-      .filter(Boolean);
+    return await this.institutionService.findAllMembers(
+      user,
+      institution.id,
+      [],
+    );
   }
 
   async findAllByInstitution(

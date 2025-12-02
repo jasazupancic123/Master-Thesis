@@ -79,7 +79,23 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
       if (!institution) return null;
 
-      core.institution.mapUsers([institution], users);
+      institution.groups = groups.filter(
+        (g) => g.institutionId === institution.id
+      );
+
+      return institution;
+    });
+
+  useEffect(() => {
+    if (!users.length) return;
+
+    // map groups and instituton
+    // setInstitutions((prev) => core.institution.mapUsers(prev, users));
+
+    setSelectedInstitution((prev) => {
+      if (!prev) return prev;
+
+      const institution = core.institution.mapUsers([prev], users)[0];
       institution.groups = groups.filter(
         (g) => g.institutionId === institution.id
       );
@@ -89,6 +105,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
       return institution;
     });
+  }, [users]);
 
   const [selectedGroups, setSelectedGroups] = useState<Group[]>(
     (selectedInstitution?.groups || []).filter((g) =>
