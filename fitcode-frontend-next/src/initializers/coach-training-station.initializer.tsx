@@ -4,7 +4,7 @@ import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import { Training } from '@/core/training/type/training.type';
-import { CoachTrainingStationProvider } from '@/store/coach-training-station.provider';
+import { TrainingStationProvider } from '@/store/training-station.provider';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { useMain } from '@/store/main.provider';
 import Alert from '@/ui/alert';
@@ -56,8 +56,6 @@ export default function CoachTrainingStationInitializer({
   }
 
   return (
-    <CoachTrainingStationProvider {...state}>
-      {children}
-    </CoachTrainingStationProvider>
+    <TrainingStationProvider {...state}>{children}</TrainingStationProvider>
   );
 }

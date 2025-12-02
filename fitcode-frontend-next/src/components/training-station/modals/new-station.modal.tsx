@@ -1,6 +1,6 @@
 import { lib } from '@/lib';
 import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import MyModal from '@/ui/modal';
 import { Typography } from '@mui/material';
 import { INDEX_DB_TRAINING_STATIONS_ID } from '../const/index-db-stations-id';

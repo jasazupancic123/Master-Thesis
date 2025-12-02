@@ -7,7 +7,7 @@ import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import UnilateralParamsRow from '../training-in-progress/unilateral-params-row';
 import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { getSupersetIndex } from './actions/actions-superset-index';
 import { useEffect, useState } from 'react';
 import { Workload } from '@/core/training/type/workload.type';
@@ -29,22 +29,26 @@ export default function TrainingStationExerciseSet(props: Props) {
 
   const { exercise } = props;
 
-  if (setIndex === undefined || !component || !selectedUser) return null;
-
-  const training = individualTrainings.find(
-    (it) => it.userId === selectedUser.uid
+  const individualTraining = individualTrainings.find(
+    (it) => it.userId === selectedUser?.uid
   )!;
-
-  if (!training) return null;
 
   const [foundWorkload, setFoundWorkload] = useState<Workload | undefined>(
     undefined
   );
 
   useEffect(() => {
+    if (
+      setIndex === undefined ||
+      !component ||
+      !selectedUser ||
+      !individualTraining
+    )
+      return;
+
     const newFoundWorkload = workloads.find((wl) => {
       return (
-        wl.trainingId === training.id &&
+        wl.trainingId === individualTraining.id &&
         wl.componentId === component.id &&
         wl.exerciseId === exercise.id &&
         wl.setNumber === setIndex + 1 &&
@@ -74,6 +78,14 @@ export default function TrainingStationExerciseSet(props: Props) {
   const params = [effType, volType, load, recType].filter(
     (p) => p !== undefined
   );
+
+  if (
+    setIndex === undefined ||
+    !component ||
+    !selectedUser ||
+    !individualTraining
+  )
+    return null;
 
   return (
     <>
@@ -127,7 +139,7 @@ export default function TrainingStationExerciseSet(props: Props) {
               disable
               onInputChange={(value) => {
                 const supersetIndex = getSupersetIndex(
-                  training,
+                  individualTraining,
                   component.id,
                   exercise.id
                 );
@@ -136,7 +148,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                 updateStationsWorkloadValue(
                   {
-                    trainingId: training.id,
+                    trainingId: individualTraining.id,
                     componentId: component.id,
                     exerciseId: exercise.id,
                     supersetIndex: supersetIndex || 0,
@@ -167,7 +179,7 @@ export default function TrainingStationExerciseSet(props: Props) {
               disableOptions
               onInputChange={(value) => {
                 const supersetIndex = getSupersetIndex(
-                  training,
+                  individualTraining,
                   component.id,
                   exercise.id
                 );
@@ -176,7 +188,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                 updateStationsWorkloadValue(
                   {
-                    trainingId: training.id,
+                    trainingId: individualTraining.id,
                     componentId: component.id,
                     exerciseId: exercise.id,
                     supersetIndex: supersetIndex || 0,
@@ -219,7 +231,7 @@ export default function TrainingStationExerciseSet(props: Props) {
               disableOptions
               onInputChange={(value) => {
                 const supersetIndex = getSupersetIndex(
-                  training,
+                  individualTraining,
                   component.id,
                   exercise.id
                 );
@@ -228,7 +240,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                 updateStationsWorkloadValue(
                   {
-                    trainingId: training.id,
+                    trainingId: individualTraining.id,
                     componentId: component.id,
                     exerciseId: exercise.id,
                     supersetIndex: supersetIndex || 0,
@@ -258,7 +270,7 @@ export default function TrainingStationExerciseSet(props: Props) {
             showOptions={!uni}
             onInputChange={(value) => {
               const supersetIndex = getSupersetIndex(
-                training,
+                individualTraining,
                 component.id,
                 exercise.id
               );
@@ -267,7 +279,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
               updateStationsWorkloadValue(
                 {
-                  trainingId: training.id,
+                  trainingId: individualTraining.id,
                   componentId: component.id,
                   exerciseId: exercise.id,
                   supersetIndex: supersetIndex || 0,
@@ -352,7 +364,7 @@ export default function TrainingStationExerciseSet(props: Props) {
                       const field = core.exercise.param.pairs[effType];
 
                       const supersetIndex = getSupersetIndex(
-                        training,
+                        individualTraining,
                         component.id,
                         exercise.id
                       );
@@ -361,7 +373,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                       updateStationsWorkloadValue(
                         {
-                          trainingId: training.id,
+                          trainingId: individualTraining.id,
                           componentId: component.id,
                           exerciseId: exercise.id,
                           supersetIndex: supersetIndex || 0,
@@ -399,7 +411,7 @@ export default function TrainingStationExerciseSet(props: Props) {
                     ] as typeof volType;
 
                     const supersetIndex = getSupersetIndex(
-                      training,
+                      individualTraining,
                       component.id,
                       exercise.id
                     );
@@ -408,7 +420,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                     updateStationsWorkloadValue(
                       {
-                        trainingId: training.id,
+                        trainingId: individualTraining.id,
                         componentId: component.id,
                         exerciseId: exercise.id,
                         supersetIndex: supersetIndex || 0,
@@ -455,7 +467,7 @@ export default function TrainingStationExerciseSet(props: Props) {
                     const field = core.exercise.param.pairs['loadKg'];
 
                     const supersetIndex = getSupersetIndex(
-                      training,
+                      individualTraining,
                       component.id,
                       exercise.id
                     );
@@ -464,7 +476,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                     updateStationsWorkloadValue(
                       {
-                        trainingId: training.id,
+                        trainingId: individualTraining.id,
                         componentId: component.id,
                         exerciseId: exercise.id,
                         supersetIndex: supersetIndex || 0,
@@ -498,7 +510,7 @@ export default function TrainingStationExerciseSet(props: Props) {
                   const field = core.exercise.param.pairs[recType];
 
                   const supersetIndex = getSupersetIndex(
-                    training,
+                    individualTraining,
                     component.id,
                     exercise.id
                   );
@@ -507,7 +519,7 @@ export default function TrainingStationExerciseSet(props: Props) {
 
                   updateStationsWorkloadValue(
                     {
-                      trainingId: training.id,
+                      trainingId: individualTraining.id,
                       componentId: component.id,
                       exerciseId: exercise.id,
                       supersetIndex: supersetIndex || 0,

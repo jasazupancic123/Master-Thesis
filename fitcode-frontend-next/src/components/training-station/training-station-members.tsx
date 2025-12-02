@@ -1,7 +1,7 @@
 import { theme } from '@/app/style';
 import { AuthUser } from '@/core/auth/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useCoachTrainingStation } from '@/store/coach-training-station.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { useMain } from '@/store/main.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import { Avatar, Box } from '@mui/material';
