@@ -152,13 +152,6 @@ export const TrainingInProgressProvider = ({
       isAiRecorded,
     } = state || {};
 
-    console.log(
-      'trainingInProgress.selectedComponent',
-      trainingInProgress?.selectedComponent
-    );
-    console.log('trainingInProgress.userId', trainingInProgress?.userId);
-    console.log('trainingInProgress.training', trainingInProgress?.training);
-
     if (
       !trainingInProgress?.selectedComponent ||
       !trainingInProgress.userId ||

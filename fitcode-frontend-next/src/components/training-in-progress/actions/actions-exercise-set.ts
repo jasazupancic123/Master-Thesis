@@ -63,7 +63,6 @@ export const finishSet = async (state: {
     workloadInput: PartialRecordedWorkloadValues;
   };
 }) => {
-  console.log('FINISH SET CALLED', state);
   const {
     userId,
     exercise,
@@ -91,8 +90,6 @@ export const finishSet = async (state: {
 
     if (imagesR && imagesR[i]) photoUrls.push(imagesR[i].url);
   }
-
-  console.log('handleUpsertSet', handleUpsertSet);
 
   // TRAINING STATION VIEW
   if (stationsViewProps) {

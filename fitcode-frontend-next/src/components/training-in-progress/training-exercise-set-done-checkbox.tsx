@@ -9,10 +9,10 @@ import { handleAdvanceInSuperset } from './actions/actions-superset';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 interface Props {
   exercise: TrainingExercise;
