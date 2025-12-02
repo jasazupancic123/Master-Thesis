@@ -686,9 +686,9 @@ export function getTempoObject(state: { recordedReps: Rep[] }): {
   }
 
   return {
-    ecc: avgTimeToExtremeS,
-    iso: avgTimeAtExtremeS,
-    con: avgTimeFromExtremeToEndS,
-    idle: avgIdleTimeS,
+    ecc: avgTimeToExtremeS.toFixed(2) as unknown as number,
+    iso: avgTimeAtExtremeS.toFixed(2) as unknown as number,
+    con: avgTimeFromExtremeToEndS.toFixed(2) as unknown as number,
+    idle: avgIdleTimeS.toFixed(2) as unknown as number,
   };
 }
