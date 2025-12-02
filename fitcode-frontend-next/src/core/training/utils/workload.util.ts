@@ -169,7 +169,7 @@ export class WorkloadUtil {
     const exercise = superset.exercises.find((e) => e.id === exerciseId);
     if (!exercise) return null;
 
-    const set = exercise.sets[setNumber];
+    const set = exercise.sets.find((s) => s.setNumber === setNumber);
     if (!set) return null;
 
     const workload: PartialWorkload = {

@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { TrainingController } from '@/core/training/training.controller';
 import toast from 'react-hot-toast';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { INDEX_DB_TRAINING_STATIONS_ID } from '@/components/training-station/const/index-db-stations-id';
 
 export type CoachTrainingSessionProps = {
   individualTrainings: (Training & { userId: string })[];
@@ -112,6 +113,28 @@ export const CoachTrainingStationProvider = (
     );
 
     return () => unsub();
+  }, [training]);
+
+  useEffect(() => {
+    const setupStation = async () => {
+      const items = await lib.common.indexedDb.items.get(
+        `${INDEX_DB_TRAINING_STATIONS_ID}-${training?.id}-${componentId}`
+      );
+
+      const data: TrainingStation | undefined | null = items?.payload;
+
+      if (data) {
+        const firstExercise = data.exercises[0] || null;
+        const firstUser = data.users[0] || null;
+
+        setStation(data);
+        setSelectedExercise(firstExercise);
+        setSelectedUser(firstUser);
+        setSelectedSetIndex(0);
+      }
+    };
+
+    setupStation();
   }, [training]);
 
   const updateStationsWorkloadValue = <K extends keyof Workload>(
@@ -238,10 +261,6 @@ export const CoachTrainingStationProvider = (
       }
     );
   }
-
-  useEffect(() => {
-    console.log('workloads updated:', workloads);
-  }, [workloads]);
 
   return (
     <CoachTrainingStationContext.Provider

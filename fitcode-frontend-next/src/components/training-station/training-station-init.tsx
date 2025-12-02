@@ -23,6 +23,8 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { v4 } from 'uuid';
 import SelectedExercisesList from '../add-exercise-form/selected-exercises-list';
 import toast from 'react-hot-toast';
+import { INDEX_DB_TRAINING_STATIONS_ID } from './const/index-db-stations-id';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 
 export default function TrainingStationInit() {
   const screenSize = useScreenSize();
@@ -52,9 +54,6 @@ export default function TrainingStationInit() {
     ),
   ];
 
-  console.log('allExercises', allExercises);
-  console.log('component', component);
-
   const uniqueExercises = Array.from(
     new Set(allExercises.map((e) => e.id))
   ).map((id) => allExercises.find((e) => e.id === id)!);
@@ -74,6 +73,7 @@ export default function TrainingStationInit() {
     <Box
       width={screenSize.isMobile ? '90%' : screenSize.isTablet ? '70%' : '50%'}
       minWidth={300}
+      maxWidth={MAX_WIDTH}
       display="flex"
       flexDirection="column"
       alignItems="center"
@@ -235,7 +235,7 @@ export default function TrainingStationInit() {
       <Button
         variant="contained"
         sx={{ mt: 2 }}
-        onClick={() => {
+        onClick={async () => {
           if (!stationName || !stationName.trim().length) {
             toast.error('Provide station name');
             return;
@@ -268,7 +268,7 @@ export default function TrainingStationInit() {
             selectedExerciseIds.includes(e.id)
           );
 
-          setStation({
+          const station = {
             id: v4(),
             name: stationName,
             color,
@@ -276,6 +276,14 @@ export default function TrainingStationInit() {
             componentId: component.id,
             users,
             exercises,
+          };
+
+          setStation(station);
+
+          await lib.common.indexedDb.items.put({
+            id: `${INDEX_DB_TRAINING_STATIONS_ID}-${training.id}-${component.id}`,
+            updatedAt: Date.now(),
+            payload: station,
           });
 
           setSelectedExercise(exercises[0] || null);
