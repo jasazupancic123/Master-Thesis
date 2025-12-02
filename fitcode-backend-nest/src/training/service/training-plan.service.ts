@@ -392,6 +392,13 @@ export class TrainingPlanService {
     return { superset, exercise, exerciseIndex };
   }
 
+  validateSupersetLimit(item: { supersets: UpdateSuperset[] }): void {
+    if (item.supersets.length >= MAX_NUM_SUPERSETS)
+      throw new BadRequestException(
+        `You can only have up to ${MAX_NUM_SUPERSETS} supersets per component`,
+      );
+  }
+
   validateSupersets(
     item: { supersets: UpdateSuperset[] },
     data: { exercises: Exercise[] },
@@ -399,10 +406,7 @@ export class TrainingPlanService {
     const newSupersets = item.supersets || [];
     const { exercises } = data;
 
-    if (item.supersets.length > MAX_NUM_SUPERSETS)
-      throw new BadRequestException(
-        `You can only have up to ${MAX_NUM_SUPERSETS} supersets per component`,
-      );
+    this.validateSupersetLimit({ supersets: newSupersets });
 
     const validSupersets: Superset[] = [];
     for (let i = 0; i < newSupersets.length; i++) {

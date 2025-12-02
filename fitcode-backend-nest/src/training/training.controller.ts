@@ -38,6 +38,7 @@ import {
   TrainingProtocolRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
@@ -67,6 +68,7 @@ import { SmartWallTraining } from './type/smart-wall.type';
 @Controller('training')
 export class TrainingController {
   constructor(
+    private readonly firebase: FirebaseService,
     private readonly commonService: CommonService,
     private readonly institutionService: InstitutionService,
     private readonly trainingService: TrainingService,
@@ -618,6 +620,26 @@ export class TrainingController {
       user,
       { trainingId },
       { userId, add: false },
+    );
+  }
+
+  @Get('report/recalculate')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async recalculateReports(
+    @RequestUser() user: User,
+    @Query('institutionId') institutionId: string,
+    @Query('userId') userId: string,
+  ) {
+    if (this.firebase.isAthlete(user)) userId = user.uid;
+    else if (!userId)
+      throw new BadRequestException(
+        'userId query parameter is required for managers and trainers',
+      );
+
+    return await this.trainingReportService.recalculateReportsForUser(
+      user,
+      institutionId,
+      userId,
     );
   }
 }

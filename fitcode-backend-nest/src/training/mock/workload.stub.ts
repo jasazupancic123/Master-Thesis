@@ -27,7 +27,7 @@ export function generateWorkloadStub(
   const workloadValue: WorkloadValue = {
     timestamp: data?.timestamp || new Date(),
     photoURLs: data?.photoURLs || [],
-    reps: data?.reps ?? 10,
+    reps: data?.reps,
     repsR: data?.repsR,
     loadKg: data?.loadKg,
     loadKgR: data?.loadKgR,
@@ -53,7 +53,7 @@ export function generateWorkloadStub(
     timeR: data?.timeR,
     dist: data?.dist,
     distR: data?.distR,
-    recTime: data?.recTime ?? 60,
+    recTime: data?.recTime,
     recTimeR: data?.recTimeR,
     recDist: data?.recDist,
     recDistR: data?.recDistR,
@@ -66,7 +66,7 @@ export function generateWorkloadStub(
     ...workloadValue,
     from: new Date(),
     to: new Date(),
-    prescribed: { setNumber, reps: 10, recTime: 60, ...data.prescribed },
+    prescribed: { setNumber, ...data.prescribed },
   };
 }
 
