@@ -56,6 +56,11 @@ export class AppController {
               user.uid,
             )
           : null,
+        isAthlete
+          ? this.activeTrainingService.completePastActiveTrainingsForAthlete(
+              user.uid,
+            )
+          : null,
       ]);
 
     return {

@@ -26,7 +26,6 @@ import { Workload } from '../entity/workload.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { TrainingService } from './training.service';
-import { TrainingReportService } from './training-report.service';
 import { WorkloadService } from './workload.service';
 
 @Injectable()
@@ -38,7 +37,6 @@ export class ActiveTrainingService {
     private readonly trainingService: TrainingService,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly workloadService: WorkloadService,
-    private readonly trainingReportService: TrainingReportService,
   ) {}
 
   /**
@@ -86,8 +84,17 @@ export class ActiveTrainingService {
         );
 
       if (activeTrainingId && activeTrainingId !== input[0].training.id) {
-        errors.push({ field: uid, message: 'ACTIVE_TRAINING_EXISTS' });
-        continue;
+        if (this.firebase.isAthlete(user)) {
+          // athlete cannot start new training if another is active
+          errors.push({ field: uid, message: 'ACTIVE_TRAINING_EXISTS' });
+          continue;
+        } else {
+          // trainer/manager can start new training, but we need to finalize existing active training first
+          await this.trainingComponentUserStatusRepository.update(
+            { trainingId: activeTrainingId, componentId: ref.componentId, uid },
+            { status: TrainingStatus.COMPLETED },
+          );
+        }
       }
     }
 
@@ -107,7 +114,12 @@ export class ActiveTrainingService {
 
       if (existing) {
         if (existing.status === TrainingStatus.IN_PROGRESS) continue;
-        if (existing.status === TrainingStatus.COMPLETED) {
+
+        // athlete cannot restart completed component, only trainer/manager can
+        if (
+          this.firebase.isAthlete(user) &&
+          existing.status === TrainingStatus.COMPLETED
+        ) {
           errors.push({ field: uid, message: 'COMPONENT_COMPLETED' });
           continue;
         }
@@ -152,9 +164,7 @@ export class ActiveTrainingService {
     user: User,
     ref: TrainingComponentRef,
     uid?: string,
-  ): Promise<{
-    errors: ValidateError<Record<string, unknown>>[];
-  }> {
+  ): Promise<{ errors: ValidateError<Record<string, unknown>>[] }> {
     const training = await this.trainingService.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
 
@@ -185,26 +195,11 @@ export class ActiveTrainingService {
         continue;
       }
 
-      const report = this.trainingReportService.getTrainingComponentReport(
-        userId,
-        ref.componentId,
+      await this.trainingService.upsertTrainingComponentStatus(
         training,
-        workloads.filter((w) => w.userId === userId),
+        statusRef,
+        workloads,
       );
-
-      await this.trainingComponentUserStatusRepository.update(statusRef, {
-        status: TrainingStatus.COMPLETED,
-        realization: report.realization,
-        sets: report.sets,
-        reps: report.reps,
-        dist: report.dist,
-        time: report.time,
-        recTime: report.recTime,
-        recDist: report.recDist,
-        exercises: report.exercises,
-        tonnage: report.tonnage,
-        tut: report.tut,
-      });
     }
 
     return { errors };
@@ -298,6 +293,12 @@ export class ActiveTrainingService {
       );
 
     return { ...individualTraining, statuses };
+  }
+
+  async completePastActiveTrainingsForAthlete(userId: string) {
+    await this.trainingComponentUserStatusRepository.completePastActiveTrainingsForAthlete(
+      userId,
+    );
   }
 
   private async getMemberIdsForTrainingReport(

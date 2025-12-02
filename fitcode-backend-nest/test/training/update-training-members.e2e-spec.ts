@@ -86,6 +86,7 @@ describe('Update Group (e2e)', () => {
       athletes[0].token,
       athletes[1].uid,
     );
+
     expect(response.status).toBe(403);
     expect(response.body.message).toBe('Forbidden resource');
   });
@@ -102,10 +103,10 @@ describe('Update Group (e2e)', () => {
   });
 
   it('should fail if member is not an athlete', async () => {
-    const response = await testApp.http.patch(
-      `/institution/${institutionId}/group/${groupId}/member`,
+    const response = await addMemberReq(
+      trainingId,
       global.trainer.token,
-      { userId: global.manager.uid },
+      global.manager.uid,
     );
 
     expect(response.status).toBe(400);
