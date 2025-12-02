@@ -8,7 +8,7 @@ interface Props extends React.PropsWithChildren {
   placeholder: string;
   value: string;
   handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  maxWidth?: string;
+  maxWidth?: string | number;
   sx?: SxProps;
 }
 
@@ -24,13 +24,13 @@ export function SearchBar({
 
   return (
     <Search
-      maxWidth={maxWidth}
       sx={{
         ...sx,
         '& .MuiInputBase-root': {
           width: '100%',
           backgroundColor: theme.palette.background.light,
         },
+        maxWidth: maxWidth,
       }}
     >
       <SearchIconWrapper>
