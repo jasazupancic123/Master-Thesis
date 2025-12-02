@@ -1,25 +1,30 @@
 'use client';
 
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { TrainingStation } from '@/core/training/type/training-station.type';
-import { Training } from '@/core/training/type/training.type';
-import { handleApiRequest, SetState } from '@/lib/common/type/state.type';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useCoachTraining } from './coach-training.provider';
-import { usePathname } from 'next/navigation';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { PartialWorkload, Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
-import { core } from '@/core/core.service';
 import dayjs from 'dayjs';
-import { TrainingController } from '@/core/training/training.controller';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { usePathname } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+import { useCoachTraining } from './coach-training.provider';
 import { INDEX_DB_TRAINING_STATIONS_ID } from '@/components/training-station/const/index-db-stations-id';
-import { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import { UserStatusesEvaluation } from '@/components/training-station/enum/user-statuses-evaluation';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { core } from '@/core/core.service';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
+import { TrainingController } from '@/core/training/training.controller';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { TrainingStation } from '@/core/training/type/training-station.type';
+import type {
+  PartialWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
+import { lib } from '@/lib';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export type TrainingStationProps = {
   individualTrainings: (Training & { userId: string })[];
@@ -188,7 +193,7 @@ export const TrainingStationProvider = (
     field: K,
     value: Workload[K]
   ) => {
-    let workload: Workload | undefined | null = workloads.find(
+    const workload: Workload | undefined | null = workloads.find(
       (w) =>
         w.trainingId === id.trainingId &&
         w.componentId === id.componentId &&
@@ -213,6 +218,7 @@ export const TrainingStationProvider = (
     if (!(field in workload)) return;
 
     workload[field] = value;
+    // ignore any
     (workload as any).id = undefined; // force update - remove id to make it "un-posted"
 
     setWorkloads((prev) =>
@@ -302,7 +308,8 @@ export const TrainingStationProvider = (
   }
 
   const validateUserStatuses = (): UserStatusesEvaluation => {
-    if (!station || !userStatuses.length) return UserStatusesEvaluation.NONE_IN_PROGRESS;
+    if (!station || !userStatuses.length)
+      return UserStatusesEvaluation.NONE_IN_PROGRESS;
 
     const allInProgress =
       userStatuses.every(

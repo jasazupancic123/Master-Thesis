@@ -1,3 +1,6 @@
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+import { createEmptyPartialWorkload } from '@/components/training-station/actions/actions-workload';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type {
@@ -17,8 +20,6 @@ import type {
   Workload,
 } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { createEmptyPartialWorkload } from '@/components/training-station/actions/actions-workload';
 
 export const finishSet = async (state: {
   userId: string;
@@ -110,8 +111,6 @@ export const finishSet = async (state: {
     });
 
     if (!workload) return;
-
-    console.log('workload to upsert from station view:', workload);
 
     await handleUpsertSetFromStationView(
       workload,

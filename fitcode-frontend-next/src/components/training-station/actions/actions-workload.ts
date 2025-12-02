@@ -1,10 +1,10 @@
-import {
+import { getSupersetIndex } from './actions-superset-index';
+import { core } from '@/core/core.service';
+import type { Training } from '@/core/training/type/training.type';
+import type {
   PartialRecordedWorkloadValues,
   Workload,
 } from '@/core/training/type/workload.type';
-import { getSupersetIndex } from './actions-superset-index';
-import { core } from '@/core/core.service';
-import { Training } from '@/core/training/type/training.type';
 
 export function createEmptyPartialWorkload(state: {
   individualTraining: Training;
@@ -45,7 +45,6 @@ export function createEmptyPartialWorkload(state: {
 
     if (supersetIndex === null) return null;
 
-    console.log('generating empty workload for set');
     workload = core.training.workload.createEmptyWorkloadFromTraining(
       {
         trainingId: individualTraining.id,

@@ -1,7 +1,7 @@
-import { Training } from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
 
 /**
- * 
+ *
  * @param training - Individual training of the selectedUser
  * @returns The superset index of the exercise in the component, or null if not found
  */

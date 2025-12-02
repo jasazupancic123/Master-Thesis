@@ -1,5 +1,5 @@
-import { AuthUser } from '@/core/auth/type/user.type';
-import { TrainingExercise } from './training-exercise.type';
+import type { TrainingExercise } from './training-exercise.type';
+import type { AuthUser } from '@/core/auth/type/user.type';
 
 export type TrainingStation = {
   id: string;

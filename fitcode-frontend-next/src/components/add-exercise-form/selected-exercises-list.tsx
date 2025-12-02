@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 
 interface Props {
   newAddedExercisesIds: string[];

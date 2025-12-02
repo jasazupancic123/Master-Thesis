@@ -1,31 +1,32 @@
 'use client';
 
-import { useCoachTrainingStation } from '@/store/training-station.provider';
-import TrainingStationInit from './training-station-init';
 import { alpha, Avatar, Box, Button, Grid2, Typography } from '@mui/material';
-import TrainingStationMembers from './training-station-members';
-import TrainingStationExercises from './training-station-exercises';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+
+import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { getSupersetIndex } from './actions/actions-superset-index';
+import { createEmptyPartialWorkload } from './actions/actions-workload';
+import NewStationModal from './modals/new-station.modal';
+import TrainingStationExerciseSet from './training-station-exercise-set';
+import TrainingStationExercises from './training-station-exercises';
+import TrainingStationHeader from './training-station-header';
+import TrainingStationInit from './training-station-init';
+import TrainingStationMembers from './training-station-members';
+import { theme } from '@/app/style';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import { lib } from '@/lib';
 import {
   EXERCISE_DEFAULT_IMG_URL,
   USER_AVATAR_IMG_URL,
 } from '@/lib/common/const/image.const';
-import { lib } from '@/lib';
-import { theme } from '@/app/style';
-import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
-import TrainingStationExerciseSet from './training-station-exercise-set';
-import { getSupersetIndex } from './actions/actions-superset-index';
-import { useRouter } from 'next/navigation';
-import TrainingStationHeader from './training-station-header';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
-import { useState } from 'react';
-import NewStationModal from './modals/new-station.modal';
-import { useMain } from '@/store/main.provider';
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
 import { useCoachTraining } from '@/store/coach-training.provider';
-import toast from 'react-hot-toast';
-import { createEmptyPartialWorkload } from './actions/actions-workload';
+import { useMain } from '@/store/main.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
+import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
 
 export default function TrainingStation() {
   const router = useRouter();

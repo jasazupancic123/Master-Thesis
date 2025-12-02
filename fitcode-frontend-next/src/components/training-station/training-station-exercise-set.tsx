@@ -1,16 +1,17 @@
-import { theme } from '@/app/style';
-import { core } from '@/core/core.service';
-import { KG } from '@/core/exercise/constant/exercise-param.constant';
-import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 import { Box, Divider, Grid2 } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import UnilateralParamsRow from '../training-in-progress/unilateral-params-row';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { getSupersetIndex } from './actions/actions-superset-index';
-import { useEffect, useState } from 'react';
-import { Workload } from '@/core/training/type/workload.type';
+import { theme } from '@/app/style';
+import { core } from '@/core/core.service';
+import { KG } from '@/core/exercise/constant/exercise-param.constant';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { Workload } from '@/core/training/type/workload.type';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
+import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
   exercise: TrainingExercise; // already correctly selected exercise based on selectedUser
@@ -119,7 +120,7 @@ export default function TrainingStationExerciseSet(props: Props) {
               disabled
               trainingInProgressSecondaryItem
               showOptions={!uni}
-              onInputChange={(values) => {
+              onInputChange={(_) => {
                 // We currently don't allow updating the tempo manually
               }}
             />
@@ -340,7 +341,7 @@ export default function TrainingStationExerciseSet(props: Props) {
                     disabled
                     trainingInProgressSecondaryItem
                     showOptions={false}
-                    onInputChange={(values) => {
+                    onInputChange={(_) => {
                       // We currently don't allow updating the tempo manually
                     }}
                   />

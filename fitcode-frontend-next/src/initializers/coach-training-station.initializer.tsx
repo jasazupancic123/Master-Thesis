@@ -1,15 +1,15 @@
 'use client';
 
-import { core } from '@/core/core.service';
-import { TrainingController } from '@/core/training/training.controller';
-import { TrainingService } from '@/core/training/training.service';
-import { Training } from '@/core/training/type/training.type';
-import { TrainingStationProvider } from '@/store/training-station.provider';
-import { useCoachTraining } from '@/store/coach-training.provider';
-import { useMain } from '@/store/main.provider';
-import Alert from '@/ui/alert';
 import { notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
+import type { Training } from '@/core/training/type/training.type';
+import { useCoachTraining } from '@/store/coach-training.provider';
+import { useMain } from '@/store/main.provider';
+import { TrainingStationProvider } from '@/store/training-station.provider';
+import Alert from '@/ui/alert';
 
 export default function CoachTrainingStationInitializer({
   children,
@@ -26,7 +26,7 @@ export default function CoachTrainingStationInitializer({
     if (!exercises.length || !users.length) return;
 
     async function init() {
-      let individualTrainingsRecord: Record<string, Training> =
+      const individualTrainingsRecord: Record<string, Training> =
         await TrainingController.getInstance().findAllIndividual(training.id);
 
       if (!individualTrainingsRecord) return notFound();

@@ -1,10 +1,11 @@
+import { CheckCircle, Close, Error, Warning } from '@mui/icons-material';
+import { alpha, Box, IconButton, Typography } from '@mui/material';
+import { useState } from 'react';
+
+import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
 import { theme } from '@/app/style';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
-import { alpha, Box, Button, IconButton, Typography } from '@mui/material';
-import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
-import { CheckCircle, Close, Error, Warning } from '@mui/icons-material';
-import { useState } from 'react';
 
 export default function TrainingStationHeader() {
   const {

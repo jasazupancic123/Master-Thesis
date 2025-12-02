@@ -10,6 +10,9 @@ import {
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 import {
   deleteSelectedExercises,
@@ -18,15 +21,12 @@ import {
 import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './completed-members-group';
 import { core } from '@/core/core.service';
+import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { TrainingController } from '@/core/training/training.controller';
-import { handleApiRequest } from '@/lib/common/type/state.type';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
