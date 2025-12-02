@@ -186,6 +186,9 @@ export class TrainingController extends BaseController {
     return this.api.post<Training>(`/import-workloads`, { workloads });
   }
 
+  /**
+   * If manager or trainer calls this, no need to pass athleteId, it starts training for all members
+   */
   async startTrainingComponent(
     trainingId: string,
     componentId: string,

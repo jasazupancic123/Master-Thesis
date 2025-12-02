@@ -3,6 +3,7 @@ import { isAfter, startOfDay } from 'date-fns';
 import type { Training } from '../type/training.type';
 import type {
   CreateWorkload,
+  PartialRecordedWorkloadValues,
   PartialWorkload,
   UserProgress,
 } from '../type/workload.type';
@@ -149,7 +150,8 @@ export class WorkloadUtil {
       setNumber: number;
       userId: string;
     },
-    training: Training
+    training: Training,
+    workloadInput?: PartialRecordedWorkloadValues // Pass recorded values if any
   ): Workload | null {
     const {
       trainingId,
@@ -181,8 +183,8 @@ export class WorkloadUtil {
       setNumber: setNumber,
       timestamp: new Date(),
       notes: '',
-      reps: set.reps,
-      repsR: set.repsR,
+      reps: workloadInput?.reps || set.reps,
+      repsR: workloadInput?.repsR || set.repsR,
       time: set.time,
       timeR: set.timeR,
       dist: set.dist,
@@ -191,14 +193,14 @@ export class WorkloadUtil {
       loadKgR: set.loadKgR,
       vel: set.vel,
       velR: set.velR,
-      tempoEcc: set.tempoEcc,
-      tempoIso: set.tempoIso,
-      tempoCon: set.tempoCon,
-      tempoIdle: set.tempoIdle,
-      tempoEccR: set.tempoEccR,
-      tempoIsoR: set.tempoIsoR,
-      tempoConR: set.tempoConR,
-      tempoIdleR: set.tempoIdleR,
+      tempoEcc: workloadInput?.tempoEcc || set.tempoEcc,
+      tempoIso: workloadInput?.tempoIso || set.tempoIso,
+      tempoCon: workloadInput?.tempoCon || set.tempoCon,
+      tempoIdle: workloadInput?.tempoIdle || set.tempoIdle,
+      tempoEccR: workloadInput?.tempoEccR || set.tempoEccR,
+      tempoIsoR: workloadInput?.tempoIsoR || set.tempoIsoR,
+      tempoConR: workloadInput?.tempoConR || set.tempoConR,
+      tempoIdleR: workloadInput?.tempoIdleR || set.tempoIdleR,
       eff: set.eff,
       effR: set.effR,
       recTime: set.recTime,

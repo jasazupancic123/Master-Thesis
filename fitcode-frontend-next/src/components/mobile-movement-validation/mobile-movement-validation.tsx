@@ -22,6 +22,7 @@ import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
   getStatusMessage,
+  getTempoObject,
   getTempoString,
   predictWebcam,
   setupVideoAndContex,
@@ -59,26 +60,51 @@ import type {
 } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import {
+  CreateWorkload,
+  PartialWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { Training } from '@/core/training/type/training.type';
 
 const DEBUG = false;
 
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
 interface MobileMovementValidationProps {
+  userId: string;
   selectedExercise: TrainingExercise | undefined;
-  setSelectedExercise: SetState<TrainingExercise | undefined> | undefined;
+  setSelectedExercise:
+    | SetState<TrainingExercise | undefined>
+    | SetState<TrainingExercise | null>
+    | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   trainingId: string;
   componentId: string;
   supersetIndex: number;
   setIndex: number;
+  stationViewProps?: {
+    individualTraining: Training;
+    workloads: Workload[];
+    router: AppRouterInstance;
+    handleUpsertSetFromStationView: (
+      body: PartialWorkload,
+      state: {
+        exerciseId: string;
+        supersetIndex: number;
+        setIndex: number;
+        isAiRecorded?: boolean;
+      },
+      router: AppRouterInstance
+    ) => Promise<void>;
+  };
 }
 
 export default function MobileMovementValidation(
@@ -95,12 +121,9 @@ export default function MobileMovementValidation(
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
   const trainingInProgressContext = useTrainingInProgress();
-  const { handleUpsertSet } = trainingInProgressContext || {};
-
-  const authenticatedAuthContext = useAuthenticatedAuth();
-  const { user } = authenticatedAuthContext || { user: null };
 
   const {
+    userId,
     selectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
@@ -108,7 +131,12 @@ export default function MobileMovementValidation(
     componentId,
     supersetIndex,
     setIndex,
+    stationViewProps,
   } = props;
+
+  const { handleUpsertSet } = trainingInProgressContext || {};
+
+  const user = mainContext.users.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
@@ -512,6 +540,107 @@ export default function MobileMovementValidation(
     //   selectedExercise,
     // });
 
+    // Coach training station view - handle set finish differently
+    if (stationViewProps) {
+      if (!setSelectedTrackingMethod || !selectedExercise) return;
+
+      if (!recordedRepsRef.current.left.length) {
+        if (
+          recordedRepsRef.current.right &&
+          !recordedRepsRef.current.right.length
+        ) {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        } else if (!recordedRepsRef.current.right) {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        }
+      }
+
+      trainingInProgress?.recordedSets[0].imagesL;
+
+      const tempoL = getTempoObject({
+        recordedReps: recordedRepsRef.current.left,
+      });
+      const tempoR = recordedRepsRef.current.right
+        ? getTempoObject({
+            recordedReps: recordedRepsRef.current.right,
+          })
+        : null;
+
+      const {
+        individualTraining,
+        workloads,
+        handleUpsertSetFromStationView,
+        router,
+      } = stationViewProps;
+
+      await finishSet({
+        userId: userId,
+        exercise: selectedExercise,
+        setIndex,
+        supersetIndex,
+        newRecordedSets: [],
+        setTrainingInProgress,
+        stationsViewProps: {
+          individualTraining,
+          componentId,
+          router,
+          handleUpsertSetFromStationView,
+          workloadInput: {
+            reps: recordedRepsRef.current.left.length,
+            repsR: recordedRepsRef.current.right
+              ? recordedRepsRef.current.right.length
+              : undefined,
+            tempoEcc: tempoL ? tempoL.ecc : undefined,
+            tempoIso: tempoL ? tempoL.iso : undefined,
+            tempoCon: tempoL ? tempoL.con : undefined,
+            tempoIdle: tempoL ? tempoL.idle : undefined,
+            tempoEccR: tempoR ? tempoR.ecc : undefined,
+            tempoIsoR: tempoR ? tempoR.iso : undefined,
+            tempoConR: tempoR ? tempoR.con : undefined,
+            tempoIdleR: tempoR ? tempoR.idle : undefined,
+          },
+        },
+        isAiRecorded: true,
+        workloads: workloads || [],
+        imagesL: recordedRepsRef.current.left
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
+
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+              side: 'L',
+            };
+          })
+          .filter((i) => i !== null) as RepImage[],
+        imagesR: recordedRepsRef.current.right
+          ? (recordedRepsRef.current.right
+              .map((rep) => {
+                if (!rep.extremumImageUrl) return null;
+
+                return {
+                  repNumber: rep.repNumber,
+                  url: rep.extremumImageUrl || '',
+                  side: 'R',
+                };
+              })
+              .filter((i) => i !== null) as RepImage[])
+          : [],
+      });
+
+      // handleAdvanceInSuperset({
+      //   useTraining: { ...trainingContext, trainingInProgress },
+      //   useTrainingInProgress: trainingInProgressContext,
+      // });
+
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+
+      return;
+    }
+
+    // Athlete mobile view - handle set finish normally
     if (
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       exercisePose &&
@@ -687,6 +816,7 @@ export default function MobileMovementValidation(
       );
 
       await finishSet({
+        userId: user.uid,
         exercise: selectedExercise,
         setIndex,
         supersetIndex,
@@ -695,7 +825,31 @@ export default function MobileMovementValidation(
         setTrainingInProgress,
         handleUpsertSet,
         isAiRecorded: true,
-        activeTraining,
+        workloads: activeTraining?.workloads || [],
+        imagesL: recordedRepsRef.current.left
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
+
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+              side: 'L',
+            };
+          })
+          .filter((i) => i !== null) as RepImage[],
+        imagesR: recordedRepsRef.current.right
+          ? (recordedRepsRef.current.right
+              .map((rep) => {
+                if (!rep.extremumImageUrl) return null;
+
+                return {
+                  repNumber: rep.repNumber,
+                  url: rep.extremumImageUrl || '',
+                  side: 'R',
+                };
+              })
+              .filter((i) => i !== null) as RepImage[])
+          : [],
       });
 
       // handleAdvanceInSuperset({
@@ -794,7 +948,12 @@ export default function MobileMovementValidation(
 
       const lastRep = side[side.length - 1];
 
-      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint)
+      if (
+        !lastRep ||
+        lastRep.extremumImageUrl ||
+        !lastRep.extremeKeypoint ||
+        !user
+      )
         return;
 
       const blob = await frameBitmapBufferRef.current.toBlobByFrameNum(

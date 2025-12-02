@@ -99,6 +99,20 @@ export type PartialWorkload = Omit<
   | 'loadRmR'
 >;
 
+export type PartialRecordedWorkloadValues = Pick<
+  Workload,
+  | 'reps'
+  | 'repsR'
+  | 'tempoCon'
+  | 'tempoConR'
+  | 'tempoEcc'
+  | 'tempoEccR'
+  | 'tempoIdle'
+  | 'tempoIdleR'
+  | 'tempoIso'
+  | 'tempoIsoR'
+>;
+
 export type ImportWorkload = Pick<
   Workload,
   | 'exerciseId'

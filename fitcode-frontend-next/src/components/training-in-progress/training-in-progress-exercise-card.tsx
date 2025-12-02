@@ -18,8 +18,11 @@ import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 export default function TrainingInProgressExerciseCard() {
+  const { user } = useAuthenticatedAuth();
+
   const { activeTraining } = useMain();
   const theme = useTheme();
   const trainingContext = useTrainings();
@@ -44,6 +47,7 @@ export default function TrainingInProgressExerciseCard() {
 
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
+      userId={user.uid}
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
