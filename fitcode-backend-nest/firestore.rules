@@ -2,10 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
     match /databases/{database}/documents {
+        function isTrainer(){
+            return request.auth != null
+                && "role" in request.auth.token
+                && request.auth.token.role.hasAny(["trainer"]);
+        }
+
         function isManager() {
             return request.auth != null
                 && "role" in request.auth.token
                 && request.auth.token.role.hasAny(["manager"]);
+        }
+
+        function isTrainerOfInstitution(trainingId) {
+            let training = get(/databases/$(database)/documents/trainings/$(trainingId)).data;
+            let memberPath = /databases/$(database)/documents/institutions/$(training.institutionId)
+                /institution-members/$(request.auth.uid);
+
+            // Check if there is at least one member with this uid and role "trainer"
+            return isTrainer() && exists(memberPath) && get(memberPath).data.role == "trainer";
         }
 
         function isManagerOfInstitution(instId) {
@@ -16,18 +31,36 @@ service cloud.firestore {
 
         // Trainings collection listener
         match /trainings/{trainingId} {
-            allow read: if (request.auth != null 
-                && (request.auth.uid == resource.data.ownerId || request.auth.uid in resource.data.memberIds))
-                || isManagerOfInstitution(resource.data.institutionId);
+            allow read: if request.auth != null 
+                && (
+                    // trainer
+                    isTrainerOfInstitution(trainingId)
+                    // or manager
+                    || isManagerOfInstitution(resource.data.institutionId)
+                    // or member
+                    || request.auth.uid in resource.data.memberIds
+                );
 
             // Training workloads subcollection
             match /training-workload/{workloadId} {
                 allow read: if request.auth != null
                 && (
                     // trainer
-                    request.auth.uid == get(/databases/$(database)/documents/trainings/$(trainingId)).data.ownerId
+                    isTrainerOfInstitution(trainingId)
                     // or member
                     || request.auth.uid in get(/databases/$(database)/documents/trainings/$(trainingId)).data.memberIds
+                );
+            }
+
+            // User component statuses subcollection
+            match /training-component-user-status/{statusId} {
+                allow read: if request.auth != null && (
+                    // trainer
+                    isTrainerOfInstitution(trainingId)
+                    // or manager
+                    || isManagerOfInstitution(
+                        get(/databases/$(database)/documents/trainings/$(trainingId)).data.institutionId
+                    )
                 );
             }
         }

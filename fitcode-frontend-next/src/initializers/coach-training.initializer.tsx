@@ -20,10 +20,13 @@ export default function CoachTrainingInitializer({
   const [state, setState] = useState<TrainingIdPageProps | null>(null);
 
   const { users, institution, exercises } = useMain();
+
   const controller = Controller.getInstance();
 
   useEffect(() => {
     async function init() {
+      if (!users.length) return;
+
       const trainingId = pathname.split('/')[2];
       const training = await controller.training.findById(trainingId);
       if (!institution || !training) return notFound();
@@ -32,6 +35,7 @@ export default function CoachTrainingInitializer({
       if (!group) return notFound();
 
       const mapped = TrainingService.mapData(training, { exercises, users });
+
       const context: TrainingIdPageProps = {
         training: mapped,
         institution,
@@ -42,7 +46,7 @@ export default function CoachTrainingInitializer({
     }
 
     init();
-  }, []);
+  }, [users]);
 
   if (!state) {
     console.log('Loading in coach-training.initializer.tsx');
