@@ -9,6 +9,7 @@ import { handleAdvanceInSuperset } from './actions/actions-superset';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
@@ -22,6 +23,7 @@ interface Props {
 export default function TrainingExerciseSetDoneCheckbox(props: Props) {
   const theme = useTheme();
 
+  const { user } = useAuthenticatedAuth();
   const mainContext = useMain();
   const { activeTraining, setActiveTraining } = mainContext;
   const trainingContext = useTrainings();
@@ -129,15 +131,25 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
             return;
           }
 
+          const recordedSet = trainingInProgress.recordedSets.find(
+            (s) =>
+              s.exerciseId === exercise.id &&
+              s.supersetIndex === supersetIndex &&
+              s.setIndex === setIndex
+          );
+
           if (!isCompleted) {
             await finishSet({
+              userId: user.uid,
               exercise,
               supersetIndex,
               setIndex,
               trainingInProgress,
               setTrainingInProgress,
+              imagesL: recordedSet?.imagesL || [],
+              imagesR: recordedSet?.imagesR || [],
               handleUpsertSet,
-              activeTraining,
+              workloads: activeTraining?.workloads || [],
             });
 
             handleAdvanceInSuperset(

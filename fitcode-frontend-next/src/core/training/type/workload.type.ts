@@ -85,6 +85,34 @@ export type CreateWorkload = Omit<
   | 'loadRmR'
 >;
 
+export type PartialWorkload = Omit<
+  Workload,
+  | 'id'
+  | 'institutionId'
+  | 'groupId'
+  | 'cycleId'
+  | 'status'
+  | 'prescribed'
+  | 'loadBw'
+  | 'loadBwR'
+  | 'loadRm'
+  | 'loadRmR'
+>;
+
+export type PartialRecordedWorkloadValues = Pick<
+  Workload,
+  | 'reps'
+  | 'repsR'
+  | 'tempoCon'
+  | 'tempoConR'
+  | 'tempoEcc'
+  | 'tempoEccR'
+  | 'tempoIdle'
+  | 'tempoIdleR'
+  | 'tempoIso'
+  | 'tempoIsoR'
+>;
+
 export type ImportWorkload = Pick<
   Workload,
   | 'exerciseId'

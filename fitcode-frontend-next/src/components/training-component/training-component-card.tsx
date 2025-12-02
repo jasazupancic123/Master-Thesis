@@ -5,9 +5,14 @@ import {
   IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,
+  PlayCircle,
+  StopCircle,
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 import {
   deleteSelectedExercises,
@@ -16,8 +21,10 @@ import {
 import { handleSelectTrainingComponent } from './actions/actions-training-component';
 import CompletedMembersGroup from './completed-members-group';
 import { core } from '@/core/core.service';
+import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { lib } from '@/lib';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 
@@ -26,9 +33,11 @@ interface TrainingComponentProps {
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
+  const theme = useTheme();
+  const router = useRouter();
+
   const { trainingComponent } = props;
 
-  const theme = useTheme();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
@@ -85,15 +94,15 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Typography>
 
             {component?.id === trainingComponent.id && (
-              <Box display="flex" justifyContent="flex-start" gap={0.5}>
+              <Box display="flex" justifyContent="flex-start" gap={1}>
                 <IconButton
                   sx={{ p: 0, m: 0, ml: 1 }}
                   onClick={() => setExpandedExercisesView((prev) => !prev)}
                 >
                   {expandedExercisesView ? (
-                    <KeyboardArrowDown sx={{ fontSize: 18 }} />
+                    <KeyboardArrowDown fontSize="small" />
                   ) : (
-                    <KeyboardArrowRight sx={{ fontSize: 18 }} />
+                    <KeyboardArrowRight fontSize="small" />
                   )}
                 </IconButton>
                 <>
@@ -127,7 +136,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             )
                           )
                         ) ? (
-                          <CheckBox sx={{ fontSize: 16 }} />
+                          <CheckBox fontSize="small" />
                         ) : supersets.some((s) =>
                             s.exercises.some((e) =>
                               selectedExerciseIds.some(
@@ -159,6 +168,58 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                     </Tooltip>
                   )}
                 </>
+                {training && dayjs(training.from).isSame(dayjs(), 'day') && (
+                  <>
+                    <Tooltip title="Start component">
+                      <IconButton
+                        sx={{ p: 0, m: 0 }}
+                        onClick={async () => {
+                          if (!training || !component) return;
+
+                          handleApiRequest(
+                            router,
+                            () =>
+                              TrainingController.getInstance().startTrainingComponent(
+                                training.id,
+                                component.id
+                              ),
+                            () => {
+                              toast.success('Component started successfully.');
+                            },
+                            undefined,
+                            'Failed to start component.'
+                          );
+                        }}
+                      >
+                        <PlayCircle fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="End component">
+                      <IconButton
+                        sx={{ p: 0, m: 0 }}
+                        onClick={() => {
+                          if (!training || !component) return;
+
+                          handleApiRequest(
+                            router,
+                            () =>
+                              TrainingController.getInstance().completeTrainingComponent(
+                                training.id,
+                                component.id
+                              ),
+                            () => {
+                              toast.success('Component ended successfully.');
+                            },
+                            undefined,
+                            'Failed to end component.'
+                          );
+                        }}
+                      >
+                        <StopCircle fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
               </Box>
             )}
 

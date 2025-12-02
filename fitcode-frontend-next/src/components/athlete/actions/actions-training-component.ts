@@ -9,6 +9,7 @@ import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import { lib } from '@/lib';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
@@ -136,7 +137,7 @@ export async function startTrainingComponent(
     userId: user.uid,
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  } as TrainingComponentUserStatus;
 
   setActiveTraining((prev) => {
     if (!prev)

@@ -555,10 +555,12 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
         : sg;
     });
 
-    const newComponent: TrainingComponent = {
-      ...structuredClone(component),
-      supersets,
-    };
+    const newComponent: TrainingComponent = !selectedSubgroup
+      ? {
+          ...structuredClone(component),
+          supersets,
+        }
+      : { ...structuredClone(component) };
 
     if (selectedSubgroup) newComponent.subgroups = newSubgroups;
 
