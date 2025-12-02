@@ -27,10 +27,10 @@ export default function useAthleteExerciseReportData(
   ): Promise<Workload[]> {
     const workloads = cache.has(key)
       ? cache.get(key)!
-      : await TrainingController.getInstance().getUserExerciseReport(
+      : await TrainingController.getInstance().getExerciseWorkloadsByManyUsers(
           selectedInstitution!.id,
-          user.uid,
-          exercise.id
+          exercise.id,
+          [user.uid]
         );
 
     if (workloads && workloads.length) cache.set(key, workloads);

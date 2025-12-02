@@ -12,7 +12,6 @@ import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
 import type { TrainerDayViewContextProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -33,7 +32,6 @@ import type {
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 
 // eslint-disable-next-line
 export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
@@ -66,7 +64,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
 
   const params = useSearchParams();
   const pathname = usePathname();
-  const controller = Controller.getInstance();
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -255,55 +252,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       prevState
     );
   }
-
-  useEffect(() => {
-    // fetch only for selectedAthlete, group avg is already on training itself
-    const fetchWorkloads = async () => {
-      if (!selectedAthlete) return;
-
-      const combinedComponents = training?.components;
-
-      if (!combinedComponents || !combinedComponents.length) {
-        setSelectedAthleteCompletedWorkloads([]);
-        return;
-      }
-
-      const uniqueExerciseIds = [] as string[];
-      combinedComponents.forEach((c) => {
-        c.supersets.forEach((s) => {
-          s.exercises.forEach((e) => {
-            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
-          });
-        });
-      });
-
-      if (!uniqueExerciseIds.length) {
-        setSelectedAthleteCompletedWorkloads([]);
-        return;
-      }
-
-      isSettingAthleteWorkloads.current = true;
-      handleApiRequest(
-        router,
-        () =>
-          controller.training.findCompletedAthleteWorkloads(
-            training.id,
-            selectedAthlete.uid
-          ),
-        (workloads) => {
-          setSelectedAthleteCompletedWorkloads(workloads);
-          isSettingAthleteWorkloads.current = false;
-        },
-        undefined,
-        'Failed to fetch workloads'
-      );
-      isSettingAthleteWorkloads.current = false;
-    };
-
-    // fetch only for selectedAthlete, group avg is already on training itself
-    if (selectedAthlete) fetchWorkloads();
-    else setSelectedAthleteCompletedWorkloads([]);
-  }, [selectedAthlete]);
 
   /* Sets new training when new period or day is clicked */
   useEffect(() => {

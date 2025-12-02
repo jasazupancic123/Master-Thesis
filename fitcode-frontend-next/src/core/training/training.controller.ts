@@ -94,15 +94,27 @@ export class TrainingController extends BaseController {
     );
   }
 
-  async getUserExerciseReport(
+  // for athlete
+  async getExerciseWorkloadsByUser(institutionId: string, exerciseId: string) {
+    return await this.api.get<Workload[]>(`/report/exercise/${exerciseId}`, {
+      query: { institutionId },
+    });
+  }
+
+  // for trainer/manager
+  async getExerciseWorkloadsByManyUsers(
     institutionId: string,
-    athleteId: string,
-    exerciseId: string
+    exerciseId: string,
+    userIds: string[]
   ) {
-    return await this.api.get<Workload[]>(
-      `/report/athlete/exercise/${exerciseId}`,
-      { query: { athleteId, institutionId } }
+    return await this.api.post<Workload[]>(
+      `/report/exercise/${exerciseId}/many-users?institutionId=${institutionId}`,
+      { userIds }
     );
+  }
+
+  async getTrainingWorkloads(trainingId: string) {
+    return this.api.get<Workload[]>(`/${trainingId}/workload`);
   }
 
   async generateQRCode(
@@ -225,17 +237,6 @@ export class TrainingController extends BaseController {
     return this.api.post<Training>(`/${trainingId}/modify`, body);
   }
 
-  async findCompletedAthleteWorkloads(
-    trainingId: string,
-    userId: string,
-    options?: FetchOptions
-  ) {
-    return this.api.get<Workload[]>(
-      `/${trainingId}/athlete/${userId}/workloads`,
-      options
-    );
-  }
-
   async create(
     body: CreateTraining,
     options?: FetchOptions
@@ -311,5 +312,11 @@ export class TrainingController extends BaseController {
 
   async removeMember(trainingId: string, body: UserId, options?: FetchOptions) {
     return this.api.delete<void>(`/${trainingId}/member`, { body, ...options });
+  }
+
+  async recalculateReports(institutionId: string, userId: string) {
+    return this.api.get<void>(
+      `/report/recalculate?institutionId=${institutionId}&userId=${userId}`
+    );
   }
 }
