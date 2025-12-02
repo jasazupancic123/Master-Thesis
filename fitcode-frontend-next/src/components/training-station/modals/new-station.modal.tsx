@@ -1,10 +1,11 @@
+import { Typography } from '@mui/material';
+
+import { INDEX_DB_TRAINING_STATIONS_ID } from '../const/index-db-stations-id';
 import { lib } from '@/lib';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { useCoachTraining } from '@/store/coach-training.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import MyModal from '@/ui/modal';
-import { Typography } from '@mui/material';
-import { INDEX_DB_TRAINING_STATIONS_ID } from '../const/index-db-stations-id';
-import { useCoachTraining } from '@/store/coach-training.provider';
 
 export default function NewStationModal(props: ModalProps) {
   const { open, setOpen } = props;

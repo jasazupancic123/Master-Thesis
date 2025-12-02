@@ -21,8 +21,6 @@ export default function CoachTrainingInitializer({
 
   const { users, institution, exercises } = useMain();
 
-  console.log('users', users);
-
   const controller = Controller.getInstance();
 
   useEffect(() => {
@@ -37,7 +35,7 @@ export default function CoachTrainingInitializer({
       if (!group) return notFound();
 
       const mapped = TrainingService.mapData(training, { exercises, users });
-      console.log('mapped training', mapped);
+
       const context: TrainingIdPageProps = {
         training: mapped,
         institution,

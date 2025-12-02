@@ -1,11 +1,12 @@
+import { Box, Typography } from '@mui/material';
+import Image from 'next/image';
+import { useEffect } from 'react';
+
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
-import { Box, Typography } from '@mui/material';
-import Image from 'next/image';
-import { useEffect } from 'react';
 
 export default function TrainingStationExercises() {
   const {

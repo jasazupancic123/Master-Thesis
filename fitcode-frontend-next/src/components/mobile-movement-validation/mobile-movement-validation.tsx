@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -52,12 +53,17 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { getPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type { Training } from '@/core/training/type/training.type';
 import type {
   RepImage,
   RepRomTimestamp,
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
+import type {
+  PartialWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
@@ -65,13 +71,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import {
-  CreateWorkload,
-  PartialWorkload,
-  Workload,
-} from '@/core/training/type/workload.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { Training } from '@/core/training/type/training.type';
 
 const DEBUG = false;
 
@@ -136,7 +135,7 @@ export default function MobileMovementValidation(
 
   const { handleUpsertSet } = trainingInProgressContext || {};
 
-  const user = mainContext.users.find((u) => u.uid === userId) || null;
+  const user = (mainContext?.users || []).find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
@@ -556,8 +555,6 @@ export default function MobileMovementValidation(
           return;
         }
       }
-
-      trainingInProgress?.recordedSets[0].imagesL;
 
       const tempoL = getTempoObject({
         recordedReps: recordedRepsRef.current.left,

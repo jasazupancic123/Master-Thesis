@@ -1,11 +1,12 @@
-import { theme } from '@/app/style';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useCoachTrainingStation } from '@/store/training-station.provider';
-import { useMain } from '@/store/main.provider';
-import { SearchBar } from '@/ui/search-bar/search-bar';
 import { Avatar, Box } from '@mui/material';
 import { useMemo, useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { useMain } from '@/store/main.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
+import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function TrainingStationMembers() {
   const { users: allUsers } = useMain();
@@ -52,29 +53,34 @@ export default function TrainingStationMembers() {
         alignItems="center"
         gap={2}
       >
-        {filteredUsers.map((user) => (
-          <Box
-            sx={{
-              border:
-                selectedUser?.uid === user.uid
-                  ? `2px solid ${theme.palette.primary.main}`
-                  : 'none',
-              borderRadius: '50%',
-            }}
-          >
-            <Avatar
+        {filteredUsers
+          .sort((a, b) =>
+            (a.displayName || '').localeCompare(b.displayName || '')
+          )
+          .map((user) => (
+            <Box
               key={user.uid}
-              src={user.photoURL || USER_AVATAR_IMG_URL}
               sx={{
-                width: 50,
-                height: 50,
-                cursor: 'pointer',
-                filter: 'grayscale(100%)',
+                border:
+                  selectedUser?.uid === user.uid
+                    ? `2px solid ${theme.palette.primary.main}`
+                    : 'none',
+                borderRadius: '50%',
               }}
-              onClick={() => setSelectedUser(user)}
-            />
-          </Box>
-        ))}
+            >
+              <Avatar
+                key={user.uid}
+                src={user.photoURL || USER_AVATAR_IMG_URL}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  cursor: 'pointer',
+                  filter: 'grayscale(100%)',
+                }}
+                onClick={() => setSelectedUser(user)}
+              />
+            </Box>
+          ))}
       </Box>
     </Box>
   );

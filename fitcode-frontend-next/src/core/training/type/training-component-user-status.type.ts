@@ -1,6 +1,6 @@
-import { DateRange } from '@/lib/common/type/date-range.type';
 import type { TrainingStatus } from '../enum/training-status.enum';
 import type { BaseEntity } from '@/core/entity.type';
+import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export type TrainingComponentUserStatus = BaseEntity &
   DateRange & {

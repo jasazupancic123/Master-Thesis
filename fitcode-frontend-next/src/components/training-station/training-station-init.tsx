@@ -1,4 +1,4 @@
-import { useCoachTrainingStation } from '@/store/training-station.provider';
+import { Group } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -8,23 +8,24 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { DEFAULT_SUBGROUP } from '../trainer-group-day-view/constant/subgroups.constant';
-import { useCoachTraining } from '@/store/coach-training.provider';
-import { Subgroup } from '@/core/training/type/subgroup.type';
 import Image from 'next/image';
-import { lib } from '@/lib';
-import { Group } from '@mui/icons-material';
 import { useRef, useState } from 'react';
-import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { theme } from '@/app/style';
-import { useScreenSize } from '@/store/screen-size.provider';
-import { GRAPH_COLORS } from '@/core/const/color.const';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { v4 } from 'uuid';
-import SelectedExercisesList from '../add-exercise-form/selected-exercises-list';
 import toast from 'react-hot-toast';
-import { INDEX_DB_TRAINING_STATIONS_ID } from './const/index-db-stations-id';
+import { v4 } from 'uuid';
+
+import SelectedExercisesList from '../add-exercise-form/selected-exercises-list';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import { DEFAULT_SUBGROUP } from '../trainer-group-day-view/constant/subgroups.constant';
+import { INDEX_DB_TRAINING_STATIONS_ID } from './const/index-db-stations-id';
+import { theme } from '@/app/style';
+import { GRAPH_COLORS } from '@/core/const/color.const';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import { lib } from '@/lib';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useCoachTraining } from '@/store/coach-training.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { useCoachTrainingStation } from '@/store/training-station.provider';
 
 export default function TrainingStationInit() {
   const screenSize = useScreenSize();

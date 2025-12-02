@@ -1,8 +1,9 @@
-import { theme } from '@/app/style';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { SetState } from '@/lib/common/type/state.type';
 import { Check } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
+
+import { theme } from '@/app/style';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   selectedExercise: TrainingExercise;
