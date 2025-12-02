@@ -22,9 +22,19 @@ import TrainingStationHeader from './training-station-header';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { useState } from 'react';
 import NewStationModal from './modals/new-station.modal';
+import { useMain } from '@/store/main.provider';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
+import { useCoachTraining } from '@/store/coach-training.provider';
+import toast from 'react-hot-toast';
+import { createEmptyPartialWorkload } from './actions/actions-workload';
 
 export default function TrainingStation() {
   const router = useRouter();
+
+  const { exerciseAiPrescriptions } = useMain();
+
+  const { training } = useCoachTraining();
 
   const {
     station,
@@ -32,12 +42,15 @@ export default function TrainingStation() {
     component,
     selectedUser,
     selectedExercise,
+    setSelectedExercise,
     selectedSetIndex,
     workloads,
+    setWorkloads,
     setSelectedSetIndex,
     handleUpsertSet,
   } = useCoachTrainingStation();
 
+  const [view, setView] = useState<TrackingMethod>(TrackingMethod.MANUAL);
   const [openNewStationModal, setOpenNewStationModal] = useState(false);
 
   const selectedImageWidth =
@@ -54,6 +67,10 @@ export default function TrainingStation() {
     ?.supersets.flatMap((s) => s.exercises)
     .find((e) => e.id === selectedExercise?.id);
 
+  const supersetIndex = individualTraining
+    ? getSupersetIndex(individualTraining, component!.id, selectedExercise!.id)
+    : null;
+
   const foundWorkload = workloads.find(
     (w) =>
       w.userId === selectedUser?.uid &&
@@ -61,22 +78,44 @@ export default function TrainingStation() {
       w.setNumber === (selectedSetIndex || 0) + 1 &&
       w.componentId === component?.id &&
       w.trainingId === individualTraining?.id &&
-      w.supersetIndex ===
-        getSupersetIndex(
-          individualTraining,
-          component!.id,
-          selectedExercise!.id
-        )
+      w.supersetIndex === supersetIndex
   );
 
   // LOGIC: Workload only has id if returned from BE (means it's completed), on FE we handle "PartialWorkload" without id - means it's uncompleted and not posted yet
   const isSetCompleted = foundWorkload && foundWorkload.id !== undefined;
+  const isAiReady = exerciseAiPrescriptions.some((ep) =>
+    ep.exerciseIds.includes(selectedExercise?.exercise?.id || 'UNKNOWN')
+  );
 
   if (!station) {
     return <TrainingStationInit />;
   }
 
-  return (
+  return view === TrackingMethod.CAMERA &&
+    selectedUser &&
+    individualTraining &&
+    component &&
+    selectedExercise &&
+    supersetIndex !== null &&
+    selectedSetIndex !== undefined ? (
+    <MobileMovementValidation
+      selectedExercise={selectedExercise}
+      setSelectedExercise={setSelectedExercise}
+      selectedTrackingMethod={view}
+      setSelectedTrackingMethod={setView}
+      trainingId={training.id}
+      userId={selectedUser.uid}
+      componentId={component.id}
+      supersetIndex={supersetIndex}
+      setIndex={selectedSetIndex}
+      stationViewProps={{
+        individualTraining,
+        router,
+        workloads,
+        handleUpsertSetFromStationView: handleUpsertSet,
+      }}
+    />
+  ) : (
     <Box
       width="100%"
       maxWidth={MAX_WIDTH}
@@ -262,6 +301,13 @@ export default function TrainingStation() {
                   cursor: 'pointer',
                 }}
                 onClick={async () => {
+                  if (isSetCompleted) {
+                    setWorkloads((prev) =>
+                      prev.filter((w) => w.id !== foundWorkload?.id)
+                    );
+                    return;
+                  }
+
                   if (
                     !selectedExercise ||
                     !selectedUser ||
@@ -271,56 +317,22 @@ export default function TrainingStation() {
                   )
                     return;
 
-                  let foundWorkload: Workload | undefined | null =
-                    workloads.find(
-                      (w) =>
-                        w.userId === selectedUser.uid &&
-                        w.exerciseId === selectedExercise.id &&
-                        w.setNumber === selectedSetIndex + 1 &&
-                        w.componentId === component.id &&
-                        w.trainingId === individualTraining?.id &&
-                        w.supersetIndex ===
-                          getSupersetIndex(
-                            individualTraining,
-                            component!.id,
-                            selectedExercise!.id
-                          )
-                    );
+                  const workload = createEmptyPartialWorkload({
+                    individualTraining,
+                    workloads,
+                    userId: selectedUser.uid,
+                    componentId: component.id,
+                    exerciseId: selectedExercise.id,
+                    setIndex: selectedSetIndex,
+                  });
 
-                  if (!foundWorkload) {
-                    const supersetIndex = getSupersetIndex(
-                      individualTraining,
-                      component.id,
-                      selectedExercise.id
-                    );
-
-                    console.log('supersetIndex', supersetIndex);
-
-                    if (supersetIndex === null) return;
-
-                    foundWorkload =
-                      core.training.workload.createEmptyWorkloadFromTraining(
-                        {
-                          trainingId: individualTraining.id,
-                          componentId: component.id,
-                          exerciseId: selectedExercise.id,
-                          supersetIndex,
-                          setNumber: (selectedSetIndex || 0) + 1,
-                          userId: selectedUser.uid,
-                        },
-                        individualTraining
-                      );
-                  }
-
-                  console.log('foundWorkload', foundWorkload);
-
-                  if (!foundWorkload) return;
+                  if (!workload) return;
 
                   await handleUpsertSet(
-                    foundWorkload,
+                    workload,
                     {
                       exerciseId: selectedExercise.id,
-                      supersetIndex: foundWorkload.supersetIndex,
+                      supersetIndex: workload.supersetIndex,
                       setIndex: selectedSetIndex,
                     },
                     router
@@ -346,6 +358,40 @@ export default function TrainingStation() {
           )}
         </Grid2>
       </Grid2>
+
+      <Box
+        width={60}
+        height={60}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        sx={{
+          backgroundColor: isAiReady
+            ? theme.palette.primary.main
+            : theme.palette.grey[700],
+          borderRadius: '25%',
+        }}
+        onClick={() => {
+          if (!isAiReady) return;
+
+          if (isSetCompleted) {
+            toast.error('Current set is already completed.');
+            return;
+          }
+
+          setView(TrackingMethod.CAMERA);
+        }}
+      >
+        <Box
+          width={60 / 3}
+          height={60 / 3}
+          sx={{
+            backgroundColor: theme.palette.background.default,
+            borderRadius: '50%',
+          }}
+        />
+      </Box>
+
       <NewStationModal
         open={openNewStationModal}
         setOpen={setOpenNewStationModal}

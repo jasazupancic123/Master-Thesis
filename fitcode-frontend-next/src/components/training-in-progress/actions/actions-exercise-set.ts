@@ -1,25 +1,38 @@
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
-import type { ActiveTraining } from '@/core/training/type/training.type';
 import type {
+  ActiveTraining,
+  Training,
+} from '@/core/training/type/training.type';
+import type {
+  RepImage,
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type {
   CreateWorkload,
+  PartialRecordedWorkloadValues,
+  PartialWorkload,
   Workload,
 } from '@/core/training/type/workload.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { createEmptyPartialWorkload } from '@/components/training-station/actions/actions-workload';
 
 export const finishSet = async (state: {
+  userId: string;
   exercise: TrainingExercise;
   supersetIndex: number;
   setIndex: number;
-  trainingInProgress: TrainingInProgress;
+  imagesL: RepImage[];
+  imagesR: RepImage[];
+  workloads: Workload[];
   newRecordedSets?: TrainingExerciseRecordedSet[];
-  setTrainingInProgress: SetState<TrainingInProgress | null>;
-  handleUpsertSet: (
+  trainingInProgress?: TrainingInProgress;
+  setTrainingInProgress?: SetState<TrainingInProgress | null>;
+  isAiRecorded?: boolean;
+  handleUpsertSet?: (
     body: CreateWorkload,
     state: {
       exerciseId: string;
@@ -30,102 +43,147 @@ export const finishSet = async (state: {
     workloads: Workload[],
     recordedSets: TrainingExerciseRecordedSet[]
   ) => Promise<void>;
-  activeTraining: ActiveTraining | null;
-  isAiRecorded?: boolean;
+
+  // for training station view:
+  stationsViewProps?: {
+    individualTraining: Training;
+    componentId: string;
+    router: AppRouterInstance;
+    handleUpsertSetFromStationView: (
+      body: PartialWorkload,
+      state: {
+        exerciseId: string;
+        supersetIndex: number;
+        setIndex: number;
+        isAiRecorded?: boolean;
+      },
+      router: AppRouterInstance
+    ) => Promise<void>;
+    workloadInput: PartialRecordedWorkloadValues;
+  };
 }) => {
   const {
+    userId,
     exercise,
     supersetIndex,
     setIndex,
+    imagesL,
+    imagesR,
+    workloads,
     trainingInProgress,
     newRecordedSets,
+    isAiRecorded,
     setTrainingInProgress,
     handleUpsertSet,
-    isAiRecorded,
-    activeTraining,
+    stationsViewProps,
   } = state;
 
   const set = exercise.sets[setIndex];
 
-  const recordedSet = (newRecordedSets || trainingInProgress.recordedSets).find(
-    (r) => {
-      return (
-        r.exerciseId === exercise.id &&
-        r.supersetIndex === supersetIndex &&
-        r.setIndex === setIndex
-      );
-    }
-  );
-
   const photoUrls = [];
 
-  const imagesLength = Math.max(
-    recordedSet?.imagesL?.length || 0,
-    recordedSet?.imagesR?.length || 0
-  );
+  const imagesLength = Math.max(imagesL.length || 0, imagesR?.length || 0);
 
   for (let i = 0; i < imagesLength; i++) {
-    if (recordedSet?.imagesL && recordedSet.imagesL[i])
-      photoUrls.push(recordedSet.imagesL[i].url);
+    if (imagesL && imagesL[i]) photoUrls.push(imagesL[i].url);
 
-    if (recordedSet?.imagesR && recordedSet.imagesR[i])
-      photoUrls.push(recordedSet.imagesR[i].url);
+    if (imagesR && imagesR[i]) photoUrls.push(imagesR[i].url);
   }
 
-  const workload: CreateWorkload = {
-    userId: trainingInProgress.userId,
-    timestamp: new Date(),
-    notes: '',
-    reps: set.reps,
-    repsR: set.repsR,
-    time: set.time,
-    timeR: set.timeR,
-    dist: set.dist,
-    distR: set.distR,
-    loadKg: set.loadKg,
-    loadKgR: set.loadKgR,
-    vel: set.vel,
-    velR: set.velR,
-    tempoEcc: set.tempoEcc,
-    tempoIso: set.tempoIso,
-    tempoCon: set.tempoCon,
-    tempoIdle: set.tempoIdle,
-    tempoEccR: set.tempoEccR,
-    tempoIsoR: set.tempoIsoR,
-    tempoConR: set.tempoConR,
-    tempoIdleR: set.tempoIdleR,
-    eff: set.eff,
-    effR: set.effR,
-    recTime: set.recTime,
-    recTimeR: set.recTimeR,
-    recDist: set.recDist,
-    recDistR: set.recDistR,
-    photoURLs: photoUrls,
-    rir: undefined,
-    rirR: undefined,
-    rom: undefined,
-    romR: undefined,
-    from: new Date(),
-    to: new Date(),
-  };
-
-  markExerciseSetAsCompleted(
-    setTrainingInProgress,
-    exercise.sets[setIndex].recTime,
-    newRecordedSets
-  );
-
-  await handleUpsertSet(
-    workload,
-    {
+  // TRAINING STATION VIEW
+  if (stationsViewProps) {
+    const {
+      individualTraining,
+      componentId,
+      router,
+      handleUpsertSetFromStationView,
+      workloadInput,
+    } = stationsViewProps;
+    const workload = createEmptyPartialWorkload({
+      individualTraining,
+      workloads,
+      userId: userId,
+      componentId,
       exerciseId: exercise.id,
       setIndex,
-      supersetIndex,
-      isAiRecorded,
-    },
-    activeTraining?.workloads || [],
-    newRecordedSets || trainingInProgress.recordedSets
-  );
+      workloadInput,
+    });
+
+    if (!workload) return;
+
+    console.log('workload to upsert from station view:', workload);
+
+    await handleUpsertSetFromStationView(
+      workload,
+      {
+        exerciseId: exercise.id,
+        supersetIndex: workload.supersetIndex,
+        setIndex,
+      },
+      router
+    );
+
+    return;
+  }
+  // TRAINING IN PROGRESS VIEW
+  else if (handleUpsertSet) {
+    const workload: CreateWorkload = {
+      userId: userId,
+      timestamp: new Date(),
+      notes: '',
+      reps: set.reps,
+      repsR: set.repsR,
+      time: set.time,
+      timeR: set.timeR,
+      dist: set.dist,
+      distR: set.distR,
+      loadKg: set.loadKg,
+      loadKgR: set.loadKgR,
+      vel: set.vel,
+      velR: set.velR,
+      tempoEcc: set.tempoEcc,
+      tempoIso: set.tempoIso,
+      tempoCon: set.tempoCon,
+      tempoIdle: set.tempoIdle,
+      tempoEccR: set.tempoEccR,
+      tempoIsoR: set.tempoIsoR,
+      tempoConR: set.tempoConR,
+      tempoIdleR: set.tempoIdleR,
+      eff: set.eff,
+      effR: set.effR,
+      recTime: set.recTime,
+      recTimeR: set.recTimeR,
+      recDist: set.recDist,
+      recDistR: set.recDistR,
+      photoURLs: photoUrls,
+      rir: undefined,
+      rirR: undefined,
+      rom: undefined,
+      romR: undefined,
+      from: new Date(),
+      to: new Date(),
+    };
+
+    if (setTrainingInProgress) {
+      markExerciseSetAsCompleted(
+        setTrainingInProgress,
+        exercise.sets[setIndex].recTime,
+        newRecordedSets
+      );
+    }
+
+    await handleUpsertSet(
+      workload,
+      {
+        exerciseId: exercise.id,
+        setIndex,
+        supersetIndex,
+        isAiRecorded,
+      },
+      workloads,
+      newRecordedSets || trainingInProgress?.recordedSets || []
+    );
+  }
 };
 
 const markExerciseSetAsCompleted = (
