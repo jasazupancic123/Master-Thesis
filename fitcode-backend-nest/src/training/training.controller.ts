@@ -522,7 +522,7 @@ export class TrainingController {
     );
   }
 
-  @Post('report/exercise/:exerciseId')
+  @Post('report/exercise/:exerciseId/many-users')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async getExerciseWorkloadsByManyUsers(
     @RequestUser() user: User,

@@ -136,9 +136,6 @@ export default function MainProvider(props: MainProviderProps) {
             );
 
           if (cachedExercisesRevision === serverInstitutionRevision) {
-            console.log('cached revision:', cachedExercisesRevision);
-            console.log('server revision:', serverInstitutionRevision);
-            console.log('cached exercises length:', cachedExercises?.length);
             console.log('Exercises are up to date, no need to fetch');
             return;
           }
