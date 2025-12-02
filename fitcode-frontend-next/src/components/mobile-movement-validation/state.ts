@@ -630,3 +630,65 @@ export function getTempoString(state: { recordedReps: Rep[] }): string {
 
   return avgTimesSStringsSliced.join(':');
 }
+
+export function getTempoObject(state: { recordedReps: Rep[] }): {
+  ecc: number;
+  iso: number;
+  con: number;
+  idle: number;
+} | null {
+  const { recordedReps } = state;
+
+  let avgTimeToExtremeMs = 0,
+    avgTimeAtExtremeMs = 0,
+    avgTimeFromExtremeToEndMs = 0,
+    avgIdleTimeMs = 0;
+
+  for (const rep of recordedReps) {
+    avgTimeToExtremeMs += rep.timeToExtremeMs || 0;
+    avgTimeAtExtremeMs += rep.timeAtExtremeMs || 0;
+    avgTimeFromExtremeToEndMs += rep.timeFromExtremeToEndMs || 0;
+    avgIdleTimeMs += rep.idleTimeMs || 0;
+  }
+
+  const avgTimeToExtremeS = Math.max(
+    EXERCISE_TIMES_ROUNDING_STEP_S,
+    lib.common.number.roundToStep(
+      Math.max(avgTimeToExtremeMs / 1000 / recordedReps.length, 0),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgTimeAtExtremeS = lib.common.number.roundToStep(
+    Math.max(avgTimeAtExtremeMs / 1000 / recordedReps.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  const avgTimeFromExtremeToEndS = Math.max(
+    lib.common.number.roundToStep(
+      Math.max(avgTimeFromExtremeToEndMs / 1000 / recordedReps.length, 0),
+      EXERCISE_TIMES_ROUNDING_STEP_S
+    )
+  );
+
+  const avgIdleTimeS = lib.common.number.roundToStep(
+    Math.max(avgIdleTimeMs / 1000 / recordedReps.length, 0),
+    EXERCISE_TIMES_ROUNDING_STEP_S
+  );
+
+  if (
+    isNaN(avgTimeToExtremeS) ||
+    isNaN(avgTimeAtExtremeS) ||
+    isNaN(avgTimeFromExtremeToEndS) ||
+    isNaN(avgIdleTimeS)
+  ) {
+    return null;
+  }
+
+  return {
+    ecc: avgTimeToExtremeS.toFixed(2) as unknown as number,
+    iso: avgTimeAtExtremeS.toFixed(2) as unknown as number,
+    con: avgTimeFromExtremeToEndS.toFixed(2) as unknown as number,
+    idle: avgIdleTimeS.toFixed(2) as unknown as number,
+  };
+}

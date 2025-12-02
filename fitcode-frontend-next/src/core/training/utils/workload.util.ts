@@ -1,7 +1,12 @@
 import { isAfter, startOfDay } from 'date-fns';
 
 import type { Training } from '../type/training.type';
-import type { CreateWorkload, UserProgress } from '../type/workload.type';
+import type {
+  CreateWorkload,
+  PartialRecordedWorkloadValues,
+  PartialWorkload,
+  UserProgress,
+} from '../type/workload.type';
 import { type Workload, WorkloadStatus } from '../type/workload.type';
 import { core } from '@/core/core.service';
 
@@ -131,5 +136,86 @@ export class WorkloadUtil {
     const rightSideDurationS = (workload.repsR || 0) * rightRepDurationS;
 
     return leftSideDurationS + rightSideDurationS;
+  }
+
+  /**
+   * Generates an empty workload object for the given training and identifiers
+   */
+  createEmptyWorkloadFromTraining(
+    id: {
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+      setNumber: number;
+      userId: string;
+    },
+    training: Training,
+    workloadInput?: PartialRecordedWorkloadValues // Pass recorded values if any
+  ): Workload | null {
+    const {
+      trainingId,
+      componentId,
+      exerciseId,
+      supersetIndex,
+      setNumber,
+      userId,
+    } = id;
+
+    const component = training.components.find((c) => c.id === componentId);
+    if (!component) return null;
+
+    const superset = component.supersets[supersetIndex];
+    if (!superset) return null;
+
+    const exercise = superset.exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return null;
+
+    const set = exercise.sets.find((s) => s.setNumber === setNumber);
+    if (!set) return null;
+
+    const workload: PartialWorkload = {
+      userId: userId,
+      trainingId: trainingId,
+      componentId: componentId,
+      supersetIndex: supersetIndex,
+      exerciseId: exerciseId,
+      setNumber: setNumber,
+      timestamp: new Date(),
+      notes: '',
+      reps: workloadInput?.reps || set.reps,
+      repsR: workloadInput?.repsR || set.repsR,
+      time: set.time,
+      timeR: set.timeR,
+      dist: set.dist,
+      distR: set.distR,
+      loadKg: set.loadKg,
+      loadKgR: set.loadKgR,
+      vel: set.vel,
+      velR: set.velR,
+      tempoEcc: workloadInput?.tempoEcc || set.tempoEcc,
+      tempoIso: workloadInput?.tempoIso || set.tempoIso,
+      tempoCon: workloadInput?.tempoCon || set.tempoCon,
+      tempoIdle: workloadInput?.tempoIdle || set.tempoIdle,
+      tempoEccR: workloadInput?.tempoEccR || set.tempoEccR,
+      tempoIsoR: workloadInput?.tempoIsoR || set.tempoIsoR,
+      tempoConR: workloadInput?.tempoConR || set.tempoConR,
+      tempoIdleR: workloadInput?.tempoIdleR || set.tempoIdleR,
+      eff: set.eff,
+      effR: set.effR,
+      recTime: set.recTime,
+      recTimeR: set.recTimeR,
+      recDist: set.recDist,
+      recDistR: set.recDistR,
+      photoURLs: [],
+      rir: undefined,
+      rirR: undefined,
+      rom: undefined,
+      romR: undefined,
+      from: new Date(),
+      to: new Date(),
+    };
+
+    return workload as Workload;
   }
 }

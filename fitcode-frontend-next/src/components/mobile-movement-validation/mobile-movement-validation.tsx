@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -22,6 +23,7 @@ import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
   getStatusMessage,
+  getTempoObject,
   getTempoString,
   predictWebcam,
   setupVideoAndContex,
@@ -51,12 +53,17 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { getPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type { Training } from '@/core/training/type/training.type';
 import type {
   RepImage,
   RepRomTimestamp,
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
+import type {
+  PartialWorkload,
+  Workload,
+} from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
@@ -71,14 +78,33 @@ const DEBUG = false;
 export const EXERCISE_TIMES_ROUNDING_STEP_S = 0.1; // round to 0.1
 
 interface MobileMovementValidationProps {
+  userId: string;
   selectedExercise: TrainingExercise | undefined;
-  setSelectedExercise: SetState<TrainingExercise | undefined> | undefined;
+  setSelectedExercise:
+    | SetState<TrainingExercise | undefined>
+    | SetState<TrainingExercise | null>
+    | undefined;
   selectedTrackingMethod: TrackingMethod | undefined;
   setSelectedTrackingMethod: SetState<TrackingMethod> | undefined;
   trainingId: string;
   componentId: string;
   supersetIndex: number;
   setIndex: number;
+  stationViewProps?: {
+    individualTraining: Training;
+    workloads: Workload[];
+    router: AppRouterInstance;
+    handleUpsertSetFromStationView: (
+      body: PartialWorkload,
+      state: {
+        exerciseId: string;
+        supersetIndex: number;
+        setIndex: number;
+        isAiRecorded?: boolean;
+      },
+      router: AppRouterInstance
+    ) => Promise<void>;
+  };
 }
 
 export default function MobileMovementValidation(
@@ -88,6 +114,7 @@ export default function MobileMovementValidation(
   const screenSize = useScreenSize();
   const pathname = usePathname();
 
+  const { user: authenticatedUser } = useAuthenticatedAuth() || {};
   const mainContext = useMain();
   const { exerciseAiPrescriptions, activeTraining } = mainContext || {};
 
@@ -95,12 +122,9 @@ export default function MobileMovementValidation(
   const { trainingInProgress, setTrainingInProgress } = trainingContext || {};
 
   const trainingInProgressContext = useTrainingInProgress();
-  const { handleUpsertSet } = trainingInProgressContext || {};
-
-  const authenticatedAuthContext = useAuthenticatedAuth();
-  const { user } = authenticatedAuthContext || { user: null };
 
   const {
+    userId,
     selectedExercise,
     selectedTrackingMethod,
     setSelectedTrackingMethod,
@@ -108,7 +132,16 @@ export default function MobileMovementValidation(
     componentId,
     supersetIndex,
     setIndex,
+    stationViewProps,
   } = props;
+
+  const { handleUpsertSet } = trainingInProgressContext || {};
+
+  // If stationViewProps is undefined, then we are in normal athlete view, so use authenticated user
+  const user =
+    !stationViewProps && authenticatedUser
+      ? authenticatedUser
+      : (mainContext?.users || []).find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
@@ -512,6 +545,120 @@ export default function MobileMovementValidation(
     //   selectedExercise,
     // });
 
+    // Coach training station view - handle set finish differently
+
+    console.log('stationViewProps', stationViewProps);
+
+    if (stationViewProps) {
+      if (!setSelectedTrackingMethod || !selectedExercise) return;
+
+      if (!recordedRepsRef.current.left.length) {
+        if (
+          recordedRepsRef.current.right &&
+          !recordedRepsRef.current.right.length
+        ) {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        } else if (!recordedRepsRef.current.right) {
+          setSelectedTrackingMethod(TrackingMethod.MANUAL);
+          return;
+        }
+      }
+
+      const tempoL = getTempoObject({
+        recordedReps: recordedRepsRef.current.left,
+      });
+      const tempoR = recordedRepsRef.current.right
+        ? getTempoObject({
+            recordedReps: recordedRepsRef.current.right,
+          })
+        : null;
+
+      const {
+        individualTraining,
+        workloads,
+        handleUpsertSetFromStationView,
+        router,
+      } = stationViewProps;
+
+      await finishSet({
+        userId: userId,
+        exercise: selectedExercise,
+        setIndex,
+        supersetIndex,
+        newRecordedSets: [],
+        setTrainingInProgress,
+        stationsViewProps: {
+          individualTraining,
+          componentId,
+          router,
+          handleUpsertSetFromStationView,
+          workloadInput: {
+            reps: recordedRepsRef.current.left.length,
+            repsR: recordedRepsRef.current.right
+              ? recordedRepsRef.current.right.length
+              : undefined,
+            tempoEcc: tempoL ? tempoL.ecc : undefined,
+            tempoIso: tempoL ? tempoL.iso : undefined,
+            tempoCon: tempoL ? tempoL.con : undefined,
+            tempoIdle: tempoL ? tempoL.idle : undefined,
+            tempoEccR: tempoR ? tempoR.ecc : undefined,
+            tempoIsoR: tempoR ? tempoR.iso : undefined,
+            tempoConR: tempoR ? tempoR.con : undefined,
+            tempoIdleR: tempoR ? tempoR.idle : undefined,
+          },
+        },
+        isAiRecorded: true,
+        workloads: workloads || [],
+        imagesL: recordedRepsRef.current.left
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
+
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+              side: 'L',
+            };
+          })
+          .filter((i) => i !== null) as RepImage[],
+        imagesR: recordedRepsRef.current.right
+          ? (recordedRepsRef.current.right
+              .map((rep) => {
+                if (!rep.extremumImageUrl) return null;
+
+                return {
+                  repNumber: rep.repNumber,
+                  url: rep.extremumImageUrl || '',
+                  side: 'R',
+                };
+              })
+              .filter((i) => i !== null) as RepImage[])
+          : [],
+      });
+
+      // handleAdvanceInSuperset({
+      //   useTraining: { ...trainingContext, trainingInProgress },
+      //   useTrainingInProgress: trainingInProgressContext,
+      // });
+
+      setSelectedTrackingMethod(TrackingMethod.MANUAL);
+
+      return;
+    }
+
+    console.log('selectedTrackingMethod', selectedTrackingMethod);
+    console.log('exercisePose', exercisePose);
+    console.log('setSelectedTrackingMethod', setSelectedTrackingMethod);
+    console.log('activeTraining', activeTraining);
+    console.log('trainingInProgress', trainingInProgress);
+    console.log('setTrainingInProgress', setTrainingInProgress);
+    console.log('handleUpsertSet', handleUpsertSet);
+    console.log('selectedExercise', selectedExercise);
+    console.log('setIndex', setIndex);
+    console.log('supersetIndex', supersetIndex);
+    console.log('user', user);
+
+    // Athlete mobile view - handle set finish normally
     if (
       selectedTrackingMethod === TrackingMethod.CAMERA &&
       exercisePose &&
@@ -526,6 +673,10 @@ export default function MobileMovementValidation(
       user !== null &&
       user !== undefined
     ) {
+      console.log(
+        'recordedRepsRef.current.left.length',
+        recordedRepsRef.current.left.length
+      );
       if (!recordedRepsRef.current.left.length) {
         if (
           recordedRepsRef.current.right &&
@@ -687,6 +838,7 @@ export default function MobileMovementValidation(
       );
 
       await finishSet({
+        userId: user.uid,
         exercise: selectedExercise,
         setIndex,
         supersetIndex,
@@ -695,7 +847,31 @@ export default function MobileMovementValidation(
         setTrainingInProgress,
         handleUpsertSet,
         isAiRecorded: true,
-        activeTraining,
+        workloads: activeTraining?.workloads || [],
+        imagesL: recordedRepsRef.current.left
+          .map((rep) => {
+            if (!rep.extremumImageUrl) return null;
+
+            return {
+              repNumber: rep.repNumber,
+              url: rep.extremumImageUrl || '',
+              side: 'L',
+            };
+          })
+          .filter((i) => i !== null) as RepImage[],
+        imagesR: recordedRepsRef.current.right
+          ? (recordedRepsRef.current.right
+              .map((rep) => {
+                if (!rep.extremumImageUrl) return null;
+
+                return {
+                  repNumber: rep.repNumber,
+                  url: rep.extremumImageUrl || '',
+                  side: 'R',
+                };
+              })
+              .filter((i) => i !== null) as RepImage[])
+          : [],
       });
 
       // handleAdvanceInSuperset({
@@ -794,7 +970,12 @@ export default function MobileMovementValidation(
 
       const lastRep = side[side.length - 1];
 
-      if (!lastRep || lastRep.extremumImageUrl || !lastRep.extremeKeypoint)
+      if (
+        !lastRep ||
+        lastRep.extremumImageUrl ||
+        !lastRep.extremeKeypoint ||
+        !user
+      )
         return;
 
       const blob = await frameBitmapBufferRef.current.toBlobByFrameNum(

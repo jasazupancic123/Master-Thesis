@@ -1,4 +1,4 @@
-import { Add, Check, VideoLibrary } from '@mui/icons-material';
+import { Add, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -14,11 +14,15 @@ import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
+import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
 
 export default function TrainingInProgressExerciseCard() {
+  const { user } = useAuthenticatedAuth();
+
   const { activeTraining } = useMain();
   const theme = useTheme();
   const trainingContext = useTrainings();
@@ -43,6 +47,7 @@ export default function TrainingInProgressExerciseCard() {
 
   return selectedTrackingMethod === TrackingMethod.CAMERA ? (
     <MobileMovementValidation
+      userId={user.uid}
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       selectedTrackingMethod={selectedTrackingMethod}
@@ -198,94 +203,14 @@ export default function TrainingInProgressExerciseCard() {
             const isSetSelected = setIndex === i;
 
             return (
-              <Box
+              <TrainingExerciseSetBox
                 key={i}
-                display="flex"
-                flexDirection="column"
-                justifyContent="flex-start"
-                alignItems="center"
-                gap={0.5}
-              >
-                <Box
-                  maxWidth="100%"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{
-                    overflowX: 'auto',
-                    mx: 'auto',
-                    border: `1px solid ${theme.palette.primary.main}`,
-                    borderLeft: i === 0 ? undefined : 'none',
-                    borderRight:
-                      i === selectedExercise.sets.length - 1
-                        ? undefined
-                        : 'none',
-                    borderTopLeftRadius: i === 0 ? '4px' : 0,
-                    borderBottomLeftRadius: i === 0 ? '4px' : 0,
-                    borderTopRightRadius:
-                      i === selectedExercise.sets.length - 1 ? '4px' : 0,
-                    borderBottomRightRadius:
-                      i === selectedExercise.sets.length - 1 ? '4px' : 0,
-                    py: 0.3,
-                    pr: i === selectedExercise.sets.length - 1 ? 0.25 : 0,
-                    pl: i === 0 ? 0.25 : 0,
-                  }}
-                >
-                  <Typography
-                    fontSize={13}
-                    textAlign="center"
-                    fontWeight="bold"
-                    sx={{
-                      position: 'relative',
-                      px: 2.5,
-                      py: 0.25,
-                      lineHeight: 1,
-                      cursor: 'pointer',
-                      color: isSetSelected
-                        ? theme.palette.text.secondary
-                        : undefined,
-                      backgroundColor: isSetSelected
-                        ? theme.palette.primary.main
-                        : undefined,
-                      borderTopLeftRadius: i === 0 ? '2px' : 0,
-                      borderBottomLeftRadius: i === 0 ? '2px' : 0,
-                      borderTopRightRadius:
-                        i === selectedExercise.sets.length - 1 ? '2px' : 0,
-                      borderBottomRightRadius:
-                        i === selectedExercise.sets.length - 1 ? '2px' : 0,
-                      textTransform: 'uppercase',
-                    }}
-                    onClick={() => {
-                      setSetIndex(i);
-                    }}
-                  >
-                    Set {i + 1}
-                  </Typography>
-                </Box>
-
-                {isSetDone ? (
-                  <Check
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      color: theme.palette.text.primary,
-                    }}
-                  />
-                ) : (
-                  <Box
-                    component="img"
-                    src="/blinking_dot.gif"
-                    alt="active set"
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      display: 'inline-block',
-                      verticalAlign: 'middle',
-                      visibility: isSetSelected ? 'visible' : 'hidden',
-                    }}
-                  />
-                )}
-              </Box>
+                selectedExercise={selectedExercise}
+                setSetIndex={setSetIndex}
+                setIndex={i}
+                isSetSelected={isSetSelected}
+                isSetDone={isSetDone}
+              />
             );
           })}
 

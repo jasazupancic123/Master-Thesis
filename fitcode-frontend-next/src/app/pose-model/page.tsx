@@ -3,6 +3,7 @@ import MobileMovementValidation from '@/components/mobile-movement-validation/mo
 export default function Page() {
   return (
     <MobileMovementValidation
+      userId={''}
       selectedExercise={undefined}
       selectedTrackingMethod={undefined}
       setSelectedTrackingMethod={undefined}
