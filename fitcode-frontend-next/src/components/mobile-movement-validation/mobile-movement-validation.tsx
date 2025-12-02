@@ -66,6 +66,7 @@ import type {
 } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
@@ -113,6 +114,7 @@ export default function MobileMovementValidation(
   const screenSize = useScreenSize();
   const pathname = usePathname();
 
+  const { user: authenticatedUser } = useAuthenticatedAuth() || {};
   const mainContext = useMain();
   const { exerciseAiPrescriptions, activeTraining } = mainContext || {};
 
@@ -135,7 +137,11 @@ export default function MobileMovementValidation(
 
   const { handleUpsertSet } = trainingInProgressContext || {};
 
-  const user = (mainContext?.users || []).find((u) => u.uid === userId) || null;
+  // If stationViewProps is undefined, then we are in normal athlete view, so use authenticated user
+  const user =
+    !stationViewProps && authenticatedUser
+      ? authenticatedUser
+      : (mainContext?.users || []).find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 
@@ -540,6 +546,9 @@ export default function MobileMovementValidation(
     // });
 
     // Coach training station view - handle set finish differently
+
+    console.log('stationViewProps', stationViewProps);
+
     if (stationViewProps) {
       if (!setSelectedTrackingMethod || !selectedExercise) return;
 
@@ -637,6 +646,18 @@ export default function MobileMovementValidation(
       return;
     }
 
+    console.log('selectedTrackingMethod', selectedTrackingMethod);
+    console.log('exercisePose', exercisePose);
+    console.log('setSelectedTrackingMethod', setSelectedTrackingMethod);
+    console.log('activeTraining', activeTraining);
+    console.log('trainingInProgress', trainingInProgress);
+    console.log('setTrainingInProgress', setTrainingInProgress);
+    console.log('handleUpsertSet', handleUpsertSet);
+    console.log('selectedExercise', selectedExercise);
+    console.log('setIndex', setIndex);
+    console.log('supersetIndex', supersetIndex);
+    console.log('user', user);
+
     // Athlete mobile view - handle set finish normally
     if (
       selectedTrackingMethod === TrackingMethod.CAMERA &&
@@ -652,6 +673,10 @@ export default function MobileMovementValidation(
       user !== null &&
       user !== undefined
     ) {
+      console.log(
+        'recordedRepsRef.current.left.length',
+        recordedRepsRef.current.left.length
+      );
       if (!recordedRepsRef.current.left.length) {
         if (
           recordedRepsRef.current.right &&
