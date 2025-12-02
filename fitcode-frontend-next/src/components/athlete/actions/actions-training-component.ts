@@ -16,6 +16,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import type { IMainContext } from '@/store/main.provider';
 import type { ITrainingsContext } from '@/store/trainings.provider';
 import { TRAINING_IN_PROGRESS_STORAGE_KEY } from '@/store/trainings.provider';
+import { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 
 export async function startTrainingComponent(
   context: {
@@ -136,7 +137,7 @@ export async function startTrainingComponent(
     userId: user.uid,
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  } as TrainingComponentUserStatus;
 
   setActiveTraining((prev) => {
     if (!prev)

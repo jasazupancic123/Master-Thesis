@@ -8,6 +8,7 @@ import {
 import { Avatar, Box, IconButton, Tooltip } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
+import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import useTrainerGroupHeaderUtils from '../trainer-group-header/hooks/use-utils';
 import { theme } from '@/app/style';
@@ -21,8 +22,12 @@ export default function TrainerTrainingInProgressHeader() {
 
   const { user } = useAuthenticatedAuth();
 
-  const { openProfileMenu, setOpenProfileMenu, setAnchorProfileEl } =
-    useTrainerGroupHeaderUtils();
+  const {
+    anchorProfileEl,
+    openProfileMenu,
+    setOpenProfileMenu,
+    setAnchorProfileEl,
+  } = useTrainerGroupHeaderUtils();
 
   return (
     <Box
@@ -98,6 +103,14 @@ export default function TrainerTrainingInProgressHeader() {
           <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
         </Tooltip>
       </Box>
+
+      {/* Profile dropdown menu*/}
+      <ProfileHeaderMenu
+        anchorEl={anchorProfileEl}
+        open={openProfileMenu}
+        setOpen={setOpenProfileMenu}
+        setAnchorEl={setAnchorProfileEl}
+      />
     </Box>
   );
 }

@@ -25,6 +25,7 @@ export function AnimatedLinearProgress({
     <LinearProgress
       variant="determinate"
       value={value}
+      color="inherit"
       sx={{
         height: 10,
         borderRadius: 5,

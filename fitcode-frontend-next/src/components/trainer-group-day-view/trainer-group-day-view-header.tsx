@@ -61,11 +61,11 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
   // const { isSticky } = useTrainerDayViewHeaderSticky();
   const isSticky = false;
 
-  interface PeriodSelectProps {
+  interface SmallDisplayProps {
     smallDisplay?: boolean;
   }
 
-  function PeriodSelect(props: PeriodSelectProps) {
+  function PeriodSelect(props: SmallDisplayProps) {
     const { smallDisplay } = props;
     return (
       <Box
