@@ -185,7 +185,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
                 : theme.palette.text.primary,
           }}
         >
-          {isRecorded ? 'Confirm' : isCompleted ? 'Done' : 'Confirm'}
+          {isRecorded ? 'Complete' : isCompleted ? 'Done' : 'Complete'}
         </Typography>
       </Box>
     </Box>

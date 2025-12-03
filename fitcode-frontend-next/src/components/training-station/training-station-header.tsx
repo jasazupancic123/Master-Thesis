@@ -1,13 +1,34 @@
-import { CheckCircle, Close, Error, Warning } from '@mui/icons-material';
-import { alpha, Box, IconButton, Typography } from '@mui/material';
+import {
+  CheckCircle,
+  Close,
+  Error,
+  FontDownload,
+  FontDownloadOff,
+  MoreVert,
+  SettingsOutlined,
+  Warning,
+} from '@mui/icons-material';
+import { alpha, Box, Button, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
 import { theme } from '@/app/style';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
+import { SetState } from '@/lib/common/type/state.type';
+import { useRouter } from 'next/navigation';
+import { useCoachTraining } from '@/store/coach-training.provider';
 
-export default function TrainingStationHeader() {
+interface Props {
+  displayUserNames: boolean;
+  setDisplayUserNames: SetState<boolean>;
+  setOpenNewStationModal: SetState<boolean>;
+}
+
+export default function TrainingStationHeader(props: Props) {
+  const router = useRouter();
+
+  const { training: globalTraining } = useCoachTraining();
   const {
     station,
     individualTrainings,
@@ -15,6 +36,9 @@ export default function TrainingStationHeader() {
     workloads,
     userStatusesValidation,
   } = useCoachTrainingStation();
+
+  const { displayUserNames, setDisplayUserNames, setOpenNewStationModal } =
+    props;
 
   const [showStatusInfo, setShowStatusInfo] = useState(true);
 
@@ -42,12 +66,15 @@ export default function TrainingStationHeader() {
   });
 
   const completedWorkloads = workloads.filter(
-    (w) => station.users.some((u) => u.uid === w.userId) && w.id !== undefined
+    (w) =>
+      station.users.some((u) => u.uid === w.userId) &&
+      station.exercises.some((e) => e.id === w.exerciseId) &&
+      w.id !== undefined
   ).length;
 
   return (
     <Box
-      width="100%"
+      width={360}
       display="flex"
       flexDirection="column"
       alignItems="center"
@@ -56,7 +83,7 @@ export default function TrainingStationHeader() {
       {/* User Statuses Info */}
       {showStatusInfo && (
         <Box
-          width={300}
+          width="100%"
           display="flex"
           justifyContent="center"
           alignItems="center"
@@ -92,31 +119,98 @@ export default function TrainingStationHeader() {
           </Typography>
 
           <IconButton
-            sx={{ p: 0, m: 0, position: 'absolute', top: 4, right: 4 }}
+            sx={{ m: 0, position: 'absolute', top: 4, right: 4 }}
             onClick={() => setShowStatusInfo(false)}
           >
             <Close sx={{ fontSize: 14 }} />
           </IconButton>
         </Box>
       )}
+
       <Box
-        width="70%"
         display="flex"
         flexDirection="column"
-        alignItems="center"
+        alignItems="flex-start"
+        justifyContent="center"
+        flex={1}
       >
-        <Typography
-          fontSize={12}
-          maxWidth="80%"
-          textAlign="center"
-          sx={{ color: station.color, fontWeight: 'bold' }}
+        <Box
+          width={360}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-end"
+          gap={1}
         >
-          Training Station
-        </Typography>
-        <Typography variant="h4" textAlign="center">
-          {station.name}
-        </Typography>
+          <Typography
+            fontSize={12}
+            maxWidth="80%"
+            textAlign="start"
+            lineHeight={1.6}
+            sx={{ color: station.color, fontWeight: 'bold' }}
+          >
+            Training Station
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (
+                !component ||
+                globalTraining.groupId === undefined ||
+                globalTraining.id === undefined
+              )
+                return;
+
+              router.push(
+                `/groups/${globalTraining.groupId}?training=${globalTraining.id}&component=${component.id}`
+              );
+            }}
+            sx={{
+              height: 18,
+              minWidth: 100,
+              backgroundColor: theme.palette.background.dark,
+              color: theme.palette.text.primary,
+              fontSize: 12,
+              p: '0px !important',
+            }}
+          >
+            Training Plan
+          </Button>
+        </Box>
+        <Box width={360} display="flex" justifyContent="space-between" gap={1}>
+          <Typography variant="h4" textAlign="start">
+            {station.name}
+          </Typography>
+          <Box
+            display="flex"
+            justifyContent="flex-end"
+            alignItems="flex-start"
+            gap={0.5}
+            mt={1}
+          >
+            <IconButton
+              onClick={() => setDisplayUserNames((prev) => !prev)}
+              sx={{ p: 0, m: 0 }}
+            >
+              {displayUserNames ? <FontDownload /> : <FontDownloadOff />}
+            </IconButton>
+            <Button
+              variant="contained"
+              onClick={() => setOpenNewStationModal(true)}
+              sx={{
+                height: 24,
+                minWidth: 46,
+                backgroundColor: theme.palette.background.dark,
+                color: theme.palette.text.primary,
+                fontSize: 12,
+                p: '0px !important',
+              }}
+            >
+              New
+            </Button>
+          </Box>
+        </Box>
       </Box>
+
       <Box width="100%" display="flex" justifyContent="center" gap={10}>
         <Box display="flex" flexDirection="column" alignItems="center">
           <Typography fontSize={12} textAlign="center">
@@ -164,7 +258,10 @@ export default function TrainingStationHeader() {
         variant="determinate"
         targetValue={(completedWorkloads / prescribedWorkloadsCount) * 100}
         sx={{
-          width: 360,
+          width:
+            typeof window !== 'undefined'
+              ? Math.min(window.innerWidth * 0.8, 360)
+              : 360,
           height: 10,
           borderRadius: 5,
           backgroundColor: alpha(station.color, 0.075),

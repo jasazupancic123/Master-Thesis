@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 
 type AnimatedLinearProgressProps = LinearProgressProps & {
   targetValue: number; // 0–100
+  fillerColor?: string;
 };
 
 export function AnimatedLinearProgress({
   targetValue,
+  fillerColor,
   ...rest
 }: AnimatedLinearProgressProps) {
   const [value, setValue] = useState(0);
@@ -29,12 +31,12 @@ export function AnimatedLinearProgress({
       sx={{
         height: 10,
         borderRadius: 5,
-        backgroundColor: (theme) => theme.palette.grey[800],
         '& .MuiLinearProgress-bar': {
           borderRadius: 5,
           // optional: make transition a bit smoother/longer
           transition: 'transform 0.8s ease-out !important',
         },
+        ...rest.sx,
       }}
       {...rest}
     />

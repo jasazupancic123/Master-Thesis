@@ -25,6 +25,12 @@ export function createEmptyPartialWorkload(state: {
     workloadInput,
   } = state;
 
+  const supersetIndex = getSupersetIndex(
+    individualTraining,
+    componentId,
+    exerciseId
+  );
+
   let workload: Workload | undefined | null = workloads.find(
     (w) =>
       w.userId === userId &&
@@ -32,17 +38,10 @@ export function createEmptyPartialWorkload(state: {
       w.setNumber === setIndex + 1 &&
       w.componentId === componentId &&
       w.trainingId === individualTraining?.id &&
-      w.supersetIndex ===
-        getSupersetIndex(individualTraining, componentId, exerciseId)
+      w.supersetIndex === supersetIndex
   );
 
-  if (!workload) {
-    const supersetIndex = getSupersetIndex(
-      individualTraining,
-      componentId,
-      exerciseId
-    );
-
+  if (!workload || workloadInput) {
     if (supersetIndex === null) return null;
 
     workload = core.training.workload.createEmptyWorkloadFromTraining(
@@ -55,7 +54,8 @@ export function createEmptyPartialWorkload(state: {
         userId: userId,
       },
       individualTraining,
-      workloadInput
+      workloadInput,
+      workload
     );
   }
 
