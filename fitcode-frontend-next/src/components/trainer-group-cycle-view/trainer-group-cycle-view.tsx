@@ -31,9 +31,8 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
 
 export default function TrainerCycleView() {
-  const { exercises: allExercises } = useMain();
-  const { group, cycle, setCycle, setTrainings, handleMoveTraining } =
-    useGroup();
+  const { exercises: allExercises, setTrainings } = useMain();
+  const { group, cycle, setCycle, handleMoveTraining } = useGroup();
 
   const theme = useTheme();
   const screenSize = useScreenSize();

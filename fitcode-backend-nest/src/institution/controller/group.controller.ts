@@ -79,31 +79,61 @@ export class GroupController {
     await this.groupService.delete(user, ref);
   }
 
-  @Patch(':groupId/member')
+  @Patch(':groupId/athlete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async addMember(
+  async addAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
   ) {
     const ref: GroupRef = { institutionId, groupId };
-    return await this.groupService.updateMembers(user, ref, {
+    return await this.groupService.updateAthletes(user, ref, {
       userId,
       add: true,
     });
   }
 
-  @Delete(':groupId/member')
+  @Delete(':groupId/athlete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
-  async removeMember(
+  async removeAthlete(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
   ) {
     const ref: GroupRef = { institutionId, groupId };
-    return await this.groupService.updateMembers(user, ref, {
+    return await this.groupService.updateAthletes(user, ref, {
+      userId,
+      add: false,
+    });
+  }
+
+  @Patch(':groupId/trainer')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async addTrainer(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Param('groupId') groupId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    const ref: GroupRef = { institutionId, groupId };
+    return await this.groupService.updateTrainers(user, ref, {
+      userId,
+      add: true,
+    });
+  }
+
+  @Delete(':groupId/trainer')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async removeTrainer(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Param('groupId') groupId: string,
+    @Body() { userId }: UserIdDto,
+  ) {
+    const ref: GroupRef = { institutionId, groupId };
+    return await this.groupService.updateTrainers(user, ref, {
       userId,
       add: false,
     });

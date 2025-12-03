@@ -1,10 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { endOfDay, subDays } from 'date-fns';
+import { endOfDay, max, min, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { User } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
@@ -32,6 +33,7 @@ import { WorkloadService } from './workload.service';
 @Injectable()
 export class TrainingReportService {
   constructor(
+    private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
@@ -39,6 +41,49 @@ export class TrainingReportService {
     private readonly groupService: GroupService,
     private readonly workloadService: WorkloadService,
   ) {}
+
+  async recalculateReportsForUser(
+    user: User,
+    institutionId: string,
+    userId: string,
+  ) {
+    const institution = await this.institutionService.findByIdOrFail(
+      user,
+      institutionId,
+    );
+
+    const athlete = await this.trainingService.getAthlete(
+      user,
+      userId,
+      institution,
+    );
+
+    // find all past trainings
+    const trainings = await this.trainingService.findAll(user, institutionId, {
+      to: endOfDay(new Date()),
+    });
+
+    const promises = trainings.flatMap(async (training) => {
+      const workloads = await this.workloadService.findAllByUserTraining({
+        trainingId: training.id,
+        userId: athlete.uid,
+      });
+
+      return training.components.map((component) =>
+        this.trainingService.upsertTrainingComponentStatus(
+          training,
+          {
+            uid: athlete.uid,
+            trainingId: training.id,
+            componentId: component.id,
+          },
+          workloads,
+        ),
+      );
+    });
+
+    await Promise.all(promises.flat());
+  }
 
   async findReportsByUser(
     user: User,
@@ -49,30 +94,80 @@ export class TrainingReportService {
       user,
       institutionId,
       { from: subDays(new Date(), 7), to: endOfDay(new Date()) },
-      { limit: 100 },
+      { limit: 10 },
     );
 
-    const workloads = await this.workloadService.findAllByUserTrainingIds(
-      user.uid,
-      trainings.map((t) => t.id),
-    );
-
-    const reports: TrainingReport[] = [];
-    for (const training of trainings) {
-      const filtered = workloads.filter(
-        (w) => w.trainingId === training.id && w.userId === user.uid,
+    const componentStatuses =
+      await this.trainingComponentUserStatusRepository.getAllByUser(
+        institutionId,
+        user.uid,
       );
 
-      if (!filtered.length) continue;
+    const reports: Record<string, TrainingReport> = {}; // <trainingId, report>
+    for (const status of componentStatuses) {
+      const training = trainings.find((t) => t.id === status.trainingId);
+      if (!training) continue; // training not found
 
-      reports.push(this.getTrainingReportByUser(user.uid, training, filtered));
+      if (!reports[status.trainingId])
+        // training report not created yet
+        reports[status.trainingId] = {
+          institutionId: status.institutionId,
+          groupId: status.groupId,
+          cycleId: status.cycleId,
+          trainingId: status.trainingId,
+          userId: status.userId,
+          from: status.from,
+          to: status.to,
+          reps: status.reps,
+          tut: status.tut,
+          tonnage: status.tonnage,
+          time: status.time,
+          dist: status.dist,
+          recTime: status.recTime,
+          recDist: status.recDist,
+          realization: status.realization,
+          exercises: status.exercises,
+          sets: status.sets,
+          components: 1,
+          prescribed: this.getPrescribedTrainingStats(training, {
+            excludeWarmupCooldown: true,
+          }),
+        };
+      else {
+        // aggregate existing report
+        reports[status.trainingId].from = min([
+          reports[status.trainingId].from,
+          status.from,
+        ]);
+
+        reports[status.trainingId].to = max([
+          reports[status.trainingId].to,
+          status.to,
+        ]);
+
+        reports[status.trainingId].reps += status.reps;
+        reports[status.trainingId].tut += status.tut;
+        reports[status.trainingId].tonnage += status.tonnage;
+        reports[status.trainingId].time += status.time;
+        reports[status.trainingId].dist += status.dist;
+        reports[status.trainingId].recTime += status.recTime;
+        reports[status.trainingId].recDist += status.recDist;
+        reports[status.trainingId].realization += status.realization;
+        reports[status.trainingId].exercises += status.exercises;
+        reports[status.trainingId].sets += status.sets;
+        reports[status.trainingId].components += 1;
+        reports[status.trainingId].prescribed = this.getPrescribedTrainingStats(
+          training,
+          { excludeWarmupCooldown: true },
+        );
+      }
     }
 
-    return reports;
+    return Object.values(reports);
   }
 
   @LogMethod()
-  async getGroupReport(
+  async getGroupAttendanceReport(
     user: User,
     ref: GroupRef,
     componentId?: string,
@@ -85,7 +180,7 @@ export class TrainingReportService {
   }
 
   @LogMethod()
-  async getTrainingsRealizationReport(
+  async getTrainingsRealizationReportByUser(
     user: User,
     institutionId: string,
     uid: string, // athlete uid
@@ -110,27 +205,45 @@ export class TrainingReportService {
   }
 
   @LogMethod()
-  async getUserExerciseReport(
+  async getExerciseWorkloadsByManyUsers(
     user: User,
     institutionId: string,
     exerciseId: string,
-    uid: string, // athlete uid
+    userIds: string[],
   ): Promise<Workload[]> {
     const institution = await this.institutionService.findByIdOrFail(
       user,
       institutionId,
     );
 
-    const athlete = await this.trainingService.getAthlete(
-      user,
-      uid,
-      institution,
+    // check that all users belong to institution
+    const athletes = await Promise.all(
+      userIds.map((uid) =>
+        this.trainingService.getAthlete(user, uid, institution),
+      ),
     );
 
-    return await this.workloadService.getUserExerciseReport({
-      userId: athlete.uid,
+    return await this.workloadService.getExerciseReportByUsers({
+      userIds: athletes.map((a) => a.uid),
       exerciseId,
     });
+  }
+
+  @LogMethod()
+  async getTrainingWorkloads(
+    user: User,
+    trainingId: string,
+  ): Promise<Workload[]> {
+    const training = await this.trainingService.findOneByIdOrFail(user, {
+      trainingId,
+    });
+
+    return this.firebase.isAthlete(user)
+      ? await this.workloadService.getAllByTrainingByUser({
+          trainingId: training.id,
+          userId: user.uid,
+        })
+      : await this.workloadService.getAllByTraining(training.id);
   }
 
   getTrainingReportByUser(
@@ -413,20 +526,6 @@ export class TrainingReportService {
     const timeRDiv = this.div('timeR', p, c);
     const loadDiv = this.div('loadKg', p, c);
     const loadRDiv = this.div('loadKgR', p, c);
-    const recTimeDiv = this.div('recTime', p, c); // less is better
-    const recTimeRDiv = this.div('recTimeR', p, c);
-    const recDistDiv = this.div('recDist', p, c);
-    const recDistRDiv = this.div('recDistR', p, c);
-
-    const tempoDiv =
-      this.getTempoTime(p) > 0
-        ? this.getTempoTime(c) / this.getTempoTime(p)
-        : 0;
-
-    const tempoRDiv =
-      this.getTempoRTime(p) > 0
-        ? this.getTempoRTime(c) / this.getTempoRTime(p)
-        : 0;
 
     const int = p.loadKg ? loadDiv : 0;
     const intR = p.loadKgR ? loadRDiv : 0;
@@ -451,6 +550,21 @@ export class TrainingReportService {
           ? distRDiv
           : 0;
 
+    /* const recTimeDiv = this.div('recTime', p, c); // less is better
+    const recTimeRDiv = this.div('recTimeR', p, c);
+    const recDistDiv = this.div('recDist', p, c);
+    const recDistRDiv = this.div('recDistR', p, c);
+
+    const tempoDiv =
+      this.getTempoTime(p) > 0
+        ? this.getTempoTime(c) / this.getTempoTime(p)
+        : 0;
+
+    const tempoRDiv =
+      this.getTempoRTime(p) > 0
+        ? this.getTempoRTime(c) / this.getTempoRTime(p)
+        : 0;
+
     const rec =
       isNum(p.recTime) && recTimeDiv > 0
         ? 1 / recTimeDiv
@@ -463,7 +577,7 @@ export class TrainingReportService {
         ? 1 / recTimeRDiv
         : isNum(p.recDistR) && recDistRDiv > 0
           ? recDistRDiv
-          : 0;
+          : 0; */
 
     // calculate realization
     const prescriptions = [
@@ -471,10 +585,10 @@ export class TrainingReportService {
       volR,
       int,
       intR,
-      tempoDiv,
+      /* tempoDiv,
       tempoRDiv,
       rec,
-      recR,
+      recR, */ // currently disabled to reduce the impact of tempo and recovery on realization
     ];
 
     // weight for averaging
@@ -489,8 +603,8 @@ export class TrainingReportService {
     }
 
     console.log(`
-      L: vol=${vol} int=${int} tempo=${tempoDiv} rec=${rec}
-      R: vol=${volR} int=${intR} tempo=${tempoRDiv} rec=${recR}
+      L: vol=${vol} int=${int}
+      R: vol=${volR} int=${intR}
       count: ${count} weight: ${w}
       realization: ${realizationLog} == ${safe.reduce((sum, v) => sum + w * v, 0)}
     `); */

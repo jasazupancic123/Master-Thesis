@@ -9,6 +9,7 @@ import type { TrainingComponentWithTrainingId } from '@/core/training/type/train
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 interface TrainerWeekViewItemProps {
@@ -23,6 +24,7 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const groupContext = useGroup();
+  const mainContext = useMain();
 
   const { item, setSelectedItem, setOpenModal } = props;
 
@@ -121,7 +123,8 @@ export default function TrainerWeekViewItem(props: TrainerWeekViewItemProps) {
                 setSelectedItem,
                 checkIsTrainingComponent,
               },
-              groupContext
+              groupContext,
+              mainContext
             );
           }}
         >

@@ -12,7 +12,6 @@ import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
 import type { TrainerDayViewContextProps } from '@/app/(trainer)/groups/[group_id]/props';
 import type { AuthUser } from '@/core/auth/type/user.type';
-import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -33,7 +32,6 @@ import type {
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 
 // eslint-disable-next-line
 export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
@@ -51,7 +49,7 @@ export type TrainerDayViewCtxExtended = Omit<
 export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { exercises } = useMain();
+  const { exercises, setTrainings } = useMain();
   const {
     cycle,
     setCycle,
@@ -59,14 +57,12 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     dateTo,
     group,
     trainings,
-    setTrainings,
     filter,
     setDetectedChanges,
   } = useGroup();
 
   const params = useSearchParams();
   const pathname = usePathname();
-  const controller = Controller.getInstance();
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -89,7 +85,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [loading, setLoading] = useState(false);
-  const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
@@ -99,11 +94,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
     null
   );
-
-  const [
-    selectedAthleteCompletedWorkloads,
-    setSelectedAthleteCompletedWorkloads,
-  ] = useState<Workload[]>([]);
 
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
@@ -235,18 +225,19 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
           membersIds: [...prev!.membersIds, member.uid],
         }));
 
-        setTrainings((prev) =>
-          prev.map((t) =>
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) =>
             t.id === training.id
               ? { ...t, membersIds: [...t.membersIds, member.uid] }
               : t
-          )
-        );
+          ),
+        }));
       },
       (snapshot) => {
         toast.error('Failed to add member');
         setTraining(snapshot.training);
-        setTrainings(snapshot.trainings);
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
       },
       async () =>
         TrainingController.getInstance().addMember(training.id, {
@@ -255,55 +246,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       prevState
     );
   }
-
-  useEffect(() => {
-    // fetch only for selectedAthlete, group avg is already on training itself
-    const fetchWorkloads = async () => {
-      if (!selectedAthlete) return;
-
-      const combinedComponents = training?.components;
-
-      if (!combinedComponents || !combinedComponents.length) {
-        setSelectedAthleteCompletedWorkloads([]);
-        return;
-      }
-
-      const uniqueExerciseIds = [] as string[];
-      combinedComponents.forEach((c) => {
-        c.supersets.forEach((s) => {
-          s.exercises.forEach((e) => {
-            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
-          });
-        });
-      });
-
-      if (!uniqueExerciseIds.length) {
-        setSelectedAthleteCompletedWorkloads([]);
-        return;
-      }
-
-      isSettingAthleteWorkloads.current = true;
-      handleApiRequest(
-        router,
-        () =>
-          controller.training.findCompletedAthleteWorkloads(
-            training.id,
-            selectedAthlete.uid
-          ),
-        (workloads) => {
-          setSelectedAthleteCompletedWorkloads(workloads);
-          isSettingAthleteWorkloads.current = false;
-        },
-        undefined,
-        'Failed to fetch workloads'
-      );
-      isSettingAthleteWorkloads.current = false;
-    };
-
-    // fetch only for selectedAthlete, group avg is already on training itself
-    if (selectedAthlete) fetchWorkloads();
-    else setSelectedAthleteCompletedWorkloads([]);
-  }, [selectedAthlete]);
 
   /* Sets new training when new period or day is clicked */
   useEffect(() => {
@@ -387,16 +329,17 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
           membersIds: prev!.membersIds.filter((id) => id !== user.uid),
         }));
 
-        setTrainings((prev) =>
-          prev.map((t) =>
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) =>
             t.id === training.id
               ? {
                   ...t,
                   membersIds: t.membersIds.filter((id) => id !== user.uid),
                 }
               : t
-          )
-        );
+          ),
+        }));
 
         // if the removed member is the selected athlete, clear the selection
         if (selectedAthlete?.uid === user.uid) {
@@ -407,7 +350,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       (snapshot) => {
         toast.error('Failed to remove member');
         setTraining(snapshot.training);
-        setTrainings(snapshot.trainings);
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
       },
       async () =>
         TrainingController.getInstance().removeMember(training.id, {
@@ -666,9 +609,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     setPagination,
     search,
     setSearch,
-    selectedAthleteCompletedWorkloads,
-    setSelectedAthleteCompletedWorkloads,
-    isSettingAthleteWorkloads,
     previousSelectedAthlete,
     expandedExercisesView,
     setExpandedExercisesView,

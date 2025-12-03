@@ -33,6 +33,15 @@ export default function useAthleteExerciseReportDataGridData(
     const setupDataGridRows = async () => {
       setIsLoadingData(true);
 
+      let workloads: Workload[] = [];
+      try {
+        workloads = await TrainingController.getInstance().getTrainingWorkloads(
+          selectedTraining.id
+        );
+      } catch (e) {
+        console.error('Error fetching workloads for training:', e);
+      }
+
       const rows = [] as DataGridRowAthleteExerciseRow[];
 
       const possibleExercises: TrainingExercise[] = selectedTraining.components
@@ -50,17 +59,13 @@ export default function useAthleteExerciseReportDataGridData(
 
       for (const exercise of uniquePossibleExercises) {
         const key = `${selectedAthlete.uid}-${exercise.id}`;
+        const currentWorkloads = workloads.filter(
+          (w) =>
+            w.userId === selectedAthlete.uid &&
+            w.exerciseId === exercise.exercise?.id
+        );
 
-        const currentWorkloads = cache.has(key)
-          ? cache.get(key)!
-          : await TrainingController.getInstance().getUserExerciseReport(
-              selectedInstitution.id,
-              selectedAthlete.uid,
-              exercise.id
-            );
-
-        if (currentWorkloads && currentWorkloads.length)
-          cache.set(key, currentWorkloads);
+        if (currentWorkloads.length) cache.set(key, currentWorkloads);
 
         // Selected training values
         const trainingWorkloads = currentWorkloads.filter(

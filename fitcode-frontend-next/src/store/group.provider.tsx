@@ -33,7 +33,7 @@ export function GroupProvider(
     trainings: allTrainings,
   } = props;
 
-  const { users: allUsers } = useMain();
+  const { users: allUsers, setTrainings } = useMain();
 
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
@@ -53,7 +53,6 @@ export function GroupProvider(
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
-  const [trainings, setTrainings] = useState(() => allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(() => allUsers);
 
   async function handleMoveTraining(e: DragEndEvent) {
@@ -77,11 +76,12 @@ export function GroupProvider(
     const newTo = dayjs(date).hour(endHour).minute(0).second(0).toDate();
 
     const duration = 30; // 30 min per component default
-    const state = { trainings: structuredClone(trainings) };
+    const state = { trainings: structuredClone(allTrainings) };
     await lib.common.generic.optimisticUpdate(
       () =>
-        setTrainings((prev) =>
-          prev.map((t) =>
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) =>
             t.id === training.id
               ? {
                   ...t,
@@ -97,9 +97,10 @@ export function GroupProvider(
                   })),
                 }
               : t
-          )
-        ),
-      (snapshot) => setTrainings(snapshot.trainings),
+          ),
+        })),
+      (snapshot) =>
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings })),
       async () =>
         await TrainingController.getInstance().move(training.id, {
           from: newFrom,
@@ -108,9 +109,10 @@ export function GroupProvider(
       state,
       (training) => {
         if (!training?.id) return;
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === training.id ? training : t))
-        );
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) => (t.id === training.id ? training : t)),
+        }));
       }
     );
   }
@@ -121,10 +123,6 @@ export function GroupProvider(
     setDateFrom(dayjs(cycle.from));
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
-
-  useEffect(() => {
-    setTrainings(allTrainings);
-  }, [allTrainings]);
 
   const value: IGroupCtx = {
     filter,
@@ -141,8 +139,7 @@ export function GroupProvider(
     setDateFrom,
     dateTo,
     setDateTo,
-    trainings,
-    setTrainings,
+    trainings: allTrainings,
     filteredUsers,
     setFilteredUsers,
     detectedChanges,

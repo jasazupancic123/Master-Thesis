@@ -47,9 +47,9 @@ describe('Modify Training (e2e)', () => {
                 generateTrainingExercise({
                   id: 'e1',
                   sets: [
-                    generateExerciseSet(1),
-                    generateExerciseSet(2),
-                    generateExerciseSet(3),
+                    generateExerciseSet(1, { reps: 10 }),
+                    generateExerciseSet(2, { reps: 10 }),
+                    generateExerciseSet(3, { reps: 10 }),
                   ],
                 }),
               ],
@@ -88,6 +88,77 @@ describe('Modify Training (e2e)', () => {
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('You cannot view this institution');
     await testApp.auth.deleteUser(user.uid);
+  });
+
+  it('should successfully add superset to component for coach', async () => {
+    const res = await req(global.trainer.token, training.id, {
+      action: TrainingAction.ADD_SUPERSET,
+      ref: { componentId: 'c1' },
+      payload: {},
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    expect(dbTraining.components[0].subgroups.length).toBe(0);
+    expect(dbTraining.components[0].supersets.length).toBe(2);
+
+    training = await clearAndResetTraining();
+  });
+
+  it('should successfully add superset to component for athlete', async () => {
+    const res = await req(global.athlete.token, training.id, {
+      action: TrainingAction.ADD_SUPERSET,
+      ref: { componentId: 'c1' },
+      payload: {},
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    expect(dbTraining.components[0].subgroups.length).toBe(1); // athlete should be moved to virtual subgroup
+    expect(dbTraining.components[0].supersets.length).toBe(1);
+
+    // athlete subgroup should have both supersets
+    const athleteSubgroup = dbTraining.components[0].subgroups[0];
+    expect(athleteSubgroup.supersets.length).toBe(2);
+
+    training = await clearAndResetTraining();
+  });
+
+  it('should successfully remove superset from component for coach', async () => {
+    const res = await req(global.trainer.token, training.id, {
+      action: TrainingAction.REMOVE_SUPERSET,
+      ref: { componentId: 'c1', supersetIndex: 0 },
+      payload: {},
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    expect(dbTraining.components[0].subgroups.length).toBe(0);
+    expect(dbTraining.components[0].supersets.length).toBe(0);
+
+    training = await clearAndResetTraining();
+  });
+
+  it('should successfully remove superset from component for athlete', async () => {
+    const res = await req(global.athlete.token, training.id, {
+      action: TrainingAction.REMOVE_SUPERSET,
+      ref: { componentId: 'c1', supersetIndex: 0 },
+      payload: {},
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    expect(dbTraining.components[0].subgroups.length).toBe(1); // athlete should be moved to virtual subgroup
+    expect(dbTraining.components[0].supersets.length).toBe(1);
+
+    const athleteSubgroup = dbTraining.components[0].subgroups[0];
+    expect(athleteSubgroup.supersets.length).toBe(0);
+
+    training = await clearAndResetTraining();
   });
 
   it('should throw error if provided exercise is not found', async () => {
@@ -300,6 +371,69 @@ describe('Modify Training (e2e)', () => {
         (ex) => ex.id === 'e1',
       ).sets.length,
     ).toBe(3);
+
+    training = await clearAndResetTraining();
+  });
+
+  it('should successfully update exercise set for coach', async () => {
+    const res = await req(global.trainer.token, training.id, {
+      action: TrainingAction.UPDATE_SET,
+      ref: {
+        componentId: 'c1',
+        supersetIndex: 0,
+        exerciseId: 'e1',
+        setNumber: 2,
+      },
+      payload: {
+        set: generateExerciseSet(2, { reps: 20 }),
+      },
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    const subgroups = dbTraining.components[0].subgroups;
+    expect(subgroups).toHaveLength(0);
+
+    const superset = dbTraining.components[0].supersets[0];
+    const trainingExercise = superset.exercises.find((ex) => ex.id === 'e1');
+    expect(trainingExercise.sets.find((s) => s.setNumber === 2).reps).toBe(20);
+
+    training = await clearAndResetTraining();
+  });
+
+  it('should successfully update exercise set for athlete', async () => {
+    const res = await req(global.athlete.token, training.id, {
+      action: TrainingAction.UPDATE_SET,
+      ref: {
+        componentId: 'c1',
+        supersetIndex: 0,
+        exerciseId: 'e1',
+        setNumber: 2,
+      },
+      payload: {
+        set: generateExerciseSet(2, { reps: 20 }),
+      },
+    });
+
+    expect(res.status).toBe(201);
+
+    const dbTraining = await db.trainings.findById(training.id);
+    const subgroups = dbTraining.components[0].subgroups;
+    expect(subgroups.length).toBe(1); // athlete should be moved to virtual subgroup
+
+    const athleteSubgroup = subgroups[0];
+    expect(
+      athleteSubgroup.supersets[0].exercises
+        .find((ex) => ex.id === 'e1')
+        .sets.find((s) => s.setNumber === 2).reps,
+    ).toBe(20);
+
+    expect(
+      dbTraining.components[0].supersets[0].exercises
+        .find((ex) => ex.id === 'e1')
+        .sets.find((s) => s.setNumber === 2).reps,
+    ).toBe(10);
 
     training = await clearAndResetTraining();
   });

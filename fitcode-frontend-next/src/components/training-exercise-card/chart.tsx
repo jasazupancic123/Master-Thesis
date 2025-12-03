@@ -89,6 +89,7 @@ export default function TrainingExerciseChart(
   const { setSelectedExercise } = useSupersets();
 
   const {
+    selectedAthleteWorkloads,
     chartData,
     selectedParams,
     setSelectedParams,
@@ -285,7 +286,17 @@ export default function TrainingExerciseChart(
           {/* Graph */}
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={chartData.slice(range[0] - 1, range[1])}>
-              <Tooltip content={CustomTooltip} />
+              <Tooltip
+                content={(props) => (
+                  <CustomTooltip
+                    active={props.active}
+                    label={props.label}
+                    payload={props.payload}
+                    selectedAthleteWorkloads={selectedAthleteWorkloads}
+                  />
+                )}
+              />
+
               <XAxis
                 dataKey="name"
                 tickFormatter={(value: string) => {

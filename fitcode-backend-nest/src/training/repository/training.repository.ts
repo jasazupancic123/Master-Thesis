@@ -155,14 +155,16 @@ export class TrainingRepository extends FirestoreRepository<Training> {
         components: training.components.map((tc) =>
           this.firebase.buildCreateQuery<TrainingComponent>({
             ...tc,
-            subgroups: tc.subgroups.map((sg) =>
-              !add && sg.membersIds.includes(memberId) // remove member from subgroup
-                ? {
-                    ...sg,
-                    membersIds: sg.membersIds.filter((id) => id !== memberId),
-                  }
-                : sg,
-            ),
+            subgroups: tc.subgroups
+              .map((sg) =>
+                !add && sg.membersIds.includes(memberId)
+                  ? {
+                      ...sg,
+                      membersIds: sg.membersIds.filter((id) => id !== memberId),
+                    }
+                  : sg,
+              )
+              .filter((sg) => sg.membersIds.length > 0),
           }),
         ),
       },

@@ -89,19 +89,36 @@ export class InstitutionController extends BaseController {
     return this.api.delete<void>(`/${institutionId}/group/${groupId}`);
   }
 
-  async addGroupMember(institutionId: string, groupId: string, body: UserId) {
+  async addGroupAthlete(institutionId: string, groupId: string, body: UserId) {
     return this.api.patch<void>(
-      `/${institutionId}/group/${groupId}/member`,
+      `/${institutionId}/group/${groupId}/athlete`,
       body
     );
   }
 
-  async removeGroupMember(
+  async removeGroupAthlete(
     institutionId: string,
     groupId: string,
     body: UserId
   ) {
-    return this.api.delete<void>(`/${institutionId}/group/${groupId}/member`, {
+    return this.api.delete<void>(`/${institutionId}/group/${groupId}/athlete`, {
+      body,
+    });
+  }
+
+  async addGroupTrainer(institutionId: string, groupId: string, body: UserId) {
+    return this.api.patch<void>(
+      `/${institutionId}/group/${groupId}/trainer`,
+      body
+    );
+  }
+
+  async removeGroupTrainer(
+    institutionId: string,
+    groupId: string,
+    body: UserId
+  ) {
+    return this.api.delete<void>(`/${institutionId}/group/${groupId}/trainer`, {
       body,
     });
   }
