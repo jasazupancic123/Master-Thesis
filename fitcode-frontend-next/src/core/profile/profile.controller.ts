@@ -31,6 +31,10 @@ export class ProfileController extends BaseController {
     return this.api.patch<object>('/', input);
   }
 
+  async saveFaceEmbeddings(faceEmbedding: number[]) {
+    return this.api.post<object>('/embed', { faceEmbedding });
+  }
+
   async upsertWellness(body: CreateWellness) {
     return this.api.post<Wellness>('/', body);
   }
