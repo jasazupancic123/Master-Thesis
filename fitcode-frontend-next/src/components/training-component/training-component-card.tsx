@@ -3,7 +3,6 @@ import {
   CheckBoxOutlineBlank,
   Delete,
   Dock,
-  DockOutlined,
   IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,

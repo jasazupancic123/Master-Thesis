@@ -1,6 +1,6 @@
 'use client';
 
-import { alpha, Avatar, Box, Button, Grid2, Typography } from '@mui/material';
+import { alpha, Avatar, Box, Grid2, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -23,12 +23,12 @@ import {
   EXERCISE_DEFAULT_IMG_URL,
   USER_AVATAR_IMG_URL,
 } from '@/lib/common/const/image.const';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useCoachTraining } from '@/store/coach-training.provider';
+import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 
 export default function TrainingStation() {
   const router = useRouter();

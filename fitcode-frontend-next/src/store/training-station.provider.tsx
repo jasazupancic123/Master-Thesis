@@ -144,8 +144,6 @@ export const TrainingStationProvider = (
           lib.firebase.firestore.serialize(doc.data())
         );
 
-        console.log('Loaded workloads:', data);
-
         setWorkloads(data);
       },
       (error) => {
