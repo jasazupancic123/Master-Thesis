@@ -11,7 +11,9 @@ import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 import Alert from '@/ui/alert';
 
-export default async function InitAthleteProvider({ children }: React.PropsWithChildren) {
+export default async function InitAthleteProvider({
+  children,
+}: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 

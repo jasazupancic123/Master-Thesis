@@ -13,7 +13,6 @@ import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingStation } from '@/core/training/type/training-station.type';
 import type {
