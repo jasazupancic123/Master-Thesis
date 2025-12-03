@@ -9,6 +9,7 @@ import {
 
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { CommonService } from '@src/common/service/common.service';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
@@ -34,6 +35,7 @@ export class ActiveTrainingService {
   private readonly logger = new Logger(ActiveTrainingService.name);
 
   constructor(
+    private readonly common: CommonService,
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
@@ -156,7 +158,8 @@ export class ActiveTrainingService {
     }
 
     if (errors.length)
-      this.logger.error('startTrainingComponent errors', errors);
+      if (!this.common.env.isTest())
+        this.logger.error('startTrainingComponent errors', errors);
 
     return { trainings, errors };
   }
@@ -209,7 +212,8 @@ export class ActiveTrainingService {
     }
 
     if (errors.length)
-      this.logger.error('completeTrainingComponent errors', errors);
+      if (!this.common.env.isTest())
+        this.logger.error('completeTrainingComponent errors', errors);
 
     return { errors };
   }
