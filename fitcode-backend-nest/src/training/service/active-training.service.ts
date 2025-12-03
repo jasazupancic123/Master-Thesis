@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -30,6 +31,8 @@ import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class ActiveTrainingService {
+  private readonly logger = new Logger(ActiveTrainingService.name);
+
   constructor(
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => AuthService))
@@ -152,6 +155,9 @@ export class ActiveTrainingService {
         });
     }
 
+    if (errors.length)
+      this.logger.error('startTrainingComponent errors', errors);
+
     return { trainings, errors };
   }
 
@@ -201,6 +207,9 @@ export class ActiveTrainingService {
         workloads,
       );
     }
+
+    if (errors.length)
+      this.logger.error('completeTrainingComponent errors', errors);
 
     return { errors };
   }

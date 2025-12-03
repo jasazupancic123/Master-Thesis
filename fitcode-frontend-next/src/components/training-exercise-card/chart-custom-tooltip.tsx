@@ -4,21 +4,26 @@ import type { TooltipContentProps } from 'recharts';
 
 import { DEFAULT_CHART_PARAMS, graphColorMap } from './chart';
 import { theme } from '@/app/style';
-import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import type { Workload } from '@/core/training/type/workload.type';
+
+interface Props extends Partial<TooltipContentProps<number, string>> {
+  selectedAthleteWorkloads: Workload[];
+}
 
 export default function CustomTooltip({
   active,
   payload,
   label,
-}: TooltipContentProps<number, string>) {
-  const { selectedAthleteCompletedWorkloads } = useTrainerDayView();
+  selectedAthleteWorkloads,
+}: Props) {
+  if (!active || !payload) return null;
 
   const isVisible = active && payload && payload.length;
   const p = payload[0];
 
   if (!p || !p.payload) return null;
 
-  const completed = selectedAthleteCompletedWorkloads.some(
+  const completed = selectedAthleteWorkloads.some(
     (wl) =>
       wl.trainingId === p.payload.trainingId &&
       wl.componentId === p.payload.componentId &&
