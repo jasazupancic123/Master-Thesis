@@ -179,7 +179,7 @@ export const TrainingStationProvider = (
   // Validate statuses on change
   useEffect(() => {
     setUserStatusesValidation(validateUserStatuses());
-  }, [station, userStatuses]);
+  }, [station, userStatuses, component]);
 
   const updateStationsWorkloadValue = <K extends keyof Workload>(
     id: {
@@ -308,21 +308,31 @@ export const TrainingStationProvider = (
   }
 
   const validateUserStatuses = (): UserStatusesEvaluation => {
-    if (!station || !userStatuses.length)
+    if (!station || !component) return UserStatusesEvaluation.NONE_IN_PROGRESS;
+
+    const thisComponentStatuses = userStatuses.filter(
+      (s) => s.componentId === component.id
+    );
+
+    if (!thisComponentStatuses.length)
       return UserStatusesEvaluation.NONE_IN_PROGRESS;
 
     const allInProgress =
-      userStatuses.every(
-        (status) => status.status === TrainingStatus.IN_PROGRESS
+      thisComponentStatuses.every(
+        (status) =>
+          status.status === TrainingStatus.IN_PROGRESS &&
+          status.componentId === component.id
       ) &&
       station.users.every((u) =>
-        userStatuses.some((status) => status.userId === u.uid)
+        thisComponentStatuses.some((status) => status.userId === u.uid)
       );
 
     if (allInProgress) return UserStatusesEvaluation.ALL_IN_PROGRESS;
 
-    const noneInProgress = userStatuses.every(
-      (status) => status.status !== TrainingStatus.IN_PROGRESS
+    const noneInProgress = thisComponentStatuses.every(
+      (status) =>
+        status.status !== TrainingStatus.IN_PROGRESS &&
+        status.componentId === component.id
     );
 
     if (noneInProgress) return UserStatusesEvaluation.NONE_IN_PROGRESS;
