@@ -129,9 +129,9 @@ export default function TrainingStationExerciseSet(props: Props) {
               options={effOptions}
               selected={effType}
               value={
-                foundWorkload?.[effType] ||
-                exercise.sets[setIndex]?.[effType] ||
-                0
+                foundWorkload?.[effType] !== undefined
+                  ? foundWorkload?.[effType]
+                  : (exercise.sets[setIndex]?.[effType] ?? 0)
               }
               exercise={exercise}
               showOptions={!uni}
@@ -170,9 +170,9 @@ export default function TrainingStationExerciseSet(props: Props) {
               options={volOptions}
               selected={volType}
               value={
-                foundWorkload?.[volType] ||
-                exercise.sets[setIndex]?.[volType] ||
-                0
+                foundWorkload?.[volType] !== undefined
+                  ? foundWorkload?.[volType]
+                  : (exercise.sets[setIndex]?.[volType] ?? 0)
               }
               exercise={exercise}
               showOptions={!uni}
@@ -222,9 +222,10 @@ export default function TrainingStationExerciseSet(props: Props) {
               options={[KG]}
               selected={KG.field}
               value={
-                foundWorkload?.[KG.field] ||
-                exercise.sets[setIndex]?.[KG.field] ||
-                0
+                foundWorkload?.[KG.field] !== undefined &&
+                typeof foundWorkload?.[KG.field] === 'number'
+                  ? (foundWorkload?.[KG.field] as number)
+                  : (exercise.sets[setIndex]?.[KG.field] ?? 0)
               }
               exercise={exercise}
               showOptions={!uni}
@@ -261,7 +262,10 @@ export default function TrainingStationExerciseSet(props: Props) {
             options={recOptions}
             selected={recType}
             value={
-              foundWorkload?.[recType] || exercise.sets[setIndex][recType] || 0
+              foundWorkload?.[recType] !== undefined &&
+              typeof foundWorkload?.[recType] === 'number'
+                ? (foundWorkload?.[recType] as number)
+                : (exercise.sets[setIndex][recType] ?? 0)
             }
             exercise={exercise}
             disableOptions
@@ -350,11 +354,17 @@ export default function TrainingStationExerciseSet(props: Props) {
                     options={effOptions}
                     selected={effType}
                     value={
-                      foundWorkload?.[core.exercise.param.pairs[effType]] ||
-                      exercise.sets[setIndex]?.[
+                      foundWorkload?.[core.exercise.param.pairs[effType]] !==
+                        undefined &&
+                      typeof foundWorkload?.[
                         core.exercise.param.pairs[effType]
-                      ] ||
-                      0
+                      ] === 'number'
+                        ? (foundWorkload?.[
+                            core.exercise.param.pairs[effType]
+                          ] as number)
+                        : (exercise.sets[setIndex]?.[
+                            core.exercise.param.pairs[effType]
+                          ] ?? 0)
                     }
                     exercise={exercise}
                     showOptions={false}
@@ -397,10 +407,17 @@ export default function TrainingStationExerciseSet(props: Props) {
                   options={volOptions}
                   selected={volType}
                   value={
-                    foundWorkload?.[core.exercise.param.pairs[volType]] ||
-                    (exercise.sets[setIndex]?.[
+                    foundWorkload?.[core.exercise.param.pairs[volType]] !==
+                      undefined &&
+                    typeof foundWorkload?.[
                       core.exercise.param.pairs[volType]
-                    ] as number)
+                    ] === 'number'
+                      ? (foundWorkload?.[
+                          core.exercise.param.pairs[volType]
+                        ] as number)
+                      : (exercise.sets[setIndex]?.[
+                          core.exercise.param.pairs[volType]
+                        ] ?? 0)
                   }
                   trainingInProgressPrimaryItem
                   disableOptions
@@ -454,11 +471,17 @@ export default function TrainingStationExerciseSet(props: Props) {
                   options={[KG]}
                   selected={KG.field}
                   value={
-                    foundWorkload?.[core.exercise.param.pairs['loadKg']] ||
-                    exercise.sets[setIndex]?.[
+                    foundWorkload?.[core.exercise.param.pairs['loadKg']] !==
+                      undefined &&
+                    typeof foundWorkload?.[
                       core.exercise.param.pairs['loadKg']
-                    ] ||
-                    0
+                    ] === 'number'
+                      ? (foundWorkload?.[
+                          core.exercise.param.pairs['loadKg']
+                        ] as number)
+                      : (exercise.sets[setIndex]?.[
+                          core.exercise.param.pairs['loadKg']
+                        ] ?? 0)
                   }
                   exercise={exercise}
                   showOptions={false}
@@ -498,9 +521,16 @@ export default function TrainingStationExerciseSet(props: Props) {
                 options={recOptions}
                 selected={recType}
                 value={
-                  foundWorkload?.[core.exercise.param.pairs[recType]] ||
-                  exercise.sets[setIndex][core.exercise.param.pairs[recType]] ||
-                  0
+                  foundWorkload?.[core.exercise.param.pairs[recType]] !==
+                    undefined &&
+                  typeof foundWorkload?.[core.exercise.param.pairs[recType]] ===
+                    'number'
+                    ? (foundWorkload?.[
+                        core.exercise.param.pairs[recType]
+                      ] as number)
+                    : (exercise.sets[setIndex][
+                        core.exercise.param.pairs[recType]
+                      ] ?? 0)
                 }
                 exercise={exercise}
                 showOptions={false}
