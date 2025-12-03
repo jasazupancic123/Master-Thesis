@@ -16,10 +16,13 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_DASHBOARD } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import Logo from '@/ui/logo';
+import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 
 export default function TrainerTrainingInProgressHeader() {
   const router = useRouter();
 
+  const { view } = useCoachTrainingHeader();
   const { user } = useAuthenticatedAuth();
 
   const {
@@ -28,6 +31,8 @@ export default function TrainerTrainingInProgressHeader() {
     setOpenProfileMenu,
     setAnchorProfileEl,
   } = useTrainerGroupHeaderUtils();
+
+  if (view === TrackingMethod.CAMERA) return null;
 
   return (
     <Box

@@ -3,7 +3,7 @@
 import { alpha, Avatar, Box, Button, Grid2, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import MobileMovementValidation from '../mobile-movement-validation/mobile-movement-validation';
@@ -12,7 +12,7 @@ import { getSupersetIndex } from './actions/actions-superset-index';
 import { createEmptyPartialWorkload } from './actions/actions-workload';
 import NewStationModal from './modals/new-station.modal';
 import TrainingStationExerciseSet from './training-station-exercise-set';
-import TrainingStationExercises from './training-station-exercises';
+import TrainingStationExerciseCard from './training-station-exercises';
 import TrainingStationHeader from './training-station-header';
 import TrainingStationInit from './training-station-init';
 import TrainingStationMembers from './training-station-members';
@@ -27,12 +27,14 @@ import { useCoachTraining } from '@/store/coach-training.provider';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
+import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 
 export default function TrainingStation() {
   const router = useRouter();
 
   const { exerciseAiPrescriptions } = useMain();
-
+  const { view, setView } = useCoachTrainingHeader();
   const { training } = useCoachTraining();
 
   const {
@@ -46,16 +48,22 @@ export default function TrainingStation() {
     workloads,
     setWorkloads,
     setSelectedSetIndex,
-    handleUpsertSet,
+    handleUpsertSetFromStationView,
   } = useCoachTrainingStation();
 
-  const [view, setView] = useState<TrackingMethod>(TrackingMethod.MANUAL);
   const [openNewStationModal, setOpenNewStationModal] = useState(false);
+  const [displayUserNames, setDisplayUserNames] = useState(true);
 
   // Individual training for selected user
   const individualTraining = individualTrainings.find(
     (it) => it.userId === selectedUser?.uid
   );
+
+  // Exercises available for the user in the station
+  const individualExercises =
+    individualTraining?.components
+      .find((c) => c.id === component?.id)
+      ?.supersets.flatMap((s) => s.exercises) || [];
 
   // Individual exercise with correct param, set values for the user
   const individualExercise = individualTraining?.components
@@ -63,19 +71,28 @@ export default function TrainingStation() {
     ?.supersets.flatMap((s) => s.exercises)
     .find((e) => e.id === selectedExercise?.id);
 
-  const supersetIndex = individualTraining
-    ? getSupersetIndex(individualTraining, component!.id, selectedExercise!.id)
-    : null;
-
-  const foundWorkload = workloads.find(
-    (w) =>
-      w.userId === selectedUser?.uid &&
-      w.exerciseId === selectedExercise?.id &&
-      w.setNumber === (selectedSetIndex || 0) + 1 &&
-      w.componentId === component?.id &&
-      w.trainingId === individualTraining?.id &&
-      w.supersetIndex === supersetIndex
+  // Exercises available in the station filtered by individual exercises
+  const userExercises = station?.exercises.filter((e) =>
+    individualExercises.some((ie) => ie.id === e.id)
   );
+
+  const supersetIndex =
+    individualTraining && component && selectedExercise
+      ? getSupersetIndex(individualTraining, component.id, selectedExercise.id)
+      : null;
+
+  const foundWorkload =
+    supersetIndex !== null
+      ? workloads.find(
+          (w) =>
+            w.userId === selectedUser?.uid &&
+            w.exerciseId === selectedExercise?.id &&
+            w.setNumber === (selectedSetIndex || 0) + 1 &&
+            w.componentId === component?.id &&
+            w.trainingId === individualTraining?.id &&
+            w.supersetIndex === supersetIndex
+        )
+      : undefined;
 
   // LOGIC: Workload only has id if returned from BE (means it's completed), on FE we handle "PartialWorkload" without id - means it's uncompleted and not posted yet
   const isSetCompleted = foundWorkload && foundWorkload.id !== undefined;
@@ -87,6 +104,14 @@ export default function TrainingStation() {
     typeof window !== 'undefined'
       ? Math.min(window.innerWidth * 0.9, 340)
       : 340;
+
+  // Prevents selected exercise from being invalid when switching users
+  useEffect(() => {
+    if (!(userExercises || []).some((e) => e.id === selectedExercise?.id)) {
+      setSelectedExercise((userExercises || [])[0] || null);
+      setSelectedSetIndex(0);
+    }
+  }, [selectedUser, station]);
 
   if (!station) {
     return <TrainingStationInit />;
@@ -113,7 +138,7 @@ export default function TrainingStation() {
         individualTraining,
         router,
         workloads,
-        handleUpsertSetFromStationView: handleUpsertSet,
+        handleUpsertSetFromStationView,
       }}
     />
   ) : (
@@ -129,19 +154,30 @@ export default function TrainingStation() {
         mx: 'auto',
       }}
     >
-      <TrainingStationHeader />
+      <TrainingStationHeader
+        displayUserNames={displayUserNames}
+        setDisplayUserNames={setDisplayUserNames}
+        setOpenNewStationModal={setOpenNewStationModal}
+      />
 
-      <Button
-        size="small"
-        variant="contained"
-        onClick={() => setOpenNewStationModal(true)}
+      <TrainingStationMembers displayUserNames={displayUserNames} />
+
+      <Box
+        maxWidth="100%"
+        display="flex"
+        sx={{
+          position: 'relative',
+          mx: 'auto',
+          overflowX: 'auto',
+          ...styledScrollbarSx(theme),
+          px: 1,
+        }}
+        gap={1}
       >
-        New station
-      </Button>
-
-      <TrainingStationMembers />
-
-      <TrainingStationExercises />
+        {(userExercises || []).map((exercise) => (
+          <TrainingStationExerciseCard key={exercise.id} exercise={exercise} />
+        ))}
+      </Box>
 
       <Box
         maxWidth={selectedImageWidth}
@@ -196,8 +232,10 @@ export default function TrainingStation() {
         <Grid2
           size={3}
           display="flex"
-          justifyContent="center"
-          alignItems="flex-start"
+          flexDirection="column"
+          justifyContent="flex-start"
+          alignItems="center"
+          gap={0.5}
         >
           <Box
             sx={{
@@ -211,11 +249,13 @@ export default function TrainingStation() {
               sx={{
                 width: 80,
                 height: 80,
-                cursor: 'pointer',
                 filter: 'grayscale(100%)',
               }}
             />
           </Box>
+          <Typography fontSize={16} fontWeight={700} textAlign="center">
+            {selectedUser?.displayName || 'Unknown User'}
+          </Typography>
         </Grid2>
         <Grid2
           size={6}
@@ -329,7 +369,7 @@ export default function TrainingStation() {
 
                   if (!workload) return;
 
-                  await handleUpsertSet(
+                  await handleUpsertSetFromStationView(
                     workload,
                     {
                       exerciseId: selectedExercise.id,
@@ -352,7 +392,7 @@ export default function TrainingStation() {
                     cursor: 'pointer',
                   }}
                 >
-                  {isSetCompleted ? 'Done' : 'Confirm'}
+                  {isSetCompleted ? 'Done' : 'Complete'}
                 </Typography>
               </Box>
             </Box>

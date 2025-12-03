@@ -59,7 +59,7 @@ interface TrainingStationProvider extends TrainingStationProps {
     field: keyof Workload,
     value: Workload[keyof Workload]
   ) => void;
-  handleUpsertSet: (
+  handleUpsertSetFromStationView: (
     body: PartialWorkload,
     state: {
       exerciseId: string;
@@ -144,6 +144,8 @@ export const TrainingStationProvider = (
           lib.firebase.firestore.serialize(doc.data())
         );
 
+        console.log('Loaded workloads:', data);
+
         setWorkloads(data);
       },
       (error) => {
@@ -179,7 +181,7 @@ export const TrainingStationProvider = (
   // Validate statuses on change
   useEffect(() => {
     setUserStatusesValidation(validateUserStatuses());
-  }, [userStatuses]);
+  }, [station, userStatuses]);
 
   const updateStationsWorkloadValue = <K extends keyof Workload>(
     id: {
@@ -226,7 +228,7 @@ export const TrainingStationProvider = (
     );
   };
 
-  async function handleUpsertSet(
+  async function handleUpsertSetFromStationView(
     body: PartialWorkload,
     state: {
       exerciseId: string;
@@ -351,7 +353,7 @@ export const TrainingStationProvider = (
         setUserStatuses,
         userStatusesValidation,
         updateStationsWorkloadValue,
-        handleUpsertSet,
+        handleUpsertSetFromStationView,
       }}
     >
       {props.children}

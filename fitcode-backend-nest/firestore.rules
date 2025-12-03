@@ -38,7 +38,7 @@ service cloud.firestore {
                     // or manager
                     || isManagerOfInstitution(resource.data.institutionId)
                     // or member
-                    || request.auth.uid in resource.data.memberIds
+                    || request.auth.uid in resource.data.membersIds
                 );
 
             // Training workloads subcollection
@@ -47,8 +47,10 @@ service cloud.firestore {
                 && (
                     // trainer
                     isTrainerOfInstitution(trainingId)
+                    // manager
+                    || isManagerOfInstitution(get(/databases/$(database)/documents/trainings/$(trainingId)).data.institutionId)
                     // or member
-                    || request.auth.uid in get(/databases/$(database)/documents/trainings/$(trainingId)).data.memberIds
+                    || request.auth.uid in get(/databases/$(database)/documents/trainings/$(trainingId)).data.membersIds
                 );
             }
 
