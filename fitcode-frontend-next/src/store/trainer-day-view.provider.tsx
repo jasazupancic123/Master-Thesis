@@ -49,7 +49,7 @@ export type TrainerDayViewCtxExtended = Omit<
 export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { exercises } = useMain();
+  const { exercises, setTrainings } = useMain();
   const {
     cycle,
     setCycle,
@@ -57,7 +57,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     dateTo,
     group,
     trainings,
-    setTrainings,
     filter,
     setDetectedChanges,
   } = useGroup();
@@ -86,7 +85,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [loading, setLoading] = useState(false);
-  const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
@@ -96,11 +94,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
     null
   );
-
-  const [
-    selectedAthleteCompletedWorkloads,
-    setSelectedAthleteCompletedWorkloads,
-  ] = useState<Workload[]>([]);
 
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
@@ -232,18 +225,19 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
           membersIds: [...prev!.membersIds, member.uid],
         }));
 
-        setTrainings((prev) =>
-          prev.map((t) =>
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) =>
             t.id === training.id
               ? { ...t, membersIds: [...t.membersIds, member.uid] }
               : t
-          )
-        );
+          ),
+        }));
       },
       (snapshot) => {
         toast.error('Failed to add member');
         setTraining(snapshot.training);
-        setTrainings(snapshot.trainings);
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
       },
       async () =>
         TrainingController.getInstance().addMember(training.id, {
@@ -335,16 +329,17 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
           membersIds: prev!.membersIds.filter((id) => id !== user.uid),
         }));
 
-        setTrainings((prev) =>
-          prev.map((t) =>
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) =>
             t.id === training.id
               ? {
                   ...t,
                   membersIds: t.membersIds.filter((id) => id !== user.uid),
                 }
               : t
-          )
-        );
+          ),
+        }));
 
         // if the removed member is the selected athlete, clear the selection
         if (selectedAthlete?.uid === user.uid) {
@@ -355,7 +350,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       (snapshot) => {
         toast.error('Failed to remove member');
         setTraining(snapshot.training);
-        setTrainings(snapshot.trainings);
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
       },
       async () =>
         TrainingController.getInstance().removeMember(training.id, {
@@ -614,9 +609,6 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     setPagination,
     search,
     setSearch,
-    selectedAthleteCompletedWorkloads,
-    setSelectedAthleteCompletedWorkloads,
-    isSettingAthleteWorkloads,
     previousSelectedAthlete,
     expandedExercisesView,
     setExpandedExercisesView,

@@ -16,30 +16,6 @@ export default function GroupInitializer({
   const groupId = pathname.split('/')[2];
   const group = groups.find((g) => g.id === groupId);
 
-  /* const [trainings, setTrainings] = useState<Fetch<Training[]>>({
-    data: [],
-    loading: false,
-    error: null,
-  });
-
-  useEffect(() => {
-    if (!institutionId || !group || group.institutionId !== institution.id)
-      return;
-
-    async function fetchData() {
-      setTrainings((prev) => ({ ...prev, loading: true }));
-
-      const controller = Controller.getInstance();
-      const [trainings] = await Promise.allSettled([
-        controller.training.findAll({ institutionId, groupId: group!.id }),
-      ]);
-
-      setTrainings(settleState(trainings, []));
-    }
-
-    fetchData().then();
-  }, []); */
-
   if (!institutionId || !group || group.institutionId !== institution.id)
     return notFound();
 

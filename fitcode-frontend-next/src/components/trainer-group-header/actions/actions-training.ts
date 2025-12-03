@@ -14,8 +14,8 @@ export async function handleUpdateTraining(
   groupCtx: IGroupCtx,
   trainerDayViewCtx: ITrainerDayViewContext
 ) {
-  const { exercises } = mainCtx;
-  const { setTrainings, setDetectedChanges } = groupCtx;
+  const { exercises, setTrainings } = mainCtx;
+  const { setDetectedChanges } = groupCtx;
   const { training, setTraining } = trainerDayViewCtx;
 
   if (!training) return toast.error('No training to update');
@@ -24,16 +24,20 @@ export async function handleUpdateTraining(
   const state = { training: structuredClone(training) };
   await lib.common.generic.optimisticUpdate(
     () => {
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === training.id ? training : t))
-      );
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.map((t) => (t.id === training.id ? training : t)),
+      }));
     },
     (snapshot, e) => {
       setIsUpdatingTraining(false);
       setTraining(snapshot.training);
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === snapshot.training.id ? snapshot.training : t))
-      );
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.map((t) =>
+          t.id === snapshot.training.id ? snapshot.training : t
+        ),
+      }));
 
       toast.error(e.message);
     },
@@ -42,12 +46,10 @@ export async function handleUpdateTraining(
     (newTraining) => {
       TrainingService.mapData(newTraining, { exercises });
       setTraining(newTraining);
-      setTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === newTraining.id) return newTraining;
-          return t;
-        })
-      );
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.map((t) => (t.id === newTraining.id ? newTraining : t)),
+      }));
 
       setDetectedChanges(false);
       setIsUpdatingTraining(false);

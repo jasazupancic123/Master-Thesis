@@ -93,15 +93,9 @@ export async function handleDeleteCycle(
 ) {
   const { router } = input;
   const { useMain, useGroup, useSliderCycles } = context;
-  const { setGroups } = useMain;
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setGroup,
-    setTrainings,
-    cycle,
-    setCycle,
-  } = useGroup;
+  const { setGroups, setTrainings } = useMain;
+  const { selectedGroup, setSelectedGroup, setGroup, cycle, setCycle } =
+    useGroup;
 
   const { editCycle, setEditCycle } = useSliderCycles;
 
@@ -118,7 +112,10 @@ export async function handleDeleteCycle(
     () => {
       if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
 
-      setTrainings((prev) => prev.filter((t) => t.cycleId !== editCycle.id));
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.filter((t) => t.cycleId !== editCycle.id),
+      }));
 
       setSelectedGroup((prev) => ({
         ...prev,
