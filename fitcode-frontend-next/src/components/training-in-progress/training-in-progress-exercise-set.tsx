@@ -45,7 +45,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
   const volType = core.training.set.getVolType(exercise.sets[0]);
   const effType = core.training.set.getEffType(exercise.sets[0]);
   const recType = core.training.set.getRecType(exercise.sets[0]);
-  const load = exercise.sets[setIndex || 0].loadKg;
+  const load = foundWorkload?.loadKg ?? exercise.sets[setIndex || 0].loadKg;
 
   const volOptions = core.training.set.getVolOptions(exercise.exercise!);
   const intOptions = core.training.set.getIntOptions(exercise.exercise!);
@@ -204,8 +204,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                   options={[KG]}
                   selected={KG.field}
                   value={
-                    foundWorkload?.[KG.field] ||
-                    exercise.sets[setIndex]?.[KG.field] ||
+                    foundWorkload?.[KG.field] ??
+                    exercise.sets[setIndex]?.[KG.field] ??
                     0
                   }
                   exercise={exercise}
@@ -431,10 +431,10 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                       options={[KG]}
                       selected={KG.field}
                       value={
-                        foundWorkload?.[core.exercise.param.pairs['loadKg']] ||
+                        foundWorkload?.[core.exercise.param.pairs['loadKg']] ??
                         exercise.sets[setIndex]?.[
                           core.exercise.param.pairs['loadKg']
-                        ] ||
+                        ] ??
                         0
                       }
                       exercise={exercise}

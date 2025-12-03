@@ -151,6 +151,22 @@ export class GroupRepository extends FirestoreRepository<Group, GroupRef> {
     };
   }
 
+  getUpdateTrainerOperation(
+    ref: GroupRef,
+    trainerId: string,
+    add: boolean,
+  ): BatchWriteOperation<Group> {
+    return {
+      ref: this.doc(ref),
+      operation: 'update',
+      data: {
+        trainerIds: add
+          ? (FieldValue.arrayUnion(trainerId) as unknown as string[])
+          : (FieldValue.arrayRemove(trainerId) as unknown as string[]),
+      },
+    };
+  }
+
   async addCycle(group: Group, cycle: Create<Cycle>) {
     const ref = this.doc({
       institutionId: group.institutionId,

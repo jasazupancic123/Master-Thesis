@@ -8,6 +8,7 @@ import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx, useGroup } from '@/store/group.provider';
+import type { IMainContext } from '@/store/main.provider';
 import type {
   ITrainerDayViewContext,
   TrainerDayViewCtxExtended,
@@ -217,13 +218,15 @@ export function updateSelectedAthleteSubgroup(
 export function handleDeleteSubgroup(
   input: { subgroupId: string },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) {
   const { subgroupId } = input;
-  const { useGroup, useTrainerDayViewContext } = context;
-  const { setTrainings, setDetectedChanges } = useGroup;
+  const { useGroup, useTrainerDayViewContext, useMain } = context;
+  const { setDetectedChanges } = useGroup;
+  const { setTrainings } = useMain;
 
   const {
     training,
@@ -269,9 +272,11 @@ export function handleDeleteSubgroup(
   setSelectedSubgroup(null);
   setComponent(newComponent);
   setTraining(newTraining);
-  setTrainings((prev) =>
-    prev.map((t) => (t.id === training.id ? newTraining : t))
-  );
+  setTrainings((prev) => ({
+    ...prev,
+    data: prev.data.map((t) => (t.id === training.id ? newTraining : t)),
+  }));
+
   setSelectedExerciseIds(
     component?.supersets
       .flatMap((s) => s.exercises)

@@ -1,6 +1,6 @@
 import { ExpandLessOutlined, ExpandMoreOutlined } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import TrainingReportCard from '../athlete/training-report-card';
 import { theme } from '@/app/style';
@@ -13,6 +13,10 @@ export default function AthleteReports() {
   const [filteredReports, setFilteredReports] = useState<TrainingReport[]>(
     reports.data.length ? [reports.data[0]] : []
   );
+
+  useEffect(() => {
+    if (reports.data.length) setFilteredReports([reports.data[0]]);
+  }, [reports.data]);
 
   const loadMoreReports = () => {
     const currentLength = filteredReports.length;

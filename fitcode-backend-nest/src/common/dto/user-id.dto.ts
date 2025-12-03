@@ -10,6 +10,14 @@ export class UserIdDto {
   userId: string;
 }
 
+export class UserIdsDto {
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiProperty({ type: String, isArray: true })
+  @Expose()
+  userIds: string[];
+}
+
 export class OptionalUserIdDto extends PartialType(UserIdDto) {}
 
 export class UpdateMemberDto extends UserIdDto {

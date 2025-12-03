@@ -34,6 +34,7 @@ import {
   CycleRef,
   SubgroupRef,
   TrainingComponentRef,
+  TrainingComponentUserStatusRef,
   TrainingRef,
   UserRef,
   WorkloadRef,
@@ -78,10 +79,12 @@ import {
 } from '../entity/workload.entity';
 import { MainSet } from '../enum/main-set.enum';
 import { SetStatus } from '../enum/set-status.enum';
+import { TrainingStatus } from '../enum/training-status.enum';
 import { UpdateTraining } from '../interface/update-training.interface';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { TrainingPlanService } from './training-plan.service';
+import { TrainingReportService } from './training-report.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -102,6 +105,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly institutionService: InstitutionService,
     private readonly exerciseService: ExerciseService,
     private readonly exerciseParamService: ExerciseParamService,
+    private readonly trainingReportService: TrainingReportService,
   ) {}
 
   async findOneById(
@@ -986,6 +990,68 @@ export class TrainingService implements Permission<Training, Institution> {
     return workloads;
   }
 
+  async upsertTrainingComponentStatus(
+    training: Training,
+    ref: TrainingComponentUserStatusRef,
+    workloads: Workload[],
+  ): Promise<void> {
+    workloads = workloads.filter(
+      (w) =>
+        w.trainingId === ref.trainingId &&
+        w.userId === ref.uid &&
+        w.componentId === ref.componentId,
+    );
+
+    const report = this.trainingReportService.getTrainingComponentReport(
+      ref.uid,
+      ref.componentId,
+      training,
+      workloads,
+    );
+
+    const existing =
+      await this.trainingComponentUserStatusRepository.findById(ref);
+
+    if (existing) {
+      await this.trainingComponentUserStatusRepository.update(ref, {
+        status: TrainingStatus.COMPLETED,
+        realization: report.realization,
+        sets: report.sets,
+        reps: report.reps,
+        dist: report.dist,
+        time: report.time,
+        recTime: report.recTime,
+        recDist: report.recDist,
+        exercises: report.exercises,
+        tonnage: report.tonnage,
+        tut: report.tut,
+      });
+    } else {
+      await this.trainingComponentUserStatusRepository.save({
+        id: null,
+        from: new Date(),
+        to: new Date(),
+        institutionId: training.institutionId,
+        groupId: training.groupId,
+        cycleId: training.cycleId,
+        trainingId: training.id,
+        componentId: ref.componentId,
+        userId: ref.uid,
+        status: TrainingStatus.NOT_STARTED,
+        realization: report.realization,
+        sets: report.sets,
+        reps: report.reps,
+        dist: report.dist,
+        time: report.time,
+        exercises: report.exercises,
+        tonnage: report.tonnage,
+        tut: report.tut,
+        recTime: report.recTime,
+        recDist: report.recDist,
+      });
+    }
+  }
+
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })
   async handleUpdateInstitutionAthleteEvent(
     event: UpdateInstitutionAthleteEvent,
@@ -1158,17 +1224,67 @@ export class TrainingService implements Permission<Training, Institution> {
     payload: TrainingActionPayload,
   ): Update<Training> {
     switch (action) {
+      case TrainingAction.ADD_SUPERSET:
+        return this.addSuperset(training, ref);
+      case TrainingAction.REMOVE_SUPERSET:
+        return this.removeSuperset(training, ref);
       case TrainingAction.ADD_EXERCISE:
         return this.addExercise(training, ref);
       case TrainingAction.REMOVE_EXERCISE:
         return this.removeExercise(training, ref);
       case TrainingAction.ADD_SET:
         return this.addSet(training, ref, payload);
+      case TrainingAction.UPDATE_SET:
+        return this.updateSet(training, ref, payload);
       case TrainingAction.REMOVE_SET:
         return this.removeSet(training, ref);
       default:
         throw new BadRequestException(`Action ${action} not supported yet`);
     }
+  }
+
+  private addSuperset(training: Training, ref: TrainingActionRef) {
+    const component = this.trainingPlanService.findComponentOrFail(
+      training,
+      ref.componentId,
+    );
+
+    const item = ref.subgroupId
+      ? this.trainingPlanService.findSubgroupOrFail(component, ref.subgroupId)
+      : component;
+
+    // check if superset limit is reached
+    this.trainingPlanService.validateSupersetLimit(item);
+
+    item.supersets = [
+      ...item.supersets,
+      { mainSet: MainSet.BLOCK, exercises: [] },
+    ];
+
+    return training;
+  }
+
+  private removeSuperset(training: Training, ref: TrainingActionRef) {
+    const { supersetIndex } = ref;
+    if (supersetIndex === undefined)
+      throw new BadRequestException(
+        'Superset index is required to remove superset',
+      );
+
+    const component = this.trainingPlanService.findComponentOrFail(
+      training,
+      ref.componentId,
+    );
+
+    const item = ref.subgroupId
+      ? this.trainingPlanService.findSubgroupOrFail(component, ref.subgroupId)
+      : component;
+
+    if (supersetIndex < 0 || supersetIndex >= component.supersets.length)
+      throw new NotFoundException('Superset not found in component');
+
+    item.supersets.splice(supersetIndex, 1);
+    return training;
   }
 
   private addExercise(training: Training, ref: TrainingActionRef) {
@@ -1208,6 +1324,32 @@ export class TrainingService implements Permission<Training, Institution> {
 
     exercise.sets.push(payload.set); // add set
     exercise.sets = exercise.sets.map((s, i) => ({ ...s, setNumber: i + 1 })); // update set numbers
+
+    return training;
+  }
+
+  private updateSet(
+    training: Training,
+    ref: TrainingActionRef,
+    payload: TrainingActionPayload,
+  ) {
+    if (!payload.set) throw new BadRequestException('Set payload is required');
+
+    const { exercise } =
+      this.trainingPlanService.validateTrainingActionExerciseRef(training, ref);
+
+    const { setNumber } = ref;
+    if (setNumber === undefined)
+      throw new BadRequestException('Set number is required to update a set');
+
+    if (setNumber < 1 || setNumber > exercise.sets.length)
+      throw new NotFoundException('Set not found in exercise');
+
+    exercise.sets[setNumber - 1] = {
+      ...exercise.sets[setNumber - 1],
+      ...payload.set,
+      setNumber,
+    };
 
     return training;
   }

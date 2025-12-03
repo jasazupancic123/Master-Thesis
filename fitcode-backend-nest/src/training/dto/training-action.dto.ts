@@ -26,16 +26,19 @@ export enum TrainingAction {
   // virtual subgroup (payload must include componentId and parentId)
   ADD_VIRTUAL_SUBGROUP = 'ADD_VIRTUAL_SUBGROUP',
   UPDATE_VIRTUAL_SUBGROUP = 'UPDATE_VIRTUAL_SUBGROUP',
-  REMOVE_VIRTUAL_SUBGROUP = 'REMOVE_VIRTUAL_SUBGROUP',
+  REMOVE_VIRTUAL_SUBGROUP = 'REMOVE_VIRTUAL_SUBGROUP', */
 
   // superset (payload must include componentId and optionally subgroupId)
   ADD_SUPERSET = 'ADD_SUPERSET',
-  UPDATE_SUPERSET = 'UPDATE_SUPERSET', // warmup, cooldown, main set
-  REMOVE_SUPERSET = 'REMOVE_SUPERSET', */
+  // UPDATE_SUPERSET_TO_CIRCUIT = 'UPDATE_SUPERSET_TO_CIRCUIT',
+  // UPDATE_SUPERSET_TO_BLOCK = 'UPDATE_SUPERSET_TO_BLOCK',
+  // UPDATE_SUPERSET_TO_WARMUP = 'UPDATE_SUPERSET_TO_WARMUP',
+  // UPDATE_SUPERSET_TO_COOLDOWN = 'UPDATE_SUPERSET_TO_COOLDOWN',
+  REMOVE_SUPERSET = 'REMOVE_SUPERSET',
 
   // exercise
   ADD_EXERCISE = 'ADD_EXERCISE',
-  // UPDATE_EXERCISE = 'UPDATE_EXERCISE', // method
+  // APPLY_METHOD_TO_EXERCISE = 'APPLY_METHOD_TO_EXERCISE',
   REMOVE_EXERCISE = 'REMOVE_EXERCISE',
 
   // set (payload must include componentId, optionally subgroupId, and mandatory supersetIndex and exerciseId)
@@ -98,9 +101,17 @@ export class TrainingActionRef {
 export class TrainingActionPayload {
   @ValidateNested()
   @Type(() => ExerciseSet)
-  @ApiProperty({ type: () => ExerciseSet })
+  @ApiPropertyOptional({ type: () => ExerciseSet })
+  @IsOptional()
   @Expose()
   set?: ExerciseSet;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  methodId?: string;
 }
 
 export class TrainingActionPayloadDto {

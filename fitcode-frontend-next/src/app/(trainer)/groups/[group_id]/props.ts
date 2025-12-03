@@ -13,10 +13,7 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import type {
-  UserProgress,
-  Workload,
-} from '@/core/training/type/workload.type';
+import type { UserProgress } from '@/core/training/type/workload.type';
 import type { Day } from '@/lib/common/service/date.util';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { Pagination } from '@/lib/common/type/paginate.type';
@@ -45,8 +42,6 @@ export type GroupContextProps = GroupIdPageProps & {
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
-  trainings: Training[];
-  setTrainings: SetState<Training[]>;
   filteredUsers: AuthUser[];
   setFilteredUsers: SetState<AuthUser[]>;
   detectedChanges: boolean;
@@ -78,9 +73,6 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
-  selectedAthleteCompletedWorkloads: Workload[];
-  setSelectedAthleteCompletedWorkloads: SetState<Workload[]>;
-  isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
   expandedExercisesView: boolean;
   setExpandedExercisesView: SetState<boolean>;
