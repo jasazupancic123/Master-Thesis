@@ -12,14 +12,17 @@ import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import useTrainerGroupHeaderUtils from '../trainer-group-header/hooks/use-utils';
 import { theme } from '@/app/style';
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINK_DASHBOARD } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 import Logo from '@/ui/logo';
 
 export default function TrainerTrainingInProgressHeader() {
   const router = useRouter();
 
+  const { view } = useCoachTrainingHeader();
   const { user } = useAuthenticatedAuth();
 
   const {
@@ -28,6 +31,8 @@ export default function TrainerTrainingInProgressHeader() {
     setOpenProfileMenu,
     setAnchorProfileEl,
   } = useTrainerGroupHeaderUtils();
+
+  if (view === TrackingMethod.CAMERA) return null;
 
   return (
     <Box

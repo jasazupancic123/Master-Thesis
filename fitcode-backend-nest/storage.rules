@@ -27,8 +27,8 @@ service firebase.storage {
     }
 
     match /training/{trainingId}/{fileId} {
-      allow read:  if hasAnyRole(['athlete','trainer']);
-      allow write: if hasAnyRole(['athlete','trainer']);
+      allow read:  if hasAnyRole(['athlete','trainer','manager']);
+      allow write: if hasAnyRole(['athlete','trainer','manager']);
     }
   }
 }

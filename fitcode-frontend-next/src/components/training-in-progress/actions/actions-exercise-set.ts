@@ -100,6 +100,7 @@ export const finishSet = async (state: {
       handleUpsertSetFromStationView,
       workloadInput,
     } = stationsViewProps;
+
     const workload = createEmptyPartialWorkload({
       individualTraining,
       workloads,

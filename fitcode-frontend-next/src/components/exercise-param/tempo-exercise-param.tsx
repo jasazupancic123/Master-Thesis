@@ -214,8 +214,8 @@ export function TempoExerciseParam({
             <ExerciseParamValueText
               value={
                 lib.common.typeChecker.isFourNumberArray(value)
-                  ? `${value[0]}:${value[1]}:${value[2]}:${value[3]}`
-                  : `${value[0]}:${value[1]}:${value[2]}`
+                  ? `${value[0]?.toFixed(1)}:${value[1]?.toFixed(1)}:${value[2]?.toFixed(1)}:${value[3]?.toFixed(1)}`
+                  : `${value[0]?.toFixed(1)}:${value[1]?.toFixed(1)}:${value[2]?.toFixed(1)}`
               }
               secondary={trainingInProgressSecondaryItem}
             />

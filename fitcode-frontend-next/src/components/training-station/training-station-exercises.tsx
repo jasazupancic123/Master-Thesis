@@ -1,44 +1,70 @@
-import { Box, Typography } from '@mui/material';
+import {
+  Box,
+  LinearProgress,
+  linearProgressClasses,
+  Typography,
+} from '@mui/material';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
-import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 
-export default function TrainingStationExercises() {
+interface Props {
+  exercise: TrainingExercise;
+}
+
+export default function TrainingStationExerciseCard(props: Props) {
   const {
     station,
     individualTrainings,
     component,
     selectedUser,
     selectedExercise,
+    workloads,
     setSelectedExercise,
     setSelectedSetIndex,
   } = useCoachTrainingStation();
+
+  const { exercise } = props;
 
   const individualTraining = individualTrainings.find(
     (t) => t.userId === selectedUser?.uid
   );
 
-  const individualExercises =
-    individualTraining?.components
-      .find((c) => c.id === component?.id)
-      ?.supersets.flatMap((s) => s.exercises) || [];
+  const [progress, setProgress] = useState(0);
 
-  const userExercises = station?.exercises.filter((e) =>
-    individualExercises.some((ie) => ie.id === e.id)
-  );
-
-  // Prevents selected exercise from being invalid when switching users
+  // Update progress when selected exercise or individual training changes
   useEffect(() => {
-    if (!(userExercises || []).some((e) => e.id === selectedExercise?.id)) {
-      setSelectedExercise((userExercises || [])[0] || null);
-      setSelectedSetIndex(0);
+    if (!component || !selectedExercise || !individualTraining) {
+      setProgress(0);
+      return;
     }
-  }, [selectedUser, station]);
+
+    const completedUserExerciseWorkloads = workloads.filter((wl) => {
+      return (
+        wl.exerciseId === exercise.id &&
+        wl.userId === selectedUser?.uid &&
+        wl.id !== undefined // if it has an id, it means it's saved (completed)
+      );
+    });
+
+    const totalSets = individualTraining
+      ? individualTraining.components
+          .find((c) => c.id === component.id)
+          ?.supersets.flatMap((s) => s.exercises)
+          .find((e) => e.id === exercise.id)?.sets.length || 0
+      : 0;
+
+    setProgress(
+      totalSets === 0
+        ? 0
+        : (completedUserExerciseWorkloads.length / totalSets) * 100
+    );
+  }, [selectedExercise, individualTraining, workloads, exercise, component]);
 
   if (!station) return null;
 
@@ -49,73 +75,89 @@ export default function TrainingStationExercises() {
 
   return (
     <Box
-      maxWidth="100%"
+      key={exercise.id}
+      width={IMAGES_WIDTH}
       display="flex"
-      sx={{ mx: 'auto', overflowX: 'auto', ...styledScrollbarSx(theme), px: 1 }}
-      gap={1}
+      flexDirection="column"
+      alignItems="center"
+      gap={0.5}
+      onClick={() => {
+        setSelectedExercise(exercise);
+        setSelectedSetIndex(0);
+      }}
+      sx={{
+        cursor: 'pointer',
+        position: 'relative',
+      }}
     >
-      {(userExercises || []).map((exercise) => (
-        <Box
-          key={exercise.id}
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        width={IMAGES_WIDTH}
+        height={IMAGES_HEIGHT}
+        sx={{
+          borderRadius: 2,
+          border:
+            selectedExercise?.id === exercise.id
+              ? `2px solid ${theme.palette.primary.main}`
+              : '2px solid transparent',
+          overflow: 'hidden',
+          flex: '0 0 auto',
+          position: 'relative',
+          opacity: progress === 100 ? 0.5 : 1,
+        }}
+      >
+        <Image
+          src={exercise.exercise?.imageUrl || EXERCISE_DEFAULT_IMG_URL}
+          alt="Exercise Image"
           width={IMAGES_WIDTH}
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={0.5}
-          onClick={() => {
-            setSelectedExercise(exercise);
-            setSelectedSetIndex(0);
+          height={IMAGES_HEIGHT}
+          unoptimized={lib.common.env.unoptimizeImages()}
+          style={{
+            filter: 'grayscale(100%)',
+            objectFit: 'cover',
+            display: 'block',
           }}
-          sx={{
-            cursor: 'pointer',
-          }}
-        >
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            width={IMAGES_WIDTH}
-            height={IMAGES_HEIGHT}
-            sx={{
-              borderRadius: 2,
-              border:
-                selectedExercise?.id === exercise.id
-                  ? `2px solid ${theme.palette.primary.main}`
-                  : '2px solid transparent',
-              overflow: 'hidden',
-              flex: '0 0 auto',
-              position: 'relative',
-            }}
-          >
-            <Image
-              src={exercise.exercise?.imageUrl || EXERCISE_DEFAULT_IMG_URL}
-              alt="Exercise Image"
-              width={IMAGES_WIDTH}
-              height={IMAGES_HEIGHT}
-              unoptimized={lib.common.env.unoptimizeImages()}
-              style={{
-                filter: 'grayscale(100%)',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
-          </Box>
+        />
+      </Box>
 
-          <Typography
-            fontSize={12}
-            fontWeight={500}
-            textAlign="center"
-            sx={{
-              display: '-webkit-box',
-              WebkitLineClamp: 1,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {exercise.exercise?.name || 'Unknown Exercise'}
-          </Typography>
-        </Box>
-      ))}
+      <Typography
+        fontSize={12}
+        fontWeight={500}
+        textAlign="center"
+        sx={{
+          display: '-webkit-box',
+          WebkitLineClamp: 1,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}
+      >
+        {exercise.exercise?.name || 'Unknown Exercise'}
+      </Typography>
+      <LinearProgress
+        variant="determinate"
+        value={progress}
+        sx={{
+          display: progress > 0 ? undefined : 'none',
+          position: 'absolute',
+          bottom: 26,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '90%',
+          height: 4,
+          borderRadius: 5,
+          border: `1px solid ${theme.palette.primary.main}`,
+          bgcolor: 'rgba(0, 0, 0, 0.3)',
+          [`&.${linearProgressClasses.bar}`]: {
+            bgcolor: theme.palette.primary.main,
+          },
+          [`&.${linearProgressClasses.colorPrimary}`]: {
+            bgcolor: theme.palette.background.default,
+          },
+          zIndex: 10,
+        }}
+      />
     </Box>
   );
 }
