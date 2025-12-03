@@ -7,16 +7,16 @@ export class InstitutionUtil {
     return items.map((item: T) => {
       item.owner = users.find((user) => user.uid === item.ownerId)!;
 
-      item.trainerIds = item.members
+      const trainerIds = item.members
         .filter((m) => m.role === UserRole.TRAINER)
         .map((m) => m.id);
 
-      item.athleteIds = item.members
+      const athleteIds = item.members
         .filter((m) => m.role === UserRole.ATHLETE)
         .map((m) => m.id);
 
-      item.trainers = users.filter((u) => item.trainerIds.includes(u.uid));
-      item.athletes = users.filter((u) => item.athleteIds.includes(u.uid));
+      item.trainers = users.filter((u) => trainerIds.includes(u.uid));
+      item.athletes = users.filter((u) => athleteIds.includes(u.uid));
       return item;
     });
   }
