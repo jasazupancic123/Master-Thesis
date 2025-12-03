@@ -79,9 +79,6 @@ export const finishSet = async (state: {
     stationsViewProps,
   } = state;
 
-  console.log('IMAGES L:', imagesL);
-  console.log('IMAGES R:', imagesR);
-
   const set = exercise.sets[setIndex];
 
   const photoUrls = [];
@@ -104,8 +101,6 @@ export const finishSet = async (state: {
       workloadInput,
     } = stationsViewProps;
 
-    console.log('workloadInput in finishSet:', workloadInput);
-
     const workload = createEmptyPartialWorkload({
       individualTraining,
       workloads,
@@ -115,8 +110,6 @@ export const finishSet = async (state: {
       setIndex,
       workloadInput,
     });
-
-    console.log('workload created in finishSet:', workload);
 
     if (!workload) return;
 

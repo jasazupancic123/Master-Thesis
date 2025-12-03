@@ -4,20 +4,18 @@ import {
   Error,
   FontDownload,
   FontDownloadOff,
-  MoreVert,
-  SettingsOutlined,
   Warning,
 } from '@mui/icons-material';
 import { alpha, Box, Button, IconButton, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
 import { theme } from '@/app/style';
+import type { SetState } from '@/lib/common/type/state.type';
+import { useCoachTraining } from '@/store/coach-training.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
-import { SetState } from '@/lib/common/type/state.type';
-import { useRouter } from 'next/navigation';
-import { useCoachTraining } from '@/store/coach-training.provider';
 
 interface Props {
   displayUserNames: boolean;

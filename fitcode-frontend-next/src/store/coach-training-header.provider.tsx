@@ -1,8 +1,9 @@
 'use client';
 
-import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import { SetState } from '@/lib/common/type/state.type';
 import { createContext, useContext, useState } from 'react';
+
+import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface ICoachTrainingHeaderContext {
   view: TrackingMethod;

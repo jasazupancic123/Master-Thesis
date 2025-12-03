@@ -8,11 +8,10 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
-import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
-import { TrainingExercise } from '@/core/training/type/training-exercise.type';
 
 interface Props {
   exercise: TrainingExercise;
