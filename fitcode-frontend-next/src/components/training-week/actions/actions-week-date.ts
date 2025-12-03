@@ -246,8 +246,8 @@ async function handleCreateTraining(
   mainCtx: IMainContext
 ) {
   const { date, from, period, selectedComponents } = input;
-  const { exercises } = mainCtx;
-  const { group, cycle, trainings, setTrainings } = groupCtx;
+  const { exercises, setTrainings } = mainCtx;
+  const { group, cycle, trainings } = groupCtx;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
@@ -293,15 +293,16 @@ async function handleCreateTraining(
         ),
       });
 
-      setTrainings((prev) =>
-        [...prev, temp].sort(
+      setTrainings((prev) => ({
+        ...prev,
+        data: [...prev.data, temp].sort(
           (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-        )
-      );
+        ),
+      }));
     },
     (snapshot) => {
       setIsCreatingTraining?.(false);
-      setTrainings(snapshot.trainings);
+      setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
     },
     async () =>
       await TrainingController.getInstance().create({
@@ -317,14 +318,16 @@ async function handleCreateTraining(
       TrainingService.mapData(training, { exercises });
 
       // update the training with the response from the server
-      setTrainings((prev) =>
-        [...prev.filter((t) => t.id !== tempId), training].sort(
-          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-        )
-      );
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data
+          .map((t) => (t.id === tempId ? training : t))
+          .sort(
+            (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+          ),
+      }));
 
       toast.success('Training created successfully');
-
       setIsCreatingTraining?.(false);
     }
   );

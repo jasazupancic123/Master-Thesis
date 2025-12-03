@@ -1,5 +1,5 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { endOfDay, startOfDay } from 'date-fns';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import {
   CollectionGroup,
   CollectionReference,
@@ -32,6 +32,10 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
   TrainingComponentUserStatus,
   TrainingComponentUserStatusRef
 > {
+  private readonly logger = new Logger(
+    TrainingComponentUserStatusRepository.name,
+  );
+
   collectionName = FirestoreCollection.TRAINING_COMPONENT_USER_STATUS;
 
   constructor(
@@ -66,6 +70,22 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<TrainingComponentUserStatus[]> {
     const snapshot = await query(this.collectionGroup()).get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(
+        doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+      ),
+    );
+  }
+
+  async getAllByUser(
+    institutionId: string,
+    userId: string,
+  ): Promise<TrainingComponentUserStatus[]> {
+    const snapshot = await this.collectionGroup()
+      .where('institutionId', '==', institutionId)
+      .where('userId', '==', userId)
+      .get();
+
     return snapshot.docs.map((doc) =>
       this.firebase.serialize(
         doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
@@ -283,6 +303,43 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
 
     result.sort((a, b) => a.from.getTime() - b.from.getTime());
     return result;
+  }
+
+  async completePastActiveTrainingsForAthlete(userId: string) {
+    const pastTrainings = await this.collectionGroup()
+      .where('userId', '==', userId)
+      .where('status', 'in', [
+        TrainingStatus.IN_PROGRESS,
+        TrainingStatus.PAUSED,
+      ])
+      .where('from', '<', Timestamp.fromDate(endOfDay(subDays(new Date(), 1)))) // end of yesterday
+      .get()
+      .then((snapshot) =>
+        snapshot.docs.map((doc) =>
+          this.firebase.serialize(
+            doc.data() as FirestoreEntity<TrainingComponentUserStatus>,
+          ),
+        ),
+      );
+
+    this.logger.log(
+      `Completing ${pastTrainings.length} past active trainings for athlete ${userId} ...`,
+    );
+
+    await this.firebase.paginateBatches(
+      pastTrainings.map((status) => ({
+        operation: 'update',
+        ref: this.doc({
+          trainingId: status.trainingId,
+          componentId: status.componentId,
+          uid: status.userId,
+        }),
+        data: {
+          status: TrainingStatus.COMPLETED,
+          to: Timestamp.fromDate(endOfDay(status.from)),
+        },
+      })),
+    );
   }
 
   getKey(ref: TrainingComponentUserStatusRef) {

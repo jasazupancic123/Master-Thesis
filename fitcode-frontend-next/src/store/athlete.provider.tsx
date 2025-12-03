@@ -3,10 +3,13 @@
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
+import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import { Controller } from '@/core/controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
   LINK_ATHLETE_HOME,
@@ -25,6 +28,7 @@ interface IAthleteContext {
   setHasJustLoggedIn: SetState<boolean>;
   filter: ILink;
   setFilter: SetState<ILink>;
+  recalculateReports: () => Promise<void>;
 }
 
 const AthleteContext = createContext<IAthleteContext | null>(null);
@@ -34,6 +38,7 @@ export const useAthlete = () => useContext(AthleteContext)!;
 export function AthleteProvider(props: React.PropsWithChildren) {
   const { children } = props;
   const { institution } = useMain();
+  const { user } = useAuthenticatedAuth();
   const [selectedDate, setSelectedDate] = useState(dayjs(new Date()));
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState(true);
 
@@ -42,6 +47,28 @@ export function AthleteProvider(props: React.PropsWithChildren) {
     loading: false,
     error: null,
   });
+
+  async function recalculateReports() {
+    try {
+      await TrainingController.getInstance().recalculateReports(
+        institution.id,
+        user.uid
+      );
+
+      // refetch reports
+      setReports((prev) => ({ ...prev, loading: true }));
+      const controller = Controller.getInstance();
+      const [reports] = await Promise.allSettled([
+        controller.training.findReports(institution.id),
+      ]);
+
+      setReports(settleState(reports, []));
+      toast.success('Reports recalculated');
+    } catch (e) {
+      console.error('Failed to recalculate reports', e);
+      toast.error('Failed to recalculate reports');
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +103,7 @@ export function AthleteProvider(props: React.PropsWithChildren) {
     filter,
     setFilter,
     reports,
+    recalculateReports,
   };
 
   return (

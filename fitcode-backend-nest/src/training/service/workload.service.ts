@@ -58,21 +58,31 @@ export class WorkloadService {
     );
   }
 
+  async getAllByTraining(trainingId: string) {
+    return await this.repository.findAllByTraining({
+      trainingId,
+    });
+  }
+
+  async getAllByTrainingByUser(
+    ref: Pick<WorkloadRef, 'userId' | 'trainingId'>,
+  ) {
+    return await this.repository.findAllByTrainingByUser(ref, ref.userId);
+  }
+
   collection(trainingId: string) {
     return this.repository.collection({ trainingId });
   }
 
-  async getUserExerciseReport(ref: ExerciseRef & { userId: string }) {
-    return await this.firebase.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', '==', ref.userId)
-      .where('exerciseId', '==', ref.exerciseId)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
-        ),
-      );
+  async getExerciseReportByUsers(ref: ExerciseRef & { userIds: string[] }) {
+    return await this.firebase.batchIn<Workload>(
+      'userId',
+      ref.userIds,
+      this.firebase.firestore.collectionGroup(
+        FirestoreCollection.TRAINING_WORKLOAD,
+      ),
+      (q) => q.where('exerciseId', '==', ref.exerciseId),
+    );
   }
 
   /**

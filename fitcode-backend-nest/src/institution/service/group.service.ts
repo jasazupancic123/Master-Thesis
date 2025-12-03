@@ -270,7 +270,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async updateMembers(user: User, ref: GroupRef, input: UpdateMemberDto) {
+  async updateAthletes(user: User, ref: GroupRef, input: UpdateMemberDto) {
     const { userId: memberId, add } = input;
 
     // validate
@@ -311,6 +311,35 @@ export class GroupService implements Permission<Group, Institution> {
     );
 
     await this.firebase.paginateBatches(operations);
+  }
+
+  @LogMethod()
+  async updateTrainers(user: User, ref: GroupRef, input: UpdateMemberDto) {
+    const { userId: trainerId, add } = input;
+
+    // validate
+    const group = await this.findOneByIdOrFail(user, ref);
+    if (!this.canEdit(user, group, group.institution))
+      throw new UnauthorizedException('You are not allowed to update trainers');
+
+    // check if trainer exists
+    const trainer = await this.authService.findOneBy('id', trainerId);
+    if (!trainer) throw new BadRequestException('Trainer does not exist');
+    if (!this.firebase.isTrainer(trainer))
+      throw new BadRequestException('Member must be a trainer');
+
+    // check if trainer is already in group
+    if (group.trainerIds.includes(trainer.uid) && add)
+      throw new BadRequestException(`Trainer is already in the group`);
+
+    // check if trainer is in institution
+    if (!this.institutionService.isTrainer(group.institution, trainer))
+      throw new BadRequestException(`Trainer is not part of the institution`);
+
+    // update group trainers
+    await this.firebase.paginateBatches([
+      this.repository.getUpdateTrainerOperation(ref, trainer.uid, add),
+    ]);
   }
 
   @OnEvent(INSTITUTION_ATHLETE_EVENT, { async: true, promisify: true })

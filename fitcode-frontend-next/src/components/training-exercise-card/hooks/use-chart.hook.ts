@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_CHART_PARAMS } from '../chart';
 import { getAthleteChart, getGroupChart } from '../chart.util';
 import { core } from '@/core/core.service';
+import { TrainingController } from '@/core/training/training.controller';
 import type { ChartWorkloadData } from '@/core/training/type/chart-workload-data.type';
 import type { ExerciseParamFieldExtended } from '@/core/training/type/exercise-set.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
@@ -26,12 +28,12 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
   const { trainings } = groupContext;
   const { selectedExercise } = supersetsContext;
 
-  const {
-    training,
-    selectedAthlete,
-    selectedAthleteCompletedWorkloads: selectedAthleteWorkloads,
-    component,
-  } = trainerDayViewContext;
+  const { training, selectedAthlete, component } = trainerDayViewContext;
+
+  const isSettingAthleteWorkloads = useRef(false);
+  const [selectedAthleteWorkloads, setSelectedAthleteWorkloads] = useState<
+    Workload[]
+  >([]);
 
   const [selectedParams, setSelectedParams] =
     useState<ExerciseParamFieldExtended[]>(DEFAULT_CHART_PARAMS);
@@ -45,6 +47,29 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
 
   const [paddingForChartBackground, setPaddingForChartBackground] =
     useState<Dimensions>({ width: 0, height: 0 });
+
+  // Fetch exercise workloads for athlete
+  useEffect(() => {
+    if (!selectedAthlete || exercise.id !== selectedExercise?.id) {
+      setSelectedAthleteWorkloads([]);
+      return;
+    }
+
+    const fetchWorkloads = async () => {
+      isSettingAthleteWorkloads.current = true;
+      const workloads =
+        await TrainingController.getInstance().getExerciseWorkloadsByManyUsers(
+          groupContext.institution.id,
+          exercise.id,
+          [selectedAthlete.uid]
+        );
+
+      setSelectedAthleteWorkloads(workloads);
+      isSettingAthleteWorkloads.current = false;
+    };
+
+    fetchWorkloads().then();
+  }, [selectedExercise?.id, selectedAthlete?.uid]);
 
   // useEffect to init avg workloads for chart
   useEffect(() => {
@@ -127,6 +152,7 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
   }, [window.innerWidth]);
 
   return {
+    selectedAthleteWorkloads,
     chartData,
     setChartData,
     selectedParams,

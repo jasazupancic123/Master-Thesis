@@ -40,11 +40,11 @@ export default function TrainingMembersSubgroup(
 ) {
   const theme = useTheme();
 
-  const mainConext = useMain();
+  const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
-  const { users } = mainConext;
+  const { users } = mainContext;
 
   const {
     component,
@@ -159,6 +159,7 @@ export default function TrainingMembersSubgroup(
                           subgroupId: selectedSubgroup.id,
                         },
                         {
+                          useMain: mainContext,
                           useGroup: groupContext,
                           useTrainerDayViewContext: {
                             ...trainerDayViewContext,

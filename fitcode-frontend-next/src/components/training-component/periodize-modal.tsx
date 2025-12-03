@@ -11,7 +11,6 @@ import type { TrainingComponent } from '@/core/training/type/training-component.
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
@@ -28,12 +27,10 @@ export default function PeriodizeModal(
   const router = useRouter();
 
   const mainContext = useMain();
-  const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
   const { exercises: allExercises } = mainContext;
-
-  const { setTrainings } = groupContext;
+  const { setTrainings } = mainContext;
 
   const {
     training,
@@ -92,15 +89,16 @@ export default function PeriodizeModal(
                 );
                 if (currentTraining) setTraining(currentTraining);
 
-                setTrainings((prev) =>
-                  prev.map((t) => {
+                setTrainings((prev) => ({
+                  ...prev,
+                  data: prev.data.map((t) => {
                     const newTraining = periodizedTrainings.find(
                       (nt) => nt.id === t.id
                     );
 
                     return newTraining ? newTraining : t;
-                  })
-                );
+                  }),
+                }));
 
                 if (selectedSubgroup) {
                   setSelectedSubgroup((prev) => {

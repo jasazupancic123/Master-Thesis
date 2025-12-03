@@ -1,5 +1,6 @@
+import { Refresh } from '@mui/icons-material';
 import type { SxProps } from '@mui/material';
-import { Box, Grid2, Tooltip, Typography } from '@mui/material';
+import { Box, Grid2, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -11,6 +12,7 @@ import useDashboardHomeComponents from './hooks/use-components.hook';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { useAthlete } from '@/store/athlete.provider';
@@ -21,7 +23,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardHome() {
   const screenSize = useScreenSize();
-  const { user } = useAuthenticatedAuth();
+  const { user, role } = useAuthenticatedAuth();
 
   const mainContext = useMain();
   const dashboardContext = useDashboard();
@@ -300,9 +302,25 @@ export default function DashboardHome() {
               </>
             ) : athleteContext ? (
               <>
-                <Typography variant="h6" lineHeight={1}>
-                  Reports
-                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Typography variant="h6" lineHeight={1}>
+                    Reports
+                  </Typography>
+
+                  {role === UserRole.ATHLETE && (
+                    <Tooltip title="Recalculate Reports">
+                      <IconButton
+                        onClick={() => athleteContext.recalculateReports()}
+                      >
+                        <Refresh />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
 
                 <AthleteReports />
               </>
