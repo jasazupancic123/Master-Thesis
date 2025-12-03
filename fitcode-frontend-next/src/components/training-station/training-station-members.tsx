@@ -1,4 +1,4 @@
-import { Avatar, Box } from '@mui/material';
+import { Avatar, Box, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 
 import { theme } from '@/app/style';
@@ -8,9 +8,15 @@ import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
-export default function TrainingStationMembers() {
+interface Props {
+  displayUserNames: boolean;
+}
+
+export default function TrainingStationMembers(props: Props) {
   const { users: allUsers } = useMain();
   const { station, selectedUser, setSelectedUser } = useCoachTrainingStation();
+
+  const { displayUserNames } = props;
 
   const users = allUsers.filter((u) =>
     station?.users.some((su) => su.uid === u.uid)
@@ -50,7 +56,7 @@ export default function TrainingStationMembers() {
         display="flex"
         flexWrap="wrap"
         justifyContent="center"
-        alignItems="center"
+        alignItems="flex-start"
         gap={2}
       >
         {filteredUsers
@@ -60,25 +66,50 @@ export default function TrainingStationMembers() {
           .map((user) => (
             <Box
               key={user.uid}
-              sx={{
-                border:
-                  selectedUser?.uid === user.uid
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : 'none',
-                borderRadius: '50%',
-              }}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="flex-start"
             >
-              <Avatar
-                key={user.uid}
-                src={user.photoURL || USER_AVATAR_IMG_URL}
+              <Box
                 sx={{
-                  width: 50,
-                  height: 50,
-                  cursor: 'pointer',
-                  filter: 'grayscale(100%)',
+                  border:
+                    selectedUser?.uid === user.uid
+                      ? `2px solid ${theme.palette.primary.main}`
+                      : '2px solid transparent',
+                  borderRadius: '50%',
                 }}
-                onClick={() => setSelectedUser(user)}
-              />
+              >
+                <Avatar
+                  key={user.uid}
+                  src={user.photoURL || USER_AVATAR_IMG_URL}
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    cursor: 'pointer',
+                    filter: 'grayscale(100%)',
+                  }}
+                  onClick={() => setSelectedUser(user)}
+                />
+              </Box>
+
+              {displayUserNames && (
+                <Typography
+                  fontSize={12}
+                  textAlign="center"
+                  sx={{
+                    mt: 0.5,
+                    maxWidth: 60,
+                    WebkitLineClamp: 2,
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {user.displayName}
+                </Typography>
+              )}
             </Box>
           ))}
       </Box>

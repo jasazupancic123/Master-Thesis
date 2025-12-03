@@ -2,6 +2,7 @@ import {
   CheckBox,
   CheckBoxOutlineBlank,
   Delete,
+  Dock,
   IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,
@@ -216,6 +217,20 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         }}
                       >
                         <StopCircle fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Create station">
+                      <IconButton
+                        sx={{ p: 0, m: 0 }}
+                        onClick={async () => {
+                          if (!training || !component) return;
+
+                          router.push(
+                            `/training/${training.id}/component/${component.id}/station`
+                          );
+                        }}
+                      >
+                        <Dock fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </>
