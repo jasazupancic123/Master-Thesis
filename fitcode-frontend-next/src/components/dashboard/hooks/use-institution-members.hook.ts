@@ -51,9 +51,7 @@ export default function useInstitutionMembers() {
         setSelectedInstitution((prev) => ({
           ...prev!,
           trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
-          trainerIds: prev!.trainerIds
-            ? [...prev!.trainerIds, user.uid]
-            : [user.uid],
+          members: [...prev!.members, { id: user.uid, role: UserRole.TRAINER }],
         }));
       } else if (role === UserRole.ATHLETE) {
         await controller.addAthlete(institutionId, { userId });
@@ -61,9 +59,7 @@ export default function useInstitutionMembers() {
         setSelectedInstitution((prev) => ({
           ...prev!,
           athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
-          athleteIds: prev!.athleteIds
-            ? [...prev!.athleteIds, user.uid]
-            : [user.uid],
+          members: [...prev!.members, { id: user.uid, role: UserRole.ATHLETE }],
         }));
       }
 
@@ -115,7 +111,7 @@ export default function useInstitutionMembers() {
             trainers: prev!.trainers?.filter(
               (trainer) => trainer.uid !== userId
             ),
-            trainerIds: prev!.trainerIds?.filter((id) => id !== userId),
+            members: prev!.members.filter((member) => member.id !== userId),
           }));
         else if (role === UserRole.ATHLETE)
           setSelectedInstitution((prev) => ({
@@ -124,7 +120,7 @@ export default function useInstitutionMembers() {
             athletes: prev!.athletes?.filter(
               (athlete) => athlete.uid !== userId
             ),
-            athleteIds: prev!.athleteIds?.filter((id) => id !== userId),
+            members: prev!.members.filter((member) => member.id !== userId),
           }));
 
         setGroups((prev) =>
@@ -214,17 +210,13 @@ export default function useInstitutionMembers() {
         setSelectedInstitution((prev) => ({
           ...prev!,
           athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
-          athleteIds: prev!.athleteIds
-            ? [...prev!.athleteIds, user.uid]
-            : [user.uid],
+          members: [...prev!.members, { id: user.uid, role: UserRole.ATHLETE }],
         }));
       } else if (registerRole === UserRole.TRAINER) {
         setSelectedInstitution((prev) => ({
           ...prev!,
           trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
-          trainerIds: prev!.trainerIds
-            ? [...prev!.trainerIds, user.uid]
-            : [user.uid],
+          members: [...prev!.members, { id: user.uid, role: UserRole.TRAINER }],
         }));
       }
 
@@ -353,9 +345,6 @@ export default function useInstitutionMembers() {
             (u) => u.customClaims.role[0] === UserRole.TRAINER
           );
 
-          const athleteIds = athletes.map((u) => u.uid);
-          const trainerIds = trainers.map((u) => u.uid);
-
           // update selected institution
           setSelectedInstitution((prev) =>
             !prev
@@ -363,9 +352,18 @@ export default function useInstitutionMembers() {
               : {
                   ...prev,
                   athletes: [...(prev.athletes || []), ...athletes],
-                  athleteIds: [...(prev.athleteIds || []), ...athleteIds],
                   trainers: [...(prev.trainers || []), ...trainers],
-                  trainerIds: [...(prev.trainerIds || []), ...trainerIds],
+                  members: [
+                    ...(prev.members || []),
+                    ...athletes.map((a) => ({
+                      id: a.uid,
+                      role: UserRole.ATHLETE,
+                    })),
+                    ...trainers.map((t) => ({
+                      id: t.uid,
+                      role: UserRole.TRAINER,
+                    })),
+                  ],
                 }
           );
 
