@@ -1,1 +1,3 @@
 export const BACKEND_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+export const FACE_ENCODER_API_BASE_URL =
+  process.env.NEXT_PUBLIC_FACE_ENCODER_API_URL;

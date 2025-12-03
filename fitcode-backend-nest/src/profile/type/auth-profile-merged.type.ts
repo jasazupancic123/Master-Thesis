@@ -9,8 +9,13 @@ export type AuthProfileMerged = Pick<
 > &
   Pick<
     Profile,
-    'birthDate' | 'gender' | 'level' | 'sport' | 'photoURLBase64' | 'wellness'
+    | 'faceEmbedding'
+    | 'birthDate'
+    | 'gender'
+    | 'level'
+    | 'sport'
+    | 'photoURLBase64'
+    | 'wellness'
   > & {
     role: UserRole;
-    faceEmbedding: number[];
   };

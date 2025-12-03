@@ -4,9 +4,6 @@ import type { UserRole } from '@src/auth/enum/user-role.enum';
 
 export type CustomClaims = {
   role: UserRole[];
-  faceFrontUrl?: string;
-  faceRightUrl?: string;
-  faceLeftUrl?: string;
 };
 
 /**

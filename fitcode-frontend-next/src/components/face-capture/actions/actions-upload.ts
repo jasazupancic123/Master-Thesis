@@ -5,9 +5,10 @@ import type { FaceCaptures } from '../types/face.type';
 import type { AuthController } from '@/core/auth/auth.controller';
 import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
+import { ProfileController } from '@/core/profile/profile.controller';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export async function uploadFaceCaptures(state: {
   customClaims: CustomClaims;
@@ -38,6 +39,8 @@ export async function uploadFaceCaptures(state: {
     ([_view, blob]) => !!blob
   ) as [keyof typeof captures, Blob][];
 
+  let frontImageBase64: string | undefined = undefined;
+
   try {
     // run uploads in parallel and populate URLs on the object
     await Promise.all(
@@ -53,32 +56,25 @@ export async function uploadFaceCaptures(state: {
           { maxDimensionCrop: 1000 }
         );
 
-        switch (view) {
-          case 'front':
-            updatedCustomClaims.faceFrontUrl = base64;
-            break;
-          case 'right':
-            updatedCustomClaims.faceRightUrl = base64;
-            break;
-          case 'left':
-            updatedCustomClaims.faceLeftUrl = base64;
-            break;
-        }
+        if (view === 'front') frontImageBase64 = base64;
       })
     );
 
-    await handleApiRequest(
-      router,
-      () => authController.updateCustomClaims(user.uid, updatedCustomClaims),
-      () => {
-        setCustomClaims(updatedCustomClaims);
-        toast.success('Face recognition images uploaded successfully!');
-        setIsCapturingFace(false);
-      },
-      undefined,
-      'Failed to post face recognition images'
-    );
-  } catch (_) {
+    if (!frontImageBase64) {
+      toast.error('Front face image not uploaded');
+      return;
+    }
+
+    const res = await new FaceEncoderController().embed(frontImageBase64);
+    if (!res.faceEmbedding || res.faceEmbedding.length === 0) {
+      toast.error('Empty face embeddings received');
+      return;
+    }
+
+    await ProfileController.getInstance().saveFaceEmbeddings(res.faceEmbedding);
+    toast.success('Face images uploaded successfully');
+  } catch (e) {
+    console.error('Error uploading face images', e);
     toast.error('Failed to upload face images');
   }
 }

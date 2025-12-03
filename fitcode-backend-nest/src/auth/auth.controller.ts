@@ -7,7 +7,6 @@ import { User } from '@src/common/type/firebase-auth.type';
 
 import { VerifyMagicLinkDto } from './dto/create-magic-link.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateCustomClaimsDto } from './dto/custom-claims.dto';
 import { IdTokenDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from './entity/user.entity';
@@ -46,16 +45,6 @@ export class AuthController {
     @Body() body: UpdateUserDto,
   ) {
     await this.authService.updateUser(user, id, body);
-  }
-
-  @Patch(':id/claims')
-  @Auth([UserRole.ADMIN, UserRole.MANAGER, UserRole.ATHLETE])
-  async updateCustomClaims(
-    @RequestUser() user: User,
-    @Param('id') id: string,
-    @Body() body: UpdateCustomClaimsDto,
-  ) {
-    await this.authService.updateCustomClaims(user, id, body);
   }
 
   @Post('register')

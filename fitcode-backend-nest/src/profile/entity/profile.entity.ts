@@ -3,6 +3,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -26,6 +27,11 @@ export class Profile extends TimestampEntity {
   @ApiProperty()
   @Expose()
   email: string;
+
+  @IsNumber({}, { each: true })
+  @ApiProperty({ type: Number, isArray: true })
+  @Expose()
+  faceEmbedding?: number[];
 
   @IsString()
   @ApiPropertyOptional()
