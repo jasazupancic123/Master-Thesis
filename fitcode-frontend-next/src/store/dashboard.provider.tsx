@@ -299,12 +299,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
             photoURL: input.photoURL,
           });
         }
-
-        if (input.role) {
-          await controller.updateCustomClaims(userId, {
-            role: [input.role],
-          });
-        }
       };
 
       await lib.common.generic.optimisticUpdate(

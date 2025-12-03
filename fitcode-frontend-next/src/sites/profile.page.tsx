@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowBack, CameraAlt, Check } from '@mui/icons-material';
+import { ArrowBack, CameraAlt } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -10,7 +10,6 @@ import {
   MenuItem,
   Select,
   TextField,
-  Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -314,40 +313,23 @@ export default function ProfilePage() {
             </Select>
           </FormControl>
         </Box>
-        {[
-          customClaims?.faceFrontUrl,
-          customClaims?.faceLeftUrl,
-          customClaims?.faceRightUrl,
-        ].some((url) => !url) ? (
-          <Box
-            width="100%"
-            display="flex"
-            justifyContent="center"
-            gap={1}
-            alignItems="center"
+
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          gap={1}
+          alignItems="center"
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ my: DEFAULT_MARGIN }}
+            onClick={() => setIsCapturingFace(true)}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ my: DEFAULT_MARGIN }}
-              onClick={() => setIsCapturingFace(true)}
-            >
-              <CameraAlt />
-            </Button>
-          </Box>
-        ) : (
-          <Typography
-            textAlign="center"
-            gap={0.5}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              color: theme.palette.success.main,
-            }}
-          >
-            Face recognition images already uploaded <Check />
-          </Typography>
-        )}
+            <CameraAlt />
+          </Button>
+        </Box>
       </Box>
       <Button
         variant="contained"
