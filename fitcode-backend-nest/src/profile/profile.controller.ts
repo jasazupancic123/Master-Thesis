@@ -6,6 +6,7 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import type { User } from '../common/type/firebase-auth.type';
 import { ImportProfilesDto } from './dto/import-profiles.dto';
+import { SaveFaceEmbeddingsDto } from './dto/save-face-embeddings.dto';
 import { SaveWellnessDto } from './dto/save-wellness.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileService } from './service/profile.service';
@@ -39,6 +40,18 @@ export class ProfileController {
     { profiles }: ImportProfilesDto,
   ) {
     return await this.profileService.importProfiles(user, profiles);
+  }
+
+  @Post('/embed')
+  @Auth([UserRole.ATHLETE])
+  async saveFaceEmbeddings(
+    @RequestUser() user: User,
+    @Body() body: SaveFaceEmbeddingsDto,
+  ) {
+    return await this.profileService.saveFaceEmbedding(
+      user,
+      body.faceEmbedding,
+    );
   }
 
   @Patch()

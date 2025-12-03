@@ -156,6 +156,11 @@ export class ProfileService implements Permission<Profile, Institution> {
     await this.repository.update(userId, input);
   }
 
+  @LogMethod()
+  async saveFaceEmbedding(user: User, embedding: number[]): Promise<void> {
+    await this.repository.update(user.uid, { faceEmbedding: embedding });
+  }
+
   canView(user: User, entity: Profile, institution?: Institution) {
     if (this.firebase.isAdmin(user)) return true; // admin can view any user
     if (user.uid === entity.uid) return true; // user can view their own profile
