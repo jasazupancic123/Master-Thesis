@@ -14,8 +14,6 @@ export interface Institution extends BaseEntity {
   owner: AuthUser;
   trainers: AuthUser[];
   athletes: AuthUser[];
-  trainerIds: string[]; // all managers and trainers
-  athleteIds: string[]; // all athletes
   groups?: Group[];
 }
 

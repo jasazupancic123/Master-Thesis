@@ -4,6 +4,7 @@ import { Avatar, Box, Typography } from '@mui/material';
 import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 import { theme } from '@/app/style';
 import type { AuthUser } from '@/core/auth/type/user.type';
+import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
 
@@ -22,7 +23,9 @@ export default function DashboardInstitutionMember(props: Props) {
     id: member.uid,
   });
 
-  const isTrainer = selectedInstitution?.trainerIds?.includes(member.uid);
+  const isTrainer = selectedInstitution?.members?.some(
+    (m) => m.id === member.uid && m.role === UserRole.TRAINER
+  );
 
   return (
     <Box
