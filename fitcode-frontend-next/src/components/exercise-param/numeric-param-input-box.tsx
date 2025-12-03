@@ -17,7 +17,6 @@ interface Props extends ModalProps {
 
 export default function NumericParamInputBoxModal(props: Props) {
   const {
-    value,
     exercise,
     setNumber,
     param,
@@ -31,8 +30,6 @@ export default function NumericParamInputBoxModal(props: Props) {
 
   const updateValue = (newValue: string) => {
     const parsedValue = isFloat ? parseFloat(newValue) : parseInt(newValue, 10);
-
-    console.log('parsedValue', parsedValue);
 
     if (isNaN(parsedValue) || parsedValue < 0) return;
 

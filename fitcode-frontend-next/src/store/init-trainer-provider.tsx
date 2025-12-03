@@ -10,7 +10,9 @@ import type { MainProviderProps } from '@/store/main.provider';
 import { CoachMainProvider } from '@/store/main.provider';
 import Alert from '@/ui/alert';
 
-export default async function InitTrainerProvider({ children }: React.PropsWithChildren) {
+export default async function InitTrainerProvider({
+  children,
+}: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 

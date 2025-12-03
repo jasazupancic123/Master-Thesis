@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Fragment } from 'react';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';

@@ -94,7 +94,7 @@ export class TrainingReportService {
       user,
       institutionId,
       { from: subDays(new Date(), 7), to: endOfDay(new Date()) },
-      { limit: 10 },
+      { limit: 1000 },
     );
 
     const componentStatuses =

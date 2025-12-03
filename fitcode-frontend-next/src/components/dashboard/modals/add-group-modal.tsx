@@ -40,19 +40,6 @@ export default function AddGroupModal(props: ModalProps) {
   const [shortName, setShortName] = useState('');
   const [owner, setOwner] = useState<AuthUser | null>(null);
 
-  const [allTrainers, setAllTrainers] = useState(
-    selectedInstitution?.trainers || []
-  );
-
-  useEffect(() => {
-    console.log('selectedInstitution changed:', selectedInstitution);
-    setAllTrainers(selectedInstitution?.trainers || []);
-  }, [selectedInstitution]);
-
-  useEffect(() => {
-    setAllTrainers(selectedInstitution?.trainers || []);
-  }, [selectedInstitution]);
-
   if (!selectedInstitution) return null;
 
   return (
@@ -139,7 +126,7 @@ export default function AddGroupModal(props: ModalProps) {
             value={owner?.uid || ''}
             onChange={(e) => {
               const trainerId = e.target.value;
-              const selectedTrainer = allTrainers.find(
+              const selectedTrainer = selectedInstitution.trainers.find(
                 (trainer) => trainer.uid === trainerId
               );
               setOwner(selectedTrainer || null);
