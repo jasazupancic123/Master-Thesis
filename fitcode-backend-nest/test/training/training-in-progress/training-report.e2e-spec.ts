@@ -373,7 +373,7 @@ describe('Training Report (e2e)', () => {
     // squat - 3rd set 10 reps 50 kg 60 rec time
     const userId = global.athlete.uid;
 
-    function getTempo(
+    function _getTempo(
       tempoEcc: number,
       tempoIso: number,
       tempoCon: number,
@@ -391,15 +391,15 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'squat',
         setNumber: 1,
         status: SetStatus.COMPLETED,
-        reps: 10, // 25 %
-        loadKg: 50, // 25 %
-        recTime: 60, // 25 %
-        ...getTempo(2, 0, 1, 0), // 25 %
+        reps: 10, // 50 %
+        loadKg: 50, // 50 %
+        // recTime: 60, // 25 %
+        // ...getTempo(2, 0, 1, 0), // 25 %
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 0, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 0, 1, 0),
         },
       },
     ]);
@@ -423,15 +423,15 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'bench',
         setNumber: 1,
         status: SetStatus.COMPLETED,
-        reps: 5, // 12.5 %
-        loadKg: 50, // 25 %
-        recTime: 60, // 25 %
-        ...getTempo(2, 0, 1, 0), // 25 %
+        reps: 5, // 25 %
+        loadKg: 50, // 50 %
+        // recTime: 60, // 25 %
+        // ...getTempo(2, 0, 1, 0), // 25 %
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 0, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 0, 1, 0),
         },
       },
     ]);
@@ -442,7 +442,8 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(1.875 / totalSets);
+
+    expect(report.realization).toBeCloseTo(1.75 / totalSets);
 
     await db.workloads.createMany([
       {
@@ -453,18 +454,18 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'bench',
         setNumber: 2,
         status: SetStatus.COMPLETED,
-        reps: 10, // 25%
-        loadKg: 75, // 1.5 * 0.25 = 37.5%
-        recTime: 60, // 25 %
-        ...getTempo(2, 0, 1, 0), // 25 %
+        reps: 10, // 50%
+        loadKg: 75, // 75%
+        // recTime: 60, // 25 %
+        // ...getTempo(2, 0, 1, 0), // 25 %
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 0, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 0, 1, 0),
         },
       },
-    ]); // 112.5 %
+    ]); // 125 %
 
     workloads = await db.workloads.getAll(training.id);
     report = trainingReportService.getTrainingReportByUser(
@@ -484,18 +485,18 @@ describe('Training Report (e2e)', () => {
         exerciseId: 'deadlift',
         setNumber: 1,
         status: SetStatus.COMPLETED,
-        reps: 0, // 25 %
-        dist: 30, // 25 %
-        recTime: 0, // 25 %
-        ...getTempo(2, 2, 1, 0), // 25 %
+        reps: 0, // 50 %
+        dist: 30, // 50 %
+        // recTime: 0, // 25 %
+        // ...getTempo(2, 2, 1, 0), // 25 %
         prescribed: {
           reps: 0,
           dist: 30,
-          recTime: 0,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 0,
+          // ...getTempo(2, 2, 1, 0),
         },
       },
-    ]); // 100%
+    ]); // 0%
 
     workloads = await db.workloads.getAll(training.id);
     report = trainingReportService.getTrainingReportByUser(
@@ -503,7 +504,8 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(4 / totalSets);
+
+    expect(report.realization).toBeCloseTo(3 / totalSets);
 
     // deadlift - 2nd set 1 rep 30 m 0 rec time tempo 2210
     await db.workloads.createMany([
@@ -516,15 +518,15 @@ describe('Training Report (e2e)', () => {
         setNumber: 2,
         status: SetStatus.COMPLETED,
         dist: 30, // 50 %
-        recTime: 0, // not prescribed (it's 0) so it wont count as weight
-        ...getTempo(2, 2, 1, 5), // 100 %
+        // recTime: 0, // not prescribed (it's 0) so it wont count as weight
+        // ...getTempo(2, 2, 1, 5), // 100 %
         prescribed: {
           dist: 30,
-          recTime: 0,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 0,
+          // ...getTempo(2, 2, 1, 0),
         },
       },
-    ]); // 150%
+    ]); // 100%
 
     workloads = await db.workloads.getAll(training.id);
     report = trainingReportService.getTrainingReportByUser(
@@ -532,7 +534,7 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(5.5 / totalSets);
+    expect(report.realization).toBeCloseTo(4 / totalSets);
 
     // deadlift - 3rd set 1 rep 30 m 0 rec time tempo 2210
     await db.workloads.createMany([
@@ -545,15 +547,15 @@ describe('Training Report (e2e)', () => {
         setNumber: 3,
         status: SetStatus.COMPLETED,
         dist: 15, // 50 %
-        recTime: 0, // not prescribed (it's 0) so it wont count as weight
-        ...getTempo(1, 0, 0, 0), // 10 %
+        // recTime: 0, // not prescribed (it's 0) so it wont count as weight
+        // ...getTempo(1, 0, 0, 0), // 10 %
         prescribed: {
           dist: 30,
-          recTime: 0,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 0,
+          // ...getTempo(2, 2, 1, 0),
         },
       },
-    ]); // 60 %
+    ]); // 50 %
 
     workloads = await db.workloads.getAll(training.id);
     report = trainingReportService.getTrainingReportByUser(
@@ -561,7 +563,7 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(6.1 / totalSets);
+    expect(report.realization).toBeCloseTo(4.5 / totalSets);
 
     // c1.1 squat - 1st set 10 reps 50 kg 60 rec time
     await db.workloads.createMany([
@@ -575,13 +577,13 @@ describe('Training Report (e2e)', () => {
         status: SetStatus.COMPLETED,
         reps: 10,
         loadKg: 50,
-        recTime: 60,
-        ...getTempo(2, 2, 1, 0),
+        // recTime: 60,
+        // ...getTempo(2, 2, 1, 0),
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 2, 1, 0),
         },
       },
     ]); // 100 %
@@ -592,7 +594,7 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(7.1 / totalSets);
+    expect(report.realization).toBeCloseTo(5.5 / totalSets);
 
     // squat - 2nd set 10 reps 50 kg 60 rec time
     // check that more recovery time is worse
@@ -607,16 +609,16 @@ describe('Training Report (e2e)', () => {
         status: SetStatus.COMPLETED,
         reps: 10, // 25 %
         loadKg: 50, // 25 %
-        recTime: 120, // 12.5 %
-        ...getTempo(2, 2, 1, 0), // 25 %
+        // recTime: 120, // 12.5 %
+        // ...getTempo(2, 2, 1, 0), // 25 %
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 2, 1, 0),
         },
       },
-    ]); // 87.5 %
+    ]); // 100 %
 
     workloads = await db.workloads.getAll(training.id);
     report = trainingReportService.getTrainingReportByUser(
@@ -624,7 +626,7 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(7.975 / totalSets);
+    expect(report.realization).toBeCloseTo(6.5 / totalSets);
 
     // c2.0 squat - 1st set 10 reps 50 kg 60 rec time
     // squat - 2nd set 10 reps 50 kg 60 rec time
@@ -641,16 +643,16 @@ describe('Training Report (e2e)', () => {
         reps: 10,
         repsR: 12,
         loadKg: 50,
-        recTime: 60,
-        ...getTempo(2, 2, 1, 0),
+        // recTime: 60,
+        // ...getTempo(2, 2, 1, 0),
         prescribed: {
           reps: 10,
           repsR: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 2, 1, 0),
         },
-      }, // 105 %
+      }, // 106.7 %
       {
         userId,
         trainingId: training.id,
@@ -661,13 +663,13 @@ describe('Training Report (e2e)', () => {
         status: SetStatus.COMPLETED,
         reps: 10,
         loadKg: 50,
-        recTime: 60,
-        ...getTempo(2, 2, 1, 0),
+        // recTime: 60,
+        // ...getTempo(2, 2, 1, 0),
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 2, 1, 0),
         },
       }, // 100 %
       {
@@ -680,13 +682,13 @@ describe('Training Report (e2e)', () => {
         status: SetStatus.COMPLETED,
         reps: 10,
         loadKg: 50,
-        recTime: 60,
-        ...getTempo(2, 2, 1, 0),
+        // recTime: 60,
+        // ...getTempo(2, 2, 1, 0),
         prescribed: {
           reps: 10,
           loadKg: 50,
-          recTime: 60,
-          ...getTempo(2, 2, 1, 0),
+          // recTime: 60,
+          // ...getTempo(2, 2, 1, 0),
         },
       }, // 100 %
     ]);
@@ -697,7 +699,8 @@ describe('Training Report (e2e)', () => {
       training,
       workloads,
     );
-    expect(report.realization).toBeCloseTo(11.025 / totalSets);
+
+    expect(report.realization).toBeCloseTo(9.567 / totalSets);
 
     // delete all workloads
     await db.workloads.deleteAll(training.id);

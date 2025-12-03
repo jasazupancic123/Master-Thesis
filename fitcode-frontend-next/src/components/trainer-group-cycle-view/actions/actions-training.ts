@@ -7,6 +7,7 @@ import type { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { Fetch } from '@/lib/common/type/fetch.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 
@@ -15,7 +16,7 @@ export async function handleAddTrainingComponents(
   input: { trainingId: string; components: TrainingComponent[] },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<Training[]>;
+    setTrainings: SetState<Fetch<Training[]>>;
     exercises: Exercise[];
     selectedTargets: { componentId: string; target: Target }[];
   }
@@ -43,17 +44,21 @@ export async function handleAddTrainingComponents(
     (training) => {
       if (!training) {
         // training was deleted
-        setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.filter((t) => t.id !== trainingId),
+        }));
+
         toast.success('Training deleted successfully');
         return;
       }
 
       // add components to training
       TrainingService.mapData(training, { exercises });
-
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === training.id ? training : t))
-      );
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.map((t) => (t.id === training.id ? training : t)),
+      }));
 
       toast.success(
         restInput.components.length > 1
@@ -74,7 +79,7 @@ export async function handleDeleteTrainingComponent(
   },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<Training[]>;
+    setTrainings: SetState<Fetch<Training[]>>;
     exercises: Exercise[];
   }
 ) {
@@ -89,11 +94,15 @@ export async function handleDeleteTrainingComponent(
 
       if (training.components.length === 0) {
         // traning was deleted
-        setTrainings((prev) => prev.filter((t) => t.id !== training.id));
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.filter((t) => t.id !== training.id),
+        }));
       } else {
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === trainingId ? training : t))
-        );
+        setTrainings((prev) => ({
+          ...prev,
+          data: prev.data.map((t) => (t.id === trainingId ? training : t)),
+        }));
       }
     },
     undefined,

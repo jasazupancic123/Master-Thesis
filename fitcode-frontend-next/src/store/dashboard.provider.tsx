@@ -431,7 +431,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       };
 
       const action = () =>
-        InstitutionController.getInstance().addGroupMember(
+        InstitutionController.getInstance().addGroupAthlete(
           selectedGroup.institutionId,
           selectedGroup.id,
           { userId: user.uid }
@@ -489,7 +489,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       };
 
       const action = () =>
-        InstitutionController.getInstance().removeGroupMember(
+        InstitutionController.getInstance().removeGroupAthlete(
           selectedGroup.institutionId,
           selectedGroup.id,
           { userId }

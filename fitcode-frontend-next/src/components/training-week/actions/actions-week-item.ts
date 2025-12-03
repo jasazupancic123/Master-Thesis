@@ -4,6 +4,7 @@ import type { GroupEvent } from '@/core/institution/type/group-event.type';
 import { TrainingController } from '@/core/training/training.controller';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import type { IGroupCtx } from '@/store/group.provider';
+import type { IMainContext } from '@/store/main.provider';
 
 export async function handleUpdateTrainingTimes(
   input: {
@@ -19,7 +20,8 @@ export async function handleUpdateTrainingTimes(
       item: TrainingComponentWithTrainingId | GroupEvent
     ) => item is TrainingComponentWithTrainingId;
   },
-  groupCtx: IGroupCtx
+  groupCtx: IGroupCtx,
+  mainCtx: IMainContext
 ) {
   const {
     item,
@@ -29,7 +31,8 @@ export async function handleUpdateTrainingTimes(
     checkIsTrainingComponent,
   } = input;
 
-  const { setTrainings, setGroup } = groupCtx;
+  const { setTrainings } = mainCtx;
+  const { setGroup } = groupCtx;
   if (!checkIsTrainingComponent(item) || !selectedItem) return;
 
   try {
@@ -41,8 +44,9 @@ export async function handleUpdateTrainingTimes(
 
     setSelectedItem((prev) => (prev ? newItem : null));
     if (checkIsTrainingComponent(newItem))
-      setTrainings((prev) =>
-        prev.map((t) =>
+      setTrainings((prev) => ({
+        ...prev,
+        data: prev.data.map((t) =>
           t.id === item.trainingId
             ? {
                 ...t,
@@ -56,8 +60,8 @@ export async function handleUpdateTrainingTimes(
                   : t.components,
               }
             : t
-        )
-      );
+        ),
+      }));
     else
       setGroup((prev) => ({
         ...prev,

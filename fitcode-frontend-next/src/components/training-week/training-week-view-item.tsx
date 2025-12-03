@@ -13,6 +13,7 @@ import { core } from '@/core/core.service';
 import type { GroupEvent } from '@/core/institution/type/group-event.type';
 import type { TrainingComponentWithTrainingId } from '@/core/training/type/training-component.type';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import MyModal from '@/ui/modal';
 
@@ -24,8 +25,10 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
+  const mainContext = useMain();
   const groupContext = useGroup();
-  const { setGroup, setTrainings } = groupContext;
+  const { setGroup } = groupContext;
+  const { setTrainings } = mainContext;
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
@@ -185,7 +188,8 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                         setSelectedItem,
                         checkIsTrainingComponent,
                       },
-                      groupContext
+                      groupContext,
+                      mainContext
                     );
                   }}
                   sx={{
@@ -212,7 +216,8 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                         setSelectedItem,
                         checkIsTrainingComponent,
                       },
-                      groupContext
+                      groupContext,
+                      mainContext
                     );
                   }}
                   sx={{
@@ -238,8 +243,9 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                 setSelectedItem((prev) => (prev ? newItem : null));
 
                 if (checkIsTrainingComponent(newItem)) {
-                  setTrainings((prev) =>
-                    prev.map((t) =>
+                  setTrainings((prev) => ({
+                    ...prev,
+                    data: prev.data.map((t) =>
                       t.id === newItem.trainingId
                         ? {
                             ...t,
@@ -250,8 +256,8 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                             ),
                           }
                         : t
-                    )
-                  );
+                    ),
+                  }));
                 } else {
                   setGroup((prev) => ({
                     ...prev,
