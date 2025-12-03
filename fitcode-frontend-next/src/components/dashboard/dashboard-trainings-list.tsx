@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Circle,
   EditOutlined,
@@ -6,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Fragment } from 'react';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
@@ -26,6 +28,7 @@ interface Props {
 }
 
 export default function DashboardTrainingsList(props: Props) {
+  const router = useRouter();
   const screenSize = useScreenSize();
   const { groups } = useMain();
 
@@ -101,7 +104,7 @@ export default function DashboardTrainingsList(props: Props) {
                       },
                     }}
                     onClick={() => {
-                      redirect(
+                      router.push(
                         `/groups/${group.id}?training=${training.id}&component=${component.id}`
                       );
                     }}

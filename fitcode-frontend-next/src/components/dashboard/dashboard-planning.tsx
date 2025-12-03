@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import AthleteOptionsContainer from '../athlete/athlete-options-container';
@@ -18,6 +18,8 @@ import { useMain } from '@/store/main.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function DashboardGroups() {
+  const router = useRouter();
+
   const { role } = useAuthenticatedAuth();
   const { groups } = useMain();
 
@@ -82,7 +84,7 @@ export default function DashboardGroups() {
               onClick={() => {
                 if (!permissionOk) return;
 
-                redirect(
+                router.push(
                   LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(group.id).home.href
                 );
               }}

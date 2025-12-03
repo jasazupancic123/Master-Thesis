@@ -14,11 +14,13 @@ import Alert from '@/ui/alert';
 export default async function InitAthleteProvider({
   children,
 }: React.PropsWithChildren) {
+  const cookieStore = await cookies();
+  const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!session) redirect(LINK_SIGN_IN.href);
+
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
     const opts: FetchOptions = { session };
-    if (!session) redirect(LINK_SIGN_IN.href);
 
     const controller = Controller.getInstance();
     const { profile, institutions, activeTraining, exerciseAiPrescriptions } =

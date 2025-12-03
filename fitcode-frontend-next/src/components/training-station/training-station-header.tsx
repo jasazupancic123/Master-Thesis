@@ -1,16 +1,6 @@
-import {
-  CheckCircle,
-  Close,
-  Error,
-  FontDownload,
-  FontDownloadOff,
-  Warning,
-} from '@mui/icons-material';
-import { alpha, Box, Button, IconButton, Typography } from '@mui/material';
+import { alpha, Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
-import { UserStatusesEvaluation } from './enum/user-statuses-evaluation';
 import { theme } from '@/app/style';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useCoachTraining } from '@/store/coach-training.provider';
@@ -18,8 +8,6 @@ import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 
 interface Props {
-  displayUserNames: boolean;
-  setDisplayUserNames: SetState<boolean>;
   setOpenNewStationModal: SetState<boolean>;
 }
 
@@ -27,18 +15,10 @@ export default function TrainingStationHeader(props: Props) {
   const router = useRouter();
 
   const { training: globalTraining } = useCoachTraining();
-  const {
-    station,
-    individualTrainings,
-    component,
-    workloads,
-    userStatusesValidation,
-  } = useCoachTrainingStation();
+  const { station, individualTrainings, component, workloads } =
+    useCoachTrainingStation();
 
-  const { displayUserNames, setDisplayUserNames, setOpenNewStationModal } =
-    props;
-
-  const [showStatusInfo, setShowStatusInfo] = useState(true);
+  const { setOpenNewStationModal } = props;
 
   if (!station) return null;
 
@@ -78,53 +58,6 @@ export default function TrainingStationHeader(props: Props) {
       alignItems="center"
       gap={2}
     >
-      {/* User Statuses Info */}
-      {showStatusInfo && (
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          gap={1}
-          sx={{
-            backgroundColor: alpha(theme.palette.background.light, 0.5),
-            borderRadius: 2,
-            p: 1,
-            py: 2,
-            position: 'relative',
-          }}
-        >
-          {/* Icon */}
-          {userStatusesValidation === UserStatusesEvaluation.ALL_IN_PROGRESS ? (
-            <CheckCircle sx={{ color: theme.palette.success.main }} />
-          ) : userStatusesValidation ===
-            UserStatusesEvaluation.NONE_IN_PROGRESS ? (
-            <Error sx={{ color: theme.palette.error.main }} />
-          ) : userStatusesValidation === UserStatusesEvaluation.MIXED ? (
-            <Warning sx={{ color: theme.palette.warning.main }} />
-          ) : null}
-
-          {/* Text */}
-          <Typography fontSize={14} lineHeight={1} mt={0.25}>
-            {userStatusesValidation === UserStatusesEvaluation.ALL_IN_PROGRESS
-              ? 'All athletes are in progress'
-              : userStatusesValidation ===
-                  UserStatusesEvaluation.NONE_IN_PROGRESS
-                ? 'No athletes are in progress'
-                : userStatusesValidation === UserStatusesEvaluation.MIXED
-                  ? 'Some athletes are not in progress'
-                  : ''}
-          </Typography>
-
-          <IconButton
-            sx={{ m: 0, position: 'absolute', top: 4, right: 4 }}
-            onClick={() => setShowStatusInfo(false)}
-          >
-            <Close sx={{ fontSize: 14 }} />
-          </IconButton>
-        </Box>
-      )}
-
       <Box
         display="flex"
         flexDirection="column"
@@ -185,12 +118,6 @@ export default function TrainingStationHeader(props: Props) {
             gap={0.5}
             mt={1}
           >
-            <IconButton
-              onClick={() => setDisplayUserNames((prev) => !prev)}
-              sx={{ p: 0, m: 0 }}
-            >
-              {displayUserNames ? <FontDownload /> : <FontDownloadOff />}
-            </IconButton>
             <Button
               variant="contained"
               onClick={() => setOpenNewStationModal(true)}

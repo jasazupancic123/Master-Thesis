@@ -8,14 +8,11 @@ import toast from 'react-hot-toast';
 
 import { useCoachTraining } from './coach-training.provider';
 import { INDEX_DB_TRAINING_STATIONS_ID } from '@/components/training-station/const/index-db-stations-id';
-import { UserStatusesEvaluation } from '@/components/training-station/enum/user-statuses-evaluation';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
-import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
-import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingStation } from '@/core/training/type/training-station.type';
 import type {
@@ -44,9 +41,6 @@ interface TrainingStationProvider extends TrainingStationProps {
   setSelectedSetIndex: SetState<number | undefined>;
   workloads: Workload[];
   setWorkloads: SetState<Workload[]>;
-  userStatuses: TrainingComponentUserStatus[];
-  setUserStatuses: SetState<TrainingComponentUserStatus[]>;
-  userStatusesValidation: UserStatusesEvaluation;
   updateStationsWorkloadValue: (
     id: {
       trainingId: string;
@@ -105,11 +99,6 @@ export const TrainingStationProvider = (
   );
 
   const [workloads, setWorkloads] = useState<Workload[]>([]);
-  const [userStatuses, setUserStatuses] = useState<
-    TrainingComponentUserStatus[]
-  >([]);
-  const [userStatusesValidation, setUserStatusesValidation] =
-    useState<UserStatusesEvaluation>(UserStatusesEvaluation.NONE_IN_PROGRESS);
 
   useEffect(() => {
     const setupStation = async () => {
@@ -153,33 +142,6 @@ export const TrainingStationProvider = (
 
     return () => unsub();
   }, [training]);
-
-  // Statuses listener
-  useEffect(() => {
-    if (!training) return;
-
-    const unsub =
-      lib.firebase.firestore.listenCollection<TrainingComponentUserStatus>(
-        `trainings/${training.id}/training-component-user-status`,
-        (snapshot) => {
-          const data: TrainingComponentUserStatus[] = snapshot.docs.map((doc) =>
-            lib.firebase.firestore.serialize(doc.data())
-          );
-
-          setUserStatuses(data);
-        },
-        (error) => {
-          console.error('Error loading user statuses:', error);
-        }
-      );
-
-    return () => unsub();
-  }, [training]);
-
-  // Validate statuses on change
-  useEffect(() => {
-    setUserStatusesValidation(validateUserStatuses());
-  }, [station, userStatuses, component]);
 
   const updateStationsWorkloadValue = <K extends keyof Workload>(
     id: {
@@ -307,39 +269,6 @@ export const TrainingStationProvider = (
     );
   }
 
-  const validateUserStatuses = (): UserStatusesEvaluation => {
-    if (!station || !component) return UserStatusesEvaluation.NONE_IN_PROGRESS;
-
-    const thisComponentStatuses = userStatuses.filter(
-      (s) => s.componentId === component.id
-    );
-
-    if (!thisComponentStatuses.length)
-      return UserStatusesEvaluation.NONE_IN_PROGRESS;
-
-    const allInProgress =
-      thisComponentStatuses.every(
-        (status) =>
-          status.status === TrainingStatus.IN_PROGRESS &&
-          status.componentId === component.id
-      ) &&
-      station.users.every((u) =>
-        thisComponentStatuses.some((status) => status.userId === u.uid)
-      );
-
-    if (allInProgress) return UserStatusesEvaluation.ALL_IN_PROGRESS;
-
-    const noneInProgress = thisComponentStatuses.every(
-      (status) =>
-        status.status !== TrainingStatus.IN_PROGRESS &&
-        status.componentId === component.id
-    );
-
-    if (noneInProgress) return UserStatusesEvaluation.NONE_IN_PROGRESS;
-
-    return UserStatusesEvaluation.MIXED;
-  };
-
   return (
     <TrainingStationContext.Provider
       value={{
@@ -357,9 +286,6 @@ export const TrainingStationProvider = (
         setSelectedSetIndex,
         workloads,
         setWorkloads,
-        userStatuses,
-        setUserStatuses,
-        userStatusesValidation,
         updateStationsWorkloadValue,
         handleUpsertSetFromStationView,
       }}
