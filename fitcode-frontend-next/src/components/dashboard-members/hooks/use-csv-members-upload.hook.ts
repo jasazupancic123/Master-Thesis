@@ -29,11 +29,23 @@ export default function useCsvMembersUpload() {
 
     const athletes = newUsers
       .filter((user) => user.customClaims.role.includes(UserRole.ATHLETE))
-      .filter((user) => !selectedInstitution?.athleteIds?.includes(user.uid));
+      .filter(
+        (user) =>
+          !selectedInstitution?.members
+            .filter((m) => m.role === UserRole.ATHLETE)
+            .map((m) => m.id)
+            .includes(user.uid)
+      );
 
     const trainers = newUsers
       .filter((user) => user.customClaims.role.includes(UserRole.TRAINER))
-      .filter((user) => !selectedInstitution?.trainerIds?.includes(user.uid));
+      .filter(
+        (user) =>
+          !selectedInstitution?.members
+            .filter((m) => m.role === UserRole.TRAINER)
+            .map((m) => m.id)
+            .includes(user.uid)
+      );
 
     if (!trainers.length && !athletes.length) {
       toast.error('No new users to add');
