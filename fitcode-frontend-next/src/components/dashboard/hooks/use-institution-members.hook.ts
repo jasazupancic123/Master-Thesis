@@ -222,6 +222,7 @@ export default function useInstitutionMembers() {
 
       setUsers((prev) => [...prev, user]);
       setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
+      toast.success('Successfully registered user');
     } catch (e) {
       console.error(e);
       toast.error('An error occurred while registering the user');
