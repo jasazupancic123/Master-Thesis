@@ -178,8 +178,12 @@ export class WorkloadUtil {
     const workload: PartialWorkload = existingWorkload
       ? {
           ...existingWorkload,
-          reps: workloadInput?.reps || set.reps,
-          repsR: workloadInput?.repsR || set.repsR,
+          reps:
+            workloadInput?.reps !== undefined ? workloadInput.reps : set.reps,
+          repsR:
+            workloadInput?.repsR !== undefined
+              ? workloadInput.repsR
+              : set.repsR,
           tempoEcc: workloadInput?.tempoEcc || set.tempoEcc,
           tempoIso: workloadInput?.tempoIso || set.tempoIso,
           tempoCon: workloadInput?.tempoCon || set.tempoCon,
@@ -198,8 +202,12 @@ export class WorkloadUtil {
           setNumber: setNumber,
           timestamp: new Date(),
           notes: '',
-          reps: workloadInput?.reps || set.reps,
-          repsR: workloadInput?.repsR || set.repsR,
+          reps:
+            workloadInput?.reps !== undefined ? workloadInput.reps : set.reps,
+          repsR:
+            workloadInput?.repsR !== undefined
+              ? workloadInput.repsR
+              : set.repsR,
           time: set.time,
           timeR: set.timeR,
           dist: set.dist,

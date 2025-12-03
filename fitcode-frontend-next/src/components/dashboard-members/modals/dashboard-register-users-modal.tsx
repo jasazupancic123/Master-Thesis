@@ -52,8 +52,27 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
           setOpen(false);
         }}
         cancelText="Close"
+        sx={{
+          minWidth:
+            typeof window !== 'undefined'
+              ? Math.min(window.innerWidth * 0.8, 400)
+              : 400,
+        }}
+        dialogueContentSx={{
+          minWidth:
+            typeof window !== 'undefined'
+              ? Math.min(window.innerWidth * 0.8, 400)
+              : 400,
+        }}
       >
-        <Box maxWidth={400} mx="auto">
+        <Box
+          width={
+            typeof window !== 'undefined'
+              ? Math.min(window.innerWidth * 0.8, 300)
+              : 300
+          }
+          mx="auto"
+        >
           <Typography
             variant="h5"
             gutterBottom

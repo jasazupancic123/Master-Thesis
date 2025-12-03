@@ -8,15 +8,9 @@ import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 
-interface Props {
-  displayUserNames: boolean;
-}
-
-export default function TrainingStationMembers(props: Props) {
+export default function TrainingStationMembers() {
   const { users: allUsers } = useMain();
   const { station, selectedUser, setSelectedUser } = useCoachTrainingStation();
-
-  const { displayUserNames } = props;
 
   const users = allUsers.filter((u) =>
     station?.users.some((su) => su.uid === u.uid)
@@ -93,23 +87,21 @@ export default function TrainingStationMembers(props: Props) {
                 />
               </Box>
 
-              {displayUserNames && (
-                <Typography
-                  fontSize={12}
-                  textAlign="center"
-                  sx={{
-                    mt: 0.5,
-                    maxWidth: 60,
-                    WebkitLineClamp: 2,
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {user.displayName}
-                </Typography>
-              )}
+              <Typography
+                fontSize={12}
+                textAlign="center"
+                sx={{
+                  mt: 0.5,
+                  maxWidth: 60,
+                  WebkitLineClamp: 2,
+                  display: '-webkit-box',
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user.displayName}
+              </Typography>
             </Box>
           ))}
       </Box>
