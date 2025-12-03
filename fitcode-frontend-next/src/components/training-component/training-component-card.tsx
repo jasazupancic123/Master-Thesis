@@ -225,8 +225,22 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         onClick={async () => {
                           if (!training || !component) return;
 
-                          router.push(
-                            `/training/${training.id}/component/${component.id}/station`
+                          handleApiRequest(
+                            router,
+                            () =>
+                              TrainingController.getInstance().startTrainingComponent(
+                                training.id,
+                                component.id
+                              ),
+                            () => {
+                              toast.success('Component started successfully.');
+
+                              router.push(
+                                `/training/${training.id}/component/${component.id}/station`
+                              );
+                            },
+                            undefined,
+                            'Failed to create station.'
                           );
                         }}
                       >

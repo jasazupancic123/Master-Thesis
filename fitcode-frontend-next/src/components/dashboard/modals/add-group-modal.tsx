@@ -45,6 +45,11 @@ export default function AddGroupModal(props: ModalProps) {
   );
 
   useEffect(() => {
+    console.log('selectedInstitution changed:', selectedInstitution);
+    setAllTrainers(selectedInstitution?.trainers || []);
+  }, [selectedInstitution]);
+
+  useEffect(() => {
     setAllTrainers(selectedInstitution?.trainers || []);
   }, [selectedInstitution]);
 
@@ -141,7 +146,7 @@ export default function AddGroupModal(props: ModalProps) {
             }}
             sx={{ mb: 2, minWidth: 200 }}
           >
-            {allTrainers.map((trainer) => (
+            {(selectedInstitution?.trainers || []).map((trainer) => (
               <MenuItem key={trainer.uid} value={trainer.uid}>
                 <Typography>{trainer.displayName}</Typography>
               </MenuItem>

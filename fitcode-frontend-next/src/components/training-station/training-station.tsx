@@ -52,7 +52,6 @@ export default function TrainingStation() {
   } = useCoachTrainingStation();
 
   const [openNewStationModal, setOpenNewStationModal] = useState(false);
-  const [displayUserNames, setDisplayUserNames] = useState(true);
 
   // Individual training for selected user
   const individualTraining = individualTrainings.find(
@@ -154,13 +153,9 @@ export default function TrainingStation() {
         mx: 'auto',
       }}
     >
-      <TrainingStationHeader
-        displayUserNames={displayUserNames}
-        setDisplayUserNames={setDisplayUserNames}
-        setOpenNewStationModal={setOpenNewStationModal}
-      />
+      <TrainingStationHeader setOpenNewStationModal={setOpenNewStationModal} />
 
-      <TrainingStationMembers displayUserNames={displayUserNames} />
+      <TrainingStationMembers />
 
       <Box
         maxWidth="100%"
@@ -247,8 +242,8 @@ export default function TrainingStation() {
               key={selectedUser?.uid}
               src={selectedUser?.photoURL || USER_AVATAR_IMG_URL}
               sx={{
-                width: 80,
-                height: 80,
+                width: 100,
+                height: 100,
                 filter: 'grayscale(100%)',
               }}
             />
@@ -302,7 +297,9 @@ export default function TrainingStation() {
           </Box>
 
           {individualExercise ? (
-            <TrainingStationExerciseSet exercise={individualExercise} />
+            <Box mt={1}>
+              <TrainingStationExerciseSet exercise={individualExercise} />
+            </Box>
           ) : (
             <Typography textAlign="center">
               Exercise not found for selected user
@@ -317,8 +314,8 @@ export default function TrainingStation() {
         >
           {individualExercise && (
             <Box
-              width={80}
-              height={80}
+              width={100}
+              height={100}
               display="flex"
               justifyContent="center"
               alignItems="center"
@@ -328,8 +325,8 @@ export default function TrainingStation() {
               }}
             >
               <Box
-                width={70}
-                height={70}
+                width={90}
+                height={90}
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
