@@ -377,9 +377,9 @@ export default function AthleteExerciseReport(props: Props) {
                         (w) => w.trainingId === trainingId
                       );
                       if (!workload) return '';
-                      return dayjs(new Date(workload.timestamp)).format(
-                        'DD/MM'
-                      );
+                      return dayjs(
+                        workload.from ? new Date(workload.from) : new Date()
+                      ).format('DD/MM');
                     },
                   },
                 ]

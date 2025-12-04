@@ -44,7 +44,8 @@ export class WorkloadUtil {
         .filter((w) => w.userId === userId)
         .sort(
           (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            (a.from ? new Date(a.from) : new Date()).getTime() -
+            (b.from ? new Date(b.from) : new Date()).getTime()
         );
 
       for (const c of prescribed.components) {
@@ -107,7 +108,7 @@ export class WorkloadUtil {
             };
           }),
           lastTimestamp:
-            componentWorkloads[componentWorkloads.length - 1]?.timestamp ||
+            componentWorkloads[componentWorkloads.length - 1]?.from ||
             startOfDay(new Date()),
         });
       }
@@ -200,7 +201,6 @@ export class WorkloadUtil {
           supersetIndex: supersetIndex,
           exerciseId: exerciseId,
           setNumber: setNumber,
-          timestamp: new Date(),
           notes: '',
           reps:
             workloadInput?.reps !== undefined ? workloadInput.reps : set.reps,

@@ -48,7 +48,7 @@ export default function SWControl(props: Props) {
         )
       : undefined;
 
-  const lastSetCompletedAt = lastCompletedWorkload?.timestamp;
+  const lastSetCompletedAt = lastCompletedWorkload?.from;
 
   const elapsedSinceLastSet = useMemo(() => {
     return lastSetCompletedAt === undefined
