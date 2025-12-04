@@ -131,9 +131,10 @@ export class InstitutionService implements Permission<Institution> {
   @LogMethod()
   async init(user: User, institutionId: string): Promise<InitInstitution> {
     const institution = await this.findByIdOrFail(user, institutionId);
-    const groups = await this.groupRepository.getAllByInstitution({
-      institutionId,
-    });
+    const groups = await this.groupRepository.getAllByInstitution(
+      { institutionId },
+      this.firebase.isAthlete(user) ? user.uid : undefined,
+    );
 
     return { ...institution, groups };
   }

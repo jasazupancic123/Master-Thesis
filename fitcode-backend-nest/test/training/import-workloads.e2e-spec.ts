@@ -177,7 +177,8 @@ describe('Get Trainings (e2e)', () => {
     expect(wG1.status).toBe(SetStatus.COMPLETED);
     expect(wG1.prescribed.reps).toBe(10);
     expect(wG1.prescribed.loadKg).toBe(50);
-    expect(wG1.timestamp).toBeDefined();
+    expect(wG1.from).toBeDefined();
+    expect(wG1.to).toBeDefined();
     expect(wG1.userId).toBe(global.athlete.uid);
     expect(wG1.institutionId).toBe(institution.id);
     expect(wG1.groupId).toBeUndefined();
@@ -194,7 +195,8 @@ describe('Get Trainings (e2e)', () => {
     expect(wG2.status).toBe(SetStatus.COMPLETED);
     expect(wG2.prescribed.reps).toBe(12);
     expect(wG2.prescribed.loadKg).toBe(52);
-    expect(wG2.timestamp).toBeDefined();
+    expect(wG1.from).toBeDefined();
+    expect(wG1.to).toBeDefined();
     expect(wG2.userId).toBe(global.athlete.uid);
     expect(wG2.institutionId).toBe(institution.id);
     expect(wG2.groupId).toBeUndefined();
@@ -211,7 +213,8 @@ describe('Get Trainings (e2e)', () => {
     expect(wI1.status).toBe(SetStatus.COMPLETED);
     expect(wI1.prescribed.reps).toBe(14);
     expect(wI1.prescribed.loadKg).toBe(54);
-    expect(wI1.timestamp).toBeDefined();
+    expect(wG1.from).toBeDefined();
+    expect(wG1.to).toBeDefined();
     expect(wI1.userId).toBe(global.athlete.uid);
     expect(wI1.institutionId).toBe(institution.id);
     expect(wI1.groupId).toBeUndefined();
