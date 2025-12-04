@@ -45,7 +45,7 @@ export function getAthleteChart(
       trainingId: t.id,
       componentId: component.id,
       exerciseId: exercise.id,
-      timestamp: t.from,
+      from: t.from,
       name: getFormatedName(t.from),
     };
 
@@ -83,7 +83,7 @@ export function getAthleteChart(
         exerciseId: exercise.id,
         supersetIndex: 0, // superset index is not relevant here
         status: SetStatus.NOT_STARTED,
-        timestamp: t.from,
+        from: t.from,
         ...set,
       });
     }
@@ -95,7 +95,9 @@ export function getAthleteChart(
   }
 
   return result.sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) =>
+      (a.from ? new Date(a.from) : new Date()).getTime() -
+      (b.from ? new Date(b.from) : new Date()).getTime()
   );
 }
 
@@ -126,7 +128,7 @@ export function getGroupChart(
       trainingId: t.id,
       componentId: component.id,
       exerciseId: exercise.id,
-      timestamp: t.from,
+      from: t.from,
       name: getFormatedName(t.from),
     };
 
@@ -179,7 +181,7 @@ export function getGroupChart(
             exerciseId: exercise.id,
             supersetIndex: 0, // superset index is not relevant here
             status: SetStatus.NOT_STARTED,
-            timestamp: t.from,
+            from: t.from,
             ...set,
           });
         }
@@ -191,7 +193,9 @@ export function getGroupChart(
   }
 
   return result.sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) =>
+      (a.from ? new Date(a.from) : new Date()).getTime() -
+      (b.from ? new Date(b.from) : new Date()).getTime()
   );
 }
 

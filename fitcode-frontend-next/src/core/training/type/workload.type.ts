@@ -34,7 +34,6 @@ export type WorkloadSecondarySide = ExerciseSetSecondarySide & {
 export type WorkloadValue = WorkloadPrimarySide &
   WorkloadSecondarySide &
   DateRange & {
-    timestamp: Date;
     photoURLs?: string[];
   };
 
@@ -83,6 +82,8 @@ export type CreateWorkload = Omit<
   | 'loadBwR'
   | 'loadRm'
   | 'loadRmR'
+  | 'recTime'
+  | 'recTimeR'
 >;
 
 export type PartialWorkload = Omit<
