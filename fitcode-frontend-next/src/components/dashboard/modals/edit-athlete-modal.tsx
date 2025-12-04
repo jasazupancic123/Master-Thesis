@@ -74,11 +74,16 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           onProfileChange('photoURLBase64', base64);
         }
 
+        const photoUrl = url || userToEdit.photoURL;
+
         await updateUserProfile({
           force: url !== null || base64 !== undefined ? true : false,
           passedUser: {
             ...userToEdit,
-            photoURL: url,
+            photoURL:
+              typeof photoUrl === 'string' && photoUrl.length > 0
+                ? photoUrl
+                : null,
           },
           passedProfile: profileToEdit
             ? {

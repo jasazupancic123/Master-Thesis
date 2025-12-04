@@ -111,6 +111,7 @@ export type PartialRecordedWorkloadValues = Pick<
   | 'tempoIdleR'
   | 'tempoIso'
   | 'tempoIsoR'
+  | 'photoURLs'
 >;
 
 export type ImportWorkload = Pick<

@@ -20,7 +20,6 @@ export default function ImagePickerSlider({
 }: Props) {
   return (
     <Box
-      width="100%"
       display="flex"
       alignItems="center"
       sx={{
