@@ -66,6 +66,7 @@ export function DashboardUserEditProvider({
   }
 
   function toggleUser(user: AuthUser | null) {
+    console.log('toggleUser', user);
     if (!user) {
       setIsEditedProfile(false);
       setIsEditedUser(false);
@@ -73,7 +74,7 @@ export function DashboardUserEditProvider({
       setProfileToEdit(undefined);
     } else {
       const profile = profiles.find((m) => m.uid === user.uid);
-      setUserToEdit(structuredClone(user));
+      setUserToEdit(structuredClone({ ...user }));
       setProfileToEdit(profile);
     }
   }
@@ -178,12 +179,6 @@ export function DashboardUserEditProvider({
 
     setUserToEdit(newUser);
     setIsEditedUser(true);
-    setFilteredUsers((prev) =>
-      prev.map((user) => (user.uid === newUser.uid ? newUser : user))
-    );
-    setUsers((prev) =>
-      prev.map((user) => (user.uid === newUser.uid ? newUser : user))
-    );
   }
 
   const value: IDashboardUserEditCtx = {

@@ -192,6 +192,7 @@ export class WorkloadUtil {
           tempoIsoR: workloadInput?.tempoIsoR || set.tempoIsoR,
           tempoConR: workloadInput?.tempoConR || set.tempoConR,
           tempoIdleR: workloadInput?.tempoIdleR || set.tempoIdleR,
+          photoURLs: workloadInput?.photoURLs || [],
         }
       : {
           userId: userId,
@@ -230,7 +231,7 @@ export class WorkloadUtil {
           recTimeR: set.recTimeR,
           recDist: set.recDist,
           recDistR: set.recDistR,
-          photoURLs: [],
+          photoURLs: workloadInput?.photoURLs || [],
           rir: undefined,
           rirR: undefined,
           rom: undefined,
