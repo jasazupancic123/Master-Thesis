@@ -170,11 +170,9 @@ describe('Complete Next Set (e2e)', () => {
       'invalid-exercise-id',
       {
         userId: global.athlete.uid,
-        timestamp: new Date(),
         from: new Date(),
         to: new Date(),
         reps: 1,
-        recTime: 0,
         photoURLs: [],
       },
     );
@@ -195,11 +193,9 @@ describe('Complete Next Set (e2e)', () => {
 
       await req(token, trainingId, 'invalid-exercise-id', {
         userId: global.athlete.uid,
-        timestamp: new Date(),
         from: new Date(),
         to: new Date(),
         reps: 1,
-        recTime: 0,
         photoURLs: [],
       });
 
@@ -220,11 +216,9 @@ describe('Complete Next Set (e2e)', () => {
       'invalid-exercise-id',
       {
         userId: global.athlete.uid,
-        timestamp: new Date(),
         from: new Date(),
         to: new Date(),
         reps: 1,
-        recTime: 0,
         photoURLs: [],
       },
     );
@@ -242,11 +236,9 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, trainingId, exercise.id, {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
       reps: 1,
-      recTime: 0,
       photoURLs: [],
     });
 
@@ -270,11 +262,9 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, pastTrainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
       reps: 1,
-      recTime: 0,
       photoURLs: [],
     });
 
@@ -285,10 +275,8 @@ describe('Complete Next Set (e2e)', () => {
   it('should fail if component has not been started yet', async () => {
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
-      recTime: 0,
       reps: 1,
     });
 
@@ -308,10 +296,8 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
-      recTime: 0,
       reps: 1,
     });
 
@@ -330,13 +316,11 @@ describe('Complete Next Set (e2e)', () => {
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: from,
       from,
       to: from,
       notes: 'left hip too low',
       reps: 12,
       loadKg: 100,
-      recTime: 60,
       tempoEcc: 2,
       tempoIso: 0,
       tempoCon: 2,
@@ -361,7 +345,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.componentId).toBe('c1');
     expect(result.supersetIndex).toBe(0);
     expect(result.setNumber).toBe(1);
-    expect(new Date(result.timestamp).getTime()).toBe(from.getTime());
+    expect(new Date(result.from).getTime()).toBe(from.getTime());
     expect(result.status).toBe(SetStatus.OVER);
     expect(result.notes).toBe('left hip too low');
 
@@ -385,7 +369,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.tempoIsoR).toBeUndefined();
     expect(result.tempoConR).toBeUndefined();
     expect(result.tempoIdleR).toBeUndefined();
-    expect(result.recTime).toBe(60);
+    expect(result.recTime).toBe(0);
     expect(result.recTimeR).toBeUndefined();
 
     const workloads = await db.workloads.getAll(trainingId);
@@ -427,12 +411,10 @@ describe('Complete Next Set (e2e)', () => {
     const spy = jest.spyOn(workloadService, 'findAllByUserTraining');
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: from,
       from,
       to: from,
       reps: 10,
       loadKg: 80,
-      recTime: 90,
       tempoEcc: 2,
       tempoIso: 0,
       tempoCon: 2,
@@ -457,7 +439,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.componentId).toBe('c1');
     expect(result.supersetIndex).toBe(1); // because first superset squat has only 1 set and is already completed
     expect(result.setNumber).toBe(1);
-    expect(new Date(result.timestamp).getTime()).toBe(from.getTime());
+    expect(new Date(result.from).getTime()).toBe(from.getTime());
     expect(result.status).toBe(SetStatus.OVER);
     expect(result.notes).toBeUndefined();
 
@@ -475,7 +457,7 @@ describe('Complete Next Set (e2e)', () => {
     expect(result.tempoIsoR).toBeUndefined();
     expect(result.tempoConR).toBeUndefined();
     expect(result.tempoIdleR).toBeUndefined();
-    expect(result.recTime).toBe(90);
+    expect(result.recTime).toBe(0);
 
     const workloads = await db.workloads.getAll(trainingId);
     expect(workloads).toHaveLength(2);
@@ -506,12 +488,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
       reps: 8,
       loadKg: 60,
-      recTime: 120,
       tempoEcc: 2,
       tempoIso: 0,
       tempoCon: 2,
@@ -591,12 +571,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const res1 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
       reps: 6,
       loadKg: 90,
-      recTime: 0,
     });
 
     expect(res1.status).toBe(201);
@@ -614,12 +592,10 @@ describe('Complete Next Set (e2e)', () => {
 
     const res2 = await req(global.trainer.token, trainingId2, 'squat', {
       userId: global.athlete.uid,
-      timestamp: new Date(),
       from: new Date(),
       to: new Date(),
       reps: 4,
       loadKg: 70,
-      recTime: 0,
     });
 
     expect(res2.status).toBe(201);
@@ -682,13 +658,11 @@ describe('Complete Next Set (e2e)', () => {
 
     const res = await req(global.trainer.token, trainingId3, exercise.id, {
       userId: global.athlete.uid,
-      timestamp: addHours(new Date(), 1),
       from: addHours(new Date(), 1),
       to: addHours(new Date(), 1),
       reps: 12,
       repsR: 11,
       loadKg: 60,
-      recTime: 0,
       // loadR should be provided
     });
 
@@ -722,12 +696,10 @@ describe('Complete Next Set (e2e)', () => {
     const from = new Date();
     const res = await req(global.trainer.token, trainingId, 'squat', {
       userId: global.athlete.uid,
-      timestamp: from,
       from,
       to: from,
       reps: 8,
       loadKg: 70,
-      recTime: 90,
       tempoEcc: 2,
       tempoIso: 0,
       tempoCon: 2,

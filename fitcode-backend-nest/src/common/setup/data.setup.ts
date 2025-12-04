@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
-import { subDays } from 'date-fns';
+import { addDays, addSeconds, subDays } from 'date-fns';
+import { v4 } from 'uuid';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
@@ -7,16 +8,32 @@ import type { CreateExerciseDto } from '@src/exercise/dto/create-exercise.dto';
 import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Cycle } from '@src/institution/entity/cycle.entity';
+import type { Group } from '@src/institution/entity/group.entity';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { SportLevel } from '@src/profile/enum/sport-level.enum';
 import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { WellnessService } from '@src/profile/service/wellness.service';
+import type { Training } from '@src/training/entity/training.entity';
+import type { Workload } from '@src/training/entity/workload.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
+import {
+  generateExerciseSet,
+  generateSuperset,
+  generateTrainingComponent,
+  generateTrainingExercise,
+} from '@src/training/mock/training.stub';
+import { generateWorkloadStub } from '@src/training/mock/workload.stub';
+import { TrainingService } from '@src/training/service/training.service';
+import { WorkloadService } from '@src/training/service/workload.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import { CommonService } from '../service/common.service';
+import { getTime } from '../service/util';
 import type { Update } from '../type/entity.type';
 import type { User } from '../type/firebase-auth.type';
+import { generateRandomNumber } from '../utils/random.util';
 import { BaseSetup } from './base.setup';
 
 export class DataSetup extends BaseSetup {
@@ -24,6 +41,8 @@ export class DataSetup extends BaseSetup {
   private readonly common: CommonService;
   private readonly authService: AuthService;
   private readonly wellnessService: WellnessService;
+  private readonly trainingService: TrainingService;
+  private readonly workloadService: WorkloadService;
 
   private admin: User;
   private manager: User;
@@ -35,6 +54,8 @@ export class DataSetup extends BaseSetup {
     this.common = app.get(CommonService);
     this.authService = app.get(AuthService);
     this.wellnessService = app.get(WellnessService);
+    this.trainingService = app.get(TrainingService);
+    this.workloadService = app.get(WorkloadService);
   }
 
   /**
@@ -71,8 +92,9 @@ export class DataSetup extends BaseSetup {
     await this.clearData();
 
     try {
-      await this.importUsers();
+      const { users, groups } = await this.importUsers();
       await this.importExercises();
+      await this.importWorkloads(users, groups);
 
       this.logger.debug(
         `Data setup took ${(performance.now() - time) / 1000}s`,
@@ -288,7 +310,7 @@ export class DataSetup extends BaseSetup {
     );
 
     // import groups
-    const groupIds = [];
+    const createdGroups: Group[] = [];
     const groups = data.find((u) => u.email === this.trainer.email)?.groups;
 
     for (const { name, membersIds: emails } of groups) {
@@ -302,7 +324,147 @@ export class DataSetup extends BaseSetup {
         institutionId: institution.id,
       });
 
-      groupIds.push(group.id);
+      // for each group, create 1 cycle
+      const cycle: Cycle = {
+        id: v4(),
+        name: 'Pre-season Cycle',
+        targets: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        from: subDays(new Date(), 7),
+        to: addDays(new Date(), 7),
+      };
+
+      await groupService.addCycle(
+        this.trainer,
+        { groupId: group.id, institutionId: institution.id },
+        cycle,
+      );
+
+      createdGroups.push({ ...group, cycles: [cycle] });
+    }
+
+    return { users, groups: createdGroups };
+  }
+
+  private async importWorkloads(users: User[], groups: Group[]) {
+    // for each group, create 3 trainings, 1 in the past, 1 today, 1 in the future
+    const trainings: Training[] = [];
+    for (const group of groups) {
+      for (let i = 1; i <= 3; i++) {
+        trainings.push(
+          await this.trainingService.createForInstitution(this.trainer, {
+            from: subDays(new Date(), i),
+            institutionId: group.institutionId,
+            groupId: group.id,
+            cycleId: group.cycles[0].id,
+            membersIds: group.membersIds,
+            components: [
+              generateTrainingComponent({
+                id: 'strength',
+                supersets: [
+                  generateSuperset({
+                    exercises: [
+                      generateTrainingExercise({
+                        id: 'squats',
+                        sets: Array.from({ length: 3 }, (_, idx) =>
+                          generateExerciseSet(idx + 1, {
+                            reps: generateRandomNumber(5, 8),
+                            loadKg: generateRandomNumber(60, 100),
+                          }),
+                        ),
+                      }),
+                      generateTrainingExercise({
+                        id: 'deadlifts',
+                        sets: Array.from({ length: 5 }, (_, idx) =>
+                          generateExerciseSet(idx + 1, {
+                            reps: generateRandomNumber(1, 5),
+                            loadKg: generateRandomNumber(120, 180),
+                          }),
+                        ),
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        );
+      }
+    }
+
+    // for each athlete, create workloads and reports
+    for (const user of users) {
+      if (!user.customClaims?.role?.includes(UserRole.ATHLETE)) continue;
+
+      for (const training of trainings) {
+        if (!training.membersIds.includes(user.uid)) continue;
+
+        // create workloads for each training component
+        const workloads: Workload[] = [];
+        let from = getTime(training.from, 10, 0);
+
+        for (let i = 0; i < 3; i++) {
+          // squats
+          const squats = training.components[0].supersets[0].exercises[0];
+          workloads.push(
+            generateWorkloadStub({
+              userId: user.uid,
+              institutionId: training.institutionId,
+              groupId: training.groupId,
+              cycleId: training.cycleId,
+              trainingId: training.id,
+              componentId: 'strength',
+              setNumber: i + 1,
+              exerciseId: 'squats',
+              prescribed: squats.sets[i],
+              status: SetStatus.COMPLETED,
+              supersetIndex: 0,
+              loadKg: generateRandomNumber(60, 100),
+              reps: generateRandomNumber(5, 8),
+              from,
+              to: addSeconds(from, (i + 1) * 60),
+            }),
+          );
+
+          from = addSeconds(from, (i + 1) * 60 + 120);
+        }
+
+        for (let i = 0; i < 3; i++) {
+          // deadlifts
+          const deadlifts = training.components[0].supersets[0].exercises[1];
+          workloads.push(
+            generateWorkloadStub({
+              userId: user.uid,
+              institutionId: training.institutionId,
+              groupId: training.groupId,
+              cycleId: training.cycleId,
+              trainingId: training.id,
+              componentId: 'strength',
+              setNumber: i + 1,
+              exerciseId: 'deadlifts',
+              prescribed: deadlifts.sets[i],
+              status: SetStatus.COMPLETED,
+              supersetIndex: 0,
+              loadKg: generateRandomNumber(120, 180),
+              reps: generateRandomNumber(1, 5),
+              from,
+              to: addSeconds(from, (i + 1) * 90),
+            }),
+          );
+
+          from = addSeconds(from, (i + 1) * 90 + 120);
+        }
+
+        await this.workloadService.upsertMany(workloads);
+
+        // save training report
+        await this.trainingService.upsertTrainingComponentStatus(
+          training,
+          { trainingId: training.id, componentId: 'strength', uid: user.uid },
+          workloads,
+        );
+      }
     }
   }
 

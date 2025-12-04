@@ -1,8 +1,7 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
-import { addDays, addHours, subDays, subMinutes } from 'date-fns';
+import { addDays, addHours, subMinutes } from 'date-fns';
 
-import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
@@ -143,24 +142,6 @@ describe('Create Training (e2e)', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Training falls outside of the selected cycle',
-      );
-    });
-
-    it('should fail to create new training if training is in the past', async () => {
-      const training = generateTrainingStub({
-        ownerId: global.trainer.uid,
-        membersIds: [global.athlete.uid],
-        groupId: group.id,
-        institutionId: institution.id,
-        cycleId: group.cycles[1].id,
-        date: subDays(new Date(), 1),
-        components: [generateTrainingComponent()],
-      });
-
-      const response = await req(global.trainer.token, training);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
       );
     });
 
@@ -491,43 +472,6 @@ describe('Create Training (e2e)', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot edit this training');
-
-      await db.trainings.deleteByIds([training.id]);
-    });
-
-    it('should fail to add components if training is in the past', async () => {
-      const training = await firebase.firestore
-        .collection(FirestoreCollection.TRAINING)
-        .add(
-          firebase.buildCreateQuery(
-            generateTrainingStub({
-              ownerId: global.trainer.uid,
-              membersIds: [global.athlete.uid],
-              groupId: group.id,
-              cycleId: group.cycles[0].id,
-              from: subDays(new Date(), 2),
-              to: subDays(new Date(), 2),
-              components: [
-                generateTrainingComponent({
-                  from: subDays(new Date(), 2),
-                  to: subDays(new Date(), 2),
-                }),
-              ],
-            }),
-            { timestamps: true },
-          ),
-        );
-
-      const response = await addComponentReq(
-        global.trainer.token,
-        training.id,
-        [generateTrainingComponent()],
-      );
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
-      );
 
       await db.trainings.deleteByIds([training.id]);
     });

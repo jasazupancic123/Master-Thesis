@@ -133,15 +133,6 @@ export class WorkloadValue extends IntersectionType(
   WorkloadPrimarySide,
   WorkloadSecondarySide,
 ) {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Expose()
-  @Transform(({ value }) => {
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? undefined : date;
-  })
-  timestamp: Date;
-
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ApiPropertyOptional({ type: String, isArray: true })
@@ -178,6 +169,8 @@ export class CreateWorkload extends OmitType(Workload, [
   'loadBwR',
   'loadRm',
   'loadRmR',
+  'recTime',
+  'recTimeR',
 ] as const) {}
 
 export class ImportWorkloadDto extends IntersectionType(
