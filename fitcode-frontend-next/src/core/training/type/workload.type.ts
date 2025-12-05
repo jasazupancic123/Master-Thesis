@@ -150,3 +150,22 @@ export type ImportWorkload = Pick<
   email: string;
   date: Date;
 };
+
+export type WorkloadRef = {
+  trainingId: string;
+  componentId: string;
+  supersetIndex: number;
+  exerciseId: string;
+  userId: string;
+  setNumber: number;
+};
+
+export type UpdateWorkload = {
+  ref: WorkloadRef;
+  data: Partial<CreateWorkload>;
+};
+
+export type UpdateManyWorkloads = {
+  updates: UpdateWorkload[];
+  deletes: WorkloadRef[];
+};

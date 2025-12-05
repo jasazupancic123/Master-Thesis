@@ -120,7 +120,7 @@ describe('Upsert Set (e2e)', () => {
     await Promise.all([
       db.trainings.clear(),
       db.groups.delete({ institutionId: institution.id, groupId: group.id }),
-      db.institutions.remove(institution.id),
+      db.institutions.deleteTest(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),
     ]);

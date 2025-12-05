@@ -17,7 +17,7 @@ import {
   TrainingRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
@@ -131,22 +131,6 @@ export class WorkloadService {
           this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
         ),
       );
-  }
-
-  async findAllByUserTrainingIds(
-    userId: string,
-    trainingIds: string[],
-  ): Promise<Workload[]> {
-    const collection = this.firebase.firestore.collectionGroup(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-
-    return await this.firebase.batchIn<Workload>(
-      'trainingId',
-      trainingIds,
-      collection,
-      (q) => q.where('userId', '==', userId),
-    );
   }
 
   async upsert(
@@ -341,6 +325,55 @@ export class WorkloadService {
       operation: 'set',
       data: this.firebase.buildCreateQuery<Workload>(w),
     }));
+
+    await this.firebase.paginateBatches(operations);
+  }
+
+  async updateMany(
+    updates: { ref: WorkloadRef; data: Partial<Workload> }[],
+    deletes: WorkloadRef[],
+  ) {
+    const operations: BatchOperation<Workload>[] = [];
+
+    for (const update of updates) {
+      const { ref, data } = update;
+      operations.push({
+        ref: this.getDoc(ref),
+        operation: 'update',
+        data: {
+          notes: data.notes,
+          reps: data.reps,
+          loadKg: data.loadKg,
+          vel: data.vel,
+          tempoEcc: data.tempoEcc,
+          tempoIso: data.tempoIso,
+          tempoCon: data.tempoCon,
+          tempoIdle: data.tempoIdle,
+          eff: data.eff,
+          time: data.time,
+          dist: data.dist,
+          recDist: data.recDist,
+          rir: data.rir,
+          rom: data.rom,
+          repsR: data.repsR,
+          loadKgR: data.loadKgR,
+          velR: data.velR,
+          tempoEccR: data.tempoEccR,
+          tempoIsoR: data.tempoIsoR,
+          tempoConR: data.tempoConR,
+          tempoIdleR: data.tempoIdleR,
+          effR: data.effR,
+          timeR: data.timeR,
+          distR: data.distR,
+          recDistR: data.recDistR,
+          rirR: data.rirR,
+          romR: data.romR,
+        },
+      });
+    }
+
+    for (const ref of deletes)
+      operations.push({ ref: this.getDoc(ref), operation: 'delete' });
 
     await this.firebase.paginateBatches(operations);
   }

@@ -23,6 +23,7 @@ import type {
 import type {
   CreateWorkload,
   ImportWorkload,
+  UpdateManyWorkloads,
   Workload,
 } from './type/workload.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
@@ -196,6 +197,10 @@ export class TrainingController extends BaseController {
 
   async importWorkloads(workloads: ImportWorkload[]) {
     return this.api.post<Training>(`/import-workloads`, { workloads });
+  }
+
+  async updateManyWorkloads(trainingId: string, body: UpdateManyWorkloads) {
+    return this.api.patch<Training>(`/${trainingId}/workload/many`, body);
   }
 
   /**

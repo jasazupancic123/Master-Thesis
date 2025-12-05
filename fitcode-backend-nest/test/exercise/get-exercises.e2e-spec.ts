@@ -71,7 +71,7 @@ describe('Get Exercises (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution2.id); // to remove users as well
+    await db.institutions.deleteTest(institution2.id); // to remove users as well
     await db.clear();
     await testApp.close();
   });

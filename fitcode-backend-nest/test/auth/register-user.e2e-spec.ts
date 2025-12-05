@@ -22,7 +22,7 @@ describe('Register User (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
+    await db.institutions.deleteTest(institution.id);
     await db.clear();
     await testApp.close();
   });
@@ -172,7 +172,7 @@ describe('Register User (e2e)', () => {
 
       // cleanup
       await testApp.auth.deleteUsers([existingUser.uid]);
-      await db.institutions.remove(otherInstitution.id);
+      await db.institutions.deleteTest(otherInstitution.id);
     });
   });
 });
