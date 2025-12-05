@@ -6,7 +6,6 @@ import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { MAX_NUM_COMPONENTS_IN_TRAINING } from '@src/training/constant/training-limits.constant';
@@ -39,7 +38,6 @@ jest.mock('@src/exercise/constant/components.constant', () => {
 describe('Create Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
 
@@ -49,7 +47,6 @@ describe('Create Training (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
     exerciseService = testApp.module.get(ExerciseService);
     trainingService = testApp.module.get(TrainingService);
 
@@ -58,7 +55,7 @@ describe('Create Training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
+    await db.institutions.deleteTest(institution.id);
     await db.clear();
     await testApp.close();
   });

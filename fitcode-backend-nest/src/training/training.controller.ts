@@ -46,6 +46,7 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { TrainingActionPayloadDto } from './dto/training-action.dto';
+import { UpdateManyWorkloadsDto } from './dto/update-many-workloads.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { Training } from './entity/training.entity';
 import { TrainingComponentUserStatus } from './entity/training-component-user-status.entity';
@@ -425,6 +426,19 @@ export class TrainingController {
     @Body() { workloads }: ImportWorkloadsDto,
   ) {
     return await this.trainingService.importWorkloads(user, workloads);
+  }
+
+  @Patch(':trainingId/workload/many')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async updateManyWorkloads(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() { updates, deletes }: UpdateManyWorkloadsDto,
+  ) {
+    return await this.trainingService.updateManyWorkloads(user, trainingId, {
+      updates,
+      deletes,
+    });
   }
 
   @Post(':trainingId/component/:cId/start')

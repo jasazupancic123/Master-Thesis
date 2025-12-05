@@ -22,8 +22,8 @@ describe('Create Training Protocol E2E', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution1.id);
-    await db.institutions.remove(institution2.id);
+    await db.institutions.deleteTest(institution1.id);
+    await db.institutions.deleteTest(institution2.id);
     await db.clear();
     await testApp.close();
   });
