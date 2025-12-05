@@ -32,9 +32,12 @@ import useTrainingRecapSelectedExercises from './hooks/use-selected-exercises';
 import { Exercise } from '@/core/exercise/type/exercise.type';
 import TrainingRecapHeader from './training-recap-header';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { useTrainingRecap } from '@/store/training-recap.provider';
 
 export default function TrainingRecap() {
   const screenSize = useScreenSize();
+
+  const { submitWorkloads } = useTrainingRecap();
 
   const [openSelectedWorkloadModal, setOpenSelectedWorkloadModal] =
     useState(false);
@@ -44,7 +47,7 @@ export default function TrainingRecap() {
   const [openSelectAthleteMenu, setOpenSelectAthleteMenu] = useState(false);
   const [openSelectExerciseMenu, setOpenSelectExerciseMenu] = useState(false);
 
-  const [deletedWorkloadIds, setDeletedWorkloadIds] = useState<string[]>([]);
+  const [deletedWorkloads, setDeletedWorkloads] = useState<Workload[]>([]);
   const [updatedWorkloads, setUpdatedWorkloads] = useState<Workload[]>([]);
 
   const athleteAnchorElRef = useRef<HTMLElement | null>(null);
@@ -75,7 +78,7 @@ export default function TrainingRecap() {
     handleCancelClick,
     handleDeleteClick,
     processRowUpdate,
-  } = useTrainingRecapRowsActions(rows, setRows, setDeletedWorkloadIds);
+  } = useTrainingRecapRowsActions(rows, setRows, setDeletedWorkloads);
 
   const { columns } = useTrainingRecapColumns(
     rowModesModel,
@@ -254,7 +257,13 @@ export default function TrainingRecap() {
             Workloads
           </Typography>
 
-          <Button size="small" variant="contained">
+          <Button
+            size="small"
+            variant="contained"
+            onClick={async () => {
+              await submitWorkloads(deletedWorkloads, updatedWorkloads);
+            }}
+          >
             Submit Changes
           </Button>
         </Box>

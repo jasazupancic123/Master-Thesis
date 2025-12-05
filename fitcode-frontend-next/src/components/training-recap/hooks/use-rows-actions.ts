@@ -21,7 +21,7 @@ import { useMain } from '@/store/main.provider';
 export default function useTrainingRecapRowsActions(
   rows: DataGridWorkloadRow[],
   setRows: SetState<DataGridWorkloadRow[]>,
-  setDeletedWorkloadIds: SetState<string[]>
+  setDeletedWorkloads: SetState<Workload[]>
 ) {
   const { exercises } = useMain();
   const { workloads } = useTrainingRecap();
@@ -71,7 +71,7 @@ export default function useTrainingRecapRowsActions(
     const workload = workloads.find((w) => w.id === id);
     if (!workload) return;
 
-    setDeletedWorkloadIds((prev) => [...prev, workload.id]);
+    setDeletedWorkloads((prev) => [...prev, workload]);
     setRows((prev) => prev.filter((r) => r.id !== id));
   };
 
