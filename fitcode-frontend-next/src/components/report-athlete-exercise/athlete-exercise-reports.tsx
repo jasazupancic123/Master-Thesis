@@ -28,6 +28,7 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import AddButton from '@/ui/add-button';
+import TutorialTooltip from '@/ui/tutorial-tooltip';
 
 interface Props {
   reports: AthleteExerciseReportType[];
@@ -105,50 +106,56 @@ export default function AthleteExerciseReports(props: Props) {
         </IconButton>
       </Box>
       <Box>
-        <AddButton
-          onClick={async () => {
-            const id = v4();
+        <TutorialTooltip
+          title={'Adds a new athlete-exercise report to the grid.'}
+          position="right"
+        >
+          <AddButton
+            onClick={async () => {
+              const id = v4();
 
-            const prevReport = reports.length
-              ? reports[reports.length - 1]
-              : null;
+              const prevReport = reports.length
+                ? reports[reports.length - 1]
+                : null;
 
-            const newReport: AthleteExerciseReportType = prevReport
-              ? {
-                  id,
-                  userId: prevReport.userId,
-                  userIds: prevReport.userIds,
-                  exerciseId: prevReport.exerciseId,
-                  type: prevReport.type,
-                }
-              : {
-                  id,
-                  userId: undefined,
-                  userIds: [],
-                  exerciseId: undefined,
-                  type: 'single',
-                };
-
-            if (selectedGroups.length === 1) {
-              const selectedGroup = selectedGroups[0];
-
-              const item: IndexDbAthleteExerciseReport | undefined = prevReport
+              const newReport: AthleteExerciseReportType = prevReport
                 ? {
                     id,
-                    exerciseId: prevReport.exerciseId,
-                    groupId: selectedGroup.id,
                     userId: prevReport.userId,
                     userIds: prevReport.userIds,
+                    exerciseId: prevReport.exerciseId,
                     type: prevReport.type,
                   }
-                : undefined;
+                : {
+                    id,
+                    userId: undefined,
+                    userIds: [],
+                    exerciseId: undefined,
+                    type: 'single',
+                  };
 
-              if (item) await updateReportInIndexDb(item);
-            }
+              if (selectedGroups.length === 1) {
+                const selectedGroup = selectedGroups[0];
 
-            setReports((prev) => [...prev, newReport]);
-          }}
-        />
+                const item: IndexDbAthleteExerciseReport | undefined =
+                  prevReport
+                    ? {
+                        id,
+                        exerciseId: prevReport.exerciseId,
+                        groupId: selectedGroup.id,
+                        userId: prevReport.userId,
+                        userIds: prevReport.userIds,
+                        type: prevReport.type,
+                      }
+                    : undefined;
+
+                if (item) await updateReportInIndexDb(item);
+              }
+
+              setReports((prev) => [...prev, newReport]);
+            }}
+          />
+        </TutorialTooltip>
       </Box>
       <DndContext
         sensors={sensors}

@@ -1,79 +1,41 @@
-import { Avatar, Box, Tab, Tabs, Typography } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-
-import { theme } from '@/app/style';
-import type { Workload } from '@/core/training/type/workload.type';
+import {
+  getPrescribedCompletedPairs,
+  setDetailsColumns,
+} from '@/components/report-athlete-exercise/actions/actions-set-details-modal';
+import { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import type { SetState } from '@/lib/common/type/state.type';
+import { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
-import {
-  getPrescribedCompletedPairs,
-  setDetailsColumns,
-} from '../actions/actions-set-details-modal';
+import { Box, Avatar, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import dayjs from 'dayjs';
 
 interface Props {
-  workloads: Workload[];
-  setWorkloads: SetState<Workload[]>;
-  activeSetNumber: number | null;
-  setActiveSetNumber: SetState<number | null>;
+  workload: Workload | null;
 }
 
-export default function SetDetailsModal(props: Props & ModalProps) {
+export default function SelectedWorkloadModal(props: ModalProps & Props) {
   const screenSize = useScreenSize();
 
   const { users, exercises } = useMain();
 
-  const {
-    workloads,
-    setWorkloads,
-    activeSetNumber,
-    setActiveSetNumber,
-    open,
-    setOpen,
-  } = props;
+  const { open, setOpen, workload } = props;
 
-  const [tab, setTab] = useState<number>(
-    activeSetNumber !== null ? activeSetNumber : 1
-  );
-  const foundWorkload = workloads.find((w) => w.setNumber === activeSetNumber);
+  if (!workload) return null;
 
-  const [workload, setWorkload] = useState<Workload | undefined>(
-    foundWorkload ? foundWorkload : workloads[0]
-  );
+  const user = users.find((u) => u.uid === workload.userId)!;
+  const exercise = exercises.find((e) => e.id === workload.exerciseId)!;
 
-  useEffect(() => {
-    if (activeSetNumber === null) return;
-
-    const foundWorkload = workloads.find(
-      (w) => w.setNumber === activeSetNumber
-    );
-
-    if (foundWorkload) {
-      setWorkload(foundWorkload);
-      setTab(activeSetNumber);
-    }
-  }, [activeSetNumber]);
-
-  const exercise = exercises.find((ex) => ex.id === workload?.exerciseId);
-  const user = users.find((u) => u.uid === workload?.userId);
-
-  if (!exercise || !user || !workload) return null;
+  if (!user || !exercise) return null;
 
   return (
     <MyModal
       isOpen={open}
-      setIsOpen={setOpen}
-      onCancel={() => {
-        setActiveSetNumber(null);
-        setWorkloads([]);
-        setOpen(false);
-      }}
+      setIsOpen={(open) => setOpen(open)}
+      onCancel={() => setOpen(false)}
       cancelText="Close"
     >
       <Box
@@ -136,33 +98,6 @@ export default function SetDetailsModal(props: Props & ModalProps) {
             </Typography>
           </Box>
         </Box>
-
-        <Tabs
-          value={tab}
-          onChange={(_, newValue) => {
-            const workload = workloads.find((w) => w.setNumber === newValue);
-
-            if (!workload) return;
-
-            setWorkload(workload);
-            setTab(newValue);
-          }}
-          textColor="primary"
-          indicatorColor="primary"
-        >
-          {workloads.map((t) => (
-            <Tab
-              key={t.id}
-              value={t.setNumber}
-              label={`Set ${t.setNumber}`}
-              sx={{
-                textTransform: 'none',
-                color: theme.palette.text.primary,
-              }}
-            />
-          ))}
-        </Tabs>
-
         <DataGrid
           autoHeight
           rows={getPrescribedCompletedPairs(workload)}
@@ -178,8 +113,6 @@ export default function SetDetailsModal(props: Props & ModalProps) {
             width: '100%',
           }}
         />
-
-        {/* Gallery */}
         <ImageGallery
           imagesL={workload?.photoURLs || []}
           imagesR={[]}
