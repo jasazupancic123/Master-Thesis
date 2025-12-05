@@ -1,13 +1,14 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
 import { TrainingController } from '@/core/training/training.controller';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Workload } from '@/core/training/type/workload.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { TrainingRecapProvider } from '@/store/training-recap.provider';
 import Alert from '@/ui/alert';
-import { usePathname } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
 
 export default function TrainingRecapInitializer({
   children,

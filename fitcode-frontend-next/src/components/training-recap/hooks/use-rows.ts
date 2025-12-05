@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
+
+import type { DataGridWorkloadRow } from '../types/data-grid-workload-row';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
-import { useState, useEffect } from 'react';
-import { DataGridWorkloadRow } from '../types/data-grid-workload-row';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { Exercise } from '@/core/exercise/type/exercise.type';
 
 export default function useTrainingRecapRows(
   selectedAthletes: AuthUser[],

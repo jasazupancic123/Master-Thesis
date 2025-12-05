@@ -197,7 +197,6 @@ export const TrainingStationProvider = (
     },
     router: AppRouterInstance
   ) {
-    console.log('partialWorkload', body);
     const {
       exerciseId,
       supersetIndex: stateSupersetIndex,

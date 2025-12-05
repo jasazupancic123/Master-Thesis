@@ -3,6 +3,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
+import {
+  getPrescribedCompletedPairs,
+  setDetailsColumns,
+} from '../actions/actions-set-details-modal';
 import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -12,10 +16,6 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
-import {
-  getPrescribedCompletedPairs,
-  setDetailsColumns,
-} from '../actions/actions-set-details-modal';
 
 interface Props {
   workloads: Workload[];

@@ -1,7 +1,8 @@
-import { Workload } from '@/core/training/type/workload.type';
+import type { GridColDef } from '@mui/x-data-grid';
+
+import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
-import { GridColDef } from '@mui/x-data-grid';
 
 type DataGridWorkloadDetailsRow = {
   name: string;

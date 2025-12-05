@@ -1,7 +1,8 @@
-import { AuthUser } from '@/core/auth/type/user.type';
+import { useEffect, useState } from 'react';
+
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
-import { useEffect, useState } from 'react';
 
 export default function useTrainingRecapSelectedAthletes() {
   const { users } = useMain();

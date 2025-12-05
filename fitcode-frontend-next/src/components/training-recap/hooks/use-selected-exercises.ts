@@ -1,7 +1,8 @@
-import { Exercise } from '@/core/exercise/type/exercise.type';
+import { useEffect, useState } from 'react';
+
+import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
-import { useState, useEffect } from 'react';
 
 export default function useTrainingRecapSelectedExercises() {
   const { exercises } = useMain();

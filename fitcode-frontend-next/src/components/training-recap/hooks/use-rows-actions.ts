@@ -1,22 +1,20 @@
-import { TrainingController } from '@/core/training/training.controller';
-import { handleApiRequest, SetState } from '@/lib/common/type/state.type';
-import {
+import type {
+  GridRowEditStopParams,
+  GridRowId,
+  GridRowModel,
   GridRowModesModel,
   GridRowSelectionModel,
-  GridRowEditStopParams,
   MuiEvent,
-  GridRowId,
-  GridRowModes,
-  GridRowModel,
 } from '@mui/x-data-grid';
+import { GridRowModes } from '@mui/x-data-grid';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { DataGridWorkloadRow } from '../types/data-grid-workload-row';
-import { useRouter } from 'next/navigation';
-import { Workload } from '@/core/training/type/workload.type';
-import { useTrainingRecap } from '@/store/training-recap.provider';
-import { AuthUser } from '@/core/auth/type/user.type';
+
+import type { DataGridWorkloadRow } from '../types/data-grid-workload-row';
+import type { Workload } from '@/core/training/type/workload.type';
+import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
+import { useTrainingRecap } from '@/store/training-recap.provider';
 
 export default function useTrainingRecapRowsActions(
   rows: DataGridWorkloadRow[],
@@ -117,7 +115,7 @@ export default function useTrainingRecapRowsActions(
       return [...otherWorkloads, updatedWorkload];
     });
 
-    let returnRow = newRow;
+    const returnRow = newRow;
 
     setRows((prev) =>
       prev.map((r) =>

@@ -1,17 +1,18 @@
+import { Avatar, Box, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import dayjs from 'dayjs';
+
 import {
   getPrescribedCompletedPairs,
   setDetailsColumns,
 } from '@/components/report-athlete-exercise/actions/actions-set-details-modal';
-import { Workload } from '@/core/training/type/workload.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import ImageGallery from '@/ui/image-gallery';
 import MyModal from '@/ui/modal';
-import { Box, Avatar, Typography } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import dayjs from 'dayjs';
 
 interface Props {
   workload: Workload | null;

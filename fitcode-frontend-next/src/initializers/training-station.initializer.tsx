@@ -8,8 +8,8 @@ import { TrainingService } from '@/core/training/training.service';
 import type { Training } from '@/core/training/type/training.type';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { useMain } from '@/store/main.provider';
-import Alert from '@/ui/alert';
 import { TrainingStationProvider } from '@/store/training-station.provider';
+import Alert from '@/ui/alert';
 
 export default function TrainingStationInitializer({
   children,
