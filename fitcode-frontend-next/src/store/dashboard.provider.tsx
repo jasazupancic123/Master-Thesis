@@ -254,9 +254,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
           ...user,
           displayName: input.displayName ?? user.displayName,
           photoURL: input.photoURL ?? user.photoURL,
-          ...(input.role
-            ? { customClaims: { ...user.customClaims, role: [input.role] } }
-            : {}),
         };
       }
 
