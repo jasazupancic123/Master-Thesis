@@ -79,9 +79,6 @@ export const finishSet = async (state: {
     stationsViewProps,
   } = state;
 
-  console.log('imagesL', imagesL);
-  console.log('imagesR', imagesR);
-
   const set = exercise.sets[setIndex];
 
   const photoUrls = [];
