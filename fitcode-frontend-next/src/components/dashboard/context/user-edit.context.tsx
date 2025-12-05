@@ -66,7 +66,6 @@ export function DashboardUserEditProvider({
   }
 
   function toggleUser(user: AuthUser | null) {
-    console.log('toggleUser', user);
     if (!user) {
       setIsEditedProfile(false);
       setIsEditedUser(false);

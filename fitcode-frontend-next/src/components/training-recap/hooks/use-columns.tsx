@@ -1,19 +1,17 @@
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useTrainingRecap } from '@/store/training-recap.provider';
 import {
   AssessmentOutlined,
-  SaveOutlined,
   CancelOutlined,
-  EditOutlined,
   DeleteOutlined,
+  EditOutlined,
+  SaveOutlined,
 } from '@mui/icons-material';
-import { Box, Avatar, IconButton } from '@mui/material';
-import {
-  GridColDef,
-  GridRowModes,
-  GridActionsCellItem,
-  GridRowModesModel,
-} from '@mui/x-data-grid';
+import { Avatar, Box, IconButton } from '@mui/material';
+import type { GridColDef, GridRowModesModel } from '@mui/x-data-grid';
+import { GridActionsCellItem, GridRowModes } from '@mui/x-data-grid';
+
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import { useTrainingRecap } from '@/store/training-recap.provider';
+import { Workload } from '@/core/training/type/workload.type';
 
 export default function useTrainingRecapColumns(
   rowModesModel: GridRowModesModel,
@@ -21,7 +19,7 @@ export default function useTrainingRecapColumns(
   handleSaveClick: (id: string) => () => void,
   handleCancelClick: (id: string) => () => void,
   handleDeleteClick: (id: string) => () => void,
-  setSelectedWorkload: (workload: any) => void,
+  setSelectedWorkload: (workload: Workload) => void,
   setOpenSelectedWorkloadModal: (open: boolean) => void
 ) {
   const { workloads } = useTrainingRecap();
@@ -140,6 +138,7 @@ export default function useTrainingRecapColumns(
         if (isInEditMode) {
           return [
             <GridActionsCellItem
+              key={0}
               icon={<SaveOutlined />}
               label="Save"
               onClick={handleSaveClick(id as string)}
@@ -163,6 +162,7 @@ export default function useTrainingRecapColumns(
             color="inherit"
           />,
           <GridActionsCellItem
+            key={3}
             icon={<DeleteOutlined />}
             label="Delete"
             onClick={handleDeleteClick(id as string)}

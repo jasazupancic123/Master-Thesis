@@ -1,5 +1,6 @@
 'use client';
 
+import { FitnessCenter, Group, Groups } from '@mui/icons-material';
 import {
   alpha,
   Avatar,
@@ -9,30 +10,30 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { DataGrid } from '@mui/x-data-grid';
 import { useRef, useState } from 'react';
-import { Workload } from '@/core/training/type/workload.type';
-import SelectedWorkloadModal from './modals/selected-workload.modal';
+import toast from 'react-hot-toast';
+
+import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
+import useTrainingRecapColumns from './hooks/use-columns';
 import useTrainingRecapRows from './hooks/use-rows';
 import useTrainingRecapRowsActions from './hooks/use-rows-actions';
-import useTrainingRecapColumns from './hooks/use-columns';
-import UserSelect from '@/ui/user-select';
-import { AuthUser } from '@/core/auth/type/user.type';
+import useTrainingRecapSelectedAthletes from './hooks/use-selected-athletes';
+import useTrainingRecapSelectedExercises from './hooks/use-selected-exercises';
+import SelectedWorkloadModal from './modals/selected-workload.modal';
+import TrainingRecapHeader from './training-recap-header';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { Workload } from '@/core/training/type/workload.type';
 import {
   EXERCISE_DEFAULT_IMG_URL,
   USER_AVATAR_IMG_URL,
 } from '@/lib/common/const/image.const';
-import { FitnessCenter, Group, Groups } from '@mui/icons-material';
-import { theme } from '@/app/style';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import toast from 'react-hot-toast';
-import useTrainingRecapSelectedAthletes from './hooks/use-selected-athletes';
-import useTrainingRecapSelectedExercises from './hooks/use-selected-exercises';
-import { Exercise } from '@/core/exercise/type/exercise.type';
-import TrainingRecapHeader from './training-recap-header';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
+import { SearchBar } from '@/ui/search-bar/search-bar';
+import UserSelect from '@/ui/user-select';
 
 export default function TrainingRecap() {
   const screenSize = useScreenSize();

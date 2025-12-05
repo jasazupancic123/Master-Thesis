@@ -1,10 +1,11 @@
+import { Box, Typography } from '@mui/material';
+import dayjs from 'dayjs';
+import { usePathname } from 'next/navigation';
+
 import { lib } from '@/lib';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
-import { Box, Typography } from '@mui/material';
-import dayjs from 'dayjs';
-import { usePathname } from 'next/navigation';
 
 export default function TrainingRecapHeader() {
   const pathname = usePathname();

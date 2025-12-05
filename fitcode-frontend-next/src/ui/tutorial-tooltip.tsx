@@ -1,6 +1,8 @@
-import { theme } from '@/app/style';
-import { Fade, Tooltip, tooltipClasses, TooltipProps } from '@mui/material';
+import type { TooltipProps } from '@mui/material';
+import { Fade, Tooltip, tooltipClasses } from '@mui/material';
 import React from 'react';
+
+import { theme } from '@/app/style';
 
 interface Props {
   title: string;

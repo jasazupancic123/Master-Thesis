@@ -1,13 +1,15 @@
 'use client';
 
-import { TrainingController } from '@/core/training/training.controller';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Workload } from '@/core/training/type/workload.type';
-import { handleApiRequest, SetState } from '@/lib/common/type/state.type';
-import { createContext, useContext, useState } from 'react';
-import { useCoachTraining } from './coach-training.provider';
-import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { createContext, useContext, useState } from 'react';
+import toast from 'react-hot-toast';
+
+import { useCoachTraining } from './coach-training.provider';
+import { TrainingController } from '@/core/training/training.controller';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import type { Workload } from '@/core/training/type/workload.type';
+import type { SetState } from '@/lib/common/type/state.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 
 export type TrainingRecapProps = {
   workloads: Workload[];
