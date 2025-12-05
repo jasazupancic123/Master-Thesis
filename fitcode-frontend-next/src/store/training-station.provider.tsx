@@ -27,7 +27,7 @@ export type TrainingStationProps = {
   individualTrainings: (Training & { userId: string })[];
 };
 
-interface TrainingStationProvider extends TrainingStationProps {
+interface ITrainingStationProvider extends TrainingStationProps {
   setIndividualTrainings: SetState<(Training & { userId: string })[]>;
   station: TrainingStation | null;
   setStation: SetState<TrainingStation | null>;
@@ -66,7 +66,7 @@ interface TrainingStationProvider extends TrainingStationProps {
 }
 
 const TrainingStationContext = createContext<
-  TrainingStationProvider | undefined
+  ITrainingStationProvider | undefined
 >(undefined);
 
 export const TrainingStationProvider = (

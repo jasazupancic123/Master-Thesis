@@ -87,20 +87,21 @@ export default function ImageGallery(props: ImageGalleryProps) {
           position: 'relative',
         }}
       >
-        {!images[currentIndex] !== null && (
-          <Image
-            src={
-              isRepImage(images[currentIndex])
-                ? images[currentIndex].url
-                : (images[currentIndex] as string)
-            }
-            unoptimized={lib.common.env.unoptimizeImages()}
-            alt="Exercise Image"
-            width={width}
-            height={0}
-            layout="intrinsic"
-          />
-        )}
+        {images[currentIndex] !== null &&
+          images[currentIndex] !== undefined && (
+            <Image
+              src={
+                isRepImage(images[currentIndex])
+                  ? images[currentIndex].url
+                  : (images[currentIndex] as string)
+              }
+              unoptimized={lib.common.env.unoptimizeImages()}
+              alt="Exercise Image"
+              width={width}
+              height={0}
+              layout="intrinsic"
+            />
+          )}
 
         <Typography
           textAlign="center"

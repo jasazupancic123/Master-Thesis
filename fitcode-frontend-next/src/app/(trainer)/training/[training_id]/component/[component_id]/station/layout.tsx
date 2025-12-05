@@ -1,9 +1,5 @@
-import CoachTrainingStationInitializer from '@/initializers/coach-training-station.initializer';
+import TrainingStationInitializer from '@/initializers/training-station.initializer';
 
 export default function Layout({ children }: React.PropsWithChildren) {
-  return (
-    <CoachTrainingStationInitializer>
-      {children}
-    </CoachTrainingStationInitializer>
-  );
+  return <TrainingStationInitializer>{children}</TrainingStationInitializer>;
 }

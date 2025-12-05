@@ -101,6 +101,8 @@ export const finishSet = async (state: {
       workloadInput,
     } = stationsViewProps;
 
+    workloadInput.photoURLs = photoUrls;
+
     const workload = createEmptyPartialWorkload({
       individualTraining,
       workloads,

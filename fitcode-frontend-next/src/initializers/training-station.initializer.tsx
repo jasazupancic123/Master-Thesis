@@ -11,7 +11,7 @@ import { useMain } from '@/store/main.provider';
 import { TrainingStationProvider } from '@/store/training-station.provider';
 import Alert from '@/ui/alert';
 
-export default function CoachTrainingStationInitializer({
+export default function TrainingStationInitializer({
   children,
 }: React.PropsWithChildren) {
   const { exercises, users } = useMain();

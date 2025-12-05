@@ -14,9 +14,11 @@ export default function DataGridCellPercentageDiff(props: Props) {
   const { value1, value2, roundValue, fontSize } = props;
   if (value1 === undefined) return '-';
 
+  if (isNaN(Number(value1)) || isNaN(Number(value2))) return '-';
+
   const percentChange = lib.common.number.calculatePercentageDiff(
-    value1,
-    value2
+    Number(value1),
+    Number(value2)
   );
 
   const isHigher = percentChange !== null && percentChange > 0;
