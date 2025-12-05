@@ -69,7 +69,7 @@ export default function useRecoveryTime(
       return;
     }
 
-    const lastSetCompletedAt = lastCompletedWorkload.timestamp;
+    const lastSetCompletedAt = lastCompletedWorkload.from;
 
     // here update every second and every second decrease value by 1 until 0
     const intervalId: NodeJS.Timeout = setInterval(() => {

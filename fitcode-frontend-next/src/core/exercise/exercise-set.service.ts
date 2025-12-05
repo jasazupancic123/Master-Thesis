@@ -49,7 +49,8 @@ export class ExerciseSetService {
       )
       .sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          (b.from ? new Date(b.from) : new Date()).getTime() -
+          (a.from ? new Date(a.from) : new Date()).getTime()
       )[0];
 
     return lastCompletedWorkload;

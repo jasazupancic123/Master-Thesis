@@ -41,6 +41,7 @@ import {
 } from '@src/common/type/firestore.type';
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Filter } from '@src/common/type/orm.type';
+import { ValidateError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { ExerciseParamService } from '@src/exercise/service/exercise-param.service';
@@ -69,6 +70,7 @@ import {
   TrainingActionPayload,
   TrainingActionRef,
 } from '../dto/training-action.dto';
+import { UpdateManyWorkloadsDto } from '../dto/update-many-workloads.dto';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
@@ -847,7 +849,6 @@ export class TrainingService implements Permission<Training, Institution> {
         componentId: COMPONENT_ID,
         supersetIndex: 0,
         status: SetStatus.COMPLETED,
-        timestamp: workload.date,
         from: workload.date,
         to: workload.date,
         prescribed: workload,
@@ -878,6 +879,87 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     return await this.findOneByIdOrFail(user, { trainingId });
+  }
+
+  @LogMethod()
+  async updateManyWorkloads(
+    user: User,
+    trainingId: string,
+    input: UpdateManyWorkloadsDto,
+  ): Promise<void> {
+    const training = await this.findOneByIdOrFail(user, { trainingId });
+    if (
+      !this.institutionService.canEditExtended(user, training.institution, {
+        allowTrainer: true,
+        allowAthlete: true,
+      })
+    )
+      throw new UnauthorizedException(
+        'You are not authorized to edit this training',
+      );
+
+    const workloads = await this.workloadService.findAllByUserTraining({
+      institutionId: training.institutionId,
+      trainingId,
+      ...(this.firebase.isAthlete(user) && { userId: user.uid }),
+    });
+
+    // check that all provided updates/deletes exist
+    const errors: ValidateError<Workload>[] = [];
+    const refs = [...input.updates.map((u) => u.ref), ...input.deletes];
+
+    for (const ref of refs) {
+      const found = workloads.find(
+        (w) =>
+          w.trainingId === ref.trainingId &&
+          w.componentId === ref.componentId &&
+          w.supersetIndex === ref.supersetIndex &&
+          w.exerciseId === ref.exerciseId &&
+          w.userId === ref.userId &&
+          w.setNumber === ref.setNumber,
+      );
+
+      if (!found)
+        errors.push({
+          field: 'id',
+          message: `NOT_FOUND: ${JSON.stringify(ref)}`,
+        });
+    }
+
+    if (errors.length)
+      throw new BadRequestException(this.common.generic.error(errors));
+
+    await this.workloadService.updateMany(input.updates, input.deletes);
+
+    // recalculate all component statuses
+    const newWorkloads = await this.workloadService.findAllByUserTraining({
+      institutionId: training.institutionId,
+      trainingId,
+      ...(this.firebase.isAthlete(user) && { userId: user.uid }),
+    });
+
+    const memberIds = Array.from(new Set(newWorkloads.map((w) => w.userId)));
+    await Promise.all(
+      memberIds.map(async (memberId) => {
+        const memberWorkloads = newWorkloads.filter(
+          (w) => w.userId === memberId,
+        );
+
+        const componentIds = Array.from(
+          new Set(memberWorkloads.map((w) => w.componentId)),
+        );
+
+        return Promise.all(
+          componentIds.map((componentId) => {
+            return this.upsertTrainingComponentStatus(
+              training,
+              { uid: memberId, trainingId: training.id, componentId },
+              memberWorkloads,
+            );
+          }),
+        );
+      }),
+    );
   }
 
   /**
@@ -975,32 +1057,19 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
-  async updateTrainingWithWorkloads(
-    athleteId: string,
-    training: Training,
-  ): Promise<Workload[]> {
-    const workloads = await this.workloadService.findAllByUserTraining({
-      userId: athleteId,
-      trainingId: training.id,
-    });
-
-    if (workloads.length)
-      this.trainingPlanService.applyWorkloadsToTraining(training, workloads);
-
-    return workloads;
-  }
-
   async upsertTrainingComponentStatus(
     training: Training,
     ref: TrainingComponentUserStatusRef,
     workloads: Workload[],
   ): Promise<void> {
-    workloads = workloads.filter(
-      (w) =>
-        w.trainingId === ref.trainingId &&
-        w.userId === ref.uid &&
-        w.componentId === ref.componentId,
-    );
+    workloads = workloads
+      .filter(
+        (w) =>
+          w.trainingId === ref.trainingId &&
+          w.userId === ref.uid &&
+          w.componentId === ref.componentId,
+      )
+      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
     const report = this.trainingReportService.getTrainingComponentReport(
       ref.uid,
@@ -1029,8 +1098,8 @@ export class TrainingService implements Permission<Training, Institution> {
     } else {
       await this.trainingComponentUserStatusRepository.save({
         id: null,
-        from: new Date(),
-        to: new Date(),
+        from: new Date(workloads[0]?.from) || new Date(),
+        to: new Date(workloads[workloads.length - 1]?.to) || new Date(),
         institutionId: training.institutionId,
         groupId: training.groupId,
         cycleId: training.cycleId,
@@ -1381,13 +1450,13 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   private validateIsDateInFuture(
-    from: Date,
-    relativeDate = startOfDay(new Date()),
+    _from: Date,
+    _relativeDate = startOfDay(new Date()),
   ) {
-    if (this.isInPast(from, relativeDate))
+    /* if (this.isInPast(from, relativeDate))
       throw new BadRequestException(
         'You cannot add or update trainings in the past',
-      );
+      ); */
   }
 
   private isInPast(date: Date, relativeDate = new Date()) {

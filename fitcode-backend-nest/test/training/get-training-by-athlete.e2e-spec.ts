@@ -457,7 +457,7 @@ describe('Get Training By Athlete (e2e)', () => {
         setNumber: 1,
         status: SetStatus.NOT_STARTED,
         exerciseId,
-        timestamp: date,
+        from: date,
         reps,
         loadKg: weight,
         prescribed: { reps, loadKg: weight },

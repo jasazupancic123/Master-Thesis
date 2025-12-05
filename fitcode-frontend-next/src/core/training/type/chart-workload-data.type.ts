@@ -2,7 +2,7 @@ import type { Workload } from './workload.type';
 
 export type ChartWorkloadData = Pick<
   Workload,
-  'trainingId' | 'componentId' | 'exerciseId' | 'timestamp'
+  'trainingId' | 'componentId' | 'exerciseId' | 'from'
 > & {
   name: string;
   int?: number;

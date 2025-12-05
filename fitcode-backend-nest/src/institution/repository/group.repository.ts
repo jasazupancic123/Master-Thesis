@@ -5,6 +5,7 @@ import {
   CollectionReference,
   DocumentReference,
   FieldValue,
+  Query,
 } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -55,8 +56,14 @@ export class GroupRepository extends FirestoreRepository<Group, GroupRef> {
     return this.collection(ref).doc(ref.groupId);
   }
 
-  async getAllByInstitution(ref: InstitutionRef): Promise<Group[]> {
-    const snapshot = await this.collection(ref).get();
+  async getAllByInstitution(
+    ref: InstitutionRef,
+    athleteId?: string,
+  ): Promise<Group[]> {
+    let q = this.collection(ref) as Query;
+    if (athleteId) q = q.where('membersIds', 'array-contains', athleteId);
+
+    const snapshot = await q.get();
     return snapshot.docs.map((doc) =>
       this.firebase.serialize(doc.data() as FirestoreEntity<Group>),
     );

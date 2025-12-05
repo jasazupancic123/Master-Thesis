@@ -98,7 +98,7 @@ describe('Get Trainings (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       db.trainings.clear(),
-      db.institutions.remove(institution.id),
+      db.institutions.deleteTest(institution.id),
     ]);
 
     await testApp.close();
