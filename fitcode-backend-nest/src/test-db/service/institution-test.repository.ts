@@ -89,7 +89,7 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
     };
   }
 
-  async remove(institutionId: string) {
+  async deleteTest(institutionId: string) {
     // remove associated users (but not global ones)
     const institution = await this.findById(institutionId);
     const userIds = [

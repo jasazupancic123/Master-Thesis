@@ -66,11 +66,7 @@ export const TrainingInProgressProvider = ({
   children,
 }: React.PropsWithChildren) => {
   const { setActiveTraining } = useMain();
-  const {
-    trainingInProgress,
-    updateTrainingInProgress,
-    setTrainingInProgress,
-  } = useTrainings();
+  const { trainingInProgress, setTrainingInProgress } = useTrainings();
 
   const router = useRouter();
 
@@ -204,7 +200,7 @@ export const TrainingInProgressProvider = ({
       if (prevWorkload) {
         const recTime = Math.abs(
           dayjs(body.from).diff(
-            dayjs(prevWorkload.to || prevWorkload.timestamp),
+            dayjs(prevWorkload.to || prevWorkload.from),
             'second'
           )
         );
@@ -212,35 +208,7 @@ export const TrainingInProgressProvider = ({
         prevWorkload.recTime = recTime;
         if (prevWorkload.repsR) prevWorkload.recTimeR = recTime;
 
-        handleApiRequest(
-          router,
-          () =>
-            TrainingController.getInstance().upsertSet(
-              trainingInProgress.training.id,
-              trainingInProgress.selectedComponent.id,
-              exerciseId,
-              stateSupersetIndex,
-              stateSetIndex, // previous set (setNumber is 1-based, setIndex is 0-based)
-              { ...prevWorkload, userId: trainingInProgress.userId }
-            ),
-          (fetchedPrevWorkload) => {
-            updatedPreviousWorkload = fetchedPrevWorkload;
-
-            const exercise = trainingInProgress.supersets[
-              stateSupersetIndex
-            ].exercises.find((ex) => ex.id === exerciseId);
-
-            if (exercise) {
-              const set = exercise.sets[stateSetIndex - 1]; // previous set
-
-              if (set) {
-                set.recTime = recTime;
-                if (set.repsR) set.recTimeR = recTime;
-                updateTrainingInProgress(exercise, supersetIndex || 0);
-              }
-            }
-          }
-        );
+        updatedPreviousWorkload = prevWorkload;
       }
     }
 

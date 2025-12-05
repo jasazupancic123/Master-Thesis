@@ -303,8 +303,12 @@ export default function TrainingExerciseChart(
                   const data = chartData.find((d) => d.name === value);
                   if (!data) return '';
 
-                  return dayjs(data.timestamp).isSame(new Date(), 'day')
-                    ? dayjs(data.timestamp).format('DD.MM.')
+                  const timestamp = data.from
+                    ? new Date(data.from)
+                    : new Date();
+
+                  return dayjs(timestamp).isSame(new Date(), 'day')
+                    ? dayjs(timestamp).format('DD.MM.')
                     : EMPTY_STRING;
                 }}
               />

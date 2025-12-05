@@ -12,20 +12,18 @@ import { SetStatus } from '../enum/set-status.enum';
 
 export function generateWorkloadStub(
   data: Create<Omit<WorkloadMeta, 'id'>> &
-    Omit<WorkloadValue, 'reps' | 'recTime' | 'timestamp' | 'photoURLs'> & {
+    Omit<WorkloadValue, 'photoURLs'> & {
       prescribed: Partial<ExerciseSet>;
-      reps?: number;
-      recTime?: number;
-      timestamp?: Date;
       photoURLs?: string[];
       random?: boolean;
+      from?: Date;
+      to?: Date;
     },
 ): Workload {
   const setNumber = data?.setNumber || 1;
 
   const workloadMeta = generateWorkloadMetaStub(data);
   const workloadValue: WorkloadValue = {
-    timestamp: data?.timestamp || new Date(),
     photoURLs: data?.photoURLs || [],
     reps: data?.reps,
     repsR: data?.repsR,
@@ -64,8 +62,8 @@ export function generateWorkloadStub(
   return {
     ...workloadMeta,
     ...workloadValue,
-    from: new Date(),
-    to: new Date(),
+    from: data?.from || new Date(),
+    to: data?.to || new Date(),
     prescribed: { setNumber, ...data.prescribed },
   };
 }

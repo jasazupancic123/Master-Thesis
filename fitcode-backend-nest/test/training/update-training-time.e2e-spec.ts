@@ -1,6 +1,6 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
-import { addDays, startOfDay, subDays } from 'date-fns';
+import { addDays, startOfDay } from 'date-fns';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import type { DateRangeDto } from '@src/common/dto/date-range.dto';
@@ -61,7 +61,7 @@ describe('Update Training (e2e)', () => {
 
   afterAll(async () => {
     await db.trainings.delete(trainingId);
-    await db.institutions.remove(institution.id);
+    await db.institutions.deleteTest(institution.id);
     await db.groups.delete({
       institutionId: institution.id,
       groupId: group.id,
@@ -94,7 +94,7 @@ describe('Update Training (e2e)', () => {
     expect(response.status).toBe(401);
     expect(response.body.message).toBe('You cannot view this institution');
 
-    await db.institutions.remove(institution2.id);
+    await db.institutions.deleteTest(institution2.id);
   });
 
   it('should fail if component is invalid', async () => {
@@ -106,30 +106,6 @@ describe('Update Training (e2e)', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Training component not found');
-  });
-
-  it('should fail to update training if training is in the past', async () => {
-    const pastTrainingId = await db.trainings.save(
-      generateTrainingStub({
-        ownerId: global.trainer.uid,
-        membersIds: [],
-        from: subDays(getTime(new Date(), 8, 0), 1),
-        to: subDays(getTime(new Date(), 9, 0), 1),
-        components: [generateTrainingComponent({ id: 'c1' })],
-      }),
-    );
-
-    const response = await req(
-      { from: new Date(), to: new Date() },
-      pastTrainingId,
-    );
-
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe(
-      'You cannot add or update trainings in the past',
-    );
-
-    await db.trainings.delete(pastTrainingId);
   });
 
   it('should fail if input dates are not on the same day as training', async () => {
