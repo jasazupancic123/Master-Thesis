@@ -120,7 +120,7 @@ describe('Upsert Set (e2e)', () => {
     await Promise.all([
       db.trainings.clear(),
       db.groups.delete({ institutionId: institution.id, groupId: group.id }),
-      db.institutions.remove(institution.id),
+      db.institutions.deleteTest(institution.id),
       db.trainings.delete(trainingId),
       db.exercises.clear(),
     ]);
@@ -166,10 +166,8 @@ describe('Upsert Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        timestamp: new Date(),
         from: new Date(),
         to: new Date(),
-        recTime: 0,
         reps: 1,
       },
     );
@@ -197,14 +195,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       0,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        recTime: 0,
-        reps: 1,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
     );
 
     expect(res.status).toBe(409);
@@ -223,14 +214,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       0,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        reps: 1,
-        recTime: 0,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
     );
 
     expect(res.status).toBe(400);
@@ -250,14 +234,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       10,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        reps: 1,
-        recTime: 0,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
     );
 
     expect(res.status).toBe(400);
@@ -277,14 +254,7 @@ describe('Upsert Set (e2e)', () => {
       'bench',
       0,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        reps: 1,
-        recTime: 0,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
     );
 
     expect(res.status).toBe(400);
@@ -304,14 +274,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       0,
       10,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        recTime: 0,
-        reps: 1,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
     );
 
     expect(res.status).toBe(400);
@@ -331,14 +294,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       0,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        reps: 6,
-        recTime: 0,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 6 },
     );
 
     expect(res.status).toBe(201);
@@ -384,14 +340,7 @@ describe('Upsert Set (e2e)', () => {
       'squat',
       0,
       1,
-      {
-        userId: global.athlete.uid,
-        timestamp: new Date(),
-        from: new Date(),
-        to: new Date(),
-        reps: 6,
-        recTime: 0,
-      },
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 6 },
     );
 
     expect(res.status).toBe(201);
@@ -418,7 +367,6 @@ describe('Upsert Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        timestamp: new Date(),
         from: new Date(),
         to: new Date(),
         reps: 6,
@@ -447,8 +395,6 @@ describe('Upsert Set (e2e)', () => {
         photoURLs: ['url1', 'url2', 'url3'],
         recDist: 500,
         recDistR: 505,
-        recTime: 60,
-        recTimeR: 52,
         time: 300,
         timeR: 298,
       },
@@ -487,8 +433,8 @@ describe('Upsert Set (e2e)', () => {
     expect(result.eff).toBe(1);
     expect(result.effR).toBe(2);
     expect(result.photoURLs).toEqual(['url1', 'url2', 'url3']);
-    expect(result.recTime).toBe(60);
-    expect(result.recTimeR).toBe(52);
+    expect(result.recTime).toBe(0); // should be 0 from backend
+    expect(result.recTimeR).toBeUndefined();
     expect(result.recDist).toBe(500);
     expect(result.recDistR).toBe(505);
     expect(result.time).toBe(300);
@@ -519,12 +465,10 @@ describe('Upsert Set (e2e)', () => {
       1,
       {
         userId: global.athlete.uid,
-        timestamp: from,
         from: from,
         to: from,
         reps: 8,
         loadKg: 70,
-        recTime: 90,
         tempoEcc: 2,
         tempoIso: 0,
         tempoCon: 2,
@@ -534,5 +478,55 @@ describe('Upsert Set (e2e)', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.message).toBe('Training component has been paused');
+  });
+
+  it('should fail if set number is not consecutive for the first set', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c2');
+
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c2',
+      'squat',
+      0,
+      2,
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe('Complete previous sets first');
+  });
+
+  it('should fail if set number is not consecutive for next sets', async () => {
+    // start component
+    await startTrainingComponentReq(global.trainer.token, trainingId, 'c2');
+
+    await db.workloads.createMany([
+      {
+        trainingId,
+        componentId: 'c2',
+        exerciseId: 'squat',
+        supersetIndex: 0,
+        setNumber: 1,
+        userId: global.athlete.uid,
+        status: SetStatus.COMPLETED,
+        reps: 6,
+        prescribed: { reps: 1 },
+      },
+    ]);
+
+    const res = await req(
+      global.trainer.token,
+      trainingId,
+      'c2',
+      'squat',
+      0,
+      3,
+      { userId: global.athlete.uid, from: new Date(), to: new Date(), reps: 1 },
+    );
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe('Complete previous sets first');
   });
 });

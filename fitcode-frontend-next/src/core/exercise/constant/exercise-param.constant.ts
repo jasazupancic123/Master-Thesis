@@ -18,7 +18,7 @@ export const REPS: Attribute<ExerciseSet> = {
   type: AttributeType.Number,
   defaultValue: 10,
   min: 0,
-  max: 100,
+  max: 10000,
   required: true,
 };
 
@@ -30,7 +30,7 @@ export const REC_TIME: Attribute<ExerciseSet> = {
   type: AttributeType.Number,
   defaultValue: 60, // in seconds
   min: 0,
-  max: 600, // 10 minutes
+  max: 86400, // 10 minutes
 };
 
 export const REC_DIST: Attribute<ExerciseSet> = {
@@ -41,7 +41,7 @@ export const REC_DIST: Attribute<ExerciseSet> = {
   type: AttributeType.Number,
   defaultValue: 100, // in meters
   min: 0,
-  max: 100000, // 100 km
+  max: 1000000, // 1000 km
 };
 
 export const KG: Attribute<ExerciseSet> = {
@@ -117,7 +117,7 @@ export const TIME: Attribute<ExerciseSet> = {
   type: AttributeType.Number,
   defaultValue: 60, // in seconds
   min: 1,
-  max: 600, // 10 minutes
+  max: 86400, // 24 hours
 };
 
 export const DIST: Attribute<ExerciseSet> = {
@@ -128,7 +128,7 @@ export const DIST: Attribute<ExerciseSet> = {
   unit: 'm',
   defaultValue: 100,
   min: 1,
-  max: 100000, // 100 km
+  max: 1000000, // 1000 km
 };
 
 export const EFF: Attribute<ExerciseSet> = {

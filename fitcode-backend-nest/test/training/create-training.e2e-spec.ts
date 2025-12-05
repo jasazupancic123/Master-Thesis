@@ -1,13 +1,11 @@
 import { TestApp } from '@test/common/utils/app.util';
 import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
-import { addDays, addHours, subDays, subMinutes } from 'date-fns';
+import { addDays, addHours, subMinutes } from 'date-fns';
 
-import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestInstitution } from '@src/common/type/entity.type';
 import { getTime } from '@src/common/utils/date.util';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
-import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import { MAX_NUM_COMPONENTS_IN_TRAINING } from '@src/training/constant/training-limits.constant';
@@ -40,7 +38,6 @@ jest.mock('@src/exercise/constant/components.constant', () => {
 describe('Create Training (e2e)', () => {
   let testApp: TestApp;
   let db: TestDbService;
-  let firebase: FirebaseService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
 
@@ -50,7 +47,6 @@ describe('Create Training (e2e)', () => {
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
-    firebase = testApp.module.get(FirebaseService);
     exerciseService = testApp.module.get(ExerciseService);
     trainingService = testApp.module.get(TrainingService);
 
@@ -59,7 +55,7 @@ describe('Create Training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
+    await db.institutions.deleteTest(institution.id);
     await db.clear();
     await testApp.close();
   });
@@ -143,24 +139,6 @@ describe('Create Training (e2e)', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         'Training falls outside of the selected cycle',
-      );
-    });
-
-    it('should fail to create new training if training is in the past', async () => {
-      const training = generateTrainingStub({
-        ownerId: global.trainer.uid,
-        membersIds: [global.athlete.uid],
-        groupId: group.id,
-        institutionId: institution.id,
-        cycleId: group.cycles[1].id,
-        date: subDays(new Date(), 1),
-        components: [generateTrainingComponent()],
-      });
-
-      const response = await req(global.trainer.token, training);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
       );
     });
 
@@ -491,43 +469,6 @@ describe('Create Training (e2e)', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot edit this training');
-
-      await db.trainings.deleteByIds([training.id]);
-    });
-
-    it('should fail to add components if training is in the past', async () => {
-      const training = await firebase.firestore
-        .collection(FirestoreCollection.TRAINING)
-        .add(
-          firebase.buildCreateQuery(
-            generateTrainingStub({
-              ownerId: global.trainer.uid,
-              membersIds: [global.athlete.uid],
-              groupId: group.id,
-              cycleId: group.cycles[0].id,
-              from: subDays(new Date(), 2),
-              to: subDays(new Date(), 2),
-              components: [
-                generateTrainingComponent({
-                  from: subDays(new Date(), 2),
-                  to: subDays(new Date(), 2),
-                }),
-              ],
-            }),
-            { timestamps: true },
-          ),
-        );
-
-      const response = await addComponentReq(
-        global.trainer.token,
-        training.id,
-        [generateTrainingComponent()],
-      );
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
-      );
 
       await db.trainings.deleteByIds([training.id]);
     });

@@ -72,7 +72,7 @@ describe('Find All Individual Trainings (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
+    await db.institutions.deleteTest(institution.id);
     await db.clear();
   });
 

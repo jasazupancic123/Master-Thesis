@@ -37,7 +37,7 @@ describe('Get Institution Protocols E2E', () => {
     expect(res.body.message).toBe('You cannot view this institution');
 
     // cleanup
-    await db.institutions.remove(newInstitution.id);
+    await db.institutions.deleteTest(newInstitution.id);
   });
 
   it.each([

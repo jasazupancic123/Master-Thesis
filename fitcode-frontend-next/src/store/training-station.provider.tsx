@@ -224,7 +224,7 @@ export const TrainingStationProvider = (
       if (prevWorkload) {
         const recTime = Math.abs(
           dayjs(body.from).diff(
-            dayjs(prevWorkload.to || prevWorkload.timestamp),
+            dayjs(prevWorkload.to || prevWorkload.from),
             'second'
           )
         );
