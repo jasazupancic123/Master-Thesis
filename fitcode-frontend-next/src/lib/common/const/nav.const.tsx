@@ -121,7 +121,7 @@ export const LINK_DASHBOARD = link(
   DASHBOARD_LINK_ID
 );
 
-export const LINK_ATHLETE_HOME = link('Home', '/home', <HomeIcon />);
+export const LINK_ATHLETE_HOME = link('Dashboard', '/home', <HomeIcon />);
 
 export const LINK_CALENDAR = link(
   'Calendar',
@@ -146,7 +146,7 @@ export const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
 const DASHBOARD_ICONS_DIMENSION = 18;
 
 export const LINK_DASHBOARD_HOME = linkPngIcon(
-  'Home',
+  'Dashboard',
   '/dashboard',
   'dashboard-home',
   `${DASHBOARD_ICONS_FOLDER}/home.png`,

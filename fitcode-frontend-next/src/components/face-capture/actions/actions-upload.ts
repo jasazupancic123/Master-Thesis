@@ -19,15 +19,7 @@ export async function uploadFaceCaptures(state: {
   authController: AuthController;
   setIsCapturingFace: SetState<boolean>;
 }) {
-  const {
-    customClaims,
-    setCustomClaims,
-    captures,
-    user,
-    router,
-    authController,
-    setIsCapturingFace,
-  } = state;
+  const { customClaims, captures, user } = state;
 
   // start with whatever roles you already have
   const updatedCustomClaims: CustomClaims = {

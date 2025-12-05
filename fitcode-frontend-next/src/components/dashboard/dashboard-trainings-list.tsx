@@ -2,11 +2,12 @@
 
 import {
   Circle,
+  EditNote,
   EditOutlined,
   PlayCircleOutline,
   Visibility,
 } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { Fragment } from 'react';
@@ -155,7 +156,20 @@ export default function DashboardTrainingsList(props: Props) {
                       gap={1}
                     >
                       {!upcoming ? (
-                        <Visibility fontSize="small" />
+                        <>
+                          <Visibility fontSize="small" />
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(
+                                `/training/${training.id}/component/${component.id}/recap`
+                              );
+                            }}
+                            sx={{ p: 0, m: 0 }}
+                          >
+                            <EditNote fontSize="small" />{' '}
+                          </IconButton>
+                        </>
                       ) : (
                         <>
                           <PlayCircleOutline fontSize="small" />
