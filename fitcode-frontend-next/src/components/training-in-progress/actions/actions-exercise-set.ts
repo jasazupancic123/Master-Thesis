@@ -129,7 +129,8 @@ export const finishSet = async (state: {
   else if (handleUpsertSet) {
     const workload: CreateWorkload = {
       userId: userId,
-      timestamp: new Date(),
+      from: new Date(),
+      to: new Date(),
       notes: '',
       reps: set.reps,
       repsR: set.repsR,
@@ -151,8 +152,6 @@ export const finishSet = async (state: {
       tempoIdleR: set.tempoIdleR,
       eff: set.eff,
       effR: set.effR,
-      recTime: set.recTime,
-      recTimeR: set.recTimeR,
       recDist: set.recDist,
       recDistR: set.recDistR,
       photoURLs: photoUrls,
@@ -160,8 +159,6 @@ export const finishSet = async (state: {
       rirR: undefined,
       rom: undefined,
       romR: undefined,
-      from: new Date(),
-      to: new Date(),
     };
 
     if (setTrainingInProgress) {

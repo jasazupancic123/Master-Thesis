@@ -76,7 +76,7 @@ export class WorkloadRepository extends FirestoreRepository<
     const snapshot = await this.collectionGroup()
       .where('userId', '==', userId)
       .where('exerciseId', '==', exerciseId)
-      .where('timestamp', '>=', subDays(new Date(), range))
+      .where('from', '>=', subDays(new Date(), range))
       .orderBy('loadKg', 'desc')
       .limit(1)
       .get();
@@ -97,10 +97,10 @@ export class WorkloadRepository extends FirestoreRepository<
   }
 
   async findAllByTrainingByUser(
-    ref: TrainingRef,
+    trainingId: string,
     userId: string,
   ): Promise<Workload[]> {
-    const snapshot = await this.collection(ref)
+    const snapshot = await this.collection({ trainingId })
       .where('userId', '==', userId)
       .get();
 

@@ -22,7 +22,8 @@ export default function useAthleteChartData(
       data
         .sort(
           (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            (a.from ? new Date(a.from) : new Date()).getTime() -
+            (b.from ? new Date(b.from) : new Date()).getTime()
         )
         .map((w, i) => {
           return {
@@ -30,7 +31,7 @@ export default function useAthleteChartData(
             userId: w.userId,
             workloadId: w.id,
             trainingId: w.trainingId,
-            date: new Date(w.timestamp),
+            date: w.from ? new Date(w.from) : new Date(),
             load: w.loadKg || 0,
             reps: w.reps || 0,
             loadR: w.loadKgR,

@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
+import { differenceInSeconds } from 'date-fns';
 import { CollectionGroup, Query } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -16,7 +17,7 @@ import {
   TrainingRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { BatchWriteOperation } from '@src/common/type/orm.type';
+import { BatchOperation, BatchWriteOperation } from '@src/common/type/orm.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { ExerciseSet } from '@src/training/entity/exercise-set.entity';
 import { Training } from '@src/training/entity/training.entity';
@@ -67,7 +68,10 @@ export class WorkloadService {
   async getAllByTrainingByUser(
     ref: Pick<WorkloadRef, 'userId' | 'trainingId'>,
   ) {
-    return await this.repository.findAllByTrainingByUser(ref, ref.userId);
+    return await this.repository.findAllByTrainingByUser(
+      ref.trainingId,
+      ref.userId,
+    );
   }
 
   collection(trainingId: string) {
@@ -129,22 +133,6 @@ export class WorkloadService {
       );
   }
 
-  async findAllByUserTrainingIds(
-    userId: string,
-    trainingIds: string[],
-  ): Promise<Workload[]> {
-    const collection = this.firebase.firestore.collectionGroup(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-
-    return await this.firebase.batchIn<Workload>(
-      'trainingId',
-      trainingIds,
-      collection,
-      (q) => q.where('userId', '==', userId),
-    );
-  }
-
   async upsert(
     ref: WorkloadRef & CycleRef & InstitutionRef,
     prescribed: ExerciseSet,
@@ -162,13 +150,22 @@ export class WorkloadService {
       ...workloadMeta,
       ...completed,
       prescribed,
+      recTime: 0,
     };
 
-    const existing = await this.repository.findById(ref);
+    const workloads = await this.findAllByUserTraining({
+      institutionId: ref.institutionId,
+      userId: ref.userId,
+      trainingId: ref.trainingId,
+    });
 
+    await this.updateRecoveryTime(workload, ref, workloads);
+
+    const existing = await this.repository.findById(ref);
     if (existing) {
       delete workload.from;
       delete workload.to;
+      delete workload.recTime;
 
       await this.repository.update(ref, workload);
       return { ...existing, ...workload, updatedAt: new Date() };
@@ -292,6 +289,23 @@ export class WorkloadService {
     if (!prescribedSet)
       throw new BadRequestException('Set number not found in exercise');
 
+    // fetch previous sets of the same exercise to ensure sequential completion
+    const workloads = await this.repository.findAllByTrainingByUser(
+      ref.trainingId,
+      ref.userId,
+    );
+
+    const previousSets = workloads.filter(
+      (w) =>
+        w.exerciseId === ref.exerciseId &&
+        w.componentId === ref.componentId &&
+        w.supersetIndex === ref.supersetIndex &&
+        w.setNumber < ref.setNumber,
+    );
+
+    if (previousSets.length < ref.setNumber - 1)
+      throw new ConflictException('Complete previous sets first');
+
     // create workload
     return await this.upsert(
       {
@@ -311,6 +325,55 @@ export class WorkloadService {
       operation: 'set',
       data: this.firebase.buildCreateQuery<Workload>(w),
     }));
+
+    await this.firebase.paginateBatches(operations);
+  }
+
+  async updateMany(
+    updates: { ref: WorkloadRef; data: Partial<Workload> }[],
+    deletes: WorkloadRef[],
+  ) {
+    const operations: BatchOperation<Workload>[] = [];
+
+    for (const update of updates) {
+      const { ref, data } = update;
+      operations.push({
+        ref: this.getDoc(ref),
+        operation: 'update',
+        data: {
+          notes: data.notes,
+          reps: data.reps,
+          loadKg: data.loadKg,
+          vel: data.vel,
+          tempoEcc: data.tempoEcc,
+          tempoIso: data.tempoIso,
+          tempoCon: data.tempoCon,
+          tempoIdle: data.tempoIdle,
+          eff: data.eff,
+          time: data.time,
+          dist: data.dist,
+          recDist: data.recDist,
+          rir: data.rir,
+          rom: data.rom,
+          repsR: data.repsR,
+          loadKgR: data.loadKgR,
+          velR: data.velR,
+          tempoEccR: data.tempoEccR,
+          tempoIsoR: data.tempoIsoR,
+          tempoConR: data.tempoConR,
+          tempoIdleR: data.tempoIdleR,
+          effR: data.effR,
+          timeR: data.timeR,
+          distR: data.distR,
+          recDistR: data.recDistR,
+          rirR: data.rirR,
+          romR: data.romR,
+        },
+      });
+    }
+
+    for (const ref of deletes)
+      operations.push({ ref: this.getDoc(ref), operation: 'delete' });
 
     await this.firebase.paginateBatches(operations);
   }
@@ -491,5 +554,33 @@ export class WorkloadService {
     if (completedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
     if (completedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
     if (completedValue > prescribedValue) return SetStatus.OVER; // over-completed set
+  }
+
+  private async updateRecoveryTime(
+    current: Workload,
+    ref: Pick<WorkloadRef, 'componentId' | 'exerciseId' | 'supersetIndex'>,
+    workloads: Workload[],
+  ) {
+    // only applies for workloads that match the same component, exercise and superset index
+    const filtered = workloads.filter(
+      (w) =>
+        w.componentId === ref.componentId &&
+        w.exerciseId === ref.exerciseId &&
+        w.supersetIndex === ref.supersetIndex,
+    );
+
+    if (!filtered.length) return; // no need to update recovery time if no workloads
+
+    // find previous set
+    const prevSetNumber = current.setNumber - 1;
+    if (prevSetNumber < 1) return; // no previous set
+
+    const previousSet = filtered.find((w) => w.setNumber === prevSetNumber);
+    if (!previousSet) return; // previous set not found
+
+    // calculate recovery time
+    await this.repository.update(previousSet, {
+      recTime: differenceInSeconds(current.from, previousSet.to),
+    });
   }
 }

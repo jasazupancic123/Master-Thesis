@@ -60,8 +60,8 @@ describe('Update Training (e2e)', () => {
   });
 
   afterAll(async () => {
-    await db.institutions.remove(institution.id);
-    await db.institutions.remove(otherInstitution.id);
+    await db.institutions.deleteTest(institution.id);
+    await db.institutions.deleteTest(otherInstitution.id);
     await db.clear();
     await testApp.close();
   });

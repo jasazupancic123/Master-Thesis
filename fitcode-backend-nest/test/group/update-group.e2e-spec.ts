@@ -77,7 +77,7 @@ describe('Update Group (e2e)', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(`Invalid groups provided`);
 
-      await db.institutions.remove(newInstitution.id);
+      await db.institutions.deleteTest(newInstitution.id);
       await db.groups.delete({
         institutionId: newInstitution.id,
         groupId: newGroup.id,

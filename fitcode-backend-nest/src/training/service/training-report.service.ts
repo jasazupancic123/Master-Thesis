@@ -163,7 +163,9 @@ export class TrainingReportService {
       }
     }
 
-    return Object.values(reports);
+    return Object.values(reports)
+      .filter((r) => r.sets > 0) // only trainings with some work done
+      .sort((a, b) => b.from.getTime() - a.from.getTime()); // most recent first
   }
 
   @LogMethod()
@@ -252,15 +254,12 @@ export class TrainingReportService {
     workloads: Workload[], // for the whole training
   ): TrainingReport {
     workloads = workloads.sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
 
-    const from = workloads[0]?.timestamp
-      ? new Date(workloads[0]?.timestamp)
-      : new Date();
-    const to = workloads[workloads.length - 1]?.timestamp
-      ? new Date(workloads[workloads.length - 1]?.timestamp)
+    const from = workloads[0]?.from ? new Date(workloads[0]?.from) : new Date();
+    const to = workloads[workloads.length - 1]?.to
+      ? new Date(workloads[workloads.length - 1]?.to)
       : from;
 
     // filter out warmup and cooldown
@@ -324,13 +323,10 @@ export class TrainingReportService {
 
     workloads = workloads
       .filter((w) => w.componentId === prescribed.componentId)
-      .sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-      );
+      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
-    const from = new Date(workloads[0]?.timestamp) || new Date();
-    const to = new Date(workloads[workloads.length - 1]?.timestamp) || from;
+    const from = new Date(workloads[0]?.from) || new Date();
+    const to = new Date(workloads[workloads.length - 1]?.to) || from;
     const report: TrainingComponentReport = {
       institutionId: workloads[0]?.institutionId,
       groupId: workloads[0]?.groupId,
@@ -364,7 +360,9 @@ export class TrainingReportService {
       report.dist += w.dist;
       report.recTime += w.recTime;
       report.recDist += w.recDist;
-      report.realization += w.realization / prescribed.sets;
+      report.realization += prescribed.sets
+        ? w.realization / prescribed.sets
+        : 0;
     }
 
     return report;
