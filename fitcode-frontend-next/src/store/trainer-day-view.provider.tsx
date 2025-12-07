@@ -327,6 +327,16 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
         setTraining((prev) => ({
           ...prev!,
           membersIds: prev!.membersIds.filter((id) => id !== user.uid),
+          // also update subgroups
+          components: prev!.components.map((c) => ({
+            ...c,
+            subgroups: c.subgroups
+              .map((sg) => ({
+                ...sg,
+                membersIds: sg.membersIds.filter((id) => id !== user.uid),
+              }))
+              .filter((sg) => sg.membersIds.length > 0),
+          })),
         }));
 
         setTrainings((prev) => ({
@@ -336,6 +346,17 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
               ? {
                   ...t,
                   membersIds: t.membersIds.filter((id) => id !== user.uid),
+                  components: t.components.map((c) => ({
+                    ...c,
+                    subgroups: c.subgroups
+                      .map((sg) => ({
+                        ...sg,
+                        membersIds: sg.membersIds.filter(
+                          (id) => id !== user.uid
+                        ),
+                      }))
+                      .filter((sg) => sg.membersIds.length > 0),
+                  })),
                 }
               : t
           ),
