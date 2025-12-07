@@ -10,9 +10,10 @@ import { useScreenSize } from '@/store/screen-size.provider';
 interface Props {
   type: 'loading' | 'unauthorized' | 'error';
   errorMessage?: string;
+  color?: string;
 }
 
-export default function Alert({ type, errorMessage }: Props) {
+export default function Alert({ type, errorMessage, color }: Props) {
   const router = useRouter();
   const screenSize = useScreenSize();
 
@@ -29,19 +30,21 @@ export default function Alert({ type, errorMessage }: Props) {
       }}
       gap={2}
     >
-      <Box
-        sx={{
-          opacity: 0.75,
-        }}
-      >
+      <Box sx={{ opacity: 0.75 }}>
         <Logo width={450} style={{ paddingLeft: 20, paddingRight: 20 }} />
       </Box>
 
-      <Typography fontSize={18} fontWeight={500} textAlign="center">
+      <Typography
+        fontSize={18}
+        fontWeight={500}
+        textAlign="center"
+        sx={{ color }}
+      >
         {type === 'error' && errorMessage
           ? 'Error: ' + errorMessage[0].toUpperCase() + errorMessage.slice(1)
           : type[0].toUpperCase() + type.slice(1)}
       </Typography>
+
       {type === 'unauthorized' && (
         <Button
           variant="contained"

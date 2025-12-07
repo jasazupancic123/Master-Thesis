@@ -5,48 +5,32 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
-import React, { useRef } from 'react';
+import React from 'react';
 import toast from 'react-hot-toast';
 
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { AuthController } from '@/core/auth/auth.controller';
+import { EMAIL_REGEX } from '@/core/const/web.const';
 import { lib } from '@/lib';
-import { SIGN_IN_REDIRECT_MAPPER } from '@/lib/common/const/nav.const';
 import { HERO_NAVBAR_HEIGHT } from '@/lib/common/const/state';
 import { STRING_CONST } from '@/lib/common/const/string.const';
-import { useAuth } from '@/store/auth.provider';
 
-export default function SignInPage() {
+export default function ForgotPasswordPage() {
   const theme = useTheme();
-  const router = useRouter();
-  const { handleUserChange } = useAuth();
-
   const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-
-  const hasToastedRef = useRef(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
-      const result = await lib.firebase.auth.login(email, password);
-      const idToken = await result.user.getIdToken();
-      const user = await AuthController.getInstance().sessionLogin(idToken);
+      if (!email) throw new Error('Please enter your email address');
+      if (!EMAIL_REGEX.test(email))
+        throw new Error('Please enter a valid email address');
 
-      const { role } = handleUserChange(user);
-      if (role) {
-        if (!hasToastedRef.current) {
-          toast.success('Signed in successfully');
-          hasToastedRef.current = true;
-        }
-
-        router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
-      }
+      await lib.firebase.auth.sendPasswordResetEmail(email);
+      toast.success('Password reset email sent successfully');
     } catch (e) {
+      console.error(e);
       toast.error((e as Error).message);
     }
   }
@@ -85,7 +69,13 @@ export default function SignInPage() {
             {STRING_CONST.doItRight}
           </Typography>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            display="flex"
+            flexDirection="column"
+          >
             <TextField
               id="email"
               variant="standard"
@@ -98,21 +88,6 @@ export default function SignInPage() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              sx={lib.mui.getBlackTextFieldStyle(theme)}
-            />
-
-            <TextField
-              id="password"
-              type="password"
-              variant="standard"
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               sx={lib.mui.getBlackTextFieldStyle(theme)}
             />
 
@@ -130,23 +105,22 @@ export default function SignInPage() {
                 borderRadius: 20,
               }}
             >
-              Log in
+              Reset Password
             </Button>
 
-            {/* Forgot password link */}
-            <Link href="/forgot-password" passHref>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: theme.palette.text.secondary,
-                  textAlign: 'center',
-                  display: 'block',
-                  mt: 2,
-                }}
-              >
-                Forgot password?
-              </Typography>
-            </Link>
+            <Typography
+              variant="body2"
+              justifySelf="end"
+              textAlign="left"
+              sx={{
+                color: theme.palette.text.secondary,
+                display: 'block',
+                mt: 2,
+              }}
+            >
+              * You will receive an email with instructions to reset your
+              password.
+            </Typography>
           </Box>
         </Box>
       </Box>

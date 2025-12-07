@@ -1,4 +1,3 @@
-import type { DraggableLocation } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
@@ -16,7 +15,7 @@ import type { TrainerDayViewCtxExtended } from '@/store/trainer-day-view.provide
 
 export async function onDragEndExercise(
   draggableId: string,
-  destination: DraggableLocation | null,
+  destination: { droppableId: string; index: number } | null,
   groupCtx: IGroupCtx,
   trainerDayViewCtx: TrainerDayViewCtxExtended
 ) {
@@ -213,7 +212,7 @@ export const onAddExerciseDrop = (
 
 export function onDragEndExerciseToExistingSuperset(
   draggableId: string,
-  destination: DraggableLocation,
+  destination: { droppableId: string; index: number },
   state: {
     component: TrainingComponent;
     selectedSubgroup: Subgroup | null;
@@ -324,7 +323,7 @@ function updateOnAddExerciseDrop(
 
 function updateOnDragEndExerciseToExistingSuperset(
   draggableId: string,
-  destination: DraggableLocation,
+  destination: { droppableId: string; index: number },
   component: TrainingComponent,
   selectedSubgroup: Subgroup | null
 ): Subgroup[] {

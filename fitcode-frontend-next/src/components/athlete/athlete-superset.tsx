@@ -1,5 +1,5 @@
 import { useTheme } from '@mui/material';
-import Box from '@mui/material/Box/Box';
+import Box from '@mui/material/Box';
 import { Fragment, useState } from 'react';
 
 import AthleteTrainingExerciseCollapsed from './athlete-training-exercise-collapsed';

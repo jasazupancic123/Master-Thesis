@@ -1,5 +1,5 @@
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import { Box, Grid2, IconButton } from '@mui/material';
+import { Box, Grid, IconButton } from '@mui/material';
 
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '@/components/exercise-param/tempo-exercise-param';
@@ -50,14 +50,14 @@ export default function TrainingExerciseCardExpandedSets({
       {/* Expanded sets view */}
       {exercise.sets.map((set, setIndex) => {
         return (
-          <Grid2
+          <Grid
             container
             spacing={1}
             columns={11}
             key={setIndex}
             px={screenSize.isSmallerThanLaptop ? 1 : 0}
           >
-            <Grid2 size={1}>
+            <Grid size={1}>
               <Box
                 display="flex"
                 flexDirection="column"
@@ -108,9 +108,9 @@ export default function TrainingExerciseCardExpandedSets({
                   )}
                 </Box>
               </Box>
-            </Grid2>
+            </Grid>
 
-            <Grid2 size={10}>
+            <Grid size={10}>
               <Box
                 display="flex"
                 width="100%"
@@ -378,8 +378,8 @@ export default function TrainingExerciseCardExpandedSets({
                   )}
                 </Box>
               )}
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
         );
       })}
     </Box>

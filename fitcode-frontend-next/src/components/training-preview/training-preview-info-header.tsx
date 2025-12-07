@@ -1,4 +1,4 @@
-import { Box, Grid2, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
 import { useCoachTraining } from '@/store/coach-training.provider';
@@ -14,8 +14,8 @@ export default function TrainingPreviewInfoHeader() {
 
   return (
     <Box width="100%" display="flex">
-      <Grid2 width="50%" container spacing={2} sx={{ mx: 'auto' }}>
-        <Grid2
+      <Grid width="50%" container spacing={2} sx={{ mx: 'auto' }}>
+        <Grid
           size={6}
           display="flex"
           flexDirection="column"
@@ -27,8 +27,8 @@ export default function TrainingPreviewInfoHeader() {
           <Typography>
             {dayjs(training.from).format('DD MMM, HH:mm')}
           </Typography>
-        </Grid2>
-        <Grid2
+        </Grid>
+        <Grid
           size={6}
           display="flex"
           flexDirection="column"
@@ -41,8 +41,8 @@ export default function TrainingPreviewInfoHeader() {
           <Typography>
             {numExercises} {numExercises === 1 ? 'exercise' : 'exercises'}
           </Typography>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
