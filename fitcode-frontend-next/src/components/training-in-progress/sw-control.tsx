@@ -24,7 +24,8 @@ export default function SWControl(props: Props) {
 
   const { trainingInProgress } = useTrainings();
 
-  const { setIndex, selectedExercise, supersetIndex } = useTrainingInProgress();
+  const { setIndex, selectedExercise, supersetIndex, workloads } =
+    useTrainingInProgress();
 
   const [now, setNow] = useState(() => Date.now());
 
@@ -42,9 +43,9 @@ export default function SWControl(props: Props) {
       ? ExerciseSetService.findLastCompletedWorkload(
           {
             trainingId: trainingInProgress.training.id,
-            componentId: trainingInProgress.selectedComponent.id,
+            componentId: trainingInProgress.componentId,
           },
-          activeTraining.workloads
+          workloads
         )
       : undefined;
 
@@ -71,12 +72,12 @@ export default function SWControl(props: Props) {
   const isSetCompleted = ExerciseSetService.isSetCompleted(
     {
       trainingId: trainingInProgress.training.id,
-      componentId: trainingInProgress.selectedComponent.id,
+      componentId: trainingInProgress.componentId,
       exerciseId: selectedExercise.id,
       supersetIndex: supersetIndex,
       setIndex: setIndex,
     },
-    activeTraining.workloads
+    workloads
   );
 
   const lastSetRecTimeS = selectedExercise.sets[setIndex].recTime;

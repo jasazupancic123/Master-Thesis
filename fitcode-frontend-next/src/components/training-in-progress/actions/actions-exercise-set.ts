@@ -3,10 +3,7 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import { createEmptyPartialWorkload } from '@/components/training-station/actions/actions-workload';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
-import type {
-  ActiveTraining,
-  Training,
-} from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
 import type {
   RepImage,
   TrainingExercise,
@@ -29,6 +26,7 @@ export const finishSet = async (state: {
   imagesL: RepImage[];
   imagesR: RepImage[];
   workloads: Workload[];
+  workloadInput: PartialRecordedWorkloadValues;
   newRecordedSets?: TrainingExerciseRecordedSet[];
   trainingInProgress?: TrainingInProgress;
   setTrainingInProgress?: SetState<TrainingInProgress | null>;
@@ -60,7 +58,6 @@ export const finishSet = async (state: {
       },
       router: AppRouterInstance
     ) => Promise<void>;
-    workloadInput: PartialRecordedWorkloadValues;
   };
 }) => {
   const {
@@ -77,9 +74,8 @@ export const finishSet = async (state: {
     setTrainingInProgress,
     handleUpsertSet,
     stationsViewProps,
+    workloadInput,
   } = state;
-
-  const set = exercise.sets[setIndex];
 
   const photoUrls = [];
 
@@ -91,6 +87,8 @@ export const finishSet = async (state: {
     if (imagesR && imagesR[i]) photoUrls.push(imagesR[i].url);
   }
 
+  workloadInput.photoURLs = photoUrls;
+
   // TRAINING STATION VIEW
   if (stationsViewProps) {
     const {
@@ -98,13 +96,10 @@ export const finishSet = async (state: {
       componentId,
       router,
       handleUpsertSetFromStationView,
-      workloadInput,
     } = stationsViewProps;
 
-    workloadInput.photoURLs = photoUrls;
-
     const workload = createEmptyPartialWorkload({
-      individualTraining,
+      training: individualTraining,
       workloads,
       userId: userId,
       componentId,
@@ -128,40 +123,18 @@ export const finishSet = async (state: {
     return;
   }
   // TRAINING IN PROGRESS VIEW
-  else if (handleUpsertSet) {
-    const workload: CreateWorkload = {
+  else if (handleUpsertSet && trainingInProgress) {
+    const workload = createEmptyPartialWorkload({
+      training: trainingInProgress?.training,
+      workloads,
       userId: userId,
-      from: new Date(),
-      to: new Date(),
-      notes: '',
-      reps: set.reps,
-      repsR: set.repsR,
-      time: set.time,
-      timeR: set.timeR,
-      dist: set.dist,
-      distR: set.distR,
-      loadKg: set.loadKg,
-      loadKgR: set.loadKgR,
-      vel: set.vel,
-      velR: set.velR,
-      tempoEcc: set.tempoEcc,
-      tempoIso: set.tempoIso,
-      tempoCon: set.tempoCon,
-      tempoIdle: set.tempoIdle,
-      tempoEccR: set.tempoEccR,
-      tempoIsoR: set.tempoIsoR,
-      tempoConR: set.tempoConR,
-      tempoIdleR: set.tempoIdleR,
-      eff: set.eff,
-      effR: set.effR,
-      recDist: set.recDist,
-      recDistR: set.recDistR,
-      photoURLs: photoUrls,
-      rir: undefined,
-      rirR: undefined,
-      rom: undefined,
-      romR: undefined,
-    };
+      componentId: trainingInProgress?.componentId,
+      exerciseId: exercise.id,
+      setIndex,
+      workloadInput,
+    });
+
+    if (!workload) return;
 
     if (setTrainingInProgress) {
       markExerciseSetAsCompleted(
@@ -199,30 +172,6 @@ const markExerciseSetAsCompleted = (
       lastSetRecTimeS: recTime ?? prev.lastSetRecTimeS,
       recordedSets: newRecordedSets ? newRecordedSets : prev.recordedSets,
     } as TrainingInProgress;
-  });
-};
-
-export const unmarkExerciseSetAsCompleted = (
-  id: {
-    exerciseId: string;
-    supersetIndex: number;
-    setIndex: number;
-  },
-  setActiveTraining: SetState<ActiveTraining | null>
-) => {
-  setActiveTraining((prev) => {
-    if (!prev) return prev;
-
-    return {
-      ...prev,
-      workloads: prev.workloads.filter((workload) => {
-        return !(
-          workload.exerciseId === id.exerciseId &&
-          workload.supersetIndex === id.supersetIndex &&
-          workload.setNumber === id.setIndex + 1
-        );
-      }),
-    } as ActiveTraining;
   });
 };
 

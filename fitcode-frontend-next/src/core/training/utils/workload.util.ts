@@ -180,20 +180,47 @@ export class WorkloadUtil {
       ? {
           ...existingWorkload,
           reps:
-            workloadInput?.reps !== undefined ? workloadInput.reps : set.reps,
+            workloadInput?.reps !== undefined
+              ? workloadInput.reps
+              : existingWorkload.reps,
           repsR:
             workloadInput?.repsR !== undefined
               ? workloadInput.repsR
-              : set.repsR,
-          tempoEcc: workloadInput?.tempoEcc || set.tempoEcc,
-          tempoIso: workloadInput?.tempoIso || set.tempoIso,
-          tempoCon: workloadInput?.tempoCon || set.tempoCon,
-          tempoIdle: workloadInput?.tempoIdle || set.tempoIdle,
-          tempoEccR: workloadInput?.tempoEccR || set.tempoEccR,
-          tempoIsoR: workloadInput?.tempoIsoR || set.tempoIsoR,
-          tempoConR: workloadInput?.tempoConR || set.tempoConR,
-          tempoIdleR: workloadInput?.tempoIdleR || set.tempoIdleR,
-          photoURLs: workloadInput?.photoURLs || [],
+              : existingWorkload.repsR,
+          tempoEcc:
+            workloadInput?.tempoEcc !== undefined
+              ? workloadInput.tempoEcc
+              : existingWorkload.tempoEcc,
+          tempoIso:
+            workloadInput?.tempoIso !== undefined
+              ? workloadInput.tempoIso
+              : existingWorkload.tempoIso,
+          tempoCon:
+            workloadInput?.tempoCon !== undefined
+              ? workloadInput.tempoCon
+              : existingWorkload.tempoCon,
+          tempoIdle:
+            workloadInput?.tempoIdle !== undefined
+              ? workloadInput.tempoIdle
+              : existingWorkload.tempoIdle,
+          tempoEccR:
+            workloadInput?.tempoEccR !== undefined
+              ? workloadInput.tempoEccR
+              : existingWorkload.tempoEccR,
+          tempoIsoR:
+            workloadInput?.tempoIsoR !== undefined
+              ? workloadInput.tempoIsoR
+              : existingWorkload.tempoIsoR,
+          tempoConR:
+            workloadInput?.tempoConR !== undefined
+              ? workloadInput.tempoConR
+              : existingWorkload.tempoConR,
+          tempoIdleR:
+            workloadInput?.tempoIdleR !== undefined
+              ? workloadInput.tempoIdleR
+              : existingWorkload.tempoIdleR,
+          photoURLs:
+            workloadInput?.photoURLs || existingWorkload.photoURLs || [],
         }
       : {
           userId: userId,
