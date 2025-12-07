@@ -8,10 +8,10 @@ import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
 
 interface Props {
   exercise: TrainingExercise;

@@ -107,7 +107,6 @@ export default function TrainingStationExerciseCard(props: Props) {
             ? 0
             : userExerciseWorkloads.length;
 
-        console.log(completedSets);
         setSelectedSetIndex(completedSets);
       }}
       sx={{

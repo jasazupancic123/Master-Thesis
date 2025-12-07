@@ -3,10 +3,7 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import { createEmptyPartialWorkload } from '@/components/training-station/actions/actions-workload';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
 import type { Rep } from '@/core/exercise-ai-prescriptions/type/rep.type';
-import type {
-  ActiveTraining,
-  Training,
-} from '@/core/training/type/training.type';
+import type { Training } from '@/core/training/type/training.type';
 import type {
   RepImage,
   TrainingExercise,
