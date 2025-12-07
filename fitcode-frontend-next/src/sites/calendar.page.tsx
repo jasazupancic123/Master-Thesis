@@ -34,6 +34,7 @@ export default function CalendarPage() {
   const [trainings, setTrainings] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
+    console.log('TEST 2');
     const init = async () => {
       const now = new Date();
       const firstDayOfMonth = new Date(
@@ -67,6 +68,7 @@ export default function CalendarPage() {
           };
         });
 
+        console.log('trainings 17');
         setTrainings(events);
       });
     };

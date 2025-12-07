@@ -77,6 +77,7 @@ export function GroupProvider(
 
     const duration = 30; // 30 min per component default
     const state = { trainings: structuredClone(allTrainings) };
+    console.log('trainings 18');
     await lib.common.generic.optimisticUpdate(
       () =>
         setTrainings((prev) => ({
@@ -99,8 +100,10 @@ export function GroupProvider(
               : t
           ),
         })),
-      (snapshot) =>
-        setTrainings((prev) => ({ ...prev, data: snapshot.trainings })),
+      (snapshot) => {
+        console.log('trainings 19');
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
+      },
       async () =>
         await TrainingController.getInstance().move(training.id, {
           from: newFrom,
@@ -109,6 +112,7 @@ export function GroupProvider(
       state,
       (training) => {
         if (!training?.id) return;
+        console.log('trainings 20');
         setTrainings((prev) => ({
           ...prev,
           data: prev.data.map((t) => (t.id === training.id ? training : t)),

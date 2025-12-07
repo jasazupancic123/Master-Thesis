@@ -21,6 +21,7 @@ export const handleAddMembersSubgroup = (
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) => {
+  console.log('handleAddMembersSubgroup input', input);
   const { member } = input;
 
   const { useGroup, useTrainerDayViewContext } = context;
@@ -157,6 +158,24 @@ const handleAddSubgroup = (
     );
   });
 
+  updatedSubgroups = updatedSubgroups.map((subgroup) => {
+    if (!subgroup.membersIds || subgroup.id === newSubgroup.id) return subgroup;
+
+    const filteredMemberIds = subgroup.membersIds.filter(
+      (id) => !createSubgroup.membersIds.includes(id)
+    );
+
+    const filteredMembers = (subgroup.members || []).filter(
+      (m) => !createSubgroup.membersIds.includes(m.uid)
+    );
+
+    return {
+      ...subgroup,
+      membersIds: filteredMemberIds,
+      members: filteredMembers,
+    };
+  });
+
   const newComponent = { ...component, subgroups: updatedSubgroups };
 
   setSelectedAthlete(undefined);
@@ -272,6 +291,7 @@ export function handleDeleteSubgroup(
   setSelectedSubgroup(null);
   setComponent(newComponent);
   setTraining(newTraining);
+  console.log('trainings 11');
   setTrainings((prev) => ({
     ...prev,
     data: prev.data.map((t) => (t.id === training.id ? newTraining : t)),

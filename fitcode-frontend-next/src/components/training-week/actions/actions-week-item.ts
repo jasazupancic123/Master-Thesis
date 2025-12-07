@@ -43,6 +43,7 @@ export async function handleUpdateTrainingTimes(
     );
 
     setSelectedItem((prev) => (prev ? newItem : null));
+    console.log('trainings 16');
     if (checkIsTrainingComponent(newItem))
       setTrainings((prev) => ({
         ...prev,
