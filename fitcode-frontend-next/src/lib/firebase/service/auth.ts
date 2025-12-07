@@ -1,7 +1,9 @@
 import { FirebaseError } from 'firebase/app';
 import type { Auth, UserCredential } from 'firebase/auth';
 import {
+  confirmPasswordReset,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithCustomToken,
   signInWithEmailAndPassword,
   updateProfile,
@@ -109,6 +111,37 @@ export class FirebaseAuthUtil {
             throw new Error('Internal error');
           case 'auth/weak-password':
             throw new Error('Password is too weak');
+          default:
+            throw new Error('An error occurred');
+        }
+      }
+
+      throw new Error('An error occurred');
+    }
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    return await sendPasswordResetEmail(this.auth, email);
+  }
+
+  async confirmPasswordReset(
+    oobCode: string,
+    newPassword: string
+  ): Promise<void> {
+    try {
+      await confirmPasswordReset(this.auth, oobCode, newPassword);
+    } catch (e: unknown) {
+      if (e instanceof FirebaseError) {
+        switch (e.code) {
+          case 'auth/expired-action-code':
+            throw new Error('The password reset code has expired');
+          case 'auth/invalid-action-code':
+            throw new Error('The password reset code is invalid');
+          case 'auth/user-disabled':
+          case 'auth/user-not-found':
+            throw new Error('User not found');
+          case 'auth/weak-password':
+            throw new Error('The new password is too weak');
           default:
             throw new Error('An error occurred');
         }

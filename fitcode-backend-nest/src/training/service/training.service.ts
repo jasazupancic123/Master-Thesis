@@ -990,26 +990,21 @@ export class TrainingService implements Permission<Training, Institution> {
   async getTrainingByAthlete(
     athleteId: string,
     training: Training,
-  ): Promise<Training & { workloads: Workload[] }> {
+  ): Promise<Training> {
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
       athleteId,
       training,
     );
 
     // calculate param based sets
-    let workloads: Workload[] = [];
     try {
       await this.updateBodyweightSets(athleteId, athleteTraining);
       await this.updateRepMaxSets(athleteId, athleteTraining);
-      workloads = await this.workloadService.findAllByUserTraining({
-        userId: athleteId,
-        trainingId: training.id,
-      });
     } catch (e) {
       this.logger.error(e);
     }
 
-    return { ...athleteTraining, workloads };
+    return athleteTraining;
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {

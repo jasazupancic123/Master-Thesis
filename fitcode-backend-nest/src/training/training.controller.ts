@@ -132,7 +132,6 @@ export class TrainingController {
   @Auth([UserRole.ATHLETE])
   async getActiveTraining(@RequestUser() user: User): Promise<
     | (Training & {
-        workloads: Workload[];
         statuses: TrainingComponentUserStatus[];
       })
     | null
