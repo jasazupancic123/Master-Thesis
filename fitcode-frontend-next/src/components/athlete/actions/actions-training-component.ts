@@ -119,20 +119,10 @@ export async function startTrainingComponent(
     exercises,
   });
 
-  const component = trainingToStart.components.find(
-    (c) => c.id === selectedComponent.id
-  );
-
-  if (!component) {
-    toast.error('Selected component not found in training. Please try again.');
-
-    return;
-  }
-
   const newStatus = {
-    id: `${trainingToStart.id}-${component.id}-${user.uid}`,
+    id: `${trainingToStart.id}-${selectedComponent.id}-${user.uid}`,
     trainingId: trainingToStart.id,
-    componentId: component.id,
+    componentId: selectedComponent.id,
     status: TrainingStatus.IN_PROGRESS,
     userId: user.uid,
     createdAt: new Date(),
@@ -143,13 +133,13 @@ export async function startTrainingComponent(
     if (!prev)
       return {
         ...trainingToStart,
-        workloads: [],
         statuses: [newStatus],
       };
 
     const foundStatus = prev.statuses?.find(
       (s) =>
-        s.trainingId === trainingToStart!.id && s.componentId === component.id
+        s.trainingId === trainingToStart!.id &&
+        s.componentId === selectedComponent.id
     );
 
     return {
@@ -157,7 +147,7 @@ export async function startTrainingComponent(
       statuses: prev.statuses
         ? foundStatus
           ? prev.statuses.map((s) =>
-              s.componentId === component.id &&
+              s.componentId === selectedComponent.id &&
               s.trainingId === trainingToStart.id
                 ? {
                     ...s,
@@ -172,7 +162,7 @@ export async function startTrainingComponent(
   });
 
   const foundTrainingInProgressObject = await lib.common.indexedDb.items.get(
-    `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingToStart.id}_${component.id}`
+    `${TRAINING_IN_PROGRESS_STORAGE_KEY}_${trainingToStart.id}_${selectedComponent.id}`
   );
 
   const foundTrainingInProgress = foundTrainingInProgressObject
@@ -181,8 +171,7 @@ export async function startTrainingComponent(
 
   setTrainingInProgress({
     training: trainingToStart,
-    selectedComponent: component,
-    supersets: component.supersets,
+    componentId: selectedComponent.id,
     userId: user.uid,
     recordedSets: foundTrainingInProgress
       ? foundTrainingInProgress.recordedSets

@@ -55,7 +55,6 @@ export type CopyTraining = Pick<DateRange, 'from'> &
   Partial<Pick<Training, 'membersIds'>>;
 
 export type ActiveTraining = Training & {
-  workloads: Workload[];
   statuses: TrainingComponentUserStatus[];
 };
 

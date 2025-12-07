@@ -31,6 +31,7 @@ export default function TrainingInProgressExerciseControls() {
     supersetIndex,
     audioEnabled,
     setAudioEnabled,
+    workloads,
   } = trainingInProgressContext;
 
   const [openAiNoticeModal, setOpenAiNoticeModal] = useState(false);
@@ -74,12 +75,12 @@ export default function TrainingInProgressExerciseControls() {
     const isCurrentSetDone = ExerciseSetService.isSetCompleted(
       {
         trainingId: trainingInProgress.training.id,
-        componentId: trainingInProgress.selectedComponent.id,
+        componentId: trainingInProgress.componentId,
         exerciseId: selectedExercise.id,
         supersetIndex: supersetIndex,
         setIndex: setIndex,
       },
-      activeTraining.workloads
+      workloads
     );
 
     if (isCurrentSetDone) {

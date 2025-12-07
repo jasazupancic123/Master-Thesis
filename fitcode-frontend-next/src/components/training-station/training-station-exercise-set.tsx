@@ -57,6 +57,8 @@ export default function TrainingStationExerciseSet(props: Props) {
       );
     });
 
+    console.log('newFoundWorkload', newFoundWorkload, 'workloads', workloads);
+
     setFoundWorkload(newFoundWorkload);
   }, [selectedUser, selectedExercise, setIndex, workloads]);
 

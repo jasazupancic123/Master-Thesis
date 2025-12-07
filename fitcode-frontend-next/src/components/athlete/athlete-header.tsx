@@ -22,7 +22,6 @@ import * as React from 'react';
 import { useState } from 'react';
 
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
-import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone-exercises.provider';
 import BottomNavigation from './bottom-navigation';
 import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
@@ -42,7 +41,6 @@ import { useTrainings } from '@/store/trainings.provider';
 import Logo from '@/ui/logo';
 
 interface Props {
-  trainingInProgressUndoneExercisesContext?: IUndoneExercisesCtx;
   trainingInProgressContext?: ITrainingInProgressContext;
   trainingInProgressUtilsContext?: ITrainingInProgressUtilsCtx;
 }
@@ -59,11 +57,7 @@ export default function AthleteHeader(props: Props) {
   const trainingContext = useTrainings();
   const { trainingInProgress } = trainingContext || {};
 
-  const {
-    trainingInProgressUndoneExercisesContext,
-    trainingInProgressContext,
-    trainingInProgressUtilsContext,
-  } = props;
+  const { trainingInProgressContext, trainingInProgressUtilsContext } = props;
 
   const {
     anchorEl,
@@ -127,7 +121,6 @@ export default function AthleteHeader(props: Props) {
         </ListItem> */}
 
         {trainingInProgress &&
-          trainingInProgressUndoneExercisesContext &&
           trainingInProgressUtilsContext &&
           openTrainingControls !== undefined &&
           trainingInProgressContext && (
@@ -235,7 +228,6 @@ export default function AthleteHeader(props: Props) {
 
           <>
             {trainingInProgress &&
-              trainingInProgressUndoneExercisesContext &&
               trainingInProgressUtilsContext &&
               openTrainingControls !== undefined &&
               trainingInProgressContext && (

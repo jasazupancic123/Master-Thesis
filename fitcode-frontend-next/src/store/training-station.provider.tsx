@@ -210,47 +210,6 @@ export const TrainingStationProvider = (
       body.from = dayjs().subtract(currentSetActiveTimeS, 'second').toDate();
     }
 
-    if (workloads.length > 0 && stateSetIndex > 0) {
-      // we have previous workloads and this is not the first set
-      const prevWorkload = workloads.find(
-        (w) =>
-          w.trainingId === body.trainingId &&
-          w.componentId === body.componentId &&
-          w.exerciseId === exerciseId &&
-          w.supersetIndex === stateSupersetIndex &&
-          w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
-      );
-
-      if (prevWorkload) {
-        const recTime = Math.abs(
-          dayjs(body.from).diff(
-            dayjs(prevWorkload.to || prevWorkload.from),
-            'second'
-          )
-        );
-
-        prevWorkload.recTime = recTime;
-        if (prevWorkload.repsR) prevWorkload.recTimeR = recTime;
-
-        // Update prev workload's recTime
-        handleApiRequest(
-          router,
-          () =>
-            TrainingController.getInstance().upsertSet(
-              body.trainingId,
-              body.componentId,
-              exerciseId,
-              stateSupersetIndex,
-              stateSetIndex, // previous set (setNumber is 1-based, setIndex is 0-based)
-              { ...prevWorkload, userId: body.userId }
-            ),
-          (_) => {
-            // We have listeners, no need to update state
-          }
-        );
-      }
-    }
-
     handleApiRequest(
       router,
       () =>
