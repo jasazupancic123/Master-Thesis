@@ -1,4 +1,4 @@
-import { Box, Divider, Grid2 } from '@mui/material';
+import { Box, Divider, Grid } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
@@ -301,17 +301,17 @@ export default function TrainingStationExerciseSet(props: Props) {
       </Box>
       {uni && (
         <>
-          <Grid2 container spacing={0.5} columns={11}>
-            <Grid2 size={0.75} />
-            <Grid2 size={9.5}></Grid2>
+          <Grid container spacing={0.5} columns={11}>
+            <Grid size={0.75} />
+            <Grid size={9.5}></Grid>
             <UnilateralParamsRow
               params={params}
               load={load}
               volParam={volParam}
               loadParam={loadParam}
             />
-            <Grid2 size={0.75} />
-          </Grid2>
+            <Grid size={0.75} />
+          </Grid>
 
           <Box
             display="flex"

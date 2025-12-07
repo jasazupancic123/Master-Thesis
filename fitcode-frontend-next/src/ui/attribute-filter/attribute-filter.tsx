@@ -1,5 +1,4 @@
-import { Checkbox, FormControlLabel, Grid2, TextField } from '@mui/material';
-import React from 'react';
+import { Checkbox, FormControlLabel, Grid, TextField } from '@mui/material';
 
 import AttributeFilterBoolean from './attribute-filter-boolean';
 import AttributeFilterNumber from './attribute-filter-number';
@@ -22,7 +21,7 @@ export default function AttributeFilter(props: AttributeFilterProps) {
     case AttributeType.Select:
     case AttributeType.Multiselect:
       return (
-        <Grid2
+        <Grid
           container
           spacing={1}
           sx={{
@@ -144,7 +143,7 @@ export default function AttributeFilter(props: AttributeFilterProps) {
               })}
             </>
           )}
-        </Grid2>
+        </Grid>
       );
     default:
       return (
