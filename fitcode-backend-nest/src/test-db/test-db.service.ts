@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { Profile } from '@src/profile/entity/profile.entity';
+import { Profile } from '@src/user/entity/profile.entity';
 
 import { ExerciseTestRepository } from './service/exercise-test.repository';
 import { GroupTestRepository } from './service/group-test.repository';

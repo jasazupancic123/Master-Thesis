@@ -18,7 +18,7 @@ import { UserRole } from '../auth/enum/user-role.enum';
 import { TimestampEntity } from '../common/entity/timestamp.entity';
 import { CommonService } from '../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
-import { DecodedUser, User } from '../common/type/firebase-auth.type';
+import { DecodedUser, FirebaseUser } from '../common/type/firebase-auth.type';
 import { Environment } from '../config/environment-validation-schema';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 
@@ -210,13 +210,13 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 
   async findUserById(uid: string) {
-    return (await this.auth.getUser(uid)) as User;
+    return (await this.auth.getUser(uid)) as FirebaseUser;
   }
 
   async authUsers(filter?: {
     ids?: string[];
     emails?: string[];
-  }): Promise<User[]> {
+  }): Promise<FirebaseUser[]> {
     const identifiers: UserIdentifier[] = [];
     if (filter?.ids) for (const id of filter.ids) identifiers.push({ uid: id });
     if (filter?.emails)
@@ -224,33 +224,34 @@ export class FirebaseService implements OnApplicationBootstrap {
 
     const users =
       identifiers.length && identifiers.length < 100
-        ? ((await this.auth.getUsers(identifiers)).users as User[])
+        ? ((await this.auth.getUsers(identifiers)).users as FirebaseUser[])
         : identifiers.length
-          ? ((await this.auth.listUsers()).users as User[]).filter((user) =>
-              identifiers.some(
-                (identifier) =>
-                  ('uid' in identifier && identifier.uid === user.uid) ||
-                  ('email' in identifier && identifier.email === user.email),
-              ),
+          ? ((await this.auth.listUsers()).users as FirebaseUser[]).filter(
+              (user) =>
+                identifiers.some(
+                  (identifier) =>
+                    ('uid' in identifier && identifier.uid === user.uid) ||
+                    ('email' in identifier && identifier.email === user.email),
+                ),
             )
-          : ((await this.auth.listUsers()).users as User[]);
+          : ((await this.auth.listUsers()).users as FirebaseUser[]);
 
-    return users.map(this.cleanUser) as User[];
+    return users.map(this.cleanUser) as FirebaseUser[];
   }
 
-  isAdmin(user: User | DecodedUser): boolean {
+  isAdmin(user: FirebaseUser | DecodedUser): boolean {
     return this.checkRole(user, UserRole.ADMIN);
   }
 
-  isManager(user: User | DecodedUser): boolean {
+  isManager(user: FirebaseUser | DecodedUser): boolean {
     return this.checkRole(user, UserRole.MANAGER);
   }
 
-  isTrainer(user: User | DecodedUser): boolean {
+  isTrainer(user: FirebaseUser | DecodedUser): boolean {
     return this.checkRole(user, UserRole.TRAINER);
   }
 
-  isAthlete(user: User | DecodedUser): boolean {
+  isAthlete(user: FirebaseUser | DecodedUser): boolean {
     return this.checkRole(user, UserRole.ATHLETE);
   }
 
@@ -300,17 +301,17 @@ export class FirebaseService implements OnApplicationBootstrap {
     );
   }
 
-  checkRole(user: User | DecodedUser, role: UserRole): boolean {
+  checkRole(user: FirebaseUser | DecodedUser, role: UserRole): boolean {
     if (isUser(user)) return user?.customClaims?.role?.includes(role);
     return user?.role?.includes(role);
   }
 
-  getRole(user: User | DecodedUser): UserRole {
+  getRole(user: FirebaseUser | DecodedUser): UserRole {
     if (isUser(user)) return user?.customClaims?.role?.[0] || UserRole.ATHLETE;
     return user?.role?.[0] || UserRole.ATHLETE;
   }
 
-  private cleanUser(user: User): Partial<User> {
+  private cleanUser(user: FirebaseUser): Partial<FirebaseUser> {
     return {
       uid: user.uid,
       email: user.email,
@@ -331,6 +332,6 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 }
 
-function isUser(user: User | DecodedUser): user is User {
-  return (user as User).customClaims !== undefined;
+function isUser(user: FirebaseUser | DecodedUser): user is FirebaseUser {
+  return (user as FirebaseUser).customClaims !== undefined;
 }

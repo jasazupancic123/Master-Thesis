@@ -1,10 +1,13 @@
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { TestUser } from '@src/common/type/entity.type';
-import type { CustomClaims, User } from '@src/common/type/firebase-auth.type';
+import type {
+  CustomClaims,
+  FirebaseUser,
+} from '@src/common/type/firebase-auth.type';
 import { generateRandomEmail } from '@src/common/utils/random.util';
 import type { FirebaseService } from '@src/firebase/firebase.service';
-import type { Profile } from '@src/profile/entity/profile.entity';
+import type { Profile } from '@src/user/entity/profile.entity';
 
 export class TestAuth {
   constructor(private readonly firebase: FirebaseService) {}
@@ -19,7 +22,7 @@ export class TestAuth {
       uid,
       email: generateRandomEmail(),
       password: 'password',
-    })) as User;
+    })) as FirebaseUser;
 
     // simulate functions
     const customClaims: CustomClaims = { role: [role] };

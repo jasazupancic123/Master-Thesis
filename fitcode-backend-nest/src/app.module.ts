@@ -13,9 +13,9 @@ import { ExerciseModule } from './exercise/exercise.module';
 import { ExerciseAiPrescriptionsModule } from './exercise-ai-prescriptions/exercise-ai-prescriptions.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { InstitutionModule } from './institution/institution.module';
-import { ProfileModule } from './profile/profile.module';
 import { TestDbModule } from './test-db/test-db.module';
 import { TrainingModule } from './training/training.module';
+import { ProfileModule } from './user/user.module';
 
 @Module({
   imports: [

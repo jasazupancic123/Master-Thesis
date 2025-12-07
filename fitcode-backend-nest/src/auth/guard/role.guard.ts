@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { UserRole } from '@src/auth/enum/user-role.enum';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 
 export const AUTH_ROLES_KEY = 'roles';
 
@@ -19,7 +19,7 @@ export class RoleGuard implements CanActivate {
     if (!required) return true;
 
     const request = context.switchToHttp().getRequest();
-    const user: User = request.user;
+    const user: FirebaseUser = request.user;
 
     if (!required.length) return true;
     return required.some((role) => user.customClaims.role.includes(role));

@@ -10,7 +10,7 @@ import {
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { CommonService } from '@src/common/service/common.service';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
   TrainingComponentUserStatusRef,
@@ -50,7 +50,7 @@ export class ActiveTrainingService {
    */
   @LogMethod()
   async startTrainingComponent(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingComponentRef,
     uid?: string,
   ): Promise<{
@@ -169,7 +169,7 @@ export class ActiveTrainingService {
    */
   @LogMethod()
   async completeTrainingComponent(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingComponentRef,
     uid?: string,
   ): Promise<{ errors: ValidateError<Record<string, unknown>>[] }> {
@@ -223,7 +223,10 @@ export class ActiveTrainingService {
    * for all athletes. He cannot pause training at all, only athlete can for himself.
    */
   @LogMethod()
-  async pauseComponent(user: User, ref: TrainingComponentRef): Promise<void> {
+  async pauseComponent(
+    user: FirebaseUser,
+    ref: TrainingComponentRef,
+  ): Promise<void> {
     const training = await this.trainingService.findOneByIdOrFail(user, ref);
     this.checkComponentExists(training, ref.componentId);
     this.trainingService.validateIsToday(training.from);
@@ -247,7 +250,7 @@ export class ActiveTrainingService {
   }
 
   async generateQRCode(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingComponentRef & UserRef,
   ): Promise<string> {
     const athlete = await this.trainingService.getAthlete(user, ref.uid);
@@ -272,7 +275,7 @@ export class ActiveTrainingService {
    * training for each of the athletes is returned.
    */
   async getActiveTrainingByAthlete(
-    user: User,
+    user: FirebaseUser,
     athleteId: string,
   ): Promise<
     | (Training & {
@@ -313,7 +316,7 @@ export class ActiveTrainingService {
   }
 
   private async getMemberIdsForTrainingReport(
-    user: User, // trainer or athlete
+    user: FirebaseUser, // trainer or athlete
     training: Training,
     uid?: string, // trainer can also provide only 1 athlete
   ): Promise<string[]> {

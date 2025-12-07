@@ -13,22 +13,14 @@ import * as jwt from 'jsonwebtoken';
 import { v4 } from 'uuid';
 
 import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
-import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { CommonService } from '@src/common/service/common.service';
-import { CustomClaims, User } from '@src/common/type/firebase-auth.type';
-import { ValidateRowError } from '@src/common/type/validate.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { ProfileService } from '@src/profile/service/profile.service';
 
 import { CreateUserDto } from '../dto/create-user.dto';
-import { UpdateCustomClaimsDto } from '../dto/custom-claims.dto';
-import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
-import { UpdateUserDto } from '../dto/update-user.dto';
-import { AuthUser } from '../entity/user.entity';
-import { UserRole } from '../enum/user-role.enum';
+import { AuthUser } from '../entity/auth-user.entity';
 
 @Injectable()
 export class AuthService {
@@ -39,8 +31,6 @@ export class AuthService {
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
-    @Inject(forwardRef(() => ProfileService))
-    private readonly profileService: Wrapper<ProfileService>,
   ) {}
 
   async sessionLogin(idToken: string, res: Response): Promise<AuthUser | null> {
@@ -76,7 +66,7 @@ export class AuthService {
   }
 
   async createMagicLink(
-    user: User,
+    user: FirebaseUser,
     uid: string,
     redirectPath?: string,
   ): Promise<string> {
@@ -128,13 +118,18 @@ export class AuthService {
     return user;
   }
 
-  async findOneBy(key: 'id' | 'email', value: string): Promise<User | null> {
+  async findOneBy(
+    key: 'id' | 'email',
+    value: string,
+  ): Promise<FirebaseUser | null> {
     try {
       switch (key) {
         case 'id':
-          return (await this.firebase.auth.getUser(value)) as User;
+          return (await this.firebase.auth.getUser(value)) as FirebaseUser;
         case 'email':
-          return (await this.firebase.auth.getUserByEmail(value)) as User;
+          return (await this.firebase.auth.getUserByEmail(
+            value,
+          )) as FirebaseUser;
         default:
           throw new Error('Invalid key');
       }
@@ -143,80 +138,7 @@ export class AuthService {
     }
   }
 
-  async findAllByInstitution(institution: Institution): Promise<User[]> {
-    return await this.firebase.authUsers({
-      ids: [institution.ownerId, ...institution.members.map((m) => m.id)],
-    });
-  }
-
-  async findAll(user: User, filter?: FilterUserQueryDto): Promise<User[]> {
-    const allUsers = await this.firebase.authUsers(filter);
-    if (this.firebase.isAdmin(user)) return allUsers;
-
-    const institutions = await this.institutionService.findAll(user);
-    const users = allUsers.filter((u) =>
-      institutions.some((institution) =>
-        [institution.ownerId, ...institution.members.map((m) => m.id)].includes(
-          u.uid,
-        ),
-      ),
-    );
-
-    const filtered = filter?.role
-      ? users.filter((u) => this.firebase.checkRole(u, filter.role))
-      : users;
-
-    // some users can be in multiple institutions, so we need to filter out duplicates
-    const uniqueUsers = filtered.filter(
-      (u, index, self) => index === self.findIndex((t) => t.uid === u.uid),
-    );
-
-    if (filter?.ids?.length === 0 || filter?.emails?.length === 0) return [];
-    return uniqueUsers;
-  }
-
-  async findAllOrFail(
-    user: User,
-    filter?: FilterUserQueryDto,
-  ): Promise<User[]> {
-    let users = await this.findAll(user, filter);
-    if (filter) {
-      /* const length = filter.ids?.length || 0 + filter.emails?.length || 0;
-        if (users.length !== length)
-          throw new BadRequestException('Invalid members provided'); */
-
-      if (filter.role)
-        users = users.filter((u) => this.firebase.checkRole(u, filter.role));
-    }
-
-    return users;
-  }
-
-  async updateUser(user: User, uid: string, data: UpdateUserDto) {
-    const userToUpdate = await this.getUserToUpdate(user, uid);
-    await this.firebase.auth.updateUser(userToUpdate.uid, data);
-  }
-
-  async updateCustomClaims(
-    user: User,
-    uid: string,
-    claims: UpdateCustomClaimsDto,
-  ): Promise<void> {
-    // if user is manager, he can only assign trainer or athlete role
-    if (this.firebase.isManager(user)) {
-      const newRole = claims.role?.[0];
-      if (![UserRole.TRAINER, UserRole.ATHLETE].includes(newRole))
-        throw new ForbiddenException('Cannot assign this role');
-    }
-
-    const userToUpdate = await this.getUserToUpdate(user, uid);
-    await this.firebase.auth.setCustomUserClaims(userToUpdate.uid, {
-      ...userToUpdate.customClaims,
-      ...claims,
-    });
-  }
-
-  async upsert(data: CreateUserDto): Promise<User> {
+  async upsert(data: CreateUserDto): Promise<FirebaseUser> {
     const { auth } = this.firebase;
     const { email, password, displayName, role, photoURL } = data;
 
@@ -235,157 +157,6 @@ export class AuthService {
       if (user?.uid) await auth.setCustomUserClaims(user.uid, { role: [role] });
     }
 
-    return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
-  }
-
-  /**
-   * Import users from a CSV file. It returns the list of successfully created users
-   * and the list of errors for the rows that failed to be created.
-   */
-  async importUsers(
-    user: User,
-    input: (CreateUserDto & { uid: string })[],
-  ): Promise<{ successful: AuthUser[]; errors: ValidateRowError[] }> {
-    if (input.length === 0) return { successful: [], errors: [] };
-    const errors: ValidateRowError[] = [];
-    const result: AuthUser[] = [];
-
-    for (let i = 0; i < input.length; i++) {
-      const row: ValidateRowError = { row: i + 1, errors: [] };
-
-      try {
-        const created = await this.registerUser(user, input[i]);
-        if (created)
-          result.push({ ...created, customClaims: { role: [input[i].role] } });
-      } catch (e) {
-        row.errors.push({ field: input[i].email, message: e.message });
-      }
-
-      if (row.errors.length > 0) errors.push(row);
-    }
-
-    return { successful: result, errors };
-  }
-
-  @LogMethod()
-  async registerUser(
-    user: User,
-    input: CreateUserDto,
-  ): Promise<AuthUser | null> {
-    // admin can register managers, and managers can register trainers and athletes
-    let institution: Institution | null = null;
-    if (this.firebase.isAdmin(user)) {
-      if (input.role !== UserRole.MANAGER)
-        throw new BadRequestException('Admin can only register managers');
-    } else if (this.firebase.isManager(user)) {
-      if (![UserRole.TRAINER, UserRole.ATHLETE].includes(input.role))
-        throw new BadRequestException(
-          'Manager can only register trainers and athletes',
-        );
-
-      institution = await this.institutionService.findByOwnerId(user.uid);
-      if (!institution)
-        throw new NotFoundException('Institution not found for manager');
-    } else throw new ForbiddenException('Cannot register user');
-
-    let created: AuthUser | null = null;
-    const customClaims: CustomClaims = { role: [input.role] };
-
-    try {
-      const user = await this.firebase.auth.createUser({
-        email: input.email,
-        password: input.password,
-        displayName: input.displayName,
-        photoURL: input.photoURL,
-      });
-
-      await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
-      await this.profileService.create({
-        uid: user.uid,
-        email: input.email,
-      });
-
-      created = { ...user, customClaims } as AuthUser;
-    } catch (e) {
-      // if user already exists, fetch it
-      if (e.code === 'auth/email-already-exists') {
-        const found = await this.findOneBy('email', input.email);
-
-        // if user is already in other institution, throw error
-        const userInstitutions = await this.institutionService.findAll(found);
-        if (userInstitutions.length > 0)
-          throw new BadRequestException(
-            'User already belongs to an institution',
-          );
-
-        created = found as AuthUser;
-      } else throw e;
-    }
-
-    // if institution is defined, add user to institution
-    if (institution)
-      await this.institutionService.addMember(
-        { role: input.role },
-        { institutionId: institution.id, uid: created.uid },
-      );
-
-    return created;
-  }
-
-  async getUserToUpdate(mainUser: User, userToUpdateId: string): Promise<User> {
-    const userToUpdate = await this.findOneBy('id', userToUpdateId);
-    if (!userToUpdate) throw new NotFoundException('User not found');
-
-    const canUpdate = await this.canUpdate(mainUser, userToUpdate);
-    if (!canUpdate) throw new ForbiddenException('Cannot update user');
-
-    return userToUpdate;
-  }
-
-  async canUpdate(mainUser: User, userToUpdate: User): Promise<boolean> {
-    // admin can update anyone
-    if (this.firebase.isAdmin(mainUser)) return true;
-
-    // athlete can update only himself
-    if (
-      this.firebase.isAthlete(userToUpdate) &&
-      mainUser.uid === userToUpdate.uid
-    )
-      return true;
-
-    // manager can update himself, trainers and athletes in his institutions
-    // trainer can update himself and athletes in his institutions
-    const institutions = await this.institutionService.findAll(mainUser);
-
-    if (this.firebase.isManager(mainUser)) {
-      const institution = institutions.find((i) => i.ownerId === mainUser.uid);
-      if (!institution) return false;
-
-      if (this.institutionService.isTrainer(institution, userToUpdate))
-        return true;
-
-      if (this.institutionService.isAthlete(institution, userToUpdate))
-        return true;
-
-      return mainUser.uid === userToUpdate.uid;
-    }
-
-    if (this.firebase.isTrainer(mainUser)) {
-      const trainerInstitutions = institutions.filter((i) =>
-        i.members.some((m) => m.id === mainUser.uid),
-      );
-
-      if (
-        this.firebase.isAthlete(userToUpdate) &&
-        trainerInstitutions.some((i) =>
-          i.members.some((m) => m.id === userToUpdate.uid),
-        )
-      )
-        return true;
-
-      return mainUser.uid === userToUpdate.uid;
-    }
-
-    return false;
+    return user?.uid ? ((await auth.getUser(user.uid)) as FirebaseUser) : null;
   }
 }

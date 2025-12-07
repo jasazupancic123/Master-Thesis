@@ -1,20 +1,21 @@
 import { TestApp } from '@test/common/utils/app.util';
 
-import type { AuthUser } from '@src/auth/entity/user.entity';
+import type { AuthUser } from '@src/auth/entity/auth-user.entity';
 import { UserRole } from '@src/auth/enum/user-role.enum';
-import { AuthService } from '@src/auth/service/auth.service';
 import type { ValidateRowError } from '@src/common/type/validate.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import type {
-  ImportProfileDto,
-  ImportProfilesDto,
-} from '@src/profile/dto/import-profiles.dto';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type {
+  ImportUserDto,
+  ImportUsersDto,
+} from '@src/user/dto/import-users.dto';
+import { UserService } from '@src/user/service/user.service';
 
 describe('Import Users (e2e)', () => {
   let testApp: TestApp;
   let firebase: FirebaseService;
   let db: TestDbService;
+  let userService: UserService;
 
   let institutionId: string;
 
@@ -22,6 +23,7 @@ describe('Import Users (e2e)', () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     firebase = testApp.module.get(FirebaseService);
+    userService = testApp.module.get(UserService);
     institutionId = (await db.institutions.createTest()).id;
   });
 
@@ -30,10 +32,10 @@ describe('Import Users (e2e)', () => {
     await testApp.close();
   });
 
-  async function req(token: string, input: ImportProfileDto[]) {
-    return await testApp.http.post('/profile/import', token, {
-      profiles: input,
-    } as ImportProfilesDto);
+  async function req(token: string, input: ImportUserDto[]) {
+    return await testApp.http.post('/user/import', token, {
+      users: input,
+    } as ImportUsersDto);
   }
 
   it.each([
@@ -71,8 +73,7 @@ describe('Import Users (e2e)', () => {
     const allProfilesBefore = await db.profiles.findAll();
     expect(allProfilesBefore).toHaveLength(4); // global test profiles
 
-    const auth = testApp.module.get(AuthService);
-    const spy = jest.spyOn(auth, 'importUsers');
+    const spy = jest.spyOn(userService, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 10 }).map((_, i) => ({
@@ -139,8 +140,7 @@ describe('Import Users (e2e)', () => {
 
     expect(athleteIds).toHaveLength(1); // only global.athlete
 
-    const auth = testApp.module.get(AuthService);
-    const spy = jest.spyOn(auth, 'importUsers');
+    const spy = jest.spyOn(userService, 'importUsers');
     const result = await req(
       global.manager.token,
       Array.from({ length: 50 }).map((_, i) => ({

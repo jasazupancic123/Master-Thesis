@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 
 import { SESSION_COOKIE_NAME } from '@src/common/constant/cookie.constant';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { AUTH_ROLES_KEY } from './role.guard';
@@ -23,7 +23,9 @@ export class AuthGuard implements CanActivate {
 
     if (!required) return true;
 
-    const req = context.switchToHttp().getRequest<Request & { user: User }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<Request & { user: FirebaseUser }>();
 
     // 1) Try Bearer token (ID token authentication)
     const authHeader = req.headers.authorization;

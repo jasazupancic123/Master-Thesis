@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 
 import { InstitutionService } from '../service/institution.service';
 
@@ -16,7 +16,7 @@ export class ProtocolController {
   @Get()
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async findAllByInstitution(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
   ) {
     return await this.institutionService.findAllProtocols(user, institutionId);
