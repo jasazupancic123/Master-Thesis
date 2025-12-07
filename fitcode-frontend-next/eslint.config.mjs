@@ -1,5 +1,8 @@
-import { FlatCompat } from '@eslint/eslintrc';
+// eslint.config.mjs
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import { defineConfig } from 'eslint/config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import prettierPlugin from 'eslint-plugin-prettier';
@@ -7,18 +10,16 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import unusedImportsPlugin from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
-const compat = new FlatCompat({
-  // import.meta.dirname is available after Node.js v20.11.0
-  baseDirectory: import.meta.dirname,
-});
+// NOTE: FlatCompat removed – we use flat configs directly.
 
-const eslintConfig = [
-  ...compat.config({
-    extends: ['next/core-web-vitals', 'next/typescript'],
-    settings: { next: { rootDir: 'fitcode-frontend-next' } },
-  }),
+export default defineConfig([
+  // Next.js + React + React Hooks + Core Web Vitals
+  ...nextVitals,
 
-  // typescript-eslint
+  // Next.js TypeScript config
+  ...nextTs,
+
+  // TypeScript-specific language options
   {
     files: ['**/*.ts?(x)'],
     languageOptions: {
@@ -26,11 +27,13 @@ const eslintConfig = [
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
-      globals: { ...globals.browser },
+      globals: {
+        ...globals.browser,
+      },
     },
   },
 
-  // next & import-resolver-typescript
+  // Next & import-resolver-typescript settings
   {
     settings: {
       next: { rootDir: 'fitcode-frontend-next' },
@@ -40,12 +43,12 @@ const eslintConfig = [
         },
       },
     },
-
     rules: {
       '@next/next/no-html-link-for-pages': 'off',
     },
   },
 
+  // Your custom rules & plugins
   {
     plugins: {
       '@typescript-eslint': tsPlugin,
@@ -54,6 +57,7 @@ const eslintConfig = [
       'simple-import-sort': simpleImportSortPlugin,
       'unused-imports': unusedImportsPlugin,
     },
+
     settings: {
       'import/resolver': {
         typescript: {
@@ -61,9 +65,16 @@ const eslintConfig = [
         },
       },
     },
+
     rules: {
       // React
       'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/deps': 'off',
+      'react-hooks/immutability': 'off',
 
       // Prettier
       'prettier/prettier': ['warn'],
@@ -111,10 +122,10 @@ const eslintConfig = [
     },
   },
 
-  // prettier
+  // Prettier config (flat) – spread it so it merges correctly
   eslintConfigPrettier,
 
-  // global ignores
+  // Global ignores
   {
     ignores: [
       '**/node_modules/',
@@ -128,6 +139,4 @@ const eslintConfig = [
       'public/wasm/**',
     ],
   },
-];
-
-export default eslintConfig;
+]);

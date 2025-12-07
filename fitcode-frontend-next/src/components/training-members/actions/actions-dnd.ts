@@ -1,3 +1,5 @@
+import type { DragEndEvent } from '@dnd-kit/core';
+
 import type useTrainingMembers from '../hooks/use-members.hook';
 import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import { handleAddMembersSubgroup } from './actions-subgroups';
@@ -9,7 +11,6 @@ import type {
   ITrainerDayViewContext,
   TrainerDayViewCtxExtended,
 } from '@/store/trainer-day-view.provider';
-import { DragEndEvent } from '@dnd-kit/core';
 
 export const handleOnDragEnd = async (
   input: DragEndEvent,
@@ -21,10 +22,7 @@ export const handleOnDragEnd = async (
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }
 ) => {
-  console.log('handleOnDragEnd input', input);
   const { active, over } = input;
-
-  console.log('active, over', active, over);
 
   const {
     useMain,
@@ -36,8 +34,6 @@ export const handleOnDragEnd = async (
 
   const training = useTrainerDayViewContext.training;
   const component = useTrainerDayViewContext.component;
-
-  console.log('component', component);
 
   if (!training || !component) return;
 

@@ -1,13 +1,13 @@
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { Box, Avatar, Tooltip } from '@mui/material';
-import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import { useSortable } from '@dnd-kit/sortable';
+import { Avatar, Box, Tooltip } from '@mui/material';
+
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
-import { AuthUser } from '@/core/auth/type/user.type';
+import { theme } from '@/app/style';
+import type { AuthUser } from '@/core/auth/type/user.type';
+import type { Subgroup } from '@/core/training/type/subgroup.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { useSortable } from '@dnd-kit/sortable';
-import { Subgroup } from '@/core/training/type/subgroup.type';
-import { theme } from '@/app/style';
 
 interface Props {
   member: AuthUser;

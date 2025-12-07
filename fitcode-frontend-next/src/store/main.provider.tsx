@@ -166,7 +166,6 @@ export default function MainProvider(props: MainProviderProps) {
   useEffect(() => {
     async function fetchData() {
       setProtocols((prev) => ({ ...prev, loading: true }));
-      console.log('trainings 21');
       setTrainings((prev) => ({ ...prev, loading: true }));
 
       const controller = Controller.getInstance();
@@ -181,7 +180,6 @@ export default function MainProvider(props: MainProviderProps) {
       ]);
 
       setProtocols(settleState(protocols, []));
-      console.log('trainings 22');
       setTrainings(settleState(trainings, []));
 
       if (authProfiles.status === 'fulfilled') {
@@ -216,14 +214,12 @@ export default function MainProvider(props: MainProviderProps) {
 
   // map active training and trainings
   useEffect(() => {
-    console.log('TEST 1');
     if (!exercises.length || trainings.loading) return;
 
     setActiveTraining(
       TrainingService.mapActiveTraining(activeTraining, { exercises })
     );
 
-    console.log('trainings 23');
     setTrainings((prev) => {
       if (prev.loading || prev.error) return prev;
       return {

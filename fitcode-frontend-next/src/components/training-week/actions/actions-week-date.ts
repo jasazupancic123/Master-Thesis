@@ -293,7 +293,6 @@ async function handleCreateTraining(
         ),
       });
 
-      console.log('trainings 13');
       setTrainings((prev) => ({
         ...prev,
         data: [...prev.data, temp].sort(
@@ -303,7 +302,6 @@ async function handleCreateTraining(
     },
     (snapshot) => {
       setIsCreatingTraining?.(false);
-      console.log('trainings 14');
       setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
     },
     async () =>
@@ -320,7 +318,6 @@ async function handleCreateTraining(
       TrainingService.mapData(training, { exercises });
 
       // update the training with the response from the server
-      console.log('trainings 15');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data

@@ -89,7 +89,6 @@ export default function PeriodizeModal(
                 );
                 if (currentTraining) setTraining(currentTraining);
 
-                console.log('trainings 10');
                 setTrainings((prev) => ({
                   ...prev,
                   data: prev.data.map((t) => {

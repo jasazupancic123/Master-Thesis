@@ -1,5 +1,15 @@
 'use client';
 
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useState } from 'react';
@@ -10,21 +20,11 @@ import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
 import TrainingMembersSubgroup from './training-members-subgroup';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  PointerSensor,
-  pointerWithin,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { AuthUser } from '@/core/auth/type/user.type';
 
 interface TrainingMembersProps {
   isSticky: boolean;
