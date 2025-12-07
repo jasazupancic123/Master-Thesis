@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
+    unoptimized: process.env.NODE_ENV === 'development',
     remotePatterns: [
       { protocol: 'http', hostname: 'fitcode-testing.appspot.com' },
       { protocol: 'http', hostname: 'localhost' },
@@ -16,27 +17,11 @@ const nextConfig = {
   },
   turbopack: {
     rules: {
-      '.svg': {
+      '*.svg': {
         loaders: ['@svgr/webpack'],
         as: '*.js',
       },
     },
-  },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/i,
-      use: [
-        {
-          loader: '@svgr/webpack',
-          options: {
-            ref: true,
-            svgo: false, // <-- disables optimization, keeps your ids verbatim
-          },
-        },
-      ],
-    });
-
-    return config;
   },
 };
 

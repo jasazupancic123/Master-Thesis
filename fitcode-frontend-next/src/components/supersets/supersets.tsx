@@ -7,7 +7,7 @@ import {
   DragOverlay,
   useDroppable,
 } from '@dnd-kit/core';
-import { Box, Grid2, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect } from 'react';
 
@@ -225,7 +225,7 @@ export default function Supersets({
             }
       }
     >
-      <Grid2
+      <Grid
         container
         rowSpacing={2}
         sx={{ mt: screenSize.isSmallerThanLaptop ? 2 : undefined }}
@@ -260,7 +260,7 @@ export default function Supersets({
           {selectedAthlete
             ? null
             : supersets.length < MAX_NUM_SUPERSETS && (
-                <Grid2
+                <Grid
                   size={{
                     xs: 12,
                     sm: screenSize.isLandscapeMobile ? 4 : 12,
@@ -295,7 +295,7 @@ export default function Supersets({
                       </Typography>
                     </Box>
                   </DroppableArea>
-                </Grid2>
+                </Grid>
               )}
           {cooldownSuperset && (
             <Superset
@@ -305,7 +305,7 @@ export default function Supersets({
             />
           )}
         </SupersetsProvider>
-      </Grid2>
+      </Grid>
 
       <DragOverlay>
         {activeExercise ? (

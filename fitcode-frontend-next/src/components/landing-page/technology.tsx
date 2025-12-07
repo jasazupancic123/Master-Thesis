@@ -1,4 +1,4 @@
-import { Box, Card, Grid2, Typography } from '@mui/material';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRef } from 'react';
 
@@ -311,14 +311,14 @@ export default function Technology() {
           />
         </Box>
       </Box>
-      <Grid2
+      <Grid
         container
         width="64vw"
         height={`calc(100vh - ${HERO_NAVBAR_HEIGHT})`}
         sx={{ pt: HERO_NAVBAR_HEIGHT }}
       >
         {items.map((item, index) => (
-          <Grid2
+          <Grid
             width="100%"
             key={item.title}
             size={{ xs: 12, md: 6 }}
@@ -404,9 +404,9 @@ export default function Technology() {
                 </Typography>
               </Box>
             </Card>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
     </Box>
   );
 }

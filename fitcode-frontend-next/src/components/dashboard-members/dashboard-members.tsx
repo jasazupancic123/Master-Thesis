@@ -10,7 +10,7 @@ import {
 import {
   Box,
   CircularProgress,
-  Grid2,
+  Grid,
   IconButton,
   TextField,
   Tooltip,
@@ -262,7 +262,7 @@ export default function DashboardMembers() {
         {!selectedGroups.length ? (
           <Typography>No groups</Typography>
         ) : (
-          <Grid2
+          <Grid
             container
             spacing={2}
             justifyContent={
@@ -274,7 +274,7 @@ export default function DashboardMembers() {
             {selectedGroups
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((g) => (
-                <Grid2
+                <Grid
                   key={g.id}
                   size={
                     selectedGroups.length === 1
@@ -301,9 +301,9 @@ export default function DashboardMembers() {
                     isDragging={isDragging}
                     setOpenEditAthleteModal={setOpenEditAthleteModal}
                   />
-                </Grid2>
+                </Grid>
               ))}
-          </Grid2>
+          </Grid>
         )}
 
         <DragOverlay style={{ cursor: 'grab' }}>

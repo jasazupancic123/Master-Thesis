@@ -1,4 +1,4 @@
-import { Box, Grid2 } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
@@ -50,13 +50,13 @@ export default function UndoneExerciseSet(props: Props) {
 
   return (
     <Box width="100%" display="flex" alignItems="center">
-      <Grid2
+      <Grid
         container
         spacing={1}
         columns={11}
         px={screenSize.isSmallerThanLaptop ? 1 : 0}
       >
-        <Grid2 size={0.5}>
+        <Grid size={0.5}>
           <Box
             display="flex"
             flexDirection="column"
@@ -79,9 +79,9 @@ export default function UndoneExerciseSet(props: Props) {
               )}
             </Box>
           </Box>
-        </Grid2>
+        </Grid>
 
-        <Grid2 size={10}>
+        <Grid size={10}>
           <Box
             display="flex"
             width="100%"
@@ -293,8 +293,8 @@ export default function UndoneExerciseSet(props: Props) {
               )}
             </Box>
           )}
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       {showDoneCheckbox && (
         <TrainingExerciseSetDoneCheckbox

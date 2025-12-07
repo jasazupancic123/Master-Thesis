@@ -3,7 +3,7 @@
 import { InfoOutlined, MoreVert } from '@mui/icons-material';
 import {
   Box,
-  Grid2,
+  Grid,
   IconButton,
   Menu,
   MenuItem,
@@ -65,7 +65,7 @@ export default function SupersetExercise({
   if (!component || !training) return null;
 
   return (
-    <Grid2
+    <Grid
       key={exercise.id}
       id={exercise.id}
       size={
@@ -202,6 +202,6 @@ export default function SupersetExercise({
           <Typography>Show Video</Typography>
         </MenuItem>
       </Menu>
-    </Grid2>
+    </Grid>
   );
 }
