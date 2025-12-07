@@ -72,6 +72,9 @@ export default function TrainingReportCard({ report }: Props) {
         borderRadius: 2,
       }}
       gap={2}
+      onClick={() => {
+        console.log('Report:', report);
+      }}
     >
       {/* Group name, cycle name, date */}
       {report && (

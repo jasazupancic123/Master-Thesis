@@ -10,6 +10,7 @@ import { useMain } from './main.provider';
 import { Controller } from '@/core/controller';
 import { UserRole } from '@/core/profile/enum/user-role.enum';
 import { TrainingController } from '@/core/training/training.controller';
+import { TrainingService } from '@/core/training/training.service';
 import type { TrainingReport } from '@/core/training/type/training-report.type';
 import {
   LINK_ATHLETE_HOME,
@@ -18,7 +19,6 @@ import {
 import type { Fetch } from '@/lib/common/type/fetch.type';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import { settleState } from '@/lib/common/util/state.util';
 
 interface IAthleteContext {
   reports: Fetch<TrainingReport[]>;
@@ -62,7 +62,18 @@ export function AthleteProvider(props: React.PropsWithChildren) {
         controller.training.findReports(institution.id),
       ]);
 
-      setReports(settleState(reports, []));
+      // map reports
+      const mapped =
+        reports.status === 'fulfilled'
+          ? reports.value.map((r) =>
+              TrainingService.mapReport(r, {
+                institutions: [institution],
+                groups: institution.groups,
+              })
+            )
+          : [];
+
+      setReports({ data: mapped, loading: false, error: null });
       toast.success('Reports recalculated');
     } catch (e) {
       console.error('Failed to recalculate reports', e);
@@ -79,7 +90,18 @@ export function AthleteProvider(props: React.PropsWithChildren) {
         controller.training.findReports(institution.id),
       ]);
 
-      setReports(settleState(reports, []));
+      // map reports
+      const mapped =
+        reports.status === 'fulfilled'
+          ? reports.value.map((r) =>
+              TrainingService.mapReport(r, {
+                institutions: [institution],
+                groups: institution.groups,
+              })
+            )
+          : [];
+
+      setReports({ data: mapped, loading: false, error: null });
     };
 
     fetchData().then();
