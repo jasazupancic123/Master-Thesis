@@ -4,7 +4,9 @@ import '@testing-library/jest-dom';
 declare global {
   namespace jest {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface Matchers<R>
-      extends jest.DomTestingLibraryMatchers<R, HTMLElement> {}
+    interface Matchers<R> extends jest.DomTestingLibraryMatchers<
+      R,
+      HTMLElement
+    > {}
   }
 }
