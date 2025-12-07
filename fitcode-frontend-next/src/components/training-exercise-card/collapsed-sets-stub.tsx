@@ -1,5 +1,5 @@
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import { Box, Grid2, IconButton } from '@mui/material';
+import { Box, Grid, IconButton } from '@mui/material';
 
 import type { TrainingExerciseCardCollapsedSetsProps } from './collapsed-sets';
 import { NumberExerciseParam } from '@/components/exercise-param/number-exercise-param';
@@ -28,14 +28,14 @@ export default function StubTrainingExerciseCardCollapsedSets(
   const recOptions = core.training.set.getRecOptions(exercise.exercise!);
 
   return (
-    <Grid2
+    <Grid
       key={componentIndex}
       container
       spacing={1}
       columns={11}
       px={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
-      <Grid2 size={1}>
+      <Grid size={1}>
         <Box
           display="flex"
           flexDirection="column"
@@ -79,9 +79,9 @@ export default function StubTrainingExerciseCardCollapsedSets(
             )}
           </Box>
         </Box>
-      </Grid2>
+      </Grid>
 
-      <Grid2 size={10}>
+      <Grid size={10}>
         <Box
           display="flex"
           width="100%"
@@ -227,7 +227,7 @@ export default function StubTrainingExerciseCardCollapsedSets(
             )}
           </Box>
         )}
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 }

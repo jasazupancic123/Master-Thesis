@@ -1,5 +1,5 @@
 import { CheckCircle } from '@mui/icons-material';
-import { Box, Grid2 } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { useTheme } from '@mui/material';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
@@ -94,7 +94,7 @@ export default function AthleteTrainingExerciseSets({
         const index = setIndex !== undefined ? setIndex : i;
 
         return (
-          <Grid2
+          <Grid
             key={i}
             container
             spacing={0.5}
@@ -107,7 +107,7 @@ export default function AthleteTrainingExerciseSets({
                   : 0
             }
           >
-            <Grid2 size={0.5}>
+            <Grid size={0.5}>
               <Box
                 display="flex"
                 flexDirection="column"
@@ -133,9 +133,9 @@ export default function AthleteTrainingExerciseSets({
                   )}
                 </Box>
               </Box>
-            </Grid2>
+            </Grid>
 
-            <Grid2 size={10}>
+            <Grid size={10}>
               <Box
                 display="flex"
                 width="100%"
@@ -404,9 +404,9 @@ export default function AthleteTrainingExerciseSets({
                   )}
                 </Box>
               )}
-            </Grid2>
+            </Grid>
 
-            <Grid2 size={0.5} display="flex" alignItems="flex-end">
+            <Grid size={0.5} display="flex" alignItems="flex-end">
               {supersetIndex !== undefined &&
                 setIndex !== undefined &&
                 componentId &&
@@ -427,8 +427,8 @@ export default function AthleteTrainingExerciseSets({
                     sx={{ color: theme.palette.primary.main, mb: 0.45 }}
                   />
                 )}
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
         );
       })}
     </Box>
