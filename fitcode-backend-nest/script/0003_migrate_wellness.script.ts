@@ -1,8 +1,8 @@
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import type { FirestoreEntity } from '@src/common/type/entity.type';
-import type { Profile } from '@src/profile/entity/profile.entity';
-import type { WellnessZScore } from '@src/profile/entity/wellnes-z-score.entity';
-import type { Wellness } from '@src/profile/entity/wellness.entity';
+import type { Profile } from '@src/user/entity/profile.entity';
+import type { WellnessZScore } from '@src/user/entity/wellnes-z-score.entity';
+import type { Wellness } from '@src/user/entity/wellness.entity';
 
 import { runScript } from './config/script-runner';
 import { setupFirebase } from './config/setup-firebase';

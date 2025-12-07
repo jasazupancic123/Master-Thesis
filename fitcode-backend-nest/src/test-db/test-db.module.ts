@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 
 import { FirebaseModule } from '@src/firebase/firebase.module';
 import { InstitutionMembersRepository } from '@src/institution/repository/institution-members.repository';
-import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { TrainingModule } from '@src/training/training.module';
+import { ProfileRepository } from '@src/user/repository/profile.repository';
 
 import { ExerciseTestRepository } from './service/exercise-test.repository';
 import { GroupTestRepository } from './service/group-test.repository';

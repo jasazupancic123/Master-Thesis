@@ -28,7 +28,7 @@ describe('Register User (e2e)', () => {
   });
 
   async function req(token: string, input: CreateUserDto) {
-    return await testApp.http.post('/auth/register', token, input);
+    return await testApp.http.post('/user/register', token, input);
   }
 
   describe('As Admin', () => {

@@ -4,13 +4,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Auth } from './common/decorator/auth.decorator';
 import { RequestUser } from './common/decorator/request-user.decorator';
-import { User } from './common/type/firebase-auth.type';
+import { FirebaseUser } from './common/type/firebase-auth.type';
 import { NodeEnv } from './config/environment-validation-schema';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions/exercise-ai-prescriptions.service';
 import { FirebaseService } from './firebase/firebase.service';
 import { InstitutionService } from './institution/service/institution.service';
-import { ProfileService } from './profile/service/profile.service';
 import { ActiveTrainingService } from './training/service/active-training.service';
+import { UserService } from './user/service/user.service';
 
 @ApiTags('General')
 @Controller()
@@ -20,7 +20,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly firebase: FirebaseService,
-    private readonly profileService: ProfileService,
+    private readonly userService: UserService,
     private readonly exerciseAiPrescriptionService: ExerciseAiPrescriptionsService,
     private readonly activeTrainingService: ActiveTrainingService,
     private readonly institutionService: InstitutionService,
@@ -42,12 +42,12 @@ export class AppController {
 
   @Get('init')
   @Auth()
-  async init(@RequestUser() user: User) {
+  async init(@RequestUser() user: FirebaseUser) {
     const isAthlete = this.firebase.isAthlete(user);
 
     const [profile, institutions, exerciseAiPrescriptions, activeTraining] =
       await Promise.all([
-        this.profileService.findOneById(user.uid),
+        this.userService.findOneById(user.uid),
         this.institutionService.findAll(user),
         this.exerciseAiPrescriptionService.findAll(),
         isAthlete

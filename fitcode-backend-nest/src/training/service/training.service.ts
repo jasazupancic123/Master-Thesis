@@ -29,7 +29,7 @@ import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import {
   CycleRef,
   SubgroupRef,
@@ -56,8 +56,8 @@ import { UpdateInstitutionAthleteEvent } from '@src/institution/event/update-ins
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { PeriodizationService } from '@src/periodization/periodization.service';
-import { ProfileService } from '@src/profile/service/profile.service';
 import { WorkloadService } from '@src/training/service/workload.service';
+import { UserService } from '@src/user/service/user.service';
 
 import {
   DURATION_TRAINING_COMPONENT_IN_MIN,
@@ -100,7 +100,7 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly repository: TrainingRepository,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
     private readonly periodizationService: PeriodizationService,
-    private readonly profileService: ProfileService,
+    private readonly userService: UserService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
     private readonly groupService: GroupService,
@@ -111,7 +111,7 @@ export class TrainingService implements Permission<Training, Institution> {
   ) {}
 
   async findOneById(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef,
     options?: { skipInstitution?: boolean },
   ): Promise<Training | null> {
@@ -131,7 +131,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   async findOneByIdOrFail(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef,
     options?: { skipInstitution?: boolean },
   ): Promise<Training> {
@@ -141,7 +141,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   async findAll(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     filter?: Filter<Training>,
     options?: { limit?: number },
@@ -190,7 +190,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async findCompletedAthleteWorkloads(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef & UserRef,
   ): Promise<Workload[]> {
     const training = await this.findOneByIdOrFail(user, ref);
@@ -205,7 +205,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async createForInstitution(
-    user: User,
+    user: FirebaseUser,
     input: CreateTrainingDto,
   ): Promise<Training> {
     // validate parent references
@@ -310,7 +310,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async update(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef,
     input: UpdateTraining,
   ): Promise<Training> {
@@ -360,7 +360,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async updateComponentTime(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingComponentRef,
     input: DateRangeDto,
   ) {
@@ -404,7 +404,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async move(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef,
     input: DateRangeDto,
   ): Promise<Training | null> {
@@ -449,7 +449,11 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async updateMembers(user: User, ref: TrainingRef, input: UpdateMemberDto) {
+  async updateMembers(
+    user: FirebaseUser,
+    ref: TrainingRef,
+    input: UpdateMemberDto,
+  ) {
     const { userId: memberId, add } = input;
 
     // validate
@@ -482,7 +486,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
-  async remove(user: User, ref: TrainingRef): Promise<void> {
+  async remove(user: FirebaseUser, ref: TrainingRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing training ${ref.trainingId}`);
 
     const training = await this.findOneByIdOrFail(user, ref);
@@ -498,7 +502,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async addComponents(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingRef,
     input: TrainingComponent[],
   ): Promise<Training> {
@@ -552,7 +556,7 @@ export class TrainingService implements Permission<Training, Institution> {
   @LogMethod()
   async deleteComponent(
     ref: TrainingComponentRef,
-    user: User,
+    user: FirebaseUser,
   ): Promise<Training> {
     // validate ownership
     const training = await this.findOneByIdOrFail(user, ref);
@@ -582,7 +586,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async modifyTraining(
-    user: User,
+    user: FirebaseUser,
     trainingId: string,
     action: TrainingAction,
     ref: TrainingActionRef,
@@ -637,7 +641,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async copyAndPeriodize(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingComponentRef & SubgroupRef,
     input: PeriodizeTrainingsDto,
   ) {
@@ -724,7 +728,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async completeNextSet(
-    user: User,
+    user: FirebaseUser,
     ref: Pick<WorkloadRef, 'trainingId' | 'exerciseId' | 'userId'>,
     input: CreateWorkload,
   ) {
@@ -769,7 +773,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async upsertSet(user: User, ref: WorkloadRef, input: CreateWorkload) {
+  async upsertSet(user: FirebaseUser, ref: WorkloadRef, input: CreateWorkload) {
     const { userId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(user, userId, training.institution);
@@ -792,7 +796,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async importWorkloads(
-    user: User,
+    user: FirebaseUser,
     workloads: ImportWorkloadDto[],
   ): Promise<Training> {
     const COMPONENT_ID = 'strength';
@@ -889,7 +893,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   @LogMethod()
   async updateManyWorkloads(
-    user: User,
+    user: FirebaseUser,
     trainingId: string,
     input: UpdateManyWorkloadsDto,
   ): Promise<void> {
@@ -1015,10 +1019,10 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (!hasBwParamType) return;
 
-    const profile = await this.profileService.findOneById(athleteId);
-    if (!profile) return;
+    const user = await this.userService.findOneById(athleteId);
+    if (!user) return;
 
-    const bw = profile.wellness.weight;
+    const bw = user.wellness.weight;
     if (!bw || bw < MIN_BODYWEIGHT_KG) return; // no valid bodyweight found
 
     this.trainingPlanService.modifyPrescribedParamValuesByType(
@@ -1169,7 +1173,11 @@ export class TrainingService implements Permission<Training, Institution> {
    * else if current user is trainer or manager, it returns found athlete
    * by athleteId if it exists and if it belongs to institution.
    */
-  async getAthlete(user: User, athleteId: string, institution?: Institution) {
+  async getAthlete(
+    user: FirebaseUser,
+    athleteId: string,
+    institution?: Institution,
+  ) {
     if (this.firebase.isAthlete(user)) return user;
     if (!athleteId) throw new BadRequestException('You must provide athlete');
 
@@ -1187,7 +1195,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private async populateTraining(
     training: Training,
-    user: User,
+    user: FirebaseUser,
     options?: {
       institutions?: Institution[];
       groups?: Group[];
@@ -1232,7 +1240,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   private async validateOverlapAndMaxLimit(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     ref: Omit<CycleRef & Partial<TrainingRef>, 'institutionId'>,
     from: Date,
@@ -1266,7 +1274,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   private async validateOverlap(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     ref: Omit<CycleRef & Partial<TrainingRef>, 'institutionId'>,
     from: Date,
@@ -1476,22 +1484,30 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException('Training is not scheduled for today');
   }
 
-  validateCanView(user: User, training: Training, institution?: Institution) {
+  validateCanView(
+    user: FirebaseUser,
+    training: Training,
+    institution?: Institution,
+  ) {
     if (!this.canView(user, training, institution))
       throw new UnauthorizedException('You cannot view this training');
   }
 
-  validateCanEdit(user: User, training: Training, institution?: Institution) {
+  validateCanEdit(
+    user: FirebaseUser,
+    training: Training,
+    institution?: Institution,
+  ) {
     if (!this.canEdit(user, training, institution))
       throw new UnauthorizedException('You cannot edit this training');
   }
 
-  validateCanAdd(user: User, institution?: Institution) {
+  validateCanAdd(user: FirebaseUser, institution?: Institution) {
     if (!this.canAdd(user, institution))
       throw new UnauthorizedException('You cannot add training');
   }
 
-  canView(user: User, training: Training, institution?: Institution) {
+  canView(user: FirebaseUser, training: Training, institution?: Institution) {
     if (training.ownerId === user.uid) return true;
     if (training.membersIds.includes(user.uid)) return true;
 
@@ -1516,7 +1532,7 @@ export class TrainingService implements Permission<Training, Institution> {
     return false;
   }
 
-  canEdit(user: User, training: Training, institution?: Institution) {
+  canEdit(user: FirebaseUser, training: Training, institution?: Institution) {
     if (this.firebase.isTrainer(user) && training.ownerId === user.uid)
       return true;
 
@@ -1532,7 +1548,7 @@ export class TrainingService implements Permission<Training, Institution> {
     return false;
   }
 
-  canAdd(user: User, institution?: Institution) {
+  canAdd(user: FirebaseUser, institution?: Institution) {
     if (institution)
       return this.institutionService.canEditExtended(user, institution, {
         allowTrainer: true,
