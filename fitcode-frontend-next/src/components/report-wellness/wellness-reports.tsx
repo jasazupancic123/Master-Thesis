@@ -1,4 +1,4 @@
-import { Avatar, Box, Grid2, Typography } from '@mui/material';
+import { Avatar, Box, Grid, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -114,8 +114,8 @@ export default function WellnessReports() {
           {')'}
         </Typography>
       </Box>
-      <Grid2 container spacing={2}>
-        <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <WellnessBarChart
             todaysWellness={todaysWellness}
             metricConfig={metricConfigs[0]}
@@ -123,8 +123,8 @@ export default function WellnessReports() {
             height={barChartHeight}
             members={members}
           />
-        </Grid2>
-        <Grid2 size={{ xs: 12, md: 6 }}>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
           <WellnessBarChart
             todaysWellness={todaysWellness}
             metricConfig={metricConfigs[1]}
@@ -132,9 +132,9 @@ export default function WellnessReports() {
             height={barChartHeight}
             members={members}
           />
-        </Grid2>
+        </Grid>
 
-        <Grid2 size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <WellnessBarChart
             todaysWellness={todaysWellness}
             metricConfig={metricConfigs[2]}
@@ -142,9 +142,9 @@ export default function WellnessReports() {
             height={barChartHeight}
             members={members}
           />
-        </Grid2>
+        </Grid>
 
-        <Grid2 size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           {/* Title */}
           <Box
             display="flex"
@@ -231,8 +231,8 @@ export default function WellnessReports() {
               )}
             </Box>
           </Box>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

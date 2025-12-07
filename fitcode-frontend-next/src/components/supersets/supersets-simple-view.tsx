@@ -1,5 +1,4 @@
-import { Box, Chip, Grid2, Typography } from '@mui/material';
-import React from 'react';
+import { Box, Chip, Grid, Typography } from '@mui/material';
 
 import type { Superset } from '@/core/training/type/superset.type';
 import { useMain } from '@/store/main.provider';
@@ -12,9 +11,9 @@ export default function SupersetsSimpleView({ supersets }: Props) {
   const { exercises } = useMain();
 
   return (
-    <Grid2 container>
+    <Grid container>
       {supersets.map((s, i) => (
-        <Grid2 key={i} spacing={1}>
+        <Grid key={i} spacing={1}>
           <Box
             sx={{
               display: 'flex',
@@ -94,8 +93,8 @@ export default function SupersetsSimpleView({ supersets }: Props) {
               })}
             </Box>
           </Box>
-        </Grid2>
+        </Grid>
       ))}
-    </Grid2>
+    </Grid>
   );
 }

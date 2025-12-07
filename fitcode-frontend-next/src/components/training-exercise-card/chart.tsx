@@ -4,7 +4,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import {
   Box,
   Checkbox,
-  Grid2,
+  Grid,
   IconButton,
   Slider,
   Typography,
@@ -104,7 +104,7 @@ export default function TrainingExerciseChart(
   };
 
   return (
-    <Grid2
+    <Grid
       container
       width="100%"
       height={!screenSize.isSmallerThanLaptop ? 300 : undefined}
@@ -116,14 +116,14 @@ export default function TrainingExerciseChart(
       }}
     >
       {/* First Row - Two Columns */}
-      <Grid2 size={{ xs: screenSize.isSmallerThanLaptop ? 12 : 6 }}>
+      <Grid size={{ xs: screenSize.isSmallerThanLaptop ? 12 : 6 }}>
         <TrainingExerciseCard
           supersetIndex={supersetIndex}
           exercise={exercise}
           chartView
         />
-      </Grid2>
-      <Grid2
+      </Grid>
+      <Grid
         size={{ xs: screenSize.isSmallerThanLaptop ? 12 : 6 }}
         sx={{ pt: screenSize.isSmallerThanLaptop ? 2 : 0 }}
       >
@@ -190,10 +190,10 @@ export default function TrainingExerciseChart(
             </IconButton>
           </Box>
         </Box>
-      </Grid2>
+      </Grid>
 
       {/* Second Row - Graph */}
-      <Grid2 size={{ xs: 12 }}>
+      <Grid size={{ xs: 12 }}>
         <Box
           sx={{
             width: '100%',
@@ -348,7 +348,7 @@ export default function TrainingExerciseChart(
             </LineChart>
           </ResponsiveContainer>
         </Box>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { alpha, Avatar, Box, Grid2, Typography } from '@mui/material';
+import { alpha, Avatar, Box, Grid, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -232,8 +232,8 @@ export default function TrainingStation() {
         </Box>
       </Box>
 
-      <Grid2 container spacing={2} sx={{ width: '100%' }}>
-        <Grid2
+      <Grid container spacing={2} sx={{ width: '100%' }}>
+        <Grid
           size={3}
           display="flex"
           flexDirection="column"
@@ -260,8 +260,8 @@ export default function TrainingStation() {
           <Typography fontSize={16} fontWeight={700} textAlign="center">
             {selectedUser?.displayName || 'Unknown User'}
           </Typography>
-        </Grid2>
-        <Grid2
+        </Grid>
+        <Grid
           size={6}
           display="flex"
           flexDirection="column"
@@ -314,8 +314,8 @@ export default function TrainingStation() {
               Exercise not found for selected user
             </Typography>
           )}
-        </Grid2>
-        <Grid2
+        </Grid>
+        <Grid
           size={3}
           display="flex"
           justifyContent="center"
@@ -412,8 +412,8 @@ export default function TrainingStation() {
               </Box>
             </Box>
           )}
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       <Box
         width={60}

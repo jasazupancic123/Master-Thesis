@@ -474,6 +474,12 @@ export class TrainingService implements Permission<Training, Institution> {
     // update members
     if (add) await this.repository.addMember(training, member.uid);
     else await this.repository.removeMember(training, member.uid);
+
+    // remove training component statuses for this member for this training
+    await this.trainingComponentUserStatusRepository.deleteAllByTrainingByMember(
+      training.id,
+      member.uid,
+    );
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {
@@ -984,26 +990,21 @@ export class TrainingService implements Permission<Training, Institution> {
   async getTrainingByAthlete(
     athleteId: string,
     training: Training,
-  ): Promise<Training & { workloads: Workload[] }> {
+  ): Promise<Training> {
     const athleteTraining = this.trainingPlanService.getTrainingByAthlete(
       athleteId,
       training,
     );
 
     // calculate param based sets
-    let workloads: Workload[] = [];
     try {
       await this.updateBodyweightSets(athleteId, athleteTraining);
       await this.updateRepMaxSets(athleteId, athleteTraining);
-      workloads = await this.workloadService.findAllByUserTraining({
-        userId: athleteId,
-        trainingId: training.id,
-      });
     } catch (e) {
       this.logger.error(e);
     }
 
-    return { ...athleteTraining, workloads };
+    return athleteTraining;
   }
 
   async updateBodyweightSets(athleteId: string, training: Training) {
@@ -1081,8 +1082,15 @@ export class TrainingService implements Permission<Training, Institution> {
     const existing =
       await this.trainingComponentUserStatusRepository.findById(ref);
 
+    const from = workloads[0]?.from ? new Date(workloads[0]?.from) : new Date();
+    const to = workloads[workloads.length - 1]?.to
+      ? new Date(workloads[workloads.length - 1]?.to)
+      : new Date();
+
     if (existing) {
       await this.trainingComponentUserStatusRepository.update(ref, {
+        from,
+        to,
         status: TrainingStatus.COMPLETED,
         realization: report.realization,
         sets: report.sets,
@@ -1098,8 +1106,8 @@ export class TrainingService implements Permission<Training, Institution> {
     } else {
       await this.trainingComponentUserStatusRepository.save({
         id: null,
-        from: new Date(workloads[0]?.from) || new Date(),
-        to: new Date(workloads[workloads.length - 1]?.to) || new Date(),
+        from,
+        to,
         institutionId: training.institutionId,
         groupId: training.groupId,
         cycleId: training.cycleId,

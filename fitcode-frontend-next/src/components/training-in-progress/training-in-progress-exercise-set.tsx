@@ -1,4 +1,4 @@
-import { Box, Divider, Grid2 } from '@mui/material';
+import { Box, Divider, Grid } from '@mui/material';
 
 import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
@@ -73,10 +73,10 @@ export default function TrainingInProgressExerciseSet(props: Props) {
         backgroundColor: theme.palette.background.default,
       }}
     >
-      <Grid2 container spacing={0.5} columns={11}>
-        <Grid2 size={0.75} />
+      <Grid container spacing={0.5} columns={11}>
+        <Grid size={0.75} />
 
-        <Grid2 size={9.5}>
+        <Grid size={9.5}>
           <Box
             display="flex"
             width="100%"
@@ -257,17 +257,17 @@ export default function TrainingInProgressExerciseSet(props: Props) {
 
           {uni && (
             <>
-              <Grid2 container spacing={0.5} columns={11}>
-                <Grid2 size={0.75} />
-                <Grid2 size={9.5}></Grid2>
+              <Grid container spacing={0.5} columns={11}>
+                <Grid size={0.75} />
+                <Grid size={9.5}></Grid>
                 <UnilateralParamsRow
                   params={params}
                   load={load}
                   volParam={volParam}
                   loadParam={loadParam}
                 />
-                <Grid2 size={0.75} />
-              </Grid2>
+                <Grid size={0.75} />
+              </Grid>
 
               <Box
                 display="flex"
@@ -490,9 +490,9 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               </Box>
             </>
           )}
-        </Grid2>
+        </Grid>
 
-        <Grid2 size={0.75}>
+        <Grid size={0.75}>
           <Box
             height="100%"
             display="flex"
@@ -506,8 +506,8 @@ export default function TrainingInProgressExerciseSet(props: Props) {
               supersetIndex={supersetIndex}
             />
           </Box>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
