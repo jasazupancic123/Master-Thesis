@@ -82,8 +82,33 @@ export default function TrainingStationExerciseCard(props: Props) {
       alignItems="center"
       gap={0.5}
       onClick={() => {
+        if (!selectedUser) return;
+
         setSelectedExercise(exercise);
-        setSelectedSetIndex(0);
+
+        const individualTraining = individualTrainings.find(
+          (it) => it.userId === selectedUser.uid
+        );
+
+        if (!individualTraining) return;
+
+        const individualExercise = individualTraining.components
+          .flatMap((c) => c.supersets.flatMap((s) => s.exercises))
+          .find((ie) => ie.id === exercise.id);
+
+        if (!individualExercise) return;
+
+        const userExerciseWorkloads = workloads.filter(
+          (w) => w.userId === selectedUser.uid && w.exerciseId === exercise.id
+        );
+
+        const completedSets =
+          userExerciseWorkloads.length >= individualExercise.sets.length
+            ? 0
+            : userExerciseWorkloads.length;
+
+        console.log(completedSets);
+        setSelectedSetIndex(completedSets);
       }}
       sx={{
         cursor: 'pointer',

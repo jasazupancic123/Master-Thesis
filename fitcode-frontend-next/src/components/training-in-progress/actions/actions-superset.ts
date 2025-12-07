@@ -1,5 +1,4 @@
 import type { ITrainingInProgressUtilsCtx } from '../context/training-in.progress-utils.provider';
-import type { IUndoneExercisesCtx } from '../context/undone-exercises.provider';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { Superset } from '@/core/training/type/superset.type';
 import type {
@@ -16,19 +15,21 @@ export function handleChangeSuperset(
     useMain: IMainContext;
     useTraining: ITrainingsContextDefined;
     useTrainingInProgress: ITrainingInProgressContext;
-    useUndoneExercises: IUndoneExercisesCtx;
   }
 ) {
   const { superset, i } = input;
 
-  const { useMain, useTraining, useTrainingInProgress, useUndoneExercises } =
-    context;
+  const { useMain, useTraining, useTrainingInProgress } = context;
 
   const { activeTraining } = useMain;
   const { trainingInProgress } = useTraining;
-  const { setUndoneExercises } = useUndoneExercises;
-  const { setSelectedExercise, setSetIndex, setSupersetIndex, supersetIndex } =
-    useTrainingInProgress;
+  const {
+    setSelectedExercise,
+    setSetIndex,
+    setSupersetIndex,
+    supersetIndex,
+    workloads,
+  } = useTrainingInProgress;
 
   if (supersetIndex === undefined) return;
 
@@ -37,21 +38,17 @@ export function handleChangeSuperset(
     {
       trainingId: trainingInProgress.training.id,
       supersetIndex,
-      componentId: trainingInProgress.selectedComponent.id,
+      componentId: trainingInProgress.componentId,
     },
-    activeTraining?.workloads || []
+    workloads
   );
 
   const extendedUndoneExercises: TrainingExerciseExtended[] =
     undoneExercises.map((exercise) => ({
       ...exercise,
-      componentId: trainingInProgress.selectedComponent.id,
+      componentId: trainingInProgress.componentId,
       supersetIndex: supersetIndex || 0,
     }));
-
-  if (undoneExercises.length > 0) {
-    setUndoneExercises(extendedUndoneExercises);
-  }
 
   setSupersetIndex(i);
   setSelectedExercise(superset.exercises[0] || null);
@@ -63,19 +60,19 @@ export const handleFinishSuperset = async (context: {
   useTraining: ITrainingsContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
   useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
-  useUndoneExercises: IUndoneExercisesCtx;
 }) => {
   const {
     useMain,
     useTraining,
     useTrainingInProgress,
     useTrainingInProgressUtils,
-    // useUndoneExercises,
   } = context;
 
   const { activeTraining } = useMain;
   const { trainingInProgress } = useTraining;
-  const { supersetIndex } = useTrainingInProgress;
+  const { supersetIndex, workloads } = useTrainingInProgress;
+
+  if (!trainingInProgress) return;
 
   // const { supersetIndex } = useTrainingInProgress;
 
@@ -84,22 +81,28 @@ export const handleFinishSuperset = async (context: {
 
   // const { setUndoneExercises } = useUndoneExercises;
 
-  if (!trainingInProgress?.supersets || supersetIndex === undefined) return;
+  const component = trainingInProgress.training.components.find(
+    (comp) => comp.id === trainingInProgress.componentId
+  );
+
+  if (!component) return;
+
+  if (!component.supersets || supersetIndex === undefined) return;
 
   handleCloseMenu();
 
   const undoneExercises: TrainingExercise[] = [];
 
-  trainingInProgress.supersets.forEach((superset) => {
+  component.supersets.forEach((superset) => {
     const undoneExercisesForSuperset =
       ExerciseSetService.getUndoneExercisesFromSuperset(
         superset,
         {
           trainingId: trainingInProgress.training.id,
           supersetIndex,
-          componentId: trainingInProgress.selectedComponent.id,
+          componentId: trainingInProgress.componentId,
         },
-        activeTraining?.workloads || []
+        workloads
       );
 
     undoneExercisesForSuperset.forEach((exercise) => {
@@ -150,6 +153,7 @@ export const handleAdvanceInSuperset = (
     setSupersetIndex,
     selectedExercise: exercise,
     setIndex,
+    workloads,
   } = useTrainingInProgress;
 
   const { handleFinish } = useTrainingInProgressUtils;
@@ -158,8 +162,13 @@ export const handleAdvanceInSuperset = (
 
   if (supersetIndex === undefined) return;
 
-  const currentSuperset =
-    trainingInProgress.selectedComponent.supersets[supersetIndex];
+  const component = trainingInProgress.training.components.find(
+    (comp) => comp.id === trainingInProgress.componentId
+  );
+
+  if (!component) return;
+
+  const currentSuperset = component.supersets[supersetIndex];
 
   if (!currentSuperset) return;
 
@@ -178,12 +187,12 @@ export const handleAdvanceInSuperset = (
       const isSetCompleted = ExerciseSetService.isSetCompleted(
         {
           trainingId: trainingInProgress.training.id,
-          componentId: trainingInProgress.selectedComponent.id,
+          componentId: trainingInProgress.componentId,
           exerciseId: ex.id,
           supersetIndex,
           setIndex: set.setNumber - 1,
         },
-        activeTraining?.workloads || []
+        workloads
       );
 
       return isSetCompleted;
@@ -193,17 +202,14 @@ export const handleAdvanceInSuperset = (
   if (allSetsCompleted) {
     // Move to next superset
 
-    const isLastSuperset =
-      supersetIndex ===
-      trainingInProgress.selectedComponent.supersets.length - 1;
+    const isLastSuperset = supersetIndex === component.supersets.length - 1;
 
     if (isLastSuperset) {
       handleFinish();
       return;
     }
 
-    const nextSuperset =
-      trainingInProgress.selectedComponent.supersets[supersetIndex + 1];
+    const nextSuperset = component.supersets[supersetIndex + 1];
 
     if (!nextSuperset) return;
 
@@ -245,9 +251,9 @@ export const handleAdvanceInSuperset = (
       {
         trainingId: trainingInProgress.training.id,
         supersetIndex,
-        componentId: trainingInProgress.selectedComponent.id,
+        componentId: trainingInProgress.componentId,
       },
-      activeTraining?.workloads || []
+      workloads
     );
 
     if (hasCompletedAllSets) continue;
@@ -260,12 +266,12 @@ export const handleAdvanceInSuperset = (
       const completed = ExerciseSetService.isSetCompleted(
         {
           trainingId: trainingInProgress.training.id,
-          componentId: trainingInProgress.selectedComponent.id,
+          componentId: trainingInProgress.componentId,
           exerciseId: currentExercise.id,
           supersetIndex,
           setIndex: set.setNumber - 1,
         },
-        activeTraining?.workloads || []
+        workloads
       );
 
       if (!completed) {

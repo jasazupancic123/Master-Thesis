@@ -2,55 +2,6 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import type { ITrainingsContextDefined } from '@/store/trainings.provider';
 
-export function updateTrainingExerciseWithAI(
-  repsCountL: number,
-  repsCountR: number | undefined,
-  tempoL: string | null,
-  tempoR: string | null | undefined,
-  passedExercise: TrainingExercise | undefined,
-  updateSelectedExercise: boolean | undefined,
-  trainingCtx: ITrainingsContextDefined,
-  trainingInProgressCtx: ITrainingInProgressContext
-) {
-  const { updateTrainingInProgress } = trainingCtx;
-  const { selectedExercise, setSelectedExercise, supersetIndex, setIndex } =
-    trainingInProgressCtx;
-
-  if (supersetIndex === undefined) return;
-  if (setIndex === undefined) return;
-
-  const updatableExercise = passedExercise || selectedExercise;
-  if (!updatableExercise) return;
-
-  const selectedSet = updatableExercise.sets[setIndex];
-  if (!selectedSet) return;
-
-  const tempoAIValuesL = tempoL
-    ? tempoL.split(':').map((t) => parseFloat(t))
-    : null;
-
-  const tempoAIValuesR = tempoR
-    ? tempoR.split(':').map((t) => parseFloat(t))
-    : null;
-
-  updatableExercise.sets[setIndex] = {
-    ...selectedSet,
-    reps: repsCountL,
-    repsR: repsCountR,
-    tempoEcc: tempoAIValuesL ? tempoAIValuesL[0] : selectedSet.tempoEcc,
-    tempoIso: tempoAIValuesL ? tempoAIValuesL[1] : selectedSet.tempoIso,
-    tempoCon: tempoAIValuesL ? tempoAIValuesL[2] : selectedSet.tempoCon,
-    tempoIdle: tempoAIValuesL ? tempoAIValuesL[3] : selectedSet.tempoIdle,
-    tempoEccR: tempoAIValuesR ? tempoAIValuesR[0] : selectedSet.tempoEccR,
-    tempoIsoR: tempoAIValuesR ? tempoAIValuesR[1] : selectedSet.tempoIsoR,
-    tempoConR: tempoAIValuesR ? tempoAIValuesR[2] : selectedSet.tempoConR,
-    tempoIdleR: tempoAIValuesR ? tempoAIValuesR[3] : selectedSet.tempoIdleR,
-  };
-
-  if (updateSelectedExercise) setSelectedExercise(updatableExercise);
-  updateTrainingInProgress(updatableExercise, supersetIndex);
-}
-
 export const goToNextExercise = (context: {
   useTraining: ITrainingsContextDefined;
   useTrainingInProgress: ITrainingInProgressContext;
@@ -64,7 +15,13 @@ export const goToNextExercise = (context: {
 
   if (!selectedExercise) return;
 
-  const selectedSuperset = trainingInProgress.supersets[supersetIndex!];
+  const component = trainingInProgress.training.components.find(
+    (comp) => comp.id === trainingInProgress.componentId
+  );
+
+  if (!component) return;
+
+  const selectedSuperset = component.supersets[supersetIndex!];
 
   if (!selectedSuperset) return;
 
@@ -87,7 +44,13 @@ export const goToPreviousExercise = (context: {
   const { selectedExercise, supersetIndex, setSelectedExercise, setSetIndex } =
     useTrainingInProgress;
 
-  const selectedSuperset = trainingInProgress.supersets[supersetIndex!];
+  const component = trainingInProgress.training.components.find(
+    (comp) => comp.id === trainingInProgress.componentId
+  );
+
+  if (!component) return;
+
+  const selectedSuperset = component.supersets[supersetIndex!];
 
   if (!selectedSuperset || !selectedExercise) return;
 

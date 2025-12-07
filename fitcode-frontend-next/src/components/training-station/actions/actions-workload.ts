@@ -7,7 +7,7 @@ import type {
 } from '@/core/training/type/workload.type';
 
 export function createEmptyPartialWorkload(state: {
-  individualTraining: Training;
+  training: Training;
   workloads: Workload[];
   userId: string;
   componentId: string;
@@ -16,7 +16,7 @@ export function createEmptyPartialWorkload(state: {
   workloadInput?: PartialRecordedWorkloadValues;
 }): Workload | null {
   const {
-    individualTraining,
+    training,
     workloads,
     userId,
     componentId,
@@ -25,11 +25,7 @@ export function createEmptyPartialWorkload(state: {
     workloadInput,
   } = state;
 
-  const supersetIndex = getSupersetIndex(
-    individualTraining,
-    componentId,
-    exerciseId
-  );
+  const supersetIndex = getSupersetIndex(training, componentId, exerciseId);
 
   let workload: Workload | undefined | null = workloads.find(
     (w) =>
@@ -37,23 +33,25 @@ export function createEmptyPartialWorkload(state: {
       w.exerciseId === exerciseId &&
       w.setNumber === setIndex + 1 &&
       w.componentId === componentId &&
-      w.trainingId === individualTraining?.id &&
+      w.trainingId === training?.id &&
       w.supersetIndex === supersetIndex
   );
+
+  console.log('foundWOrklaod', workload, 'workloadInput', workloadInput);
 
   if (!workload || workloadInput) {
     if (supersetIndex === null) return null;
 
     workload = core.training.workload.createEmptyWorkloadFromTraining(
       {
-        trainingId: individualTraining.id,
+        trainingId: training.id,
         componentId: componentId,
         exerciseId: exerciseId,
         supersetIndex,
         setNumber: (setIndex || 0) + 1,
         userId: userId,
       },
-      individualTraining,
+      training,
       workloadInput,
       workload
     );

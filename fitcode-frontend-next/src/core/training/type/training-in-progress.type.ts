@@ -1,17 +1,14 @@
 import type { Dayjs } from 'dayjs';
 
-import type { Superset } from './superset.type';
 import type { Training } from './training.type';
-import type { TrainingComponent } from './training-component.type';
 import type { TrainingExerciseRecordedSet } from './training-exercise.type';
 
 export type TrainingInProgress = {
+  userId: string;
   training: Training;
-  selectedComponent: TrainingComponent;
-  supersets: Superset[];
+  componentId: string;
   startOfTraining: Dayjs | null;
   recordedSets: TrainingExerciseRecordedSet[];
-  userId: string;
   lastSetCompletedAt?: Date;
   lastSetRecTimeS?: number;
 };
