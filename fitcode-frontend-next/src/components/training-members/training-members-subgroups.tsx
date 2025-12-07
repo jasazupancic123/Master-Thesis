@@ -10,9 +10,8 @@ import {
   MenuItem,
   Tooltip,
   Typography,
+  useTheme,
 } from '@mui/material';
-import { useTheme } from '@mui/material';
-import { Draggable, Droppable } from 'react-beautiful-dnd';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 import {
@@ -81,202 +80,182 @@ export default function TrainingMembersSubgroup(
   if (!training) return null;
 
   return (
-    <Droppable
-      key={`droppable-${subgroup.id}`}
-      droppableId={subgroup.id}
-      direction="horizontal"
-    >
-      {(provided) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.droppableProps}
-          onClick={() => {
-            if (
-              selectedSubgroup?.id === subgroup.id ||
-              (!selectedSubgroup &&
-                subgroupIndex === 0 &&
-                subgroup.id === DEFAULT_SUBGROUP_ID)
-            )
-              return;
+    <>
+      <div
+        onClick={() => {
+          if (
+            selectedSubgroup?.id === subgroup.id ||
+            (!selectedSubgroup &&
+              subgroupIndex === 0 &&
+              subgroup.id === DEFAULT_SUBGROUP_ID)
+          )
+            return;
 
-            if (subgroupIndex > 0) {
-              // subgroup
-              setSelectedSubgroup(subgroup);
-              setSelectedAthlete(undefined);
+          if (subgroupIndex > 0) {
+            // subgroup
+            setSelectedSubgroup(subgroup);
+            setSelectedAthlete(undefined);
 
-              setSelectedExerciseIds(
-                subgroup.supersets
-                  .flatMap((s) => s.exercises)
-                  .filter((e) => selectedExerciseIds.some((se) => se === e.id))
-                  .map((e) => e.id) || []
-              );
-            } else if (subgroupIndex === 0) {
-              // main group
-              setSelectedSubgroup(null);
-              setSelectedAthlete(undefined);
+            setSelectedExerciseIds(
+              subgroup.supersets
+                .flatMap((s) => s.exercises)
+                .filter((e) => selectedExerciseIds.some((se) => se === e.id))
+                .map((e) => e.id) || []
+            );
+          } else if (subgroupIndex === 0) {
+            // main group
+            setSelectedSubgroup(null);
+            setSelectedAthlete(undefined);
 
-              if (!component) return;
+            if (!component) return;
 
-              setSelectedExerciseIds(
-                component?.supersets
-                  .flatMap((s) => s.exercises)
-                  .filter((e) => selectedExerciseIds.some((se) => se === e.id))
-                  .map((e) => e.id) || []
-              );
-            }
-          }}
-          style={{
-            display: 'inline-block',
-            cursor: 'pointer',
-            position: 'relative',
+            setSelectedExerciseIds(
+              component?.supersets
+                .flatMap((s) => s.exercises)
+                .filter((e) => selectedExerciseIds.some((se) => se === e.id))
+                .map((e) => e.id) || []
+            );
+          }
+        }}
+        style={{
+          display: 'inline-block',
+          cursor: 'pointer',
+          position: 'relative',
+        }}
+      >
+        {subgroup.id !== DEFAULT_SUBGROUP_ID &&
+          selectedSubgroup &&
+          subgroup.id === selectedSubgroup.id && (
+            <Box position="absolute" right={0} top={0}>
+              <IconButton
+                sx={{ p: 0, m: 0, zIndex: 1000 }}
+                onClick={(event) => {
+                  event.stopPropagation(); // Prevents clicking affecting parent elements
+                  setAnchorEl(event.currentTarget);
+                }}
+              >
+                <MoreVert sx={{ fontSize: 20 }} />
+              </IconButton>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem
+                  onClick={() => {
+                    if (!component || !selectedSubgroup) return;
+                    handleDeleteSubgroup(
+                      {
+                        subgroupId: selectedSubgroup.id,
+                      },
+                      {
+                        useMain: mainContext,
+                        useGroup: groupContext,
+                        useTrainerDayViewContext: {
+                          ...trainerDayViewContext,
+                          training,
+                          component,
+                        },
+                      }
+                    );
+                    handleMenuClose();
+                  }}
+                  sx={{ color: theme.palette.error.main }}
+                >
+                  Remove
+                </MenuItem>
+              </Menu>
+            </Box>
+          )}
+        <Box
+          display="flex"
+          flexDirection={'column'}
+          alignItems="center"
+          sx={{
+            marginRight:
+              subgroup.id !== DEFAULT_SUBGROUP_ID &&
+              selectedSubgroup &&
+              selectedSubgroup.id === subgroup.id
+                ? '20px'
+                : undefined,
           }}
         >
-          {subgroup.id !== DEFAULT_SUBGROUP_ID &&
-            selectedSubgroup &&
-            subgroup.id === selectedSubgroup.id && (
-              <Box position="absolute" right={0} top={0}>
-                <IconButton
-                  sx={{ p: 0, m: 0, zIndex: 1000 }}
-                  onClick={(event) => {
-                    event.stopPropagation(); // Prevents clicking affecting parent elements
-                    setAnchorEl(event.currentTarget);
-                  }}
-                >
-                  <MoreVert sx={{ fontSize: 20 }} />
-                </IconButton>
-
-                {/* Context Menu */}
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem
-                    onClick={() => {
-                      if (!component || !selectedSubgroup) return;
-                      handleDeleteSubgroup(
-                        {
-                          subgroupId: selectedSubgroup.id,
-                        },
-                        {
-                          useMain: mainContext,
-                          useGroup: groupContext,
-                          useTrainerDayViewContext: {
-                            ...trainerDayViewContext,
-                            training,
-                            component,
-                          },
-                        }
-                      );
-                      handleMenuClose();
-                    }}
-                    sx={{ color: theme.palette.error.main }}
-                  >
-                    Remove
-                  </MenuItem>
-                </Menu>
-              </Box>
-            )}
-          <Box
-            display="flex"
-            flexDirection={'column'}
-            alignItems="center"
+          <Card
+            key={`card-${subgroup.id}`}
             sx={{
-              marginRight:
-                subgroup.id !== DEFAULT_SUBGROUP_ID &&
-                selectedSubgroup &&
-                selectedSubgroup.id === subgroup.id
-                  ? '20px'
-                  : undefined,
+              m: 0.1,
+              ml: 0,
+              backgroundColor: theme.palette.background.default,
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
             }}
           >
-            <Card
-              key={`card-${subgroup.id}`}
-              sx={{
-                m: 0.1,
-                ml: 0,
-                backgroundColor: theme.palette.background.default,
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%',
-              }}
-            >
-              {subgroup.membersIds.map((memberId, index) => {
-                const member = members.find((user) => user.uid === memberId);
-                if (!member) return null;
+            {subgroup.membersIds.map((memberId, index) => {
+              const member = members.find((user) => user.uid === memberId);
+              if (!member) return null;
 
-                return (
-                  <Draggable
-                    key={`${member.uid}-${index}`}
-                    draggableId={`${member.uid}`}
-                    index={index}
+              return (
+                <Box key={`${member.uid}-${index}`}>
+                  <Box
+                    key={`${subgroup.id}-${member.uid}-tooltip`}
+                    sx={{ p: 0, m: 0 }}
+                    onClick={() => {
+                      updateSelectedAthleteSubgroup(member, subgroup.id, {
+                        ...trainerDayViewContext,
+                        training,
+                        component,
+                      });
+                    }}
+                    borderRadius={selectedAthlete === member ? '50%' : 0}
+                    border={
+                      selectedAthlete === member
+                        ? `2px solid ${theme.palette.primary.main}`
+                        : 'none'
+                    }
+                    zIndex={1000}
                   >
-                    {(provided) => (
-                      <Box
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        key={`${subgroup.id}-${member.uid}-tooltip`}
-                        sx={{ p: 0, m: 0 }}
-                        onClick={() => {
-                          updateSelectedAthleteSubgroup(member, subgroup.id, {
-                            ...trainerDayViewContext,
-                            training,
-                            component,
-                          });
-                        }}
-                        borderRadius={selectedAthlete === member ? '50%' : 0}
-                        border={
-                          selectedAthlete === member
-                            ? `2px solid ${theme.palette.primary.main}`
-                            : 'none'
+                    <Tooltip
+                      title={member.email}
+                      sx={{ mx: 1, my: '0px !important', p: 0 }}
+                    >
+                      <Avatar
+                        className="avatar-border"
+                        src={
+                          users.find((m) => m.uid === member.uid)?.photoURL ||
+                          USER_AVATAR_IMG_URL
                         }
-                        zIndex={1000}
-                      >
-                        <Tooltip
-                          title={member.email}
-                          sx={{ mx: 1, my: '0px !important', p: 0 }}
-                        >
-                          <Avatar
-                            className="avatar-border"
-                            src={
-                              users.find((m) => m.uid === member.uid)
-                                ?.photoURL || USER_AVATAR_IMG_URL
-                            }
-                            sx={{
-                              width: 50,
-                              height: 50,
-                              m: selectedAthlete === member ? 0.25 : 0.5,
-                              filter: 'grayscale(100%)',
-                            }}
-                          >
-                            {/* {member.email[0].toUpperCase()} */}
-                          </Avatar>
-                        </Tooltip>
-                      </Box>
-                    )}
-                  </Draggable>
-                );
-              })}
-            </Card>
+                        sx={{
+                          width: 50,
+                          height: 50,
+                          m: selectedAthlete === member ? 0.25 : 0.5,
+                          filter: 'grayscale(100%)',
+                        }}
+                      ></Avatar>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Card>
 
-            <Typography
-              fontSize={12}
-              fontWeight={600}
-              sx={{
-                textAlign: 'center',
-                color: isSubgroupSelected(subgroup.id)
-                  ? theme.palette.primary.main
-                  : undefined,
-              }}
-            >
-              {`G${subgroupIndex + 1}#${subgroup.membersIds.length}`}
-            </Typography>
-          </Box>
-        </div>
-      )}
-    </Droppable>
+          <Typography
+            fontSize={12}
+            fontWeight={600}
+            sx={{
+              textAlign: 'center',
+              color: isSubgroupSelected(subgroup.id)
+                ? theme.palette.primary.main
+                : undefined,
+            }}
+          >
+            {`G${subgroupIndex + 1}#${subgroup.membersIds.length}`}
+          </Typography>
+        </Box>
+      </div>
+    </>
   );
 }

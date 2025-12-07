@@ -196,6 +196,56 @@
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         {
+          "fieldPath": "exerciseId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "loadKg",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "from",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "training-workload",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "institutionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trainingId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "training-workload",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
           "fieldPath": "trainingId",
           "order": "ASCENDING"
         },
@@ -516,6 +566,29 @@
         },
         {
           "fieldPath": "from",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "trainings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "institutionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "from",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "to",
           "order": "ASCENDING"
         },
         {

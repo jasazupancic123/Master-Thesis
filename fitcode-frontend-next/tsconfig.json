@@ -10,7 +10,7 @@
       "esnext"
     ],
     "types": [
-      "jest", 
+      "jest",
       "node"
     ],
     "allowJs": true,
@@ -23,7 +23,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -33,9 +33,9 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
+      ]
     },
-    "target": "ES2017"
+    "target": "ES2020"
   },
   "include": [
     "next-env.d.ts",
@@ -47,7 +47,8 @@
     "src/components/mediapipe-react-app/components/CameraSquat/CameraSquat.js",
     "src/lib/common/type/svgr.d.ts",
     "jest.setup.js",
-    "jest.config.ts"
+    "jest.config.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

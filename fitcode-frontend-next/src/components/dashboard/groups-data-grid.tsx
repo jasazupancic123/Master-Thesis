@@ -173,7 +173,7 @@ export default function GroupsDataGrid({
             icon={<DeleteIcon />}
             label="Delete"
             onClick={handleDeleteClick(id)}
-            color="error"
+            color="inherit"
           />,
         ];
       },

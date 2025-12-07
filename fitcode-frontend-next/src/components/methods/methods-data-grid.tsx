@@ -1,18 +1,12 @@
 'use client';
 
-import { alpha, Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type {
   GridColDef,
   GridRowModel,
   GridRowModesModel,
 } from '@mui/x-data-grid';
-import {
-  DataGrid,
-  GridRowEditStopReasons,
-  GridToolbarContainer,
-  GridToolbarExport,
-  GridToolbarQuickFilter,
-} from '@mui/x-data-grid';
+import { DataGrid, GridRowEditStopReasons } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 
 import type { Method } from '@/core/exercise/type/method.type';
@@ -73,29 +67,6 @@ export default function MethodsDataGrid({
     if (Object.keys(changes).length === 0) return newRow;
 
     return newRow;
-  }
-
-  function CustomToolbar() {
-    return (
-      <GridToolbarContainer
-        sx={{
-          justifyContent: 'space-between',
-          p: 1.5,
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-          backdropFilter: 'blur(8px)',
-        }}
-      >
-        <GridToolbarQuickFilter
-          placeholder="Search methods…"
-          variant="outlined"
-          sx={{ input: { borderRadius: 2, py: 1, px: 1.5 } }}
-        />
-
-        <GridToolbarExport
-          csvOptions={{ fileName: 'methods-export', utf8WithBom: true }}
-        />
-      </GridToolbarContainer>
-    );
   }
 
   const columns: GridColDef[] = [
@@ -189,7 +160,6 @@ export default function MethodsDataGrid({
         onRowClick={(params) =>
           !selectMode ? onRowClick?.(params.row as Method) : undefined
         }
-        slots={{ toolbar: CustomToolbar }}
         editMode="row"
         rowModesModel={model}
         onRowModesModelChange={(newModel) => setModel(newModel)}

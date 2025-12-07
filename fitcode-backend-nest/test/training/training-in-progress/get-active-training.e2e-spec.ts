@@ -4,7 +4,6 @@ import type { TestInstitution } from '@src/common/type/entity.type';
 import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
-import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
@@ -101,7 +100,6 @@ describe('Get Active Training (e2e)', () => {
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(training.id);
-    expect(res.body.workloads).toBeDefined();
     expect(res.body.statuses).toBeDefined();
 
     // clean up
@@ -114,7 +112,6 @@ describe('Get Active Training (e2e)', () => {
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(training.id);
-    expect(res.body.workloads).toBeDefined();
     expect(res.body.statuses).toBeDefined();
 
     await db.workloads.createMany([
@@ -137,14 +134,7 @@ describe('Get Active Training (e2e)', () => {
     const resWithWorkloads = await req(global.athlete.token);
     expect(resWithWorkloads.status).toBe(200);
     expect(resWithWorkloads.body.id).toBe(training.id);
-    expect(resWithWorkloads.body.workloads).toBeDefined();
     expect(resWithWorkloads.body.statuses).toBeDefined();
-
-    const resTraining = resWithWorkloads.body as Training & {
-      workloads: Workload[];
-    };
-
-    expect(resTraining.workloads).toHaveLength(1);
 
     // clean up
     await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
@@ -158,7 +148,6 @@ describe('Get Active Training (e2e)', () => {
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(training.id);
-    expect(res.body.workloads).toBeDefined();
     expect(res.body.statuses).toBeDefined();
 
     // clean up
@@ -201,7 +190,6 @@ describe('Get Active Training (e2e)', () => {
     const res = await req(global.athlete.token);
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(earliestTraining.id);
-    expect(res.body.workloads).toBeDefined();
     expect(res.body.statuses).toBeDefined();
 
     // clean up

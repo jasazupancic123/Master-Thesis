@@ -1,6 +1,6 @@
 import { Refresh } from '@mui/icons-material';
 import type { SxProps } from '@mui/material';
-import { Box, Grid2, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -225,9 +225,9 @@ export default function DashboardHome() {
             </Box>
           </Box>
         </Box>
-        <Grid2 width="100%" container spacing={2}>
+        <Grid width="100%" container spacing={2}>
           {activeComponent && activeTraining && (
-            <Grid2
+            <Grid
               size={{ xs: 12, sm: 12, md: 4 }}
               sx={cardProps}
               display="flex"
@@ -247,10 +247,10 @@ export default function DashboardHome() {
                 trainings={trainings.data}
                 index={0}
               />
-            </Grid2>
+            </Grid>
           )}
 
-          <Grid2
+          <Grid
             size={{ xs: 12, sm: 12, md: 4 }}
             sx={cardProps}
             display="flex"
@@ -271,8 +271,8 @@ export default function DashboardHome() {
                   : null
               }
             />
-          </Grid2>
-          <Grid2
+          </Grid>
+          <Grid
             size={{ xs: 12, sm: 12, md: 4 }}
             sx={cardProps}
             display="flex"
@@ -284,8 +284,8 @@ export default function DashboardHome() {
             </Typography>
 
             <CycleProgress />
-          </Grid2>
-          <Grid2
+          </Grid>
+          <Grid
             size={{ xs: 12, sm: 12, md: 4 }}
             sx={cardProps}
             display="flex"
@@ -327,8 +327,8 @@ export default function DashboardHome() {
             ) : (
               <></>
             )}
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
       </Box>
     </DashboardPageContainer>
   );

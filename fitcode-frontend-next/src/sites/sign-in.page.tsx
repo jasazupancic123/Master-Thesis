@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import React, { useRef } from 'react';
@@ -42,6 +43,7 @@ export default function SignInPage() {
           toast.success('Signed in successfully');
           hasToastedRef.current = true;
         }
+
         router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
       }
     } catch (e) {
@@ -130,6 +132,21 @@ export default function SignInPage() {
             >
               Log in
             </Button>
+
+            {/* Forgot password link */}
+            <Link href="/forgot-password" passHref>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  textAlign: 'center',
+                  display: 'block',
+                  mt: 2,
+                }}
+              >
+                Forgot password?
+              </Typography>
+            </Link>
           </Box>
         </Box>
       </Box>
