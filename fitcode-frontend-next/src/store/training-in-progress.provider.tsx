@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useMain } from './main.provider';
 import { useTrainings } from './trainings.provider';
 import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -74,10 +73,7 @@ const TrainingInProgressContext =
 export const useTrainingInProgress = () =>
   useContext(TrainingInProgressContext)!;
 
-export const TrainingInProgressProvider = ({
-  children,
-}: React.PropsWithChildren) => {
-  const { setActiveTraining } = useMain();
+export const TrainingInProgressProvider = ({ children }: React.PropsWithChildren) => {
   const { trainingInProgress, setTrainingInProgress } = useTrainings();
 
   const router = useRouter();
@@ -208,7 +204,6 @@ export const TrainingInProgressProvider = ({
       exerciseId,
       supersetIndex: stateSupersetIndex,
       setIndex: stateSetIndex,
-      isAiRecorded,
     } = state || {};
 
     if (
@@ -245,34 +240,6 @@ export const TrainingInProgressProvider = ({
         core.training.workload.getActiveWorkloadTimeS(body);
 
       body.from = dayjs().subtract(currentSetActiveTimeS, 'second').toDate();
-    }
-
-    let updatedPreviousWorkload: Workload | undefined = undefined;
-
-    if (workloads.length > 0 && stateSetIndex > 0) {
-      // we have previous workloads and this is not the first set
-      const prevWorkload = workloads.find(
-        (w) =>
-          w.trainingId === trainingInProgress.training.id &&
-          w.componentId === trainingInProgress.componentId &&
-          w.exerciseId === exerciseId &&
-          w.supersetIndex === stateSupersetIndex &&
-          w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
-      );
-
-      if (prevWorkload) {
-        const recTime = Math.abs(
-          dayjs(body.from).diff(
-            dayjs(prevWorkload.to || prevWorkload.from),
-            'second'
-          )
-        );
-
-        prevWorkload.recTime = recTime;
-        if (prevWorkload.repsR) prevWorkload.recTimeR = recTime;
-
-        updatedPreviousWorkload = prevWorkload;
-      }
     }
 
     handleApiRequest(

@@ -4,7 +4,6 @@ import type {
   UpdateTrainingComponent,
 } from './training-component.type';
 import type { TrainingComponentUserStatus } from './training-component-user-status.type';
-import type { Workload } from './workload.type';
 import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Cycle } from '@/core/institution/type/cycle.type';

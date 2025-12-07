@@ -53,7 +53,6 @@ export function TrainingInProgressUtilsProvider({
 
   const { selectedTrackingMethod } = useAthleteHeader();
 
-  const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);

@@ -20,7 +20,6 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const { user } = useAuthenticatedAuth();
   const mainContext = useMain();
-  const { activeTraining, setActiveTraining } = mainContext;
   const trainingContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
 

@@ -5,10 +5,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
@@ -35,7 +33,7 @@ export type ITrainingsContextDefined = Omit<
 };
 
 export const TrainingsProvider = (props: React.PropsWithChildren) => {
-  const { activeTraining, setActiveTraining } = useMain();
+  const { activeTraining } = useMain();
   const { children } = props;
 
   const [trainingInProgress, setTrainingInProgress] =

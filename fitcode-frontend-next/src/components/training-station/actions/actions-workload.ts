@@ -37,8 +37,6 @@ export function createEmptyPartialWorkload(state: {
       w.supersetIndex === supersetIndex
   );
 
-  console.log('foundWOrklaod', workload, 'workloadInput', workloadInput);
-
   if (!workload || workloadInput) {
     if (supersetIndex === null) return null;
 

@@ -118,7 +118,6 @@ export default function TrainingStationMembers() {
                         ? 0
                         : userExerciseWorkloads.length;
 
-                    console.log(completedSets);
                     setSelectedSetIndex(completedSets);
                   }}
                 />

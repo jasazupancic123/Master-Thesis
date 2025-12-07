@@ -43,13 +43,6 @@ export function handleChangeSuperset(
     workloads
   );
 
-  const extendedUndoneExercises: TrainingExerciseExtended[] =
-    undoneExercises.map((exercise) => ({
-      ...exercise,
-      componentId: trainingInProgress.componentId,
-      supersetIndex: supersetIndex || 0,
-    }));
-
   setSupersetIndex(i);
   setSelectedExercise(superset.exercises[0] || null);
   setSetIndex(0);

@@ -8,7 +8,6 @@ import { KG } from '@/core/exercise/constant/exercise-param.constant';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
@@ -36,8 +35,6 @@ export default function AthleteTrainingExerciseSets({
   dissableBottomPadding,
   trainingInProgressView,
 }: Props) {
-  const { activeTraining } = useMain();
-
   const theme = useTheme();
   const screenSize = useScreenSize();
 
