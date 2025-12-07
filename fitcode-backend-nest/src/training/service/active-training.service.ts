@@ -24,7 +24,6 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingComponentUserStatus } from '../entity/training-component-user-status.entity';
-import { Workload } from '../entity/workload.entity';
 import { TrainingStatus } from '../enum/training-status.enum';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
 import { TrainingService } from './training.service';
@@ -277,7 +276,6 @@ export class ActiveTrainingService {
     athleteId: string,
   ): Promise<
     | (Training & {
-        workloads: Workload[];
         statuses: TrainingComponentUserStatus[];
       })
     | null

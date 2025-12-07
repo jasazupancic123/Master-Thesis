@@ -5,7 +5,6 @@ import type { Group } from '@src/institution/entity/group.entity';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
-import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
   generateSubgroup,
@@ -101,8 +100,6 @@ describe('Find All Individual Trainings (e2e)', () => {
     expect(user2Training).toBeDefined();
     expect(user1Training.id).toBe(training.id);
     expect(user2Training.id).toBe(training.id);
-    expect(user1Training.workloads).toHaveLength(0);
-    expect(user2Training.workloads).toHaveLength(0);
 
     // user1 should have only his supersets
     expect(user1Training.components).toHaveLength(1);
@@ -122,57 +119,5 @@ describe('Find All Individual Trainings (e2e)', () => {
 
     // clean up
     await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
-  });
-
-  it('should return individual training for athletes with populated workloads', async () => {
-    await db.workloads.createMany([
-      {
-        trainingId: training.id,
-        userId: institution.athletes[0].uid,
-        componentId: 'c1',
-        supersetIndex: 0,
-        exerciseId: 'e1',
-        setNumber: 1,
-        status: SetStatus.PARTIAL,
-        prescribed: { reps: 10, loadKg: 50 },
-        reps: 13,
-        loadKg: 37.5,
-        rir: 5,
-        photoURLs: ['a', 'b', 'c'],
-      },
-      {
-        trainingId: training.id,
-        userId: institution.athletes[1].uid,
-        componentId: 'c1',
-        supersetIndex: 0,
-        exerciseId: 'e2',
-        setNumber: 1,
-        status: SetStatus.PARTIAL,
-        prescribed: { reps: 10, loadKg: 50 },
-        reps: 26,
-        loadKg: 40,
-      },
-    ]);
-
-    const res = await req(global.trainer.token, training.id);
-    expect(res.status).toBe(200);
-
-    const user1Training = res.body[institution.athletes[0].uid] as Training & {
-      workloads: Workload[];
-    };
-    const user2Training = res.body[institution.athletes[1].uid] as Training & {
-      workloads: Workload[];
-    };
-
-    expect(user1Training).toBeDefined();
-    expect(user2Training).toBeDefined();
-    expect(user1Training.id).toBe(training.id);
-    expect(user2Training.id).toBe(training.id);
-    expect(user1Training.workloads).toHaveLength(1);
-    expect(user2Training.workloads).toHaveLength(1);
-
-    // clean up
-    await db.trainingComponentUserStatus.deleteAllByTraining(training.id);
-    await db.workloads.deleteAll(training.id);
   });
 });
