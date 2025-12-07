@@ -220,7 +220,7 @@ export default function TrainingInProgressExerciseSet(props: Props) {
                 />
               )}
             </Box>
-            ;
+
             {recParam && (
               <NumberExerciseParam
                 options={recOptions}
