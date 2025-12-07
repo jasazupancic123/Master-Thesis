@@ -3,7 +3,6 @@
 import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useState } from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 import { handleOnDragEnd } from './actions/actions-dnd';
@@ -72,10 +71,11 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             overflow: 'visible',
           }}
         >
-          <DragDropContext
+          <Box
             onDragEnd={(result) =>
               handleOnDragEnd(
-                { result },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                { result: result as any },
                 {
                   useMain: mainContext,
                   useGroup: groupContext,
@@ -184,7 +184,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                     );
                   })}
             </Box>
-          </DragDropContext>
+          </Box>
         </Stack>
       </Stack>
     </>
