@@ -112,6 +112,7 @@ export async function handleDeleteCycle(
     () => {
       if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
 
+      console.log('trainings 9');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data.filter((t) => t.cycleId !== editCycle.id),

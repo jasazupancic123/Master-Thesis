@@ -44,6 +44,7 @@ export async function handleAddTrainingComponents(
     (training) => {
       if (!training) {
         // training was deleted
+        console.log('trainings 2');
         setTrainings((prev) => ({
           ...prev,
           data: prev.data.filter((t) => t.id !== trainingId),
@@ -55,6 +56,7 @@ export async function handleAddTrainingComponents(
 
       // add components to training
       TrainingService.mapData(training, { exercises });
+      console.log('trainings 3');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data.map((t) => (t.id === training.id ? training : t)),
@@ -94,11 +96,13 @@ export async function handleDeleteTrainingComponent(
 
       if (training.components.length === 0) {
         // traning was deleted
+        console.log('trainings 4');
         setTrainings((prev) => ({
           ...prev,
           data: prev.data.filter((t) => t.id !== training.id),
         }));
       } else {
+        console.log('trainings 5');
         setTrainings((prev) => ({
           ...prev,
           data: prev.data.map((t) => (t.id === trainingId ? training : t)),
