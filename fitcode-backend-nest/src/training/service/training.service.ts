@@ -474,6 +474,12 @@ export class TrainingService implements Permission<Training, Institution> {
     // update members
     if (add) await this.repository.addMember(training, member.uid);
     else await this.repository.removeMember(training, member.uid);
+
+    // remove training component statuses for this member for this training
+    await this.trainingComponentUserStatusRepository.deleteAllByTrainingByMember(
+      training.id,
+      member.uid,
+    );
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {

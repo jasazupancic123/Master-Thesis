@@ -342,6 +342,19 @@ export class TrainingComponentUserStatusRepository extends FirestoreRepository<
     );
   }
 
+  async deleteAllByTrainingByMember(trainingId: string, uid: string) {
+    const snapshot = await this.collection({ trainingId })
+      .where('userId', '==', uid)
+      .get();
+
+    await this.firebase.paginateBatches(
+      snapshot.docs.map((doc) => ({
+        operation: 'delete' as const,
+        ref: doc.ref,
+      })),
+    );
+  }
+
   getKey(ref: TrainingComponentUserStatusRef) {
     return `${ref.trainingId}-${ref.componentId}-${ref.uid}`;
   }
