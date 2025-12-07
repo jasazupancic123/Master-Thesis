@@ -1,5 +1,6 @@
 'use client';
 
+import { useSortable } from '@dnd-kit/sortable';
 import { MoreVert } from '@mui/icons-material';
 import {
   Box,
@@ -14,14 +15,13 @@ import {
 import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
 import { handleDeleteSubgroup } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
+import SubgroupMember from './subgroup-member';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import SubgroupMember from './subgroup-member';
-import { AuthUser } from '@/core/auth/type/user.type';
-import { useSortable } from '@dnd-kit/sortable';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -46,7 +46,6 @@ export default function TrainingMembersSubgroup(
     training,
     setSelectedSubgroup,
     selectedSubgroup,
-    selectedAthlete,
     setSelectedAthlete,
     selectedExerciseIds,
     setSelectedExerciseIds,

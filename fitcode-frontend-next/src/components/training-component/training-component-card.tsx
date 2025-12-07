@@ -6,8 +6,6 @@ import {
   IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,
-  PlayCircle,
-  StopCircle,
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';

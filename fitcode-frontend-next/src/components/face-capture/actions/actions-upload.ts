@@ -21,11 +21,6 @@ export async function uploadFaceCaptures(state: {
 }) {
   const { customClaims, captures, user } = state;
 
-  // start with whatever roles you already have
-  const updatedCustomClaims: CustomClaims = {
-    role: customClaims?.role ?? [], // keep existing roles
-  };
-
   // collect entries that actually have blobs
   const entries = Object.entries(captures).filter(
     ([_view, blob]) => !!blob

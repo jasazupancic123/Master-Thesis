@@ -11,7 +11,6 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import { useTheme } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -46,7 +45,6 @@ const DEFAULT_MARGIN = 1;
 export default function ProfilePage() {
   const { user, setUser, customClaims } = useAuthenticatedAuth();
 
-  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
 

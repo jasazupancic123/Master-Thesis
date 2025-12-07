@@ -14,7 +14,6 @@ export async function handleUpdateTraining(
   groupCtx: IGroupCtx,
   trainerDayViewCtx: ITrainerDayViewContext
 ) {
-  console.log('TEST 4');
   const { exercises, setTrainings } = mainCtx;
   const { setDetectedChanges } = groupCtx;
   const { training, setTraining } = trainerDayViewCtx;
@@ -25,7 +24,6 @@ export async function handleUpdateTraining(
   const state = { training: structuredClone(training) };
   await lib.common.generic.optimisticUpdate(
     () => {
-      console.log('trainings 6');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data.map((t) => (t.id === training.id ? training : t)),
@@ -34,7 +32,6 @@ export async function handleUpdateTraining(
     (snapshot, e) => {
       setIsUpdatingTraining(false);
       setTraining(snapshot.training);
-      console.log('trainings 7');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data.map((t) =>
@@ -49,7 +46,6 @@ export async function handleUpdateTraining(
     (newTraining) => {
       TrainingService.mapData(newTraining, { exercises });
       setTraining(newTraining);
-      console.log('trainings 8');
       setTrainings((prev) => ({
         ...prev,
         data: prev.data.map((t) => (t.id === newTraining.id ? newTraining : t)),

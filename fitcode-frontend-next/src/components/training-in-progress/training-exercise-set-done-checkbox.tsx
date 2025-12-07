@@ -47,6 +47,21 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
     currentAiRecordedWorkload.supersetIndex === supersetIndex &&
     currentAiRecordedWorkload.setNumber === setIndex + 1;
 
+  const [isCompleted, setIsCompleted] = useState<boolean>(
+    trainingInProgress
+      ? ExerciseSetService.isSetCompleted(
+          {
+            trainingId: trainingInProgress.training.id,
+            componentId: trainingInProgress.selectedComponent.id,
+            exerciseId: exercise.id,
+            supersetIndex,
+            setIndex,
+          },
+          activeTraining?.workloads || []
+        )
+      : false
+  );
+
   useEffect(() => {
     if (!trainingInProgress) return;
 
@@ -63,21 +78,6 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
     setIsCompleted(completed);
   }, [activeTraining, exercise, supersetIndex, setIndex]);
-
-  const [isCompleted, setIsCompleted] = useState<boolean>(
-    trainingInProgress
-      ? ExerciseSetService.isSetCompleted(
-          {
-            trainingId: trainingInProgress.training.id,
-            componentId: trainingInProgress.selectedComponent.id,
-            exerciseId: exercise.id,
-            supersetIndex,
-            setIndex,
-          },
-          activeTraining?.workloads || []
-        )
-      : false
-  );
 
   if (!exercise || !trainingInProgress) {
     return null;

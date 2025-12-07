@@ -306,7 +306,6 @@ export default function AthleteHeader(props: Props) {
         setOpen={setOpenCreateTrainingModal}
         onCreateTraining={(training) => {
           training = TrainingService.mapTraining(training, { exercises });
-          console.log('trainings 1');
           setTrainings((prev) => ({
             ...prev,
             data: [...prev.data, training].sort((a, b) =>

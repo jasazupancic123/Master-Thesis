@@ -21,7 +21,6 @@ export const handleAddMembersSubgroup = (
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
   }
 ) => {
-  console.log('handleAddMembersSubgroup input', input);
   const { member } = input;
 
   const { useGroup, useTrainerDayViewContext } = context;
@@ -291,7 +290,6 @@ export function handleDeleteSubgroup(
   setSelectedSubgroup(null);
   setComponent(newComponent);
   setTraining(newTraining);
-  console.log('trainings 11');
   setTrainings((prev) => ({
     ...prev,
     data: prev.data.map((t) => (t.id === training.id ? newTraining : t)),

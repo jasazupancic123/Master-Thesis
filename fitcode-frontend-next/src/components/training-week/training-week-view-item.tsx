@@ -243,7 +243,6 @@ export default function WeekViewItem({ item }: WeekViewItemProps) {
                 setSelectedItem((prev) => (prev ? newItem : null));
 
                 if (checkIsTrainingComponent(newItem)) {
-                  console.log('trainings 12');
                   setTrainings((prev) => ({
                     ...prev,
                     data: prev.data.map((t) =>
