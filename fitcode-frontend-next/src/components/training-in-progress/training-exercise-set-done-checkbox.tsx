@@ -32,7 +32,6 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const { exercise, setIndex, supersetIndex } = props;
 
-<<<<<<< HEAD
   if (!exercise || !trainingInProgress) return null;
 
   const foundWorkload =
@@ -49,52 +48,6 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
       : undefined;
 
   const isSetCompleted = foundWorkload && foundWorkload.id !== undefined;
-=======
-  const isRecorded =
-    currentAiRecordedWorkload &&
-    trainingInProgress &&
-    currentAiRecordedWorkload.componentId ===
-      trainingInProgress.selectedComponent.id &&
-    currentAiRecordedWorkload.exerciseId === exercise.id &&
-    currentAiRecordedWorkload.supersetIndex === supersetIndex &&
-    currentAiRecordedWorkload.setNumber === setIndex + 1;
-
-  const [isCompleted, setIsCompleted] = useState<boolean>(
-    trainingInProgress
-      ? ExerciseSetService.isSetCompleted(
-          {
-            trainingId: trainingInProgress.training.id,
-            componentId: trainingInProgress.selectedComponent.id,
-            exerciseId: exercise.id,
-            supersetIndex,
-            setIndex,
-          },
-          activeTraining?.workloads || []
-        )
-      : false
-  );
-
-  useEffect(() => {
-    if (!trainingInProgress) return;
-
-    const completed = ExerciseSetService.isSetCompleted(
-      {
-        trainingId: trainingInProgress.training.id,
-        componentId: trainingInProgress.selectedComponent.id,
-        exerciseId: exercise.id,
-        supersetIndex,
-        setIndex,
-      },
-      activeTraining?.workloads || []
-    );
-
-    setIsCompleted(completed);
-  }, [activeTraining, exercise, supersetIndex, setIndex]);
-
-  if (!exercise || !trainingInProgress) {
-    return null;
-  }
->>>>>>> jasa/fix/FCW-275/fix-subgroups-draging
 
   return (
     <Box
