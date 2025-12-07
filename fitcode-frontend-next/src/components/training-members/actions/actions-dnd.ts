@@ -1,5 +1,3 @@
-import type { DropResult } from 'react-beautiful-dnd';
-
 import type useTrainingMembers from '../hooks/use-members.hook';
 import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import { handleAddMembersSubgroup } from './actions-subgroups';
@@ -13,7 +11,8 @@ import type {
 } from '@/store/trainer-day-view.provider';
 
 export const handleOnDragEnd = async (
-  input: { result: DropResult },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: { result: any },
   context: {
     useMain: IMainContext;
     useGroup: IGroupCtx;
@@ -69,7 +68,8 @@ export const handleOnDragEnd = async (
 };
 
 const onDragEndSubgroup = (
-  { destination, draggableId }: DropResult,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  { destination, draggableId }: any,
   context: {
     useMain: ReturnType<typeof useMain>;
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
