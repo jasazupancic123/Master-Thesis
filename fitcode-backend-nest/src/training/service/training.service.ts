@@ -1081,8 +1081,15 @@ export class TrainingService implements Permission<Training, Institution> {
     const existing =
       await this.trainingComponentUserStatusRepository.findById(ref);
 
+    const from = workloads[0]?.from ? new Date(workloads[0]?.from) : new Date();
+    const to = workloads[workloads.length - 1]?.to
+      ? new Date(workloads[workloads.length - 1]?.to)
+      : new Date();
+
     if (existing) {
       await this.trainingComponentUserStatusRepository.update(ref, {
+        from,
+        to,
         status: TrainingStatus.COMPLETED,
         realization: report.realization,
         sets: report.sets,
@@ -1098,8 +1105,8 @@ export class TrainingService implements Permission<Training, Institution> {
     } else {
       await this.trainingComponentUserStatusRepository.save({
         id: null,
-        from: new Date(workloads[0]?.from) || new Date(),
-        to: new Date(workloads[workloads.length - 1]?.to) || new Date(),
+        from,
+        to,
         institutionId: training.institutionId,
         groupId: training.groupId,
         cycleId: training.cycleId,
