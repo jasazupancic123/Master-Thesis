@@ -695,3 +695,19 @@ export function getTempoObject(state: { recordedReps: Rep[] }): {
     idle: avgIdleTimeS.toFixed(2) as unknown as number,
   };
 }
+
+export function getAvgTotalRomCm(state: {
+  recordedReps: Rep[];
+}): number | null {
+  const { recordedReps } = state;
+
+  if (!recordedReps.length) return null;
+
+  let totalRomCm = 0;
+
+  for (const rep of recordedReps) {
+    totalRomCm += rep.totalRomCm || 0;
+  }
+
+  return totalRomCm / recordedReps.length;
+}
