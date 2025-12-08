@@ -29,7 +29,7 @@ export default function useTrainingRecapRowsActions(
 
   // which rows are selected (for delete)
   const [rowSelectionModel, setRowSelectionModel] =
-    useState<GridRowSelectionModel>([] as never);
+    useState<GridRowSelectionModel | null>(null);
 
   // prevent auto-committing when focus leaves the row (ophandleSaveClicktional but common)
   const handleRowEditStop = (
