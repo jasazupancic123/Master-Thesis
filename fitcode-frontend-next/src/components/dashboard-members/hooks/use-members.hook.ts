@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useDashboardMembers() {
@@ -18,9 +18,7 @@ export default function useDashboardMembers() {
   const [includeTrainers, setIncludeTrainers] = useState(true);
   const [includeAthletes, setIncludeAthletes] = useState(true);
 
-  const [allInstitutionMembers, setAllInstitutionMembers] = useState<
-    AuthUser[]
-  >(
+  const [allInstitutionMembers, setAllInstitutionMembers] = useState<User[]>(
     (selectedInstitution?.trainers || [])
       .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
       .concat(
@@ -46,8 +44,7 @@ export default function useDashboardMembers() {
   const [filteredMembers, setFilteredMembers] = useState(allInstitutionMembers);
 
   useEffect(() => {
-    let members: AuthUser[] = [];
-
+    let members: User[] = [];
     if (includeTrainers) {
       members = members.concat(selectedInstitution?.trainers || []);
     }

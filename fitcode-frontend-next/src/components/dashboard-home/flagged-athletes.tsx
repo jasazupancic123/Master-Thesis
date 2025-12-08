@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
-import { WellnessChartDataType } from '@/core/profile/enum/wellness-chart-data-type.enum';
+import { WellnessChartDataType } from '@/core/user/enum/wellness-chart-data-type.enum';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -72,7 +72,7 @@ export default function FlaggedAthletes() {
       sx={{ p: 1 }}
     >
       {flaggedWellness.map((w) => {
-        const user = users.find((u) => u.uid === w.userId);
+        const user = users.data.find((u) => u.uid === w.userId);
 
         if (!user) return null;
 

@@ -225,8 +225,8 @@ export default function TrainingMembersSubgroup(
                       <Avatar
                         className="avatar-border"
                         src={
-                          users.find((m) => m.uid === member.uid)?.photoURL ||
-                          USER_AVATAR_IMG_URL
+                          users.data.find((m) => m.uid === member.uid)
+                            ?.photoURL || USER_AVATAR_IMG_URL
                         }
                         sx={{
                           width: 50,

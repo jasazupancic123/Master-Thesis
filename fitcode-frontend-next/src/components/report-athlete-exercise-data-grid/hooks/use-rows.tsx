@@ -2,18 +2,18 @@ import type { GridColDef } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
 
 import type { DataGridRowAthleteExerciseRow } from '../types/data-grid-row';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
 
 export default function useAthleteExerciseReportDataGridData(
-  selectedAthlete: AuthUser | null,
+  selectedAthlete: User | null,
   selectedTraining: Training | null,
   cache: Map<string, Workload[]>
 ) {

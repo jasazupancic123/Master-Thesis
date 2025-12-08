@@ -12,10 +12,10 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { CreateGroup } from '@/core/institution/type/group.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -38,7 +38,7 @@ export default function AddGroupModal(props: ModalProps) {
 
   const [groupName, setGroupName] = useState('');
   const [shortName, setShortName] = useState('');
-  const [owner, setOwner] = useState<AuthUser | null>(null);
+  const [owner, setOwner] = useState<User | null>(null);
 
   if (!selectedInstitution) return null;
 
@@ -67,7 +67,7 @@ export default function AddGroupModal(props: ModalProps) {
           router,
           () => InstitutionController.getInstance().createGroup(input),
           (group) => {
-            group = core.group.mapMembers(group, users);
+            group = core.group.mapMembers(group, users.data);
 
             setSelectedInstitution({
               ...selectedInstitution,

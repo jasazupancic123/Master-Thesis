@@ -1,4 +1,4 @@
-import type { AuthUser } from '../auth/type/user.type';
+import type { User } from '../user/type/user.type';
 import type { ExerciseSet } from './type/exercise-set.type';
 import type { Training } from './type/training.type';
 import type { TrainingComponent } from './type/training-component.type';
@@ -14,7 +14,7 @@ export class TrainingReportService {
   static initEmptyTrainingReport(
     training: Training,
     component: TrainingComponent,
-    user: AuthUser
+    user: User
   ): TrainingReport {
     return {
       institutionId: training.institutionId,

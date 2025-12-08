@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 
 import type { FaceCaptures, FacePreviews } from '../types/face.type';
 import type { Landmark, Scored } from '../types/landmark.type';
-import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import { FaceCaptureStep } from '@/core/user/enum/face-capture-step.enum';
 import type { SetState } from '@/lib/common/type/state.type';
 
 // Load Mediapipe Tasks Vision dynamically in the browser

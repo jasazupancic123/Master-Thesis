@@ -1,21 +1,20 @@
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Profile } from '@/core/profile/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 
-let cachedUser: AuthUser | null = null;
-let cachedProfile: Profile | null = null;
+let cachedUser: User | null = null;
+let cachedProfile: User | null = null;
 
-export function getCachedUser(): AuthUser | null {
+export function getCachedUser(): User | null {
   return cachedUser;
 }
 
-export function setCachedUser(profile: AuthUser) {
+export function setCachedUser(profile: User) {
   cachedUser = profile;
 }
 
-export function getCachedProfile(): Profile | null {
+export function getCachedProfile(): User | null {
   return cachedProfile;
 }
 
-export function setCachedProfile(profile: Profile) {
+export function setCachedProfile(profile: User) {
   cachedProfile = profile;
 }

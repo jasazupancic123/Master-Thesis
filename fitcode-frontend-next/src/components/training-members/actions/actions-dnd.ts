@@ -107,7 +107,7 @@ const onDragEndSubgroup = (
 
   // Add member to the new subgroup
   if (destination.droppableId === DEFAULT_SUBGROUP_ID) {
-    const newMember = users.find((user) => user.uid === draggableId);
+    const newMember = users.data.find((user) => user.uid === draggableId);
 
     if (!newMember) return;
 

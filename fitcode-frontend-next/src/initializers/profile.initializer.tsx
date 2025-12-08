@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { AuthController } from '@/core/auth/auth.controller';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import { ProfileController } from '@/core/profile/profile.controller';
-import type { Profile } from '@/core/profile/type/user.type';
+import type { User } from '@/core/user/type/user.type';
+import { UserController } from '@/core/user/user.controller';
 import {
   getCachedProfile,
   getCachedUser,
@@ -17,11 +15,11 @@ import { ProfileProvider } from '@/store/profile.provider';
 export default function ProfileInitializer({
   children,
 }: React.PropsWithChildren) {
-  const [user, setUser] = useState<AuthUser | undefined>(
+  const [user, setUser] = useState<User | undefined>(
     getCachedUser() || undefined
   );
 
-  const [profile, setProfile] = useState<Profile | undefined>(
+  const [profile, setProfile] = useState<User | undefined>(
     getCachedProfile() || undefined
   );
 
@@ -29,12 +27,11 @@ export default function ProfileInitializer({
     async function init() {
       if (user || profile) return; // already cached
 
-      const fetchedUser = await AuthController.getInstance().findMe();
+      const fetchedUser = await UserController.getInstance().findMe();
       setCachedUser(fetchedUser);
       setUser(fetchedUser);
 
-      const fetchedProfile =
-        await ProfileController.getInstance().findProfile();
+      const fetchedProfile = await UserController.getInstance().findMe();
       setCachedProfile(fetchedProfile);
       setProfile(fetchedProfile);
     }
@@ -44,12 +41,7 @@ export default function ProfileInitializer({
 
   if (!user || !profile) return <div>Loading profile...</div>;
   return (
-    <ProfileProvider
-      user={user}
-      setUser={setUser}
-      profile={profile}
-      setProfile={setProfile}
-    >
+    <ProfileProvider user={user} setUser={setUser}>
       {children}
     </ProfileProvider>
   );

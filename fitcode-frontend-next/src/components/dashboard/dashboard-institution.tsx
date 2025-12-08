@@ -247,7 +247,7 @@ export default function DashboardInstitution() {
                 <Avatar
                   className="avatar-border"
                   src={
-                    users.find((m) => m.uid === user.uid)?.photoURL ||
+                    users.data.find((m) => m.uid === user.uid)?.photoURL ||
                     USER_AVATAR_IMG_URL
                   }
                   sx={{

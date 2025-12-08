@@ -2,7 +2,7 @@ import { Avatar, Box, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
@@ -12,13 +12,13 @@ export default function TrainingStationMembers() {
   const { users: allUsers } = useMain();
   const { station, selectedUser, setSelectedUser } = useCoachTrainingStation();
 
-  const users = allUsers.filter((u) =>
+  const users = allUsers.data.filter((u) =>
     station?.users.some((su) => su.uid === u.uid)
   );
 
   const [search, setSearch] = useState('');
 
-  const filteredUsers = useMemo<AuthUser[]>(() => {
+  const filteredUsers = useMemo<User[]>(() => {
     if (search.trim() === '') return users;
 
     const lowerSearch = search.toLowerCase();

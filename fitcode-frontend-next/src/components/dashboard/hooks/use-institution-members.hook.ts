@@ -4,15 +4,12 @@ import toast from 'react-hot-toast';
 
 import type { IFormData } from './use-register-member-form.hook';
 import useRegisterMemberForm from './use-register-member-form.hook';
-import { AuthController } from '@/core/auth/auth.controller';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
-import { Gender } from '@/core/profile/enum/gender.enum';
-import { SportLevel } from '@/core/profile/enum/sport-level.enum';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { ProfileController } from '@/core/profile/profile.controller';
-import type { ImportProfile } from '@/core/profile/type/user.type';
+import { Gender } from '@/core/user/enum/gender.enum';
+import { SportLevel } from '@/core/user/enum/sport-level.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { ImportUser, User } from '@/core/user/type/user.type';
+import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
@@ -20,8 +17,7 @@ import { useMain } from '@/store/main.provider';
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
 export default function useInstitutionMembers() {
-  const { users, profiles, setProfiles, setUsers, groups, setGroups } =
-    useMain();
+  const { users, setUsers, groups, setGroups } = useMain();
   const { setFormData } = useRegisterMemberForm();
 
   const {
@@ -31,19 +27,19 @@ export default function useInstitutionMembers() {
     setSelectedGroups,
   } = useDashboard();
 
-  const [existingUser, setExistingUser] = useState<AuthUser | null>(null);
+  const [existingUser, setExistingUser] = useState<User | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
   const [openUserAlreadyExistsModal, setOpenUserAlreadyExistsModal] =
     useState(false);
 
-  async function addUser(user: AuthUser | null) {
+  async function addUser(user: User | null) {
     if (!user || !selectedInstitution) return;
 
     const controller = InstitutionController.getInstance();
     const institutionId = selectedInstitution!.id;
     const userId = user!.uid;
 
-    const role = user.customClaims.role[0];
+    const role = user.role;
     try {
       if (role === UserRole.TRAINER) {
         await controller.addTrainer(institutionId, { userId });
@@ -78,17 +74,16 @@ export default function useInstitutionMembers() {
     const controller = InstitutionController.getInstance();
     const institutionId = selectedInstitution!.id;
 
-    const user = users?.find((user) => user.uid === userId);
+    const user = users?.data?.find((user) => user.uid === userId);
     if (!user) return;
 
-    const role = user.customClaims.role[0];
+    const role = user.role;
 
     const prevState = {
       institution: structuredClone(selectedInstitution),
       selectedGroups: selectedGroups ? structuredClone(selectedGroups) : [],
       groups: structuredClone(groups || []),
       users: structuredClone(users || []),
-      profiles: structuredClone(profiles || []),
     };
 
     await lib.common.generic.optimisticUpdate(
@@ -154,7 +149,6 @@ export default function useInstitutionMembers() {
         setSelectedGroups(snapshot.selectedGroups);
         setGroups(snapshot.groups);
         setUsers(snapshot.users);
-        setProfiles(snapshot.profiles);
       },
       async () => {
         if (role === UserRole.TRAINER)
@@ -189,7 +183,7 @@ export default function useInstitutionMembers() {
         `User with email ${email} is already registered as a ${registerRole}.`
       );
 
-    const existingUser = users?.find((user) => user.email === email);
+    const existingUser = users?.data?.find((user) => user.email === email);
     if (existingUser) {
       setExistingUser(existingUser);
       setIsUploadingMembers(true);
@@ -199,11 +193,12 @@ export default function useInstitutionMembers() {
     setIsUploadingMembers(true);
 
     try {
-      const user = await AuthController.getInstance().registerUser({
+      const user = await UserController.getInstance().register({
         displayName,
         email,
         password,
         role: registerRole,
+        photoURL: '',
       });
 
       if (registerRole === UserRole.ATHLETE) {
@@ -220,8 +215,7 @@ export default function useInstitutionMembers() {
         }));
       }
 
-      setUsers((prev) => [...prev, user]);
-      setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
+      setUsers((prev) => ({ ...prev, data: [...prev.data, user] }));
       toast.success('Successfully registered user');
     } catch (e) {
       console.error(e);
@@ -234,14 +228,14 @@ export default function useInstitutionMembers() {
   async function uploadUsers(file: File) {
     setIsUploadingMembers(true);
 
-    let result: AuthUser[] = [];
+    let result: User[] = [];
 
-    Papa.parse<ImportProfile>(file, {
+    Papa.parse<ImportUser>(file, {
       header: true,
       skipEmptyLines: true,
       error: (e: Error) =>
         toast.error(`Failed to parse CSV file: ${e.message}`),
-      transform: (value, column: keyof ImportProfile) => {
+      transform: (value, column: keyof ImportUser) => {
         switch (column) {
           case 'email':
             value = value.trim().toLowerCase();
@@ -311,7 +305,7 @@ export default function useInstitutionMembers() {
           return;
         }
 
-        const data: ImportProfile[] = results.data.map((r) => ({
+        const data: ImportUser[] = results.data.map((r) => ({
           email: r.email,
           password: r.password,
           displayName: r.displayName,
@@ -324,27 +318,15 @@ export default function useInstitutionMembers() {
         }));
 
         try {
-          const response = await ProfileController.getInstance().importProfiles(
-            { profiles: data }
-          );
+          const response = await UserController.getInstance().import({
+            users: data,
+          });
 
           result = response.successful || [];
+          setUsers((prev) => ({ ...prev, data: [...prev.data, ...result] }));
 
-          setUsers((prev) => [...prev, ...result]);
-          setProfiles((prev) => [
-            ...prev,
-            ...(response.successful || []).map((u) =>
-              core.profile.userToProfile(u)
-            ),
-          ]);
-
-          const athletes = result.filter(
-            (u) => u.customClaims.role[0] === UserRole.ATHLETE
-          );
-
-          const trainers = result.filter(
-            (u) => u.customClaims.role[0] === UserRole.TRAINER
-          );
+          const athletes = result.filter((u) => u.role === UserRole.ATHLETE);
+          const trainers = result.filter((u) => u.role === UserRole.TRAINER);
 
           // update selected institution
           setSelectedInstitution((prev) =>

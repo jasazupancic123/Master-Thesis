@@ -23,7 +23,7 @@ export default function TrainingStationInitializer({
   }>();
 
   useEffect(() => {
-    if (!exercises.length || !users.length) return;
+    if (!exercises.length || !users.data.length) return;
 
     async function init() {
       const individualTrainingsRecord: Record<string, Training> =
@@ -37,7 +37,7 @@ export default function TrainingStationInitializer({
         ([userId, training]) => {
           const mappedTraining = TrainingService.mapData(training, {
             exercises,
-            users,
+            users: users.data,
           });
 
           return { ...mappedTraining, userId };

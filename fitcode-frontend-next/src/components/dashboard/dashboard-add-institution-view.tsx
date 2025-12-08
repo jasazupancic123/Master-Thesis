@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { AuthController } from '@/core/auth/auth.controller';
-import type { CreateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { CreateUser } from '@/core/user/type/user.type';
+import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -56,12 +56,13 @@ export default function DashboardAddInstitution() {
       email,
       password,
       role: UserRole.MANAGER,
+      photoURL: imageUrl,
     };
 
     handleApiRequest(
       router,
       async () => {
-        const user = await AuthController.getInstance().registerUser(userInput);
+        const user = await UserController.getInstance().register(userInput);
         const institution = await InstitutionController.getInstance().create({
           name,
           imageUrl,
@@ -71,8 +72,12 @@ export default function DashboardAddInstitution() {
         return { institution, user };
       },
       ({ user, institution }) => {
-        institution = core.institution.mapUsers([institution], users || [])[0];
-        setUsers((prev) => [...prev, user]);
+        institution = core.institution.mapUsers(
+          [institution],
+          users.data || []
+        )[0];
+
+        setUsers((prev) => ({ ...prev, data: [...(prev.data || []), user] }));
         setInstitutions((prev) => [...prev, institution]);
         setEmail('');
         setPassword('');

@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAuthenticatedAuth, withAuth } from './auth.provider';
-import type { AuthProfileMerged, AuthUser } from '@/core/auth/type/user.type';
 import { Controller } from '@/core/controller';
 import { core } from '@/core/core.service';
 import { ExerciseController } from '@/core/exercise/exercise.controller';
@@ -15,22 +14,22 @@ import type {
   InitInstitution,
   Institution,
 } from '@/core/institution/type/institution.type';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import type { Profile } from '@/core/profile/type/user.type';
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
 import { TrainingService } from '@/core/training/training.service';
 import type {
   ActiveTraining,
   Training,
 } from '@/core/training/type/training.type';
 import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
+import type { WellnessZScore } from '@/core/user/type/wellness.type';
 import { lib } from '@/lib';
 import type { Fetch } from '@/lib/common/type/fetch.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { initFetch, settleState } from '@/lib/common/util/state.util';
 
 export interface MainProviderProps extends React.PropsWithChildren {
-  profile: AuthProfileMerged;
+  user: User;
   institutions: Institution[];
   activeTraining: ActiveTraining | null;
   exerciseAiPrescriptions: ExerciseAiPrescription[];
@@ -38,13 +37,11 @@ export interface MainProviderProps extends React.PropsWithChildren {
 }
 
 export interface IMainContext extends MainProviderProps {
-  users: AuthUser[];
-  profiles: Profile[];
+  users: Fetch<User[]>;
   exercises: Exercise[];
   groups: Group[];
-  setProfile: SetState<AuthProfileMerged>;
-  setProfiles: SetState<Profile[]>;
-  setUsers: SetState<AuthUser[]>;
+  setUser: SetState<User>;
+  setUsers: SetState<Fetch<User[]>>;
   setExercises: SetState<Exercise[]>;
   setGroups: SetState<Group[]>;
   setActiveTraining: SetState<ActiveTraining | null>;
@@ -73,14 +70,13 @@ export default function MainProvider(props: MainProviderProps) {
   const institutionId = _institution.id;
   const { role } = useAuthenticatedAuth();
 
-  const [profile, setProfile] = useState(props.profile);
+  const [user, setUser] = useState(props.user);
   const [institution, setInstitution] = useState(_institution);
   const [groups, setGroups] = useState<Group[]>(_institution.groups);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [trainings, setTrainings] = useState(initFetch<Training[]>([]));
   const [protocols, setProtocols] = useState(initFetch<TrainingProtocol[]>([]));
-  const [users, setUsers] = useState<AuthUser[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [users, setUsers] = useState(initFetch<User[]>([]));
 
   const [exerciseAiPrescriptions, setExerciseAiPrescriptions] = useState(
     props.exerciseAiPrescriptions
@@ -107,9 +103,12 @@ export default function MainProvider(props: MainProviderProps) {
 
   // map users on fetch
   useEffect(() => {
-    if (!users.length) return;
-    setGroups(institution.groups.map((g) => core.group.mapMembers(g, users)));
-    setInstitution((prev) => core.institution.mapUsers([prev], users)[0]);
+    if (!users.data.length) return;
+    setGroups(
+      institution.groups.map((g) => core.group.mapMembers(g, users.data))
+    );
+
+    setInstitution((prev) => core.institution.mapUsers([prev], users.data)[0]);
   }, [users]);
 
   // load exercises (from cache or from server)
@@ -181,32 +180,7 @@ export default function MainProvider(props: MainProviderProps) {
 
       setProtocols(settleState(protocols, []));
       setTrainings(settleState(trainings, []));
-
-      if (authProfiles.status === 'fulfilled') {
-        const users: AuthUser[] = authProfiles.value.map((u) => ({
-          uid: u.uid,
-          email: u.email!,
-          displayName: u.displayName || '',
-          photoURL: u.photoURL || '',
-          customClaims: { role: [u.role || UserRole.ATHLETE] },
-        }));
-
-        const profiles: Profile[] = authProfiles.value.map((u) => ({
-          uid: u.uid,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          email: u.email!,
-          photoURLBase64: u.photoURLBase64 || '',
-          sport: u.sport,
-          level: u.level,
-          gender: u.gender,
-          birthDate: u.birthDate || new Date(),
-          wellness: u.wellness || { date: new Date(), userId: u.uid },
-        }));
-
-        setUsers(users);
-        setProfiles(profiles);
-      }
+      setUsers(settleState(authProfiles, []));
     }
 
     fetchData().then();
@@ -232,10 +206,8 @@ export default function MainProvider(props: MainProviderProps) {
   }, [exercises, trainings.loading, activeTraining?.id]);
 
   const value: IMainContext = {
-    profile,
-    setProfile,
-    profiles,
-    setProfiles,
+    user: user,
+    setUser: setUser,
     users,
     setUsers,
     exercises,
@@ -252,7 +224,7 @@ export default function MainProvider(props: MainProviderProps) {
     setProtocols,
     institutions: props.institutions,
     institution: props.institution,
-    wellness: profiles.map((p) => p.wellness).flat(),
+    wellness: users.data.map((p) => p.wellness).flat(),
     activeTraining,
   };
 

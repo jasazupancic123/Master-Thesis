@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Workload } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
 export default function useAthleteExerciseReportData(
   reportType: 'single' | 'comparison',
-  selectedUser: AuthUser | null,
-  selectedUsers: AuthUser[],
+  selectedUser: User | null,
+  selectedUsers: User[],
   selectedExercise: Exercise | null,
   cache: Map<string, Workload[]>,
   groupByTraining: boolean,
@@ -20,7 +20,7 @@ export default function useAthleteExerciseReportData(
   const { selectedInstitution } = useDashboard();
 
   async function getAthleteExerciseWorkloads(
-    user: AuthUser,
+    user: User,
     exercise: Exercise,
     key: string,
     averagePerTraining?: boolean // for comparison reports

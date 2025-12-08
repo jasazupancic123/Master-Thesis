@@ -1,4 +1,4 @@
-import type { Wellness } from '@/core/profile/type/wellness.type';
+import type { Wellness } from '@/core/user/type/wellness.type';
 
 let cachedWellness: Wellness | null = null;
 

@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 
 import type { DataGridWorkloadRow } from '../types/data-grid-workload-row';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { User } from '@/core/user/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
 
 export default function useTrainingRecapRows(
-  selectedAthletes: AuthUser[],
+  selectedAthletes: User[],
   selectedExercises: Exercise[]
 ) {
   const { users, exercises } = useMain();
@@ -33,7 +33,7 @@ export default function useTrainingRecapRows(
     setRows(
       workloads
         .map((workload) => {
-          const user = users.find((u) => u.uid === workload.userId);
+          const user = users.data.find((u) => u.uid === workload.userId);
           const exercise = exercises.find((e) => e.id === workload.exerciseId);
 
           if (!user || !exercise) return undefined;

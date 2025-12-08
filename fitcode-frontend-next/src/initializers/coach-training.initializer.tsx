@@ -25,7 +25,7 @@ export default function CoachTrainingInitializer({
 
   useEffect(() => {
     async function init() {
-      if (!users.length) return;
+      if (!users.data.length) return;
 
       const trainingId = pathname.split('/')[2];
       const training = await controller.training.findById(trainingId);
@@ -34,7 +34,10 @@ export default function CoachTrainingInitializer({
       const group = groups.find((g) => g.id === training.groupId);
       if (!group) return notFound();
 
-      const mapped = TrainingService.mapData(training, { exercises, users });
+      const mapped = TrainingService.mapData(training, {
+        exercises,
+        users: users.data,
+      });
 
       const context: TrainingIdPageProps = {
         training: mapped,

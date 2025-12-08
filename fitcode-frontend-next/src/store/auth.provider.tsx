@@ -5,8 +5,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { AuthController } from '@/core/auth/auth.controller';
 import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import type {
   AuthStatus,
@@ -21,7 +21,7 @@ export const useAuth = () => useContext(AuthContext)!;
 
 export type AuthState = {
   status: AuthStatus;
-  user?: AuthUser;
+  user?: User;
   role?: UserRole;
   customClaims?: CustomClaims;
 };
@@ -44,7 +44,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
       setState((prevState) => ({ ...prevState, customClaims: claims }));
   }
 
-  function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
+  function setUser(data: Partial<User>) {
     if (state.status !== 'authenticated') return;
     setState((prevState) => ({
       ...prevState,
@@ -52,7 +52,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     }));
   }
 
-  function handleUserChange(user: AuthUser | null): AuthState {
+  function handleUserChange(user: User | null): AuthState {
     let newState: AuthState = { ...state, status: 'loading' };
 
     if (!user) {
@@ -65,15 +65,8 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
       };
     } else {
       // user is logged in
-      const customClaims = user.customClaims;
-      const role = customClaims.role?.[0];
-
-      newState = {
-        status: 'authenticated',
-        user,
-        role,
-        customClaims,
-      };
+      const role = user.role;
+      newState = { status: 'authenticated', user, role };
     }
 
     setState(newState);

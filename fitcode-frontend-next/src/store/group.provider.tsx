@@ -53,7 +53,7 @@ export function GroupProvider(
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
-  const [filteredUsers, setFilteredUsers] = useState(() => allUsers);
+  const [filteredUsers, setFilteredUsers] = useState(() => allUsers.data);
 
   async function handleMoveTraining(e: DragEndEvent) {
     const { over, active } = e;

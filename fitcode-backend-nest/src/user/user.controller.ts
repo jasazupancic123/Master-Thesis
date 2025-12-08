@@ -34,9 +34,9 @@ export class UserController {
     return await this.userService.findOneById(user.uid);
   }
 
-  @Post('/import')
+  @Post('import')
   @Auth([UserRole.MANAGER])
-  async importProfiles(
+  async import(
     @RequestUser() user: FirebaseUser,
     @Body()
     { users: profiles }: ImportUsersDto,
@@ -46,7 +46,7 @@ export class UserController {
 
   @Patch(':id')
   @Auth()
-  async updateUser(
+  async update(
     @RequestUser() user: FirebaseUser,
     @Param('id') id: string,
     @Body() body: UpdateUserDto,
@@ -56,7 +56,7 @@ export class UserController {
 
   @Post('register')
   @Auth([UserRole.ADMIN, UserRole.MANAGER])
-  async registerUser(
+  async register(
     @RequestUser() user: FirebaseUser,
     @Body() body: CreateUserDto,
   ) {

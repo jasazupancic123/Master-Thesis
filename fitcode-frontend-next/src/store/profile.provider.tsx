@@ -2,15 +2,12 @@
 
 import { createContext, useContext } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { Profile } from '@/core/profile/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import type { SetStateNullable } from '@/lib/common/type/state.type';
 
 interface Props extends React.PropsWithChildren {
-  user: AuthUser;
-  profile: Profile;
-  setProfile: SetStateNullable<Profile>;
-  setUser: SetStateNullable<AuthUser>;
+  user: User;
+  setUser: SetStateNullable<User>;
 }
 
 const ProfileContext = createContext<Props | null>(null);

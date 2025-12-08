@@ -8,13 +8,11 @@ import {
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Group } from '@/core/institution/type/group.type';
+import type { User } from '@/core/user/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
 
-export default function useDashboardMembersDrag(
-  allInstitutionMembers: AuthUser[]
-) {
+export default function useDashboardMembersDrag(allInstitutionMembers: User[]) {
   const { selectedInstitution, selectedGroups, addGroupMember, updateGroup } =
     useDashboard();
 
