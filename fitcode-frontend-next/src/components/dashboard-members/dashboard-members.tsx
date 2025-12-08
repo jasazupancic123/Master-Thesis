@@ -41,13 +41,13 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
-
-  const { selectedInstitution, selectedGroups } = useDashboard();
-
+  const { institution } = useMain();
+  const { selectedGroups } = useDashboard();
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers } =
     useInstitutionMembers();
 
@@ -82,8 +82,6 @@ export default function DashboardMembers() {
 
   const [wrapInstitutionMembers, setWrapInstitutionMembers] = useState(false);
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
-
-  if (!selectedInstitution) return null;
 
   return (
     <DashboardPageContainer>
@@ -122,7 +120,7 @@ export default function DashboardMembers() {
               gap={0.5}
             >
               <Image
-                src={selectedInstitution.imageUrl}
+                src={institution.imageUrl}
                 alt="Institution"
                 unoptimized={lib.common.env.unoptimizeImages()}
                 width={24}

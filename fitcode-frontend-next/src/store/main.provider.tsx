@@ -37,6 +37,7 @@ export interface MainProviderProps extends React.PropsWithChildren {
 }
 
 export interface IMainContext extends MainProviderProps {
+  setInstitution: SetState<InitInstitution>;
   users: Fetch<User[]>;
   exercises: Exercise[];
   setUser: SetState<User>;
@@ -213,8 +214,9 @@ export default function MainProvider(props: MainProviderProps) {
     setTrainings,
     protocols,
     setProtocols,
+    institution,
+    setInstitution,
     institutions: props.institutions,
-    institution: props.institution,
     wellness: users.data.map((p) => p.wellness).flat(),
     activeTraining,
   };

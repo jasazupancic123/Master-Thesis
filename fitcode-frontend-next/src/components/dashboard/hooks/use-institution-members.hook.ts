@@ -17,26 +17,20 @@ import { useMain } from '@/store/main.provider';
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
 export default function useInstitutionMembers() {
-  const { users, setUsers } = useMain();
+  const { users, setUsers, institution, setInstitution } = useMain();
   const { setFormData } = useRegisterMemberForm();
 
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    selectedGroups,
-    setSelectedGroups,
-  } = useDashboard();
-
+  const { selectedGroups, setSelectedGroups } = useDashboard();
   const [existingUser, setExistingUser] = useState<User | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
   const [openUserAlreadyExistsModal, setOpenUserAlreadyExistsModal] =
     useState(false);
 
   async function addUser(user: User | null) {
-    if (!user || !selectedInstitution) return;
+    if (!user) return;
 
     const controller = InstitutionController.getInstance();
-    const institutionId = selectedInstitution!.id;
+    const institutionId = institution.id;
     const userId = user!.uid;
 
     const role = user.role;
@@ -44,7 +38,7 @@ export default function useInstitutionMembers() {
       if (role === UserRole.TRAINER) {
         await controller.addTrainer(institutionId, { userId });
 
-        setSelectedInstitution((prev) => ({
+        setInstitution((prev) => ({
           ...prev!,
           trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
           members: [...prev!.members, { id: user.uid, role: UserRole.TRAINER }],
@@ -52,7 +46,7 @@ export default function useInstitutionMembers() {
       } else if (role === UserRole.ATHLETE) {
         await controller.addAthlete(institutionId, { userId });
 
-        setSelectedInstitution((prev) => ({
+        setInstitution((prev) => ({
           ...prev!,
           athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
           members: [...prev!.members, { id: user.uid, role: UserRole.ATHLETE }],
@@ -69,10 +63,8 @@ export default function useInstitutionMembers() {
   }
 
   async function removeUser(userId: string) {
-    if (!selectedInstitution) return;
-
     const controller = InstitutionController.getInstance();
-    const institutionId = selectedInstitution!.id;
+    const institutionId = institution!.id;
 
     const user = users?.data?.find((user) => user.uid === userId);
     if (!user) return;
@@ -80,14 +72,14 @@ export default function useInstitutionMembers() {
     const role = user.role;
 
     const prevState = {
-      institution: structuredClone(selectedInstitution),
+      institution: structuredClone(institution),
       selectedGroups: selectedGroups ? structuredClone(selectedGroups) : [],
       users: structuredClone(users || []),
     };
 
     await lib.common.generic.optimisticUpdate(
       () => {
-        const newGroups = selectedInstitution.groups?.map((group) => {
+        const newGroups = institution.groups?.map((group) => {
           if (!group.membersIds.includes(userId)) return group;
           return {
             ...group,
@@ -99,7 +91,7 @@ export default function useInstitutionMembers() {
         });
 
         if (role === UserRole.TRAINER)
-          setSelectedInstitution((prev) => ({
+          setInstitution((prev) => ({
             ...prev!,
             groups: newGroups,
             trainers: prev!.trainers?.filter(
@@ -108,7 +100,7 @@ export default function useInstitutionMembers() {
             members: prev!.members.filter((member) => member.id !== userId),
           }));
         else if (role === UserRole.ATHLETE)
-          setSelectedInstitution((prev) => ({
+          setInstitution((prev) => ({
             ...prev!,
             groups: newGroups,
             athletes: prev!.athletes?.filter(
@@ -131,7 +123,7 @@ export default function useInstitutionMembers() {
         );
       },
       (snapshot) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         setSelectedGroups(snapshot.selectedGroups);
         setUsers(snapshot.users);
       },
@@ -146,7 +138,6 @@ export default function useInstitutionMembers() {
   }
 
   async function registerUser(registerRole: UserRole, formData: IFormData) {
-    if (!selectedInstitution) return;
     setFormData(formData);
 
     const { displayName, email, password, confirmPassword } = formData;
@@ -156,12 +147,8 @@ export default function useInstitutionMembers() {
 
     const exists =
       registerRole === UserRole.ATHLETE
-        ? selectedInstitution?.athletes?.some(
-            (athlete) => athlete.email === email
-          )
-        : selectedInstitution?.trainers?.some(
-            (trainer) => trainer.email === email
-          );
+        ? institution?.athletes?.some((athlete) => athlete.email === email)
+        : institution?.trainers?.some((trainer) => trainer.email === email);
 
     if (exists)
       return toast.error(
@@ -186,13 +173,13 @@ export default function useInstitutionMembers() {
       });
 
       if (registerRole === UserRole.ATHLETE) {
-        setSelectedInstitution((prev) => ({
+        setInstitution((prev) => ({
           ...prev!,
           athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
           members: [...prev!.members, { id: user.uid, role: UserRole.ATHLETE }],
         }));
       } else if (registerRole === UserRole.TRAINER) {
-        setSelectedInstitution((prev) => ({
+        setInstitution((prev) => ({
           ...prev!,
           trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
           members: [...prev!.members, { id: user.uid, role: UserRole.TRAINER }],
@@ -313,7 +300,7 @@ export default function useInstitutionMembers() {
           const trainers = result.filter((u) => u.role === UserRole.TRAINER);
 
           // update selected institution
-          setSelectedInstitution((prev) =>
+          setInstitution((prev) =>
             !prev
               ? prev
               : {

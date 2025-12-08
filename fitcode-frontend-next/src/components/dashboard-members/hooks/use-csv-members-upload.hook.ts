@@ -8,15 +8,12 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useCsvMembersUpload() {
-  const { users } = useMain();
-  const { selectedInstitution } = useDashboard();
-
+  const { users, institution } = useMain();
   const { setIsUploadingMembers } = useInstitutionMembers();
-
   const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!selectedInstitution || !csvUserEmails.length) return;
+    if (!institution || !csvUserEmails.length) return;
 
     const newUsers = [] as User[];
     for (const email of csvUserEmails) {
@@ -34,7 +31,7 @@ export default function useCsvMembersUpload() {
       .filter((user) => user.role.includes(UserRole.ATHLETE))
       .filter(
         (user) =>
-          !selectedInstitution?.members
+          !institution?.members
             .filter((m) => m.role === UserRole.ATHLETE)
             .map((m) => m.id)
             .includes(user.uid)
@@ -44,7 +41,7 @@ export default function useCsvMembersUpload() {
       .filter((user) => user.role.includes(UserRole.TRAINER))
       .filter(
         (user) =>
-          !selectedInstitution?.members
+          !institution?.members
             .filter((m) => m.role === UserRole.TRAINER)
             .map((m) => m.id)
             .includes(user.uid)

@@ -38,8 +38,8 @@ export const useDashboardUserEdit = () => useContext(DashboardUserEditContext)!;
 export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
-  const { users, setUsers } = useMain();
-  const { setSelectedInstitution, setSelectedGroups } = useDashboard();
+  const { users, setUsers, setInstitution } = useMain();
+  const { setSelectedGroups } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
@@ -106,18 +106,14 @@ export function DashboardUserEditProvider({
         prev.map((g) => core.group.mapMembers(g, mappedUsers))
       );
 
-      setSelectedInstitution((prev) =>
-        !prev
-          ? null
-          : {
-              ...prev,
-              athletes: mapUsers(prev.athletes),
-              trainers: mapUsers(prev.trainers),
-              groups: (prev.groups || []).map((group) =>
-                core.group.mapMembers(group, mappedUsers)
-              ),
-            }
-      );
+      setInstitution((prev) => ({
+        ...prev,
+        athletes: mapUsers(prev.athletes),
+        trainers: mapUsers(prev.trainers),
+        groups: (prev.groups || []).map((group) =>
+          core.group.mapMembers(group, mappedUsers)
+        ),
+      }));
 
       toast.success('Successfully updated user profile');
     } catch (e) {
