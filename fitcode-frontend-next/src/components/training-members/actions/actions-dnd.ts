@@ -1,3 +1,5 @@
+import type { DragEndEvent } from '@dnd-kit/core';
+
 import type useTrainingMembers from '../hooks/use-members.hook';
 import type useTrainingMembersSubgroups from '../hooks/use-subgroups.hook';
 import { handleAddMembersSubgroup } from './actions-subgroups';
@@ -11,8 +13,7 @@ import type {
 } from '@/store/trainer-day-view.provider';
 
 export const handleOnDragEnd = async (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: { result: any },
+  input: DragEndEvent,
   context: {
     useMain: IMainContext;
     useGroup: IGroupCtx;
@@ -21,7 +22,7 @@ export const handleOnDragEnd = async (
     useTrainingMembers: ReturnType<typeof useTrainingMembers>;
   }
 ) => {
-  const { result } = input;
+  const { active, over } = input;
 
   const {
     useMain,
@@ -38,10 +39,8 @@ export const handleOnDragEnd = async (
 
   const { members } = useTrainingMembers;
 
-  const { draggableId, destination } = result;
-
-  if (!destination) {
-    const user = members.find((m) => m.uid === draggableId);
+  if (!over) {
+    const user = members.find((m) => m.uid === active.id);
     if (!user) return;
     handleAddMembersSubgroup(
       { member: user },
@@ -55,7 +54,7 @@ export const handleOnDragEnd = async (
       }
     );
   } else {
-    onDragEndSubgroup(result, {
+    onDragEndSubgroup(input, {
       useMain,
       useTrainerDayViewContext: {
         ...useTrainerDayViewContext,
@@ -68,15 +67,14 @@ export const handleOnDragEnd = async (
 };
 
 const onDragEndSubgroup = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { destination, draggableId }: any,
+  input: DragEndEvent,
   context: {
     useMain: ReturnType<typeof useMain>;
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
     useTrainingMembersSubgroups: ReturnType<typeof useTrainingMembersSubgroups>;
   }
 ) => {
-  if (!destination) return;
+  const { active, over } = input;
 
   const { useMain, useTrainerDayViewContext, useTrainingMembersSubgroups } =
     context;
@@ -92,22 +90,22 @@ const onDragEndSubgroup = (
 
   // find from which subgroup the member is being dragged from and add it to changedSubgroupIds
   const fromSubgroup = updatedSubgroups.find(
-    (s) => s.membersIds.includes(draggableId) && !s.parentId
+    (s) => s.membersIds.includes(active.id.toString()) && !s.parentId
   );
 
-  if (fromSubgroup && fromSubgroup.id === destination.droppableId) return;
+  if (fromSubgroup && fromSubgroup.id === over?.id) return;
 
   if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
     setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
 
   updatedSubgroups.forEach((s) => {
     if (!s.membersIds || s.parentId) return;
-    s.membersIds = s.membersIds.filter((id) => id !== draggableId);
+    s.membersIds = s.membersIds.filter((id) => id !== active.id);
   });
 
   // Add member to the new subgroup
-  if (destination.droppableId === DEFAULT_SUBGROUP_ID) {
-    const newMember = users.data.find((user) => user.uid === draggableId);
+  if (over?.id === DEFAULT_SUBGROUP_ID) {
+    const newMember = users.data.find((user) => user.uid === active.id);
 
     if (!newMember) return;
 
@@ -115,17 +113,15 @@ const onDragEndSubgroup = (
       (s) => s.id === DEFAULT_SUBGROUP_ID
     );
     if (defaultSubgroup) {
-      defaultSubgroup.membersIds.push(draggableId);
+      defaultSubgroup.membersIds.push(active.id.toString());
       defaultSubgroup.members?.push(newMember);
     }
   } else {
-    const targetSubgroup = updatedSubgroups.find(
-      (s) => s.id === destination.droppableId
-    );
+    const targetSubgroup = updatedSubgroups.find((s) => s.id === over?.id);
 
     if (!targetSubgroup) return;
 
-    targetSubgroup.membersIds.push(draggableId);
+    targetSubgroup.membersIds.push(active.id.toString());
 
     if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id))
       setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
@@ -133,7 +129,8 @@ const onDragEndSubgroup = (
 
   // delete custom workloads subgroup
   const foundCustomUserSubgroup = component.subgroups.find(
-    (subgroup) => subgroup.parentId && subgroup.membersIds.includes(draggableId)
+    (subgroup) =>
+      subgroup.parentId && subgroup.membersIds.includes(active.id.toString())
   );
 
   updatedSubgroups = updatedSubgroups.filter(

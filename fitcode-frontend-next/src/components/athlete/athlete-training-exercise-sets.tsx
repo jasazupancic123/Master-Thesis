@@ -1,4 +1,3 @@
-import { CheckCircle } from '@mui/icons-material';
 import { Box, Grid } from '@mui/material';
 import { useTheme } from '@mui/material';
 
@@ -6,13 +5,10 @@ import { NumberExerciseParam } from '../exercise-param/number-exercise-param';
 import { TempoExerciseParam } from '../exercise-param/tempo-exercise-param';
 import { core } from '@/core/core.service';
 import { KG } from '@/core/exercise/constant/exercise-param.constant';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { ExerciseSet } from '@/core/training/type/exercise-set.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainings } from '@/store/trainings.provider';
 import LeftRightExerciseText from '@/ui/left-right-exercise-text';
 
 interface Props {
@@ -36,17 +32,11 @@ export default function AthleteTrainingExerciseSets({
   expanded,
   passedSet,
   setIndex,
-  supersetIndex,
-  componentId,
-  trainingId,
   dissableBottomPadding,
   trainingInProgressView,
 }: Props) {
-  const { activeTraining } = useMain();
-
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const { updateTrainingInProgress } = useTrainings();
 
   const uni = exercise.exercise?.isUnilateral;
   const volType = core.training.set.getVolType(exercise.sets[0]);
@@ -154,11 +144,7 @@ export default function AthleteTrainingExerciseSets({
                       value={exercise.sets[index]?.[volType] || 0}
                       exercise={exercise}
                       disableOptions
-                      onInputChange={(value) => {
-                        exercise.sets[index][volType] = +value;
-
-                        updateTrainingInProgress(exercise, supersetIndex || 0);
-                      }}
+                      onInputChange={(_) => {}}
                     />
                   </Box>
                 )}
@@ -175,10 +161,7 @@ export default function AthleteTrainingExerciseSets({
                       value={exercise.sets[index]?.[KG.field] || 0}
                       exercise={exercise}
                       disableOptions
-                      onInputChange={(value) => {
-                        exercise.sets[index][KG.field] = +value as never;
-                        updateTrainingInProgress(exercise, supersetIndex || 0);
-                      }}
+                      onInputChange={(_) => {}}
                     />
                   </Box>
                 )}
@@ -196,17 +179,7 @@ export default function AthleteTrainingExerciseSets({
                         value={core.training.set.getTempo(exercise.sets[index])}
                         exercise={exercise}
                         disableOptions
-                        onInputChange={(value) => {
-                          core.training.set.setTempo(
-                            exercise.sets[index],
-                            value as [number, number, number, number]
-                          );
-
-                          updateTrainingInProgress(
-                            exercise,
-                            supersetIndex || 0
-                          );
-                        }}
+                        onInputChange={(_) => {}}
                       />
                     </Box>
                   ) : (
@@ -221,13 +194,7 @@ export default function AthleteTrainingExerciseSets({
                         value={exercise.sets[index]?.[effType] || 0}
                         exercise={exercise}
                         disableOptions
-                        onInputChange={(value) => {
-                          exercise.sets[index][effType] = +value;
-                          updateTrainingInProgress(
-                            exercise,
-                            supersetIndex || 0
-                          );
-                        }}
+                        onInputChange={(_) => {}}
                       />
                     </Box>
                   )
@@ -245,10 +212,7 @@ export default function AthleteTrainingExerciseSets({
                       value={exercise.sets[index][recType] || 0}
                       exercise={exercise}
                       disableOptions
-                      onInputChange={(value) => {
-                        exercise.sets[index][recType] = +value;
-                        updateTrainingInProgress(exercise, supersetIndex || 0);
-                      }}
+                      onInputChange={(_) => {}}
                     />
                   </Box>
                 )}
@@ -277,17 +241,7 @@ export default function AthleteTrainingExerciseSets({
                         }
                         exercise={exercise}
                         showOptions={false}
-                        onInputChange={(value) => {
-                          const field = core.exercise.param.pairs[
-                            volType
-                          ] as typeof volType;
-
-                          exercise.sets[index][field] = +value;
-                          updateTrainingInProgress(
-                            exercise,
-                            supersetIndex || 0
-                          );
-                        }}
+                        onInputChange={(_) => {}}
                       />
                     </Box>
                   )}
@@ -309,14 +263,7 @@ export default function AthleteTrainingExerciseSets({
                         exercise={exercise}
                         showOptions={false}
                         disableOptions
-                        onInputChange={(value) => {
-                          const field = core.exercise.param.pairs['loadKg'];
-                          exercise.sets[index][field] = +value as never;
-                          updateTrainingInProgress(
-                            exercise,
-                            supersetIndex || 0
-                          );
-                        }}
+                        onInputChange={(_) => {}}
                       />
                     </Box>
                   )}
@@ -337,17 +284,7 @@ export default function AthleteTrainingExerciseSets({
                           exercise={exercise}
                           showOptions={false}
                           disableOptions
-                          onInputChange={(values) => {
-                            core.training.set.setTempo(
-                              exercise.sets[index],
-                              values as [number, number, number, number]
-                            );
-
-                            updateTrainingInProgress(
-                              exercise,
-                              supersetIndex || 0
-                            );
-                          }}
+                          onInputChange={(_) => {}}
                         />
                       ) : (
                         <NumberExerciseParam
@@ -361,14 +298,7 @@ export default function AthleteTrainingExerciseSets({
                           exercise={exercise}
                           showOptions={false}
                           disableOptions
-                          onInputChange={(value) => {
-                            const field = core.exercise.param.pairs[effType];
-                            exercise.sets[index][field] = +value as never;
-                            updateTrainingInProgress(
-                              exercise,
-                              supersetIndex || 0
-                            );
-                          }}
+                          onInputChange={(_) => {}}
                         />
                       )}
                     </Box>
@@ -391,14 +321,7 @@ export default function AthleteTrainingExerciseSets({
                         exercise={exercise}
                         showOptions={false}
                         disableOptions
-                        onInputChange={(value) => {
-                          const field = core.exercise.param.pairs[recType];
-                          exercise.sets[index][field] = +value as never;
-                          updateTrainingInProgress(
-                            exercise,
-                            supersetIndex || 0
-                          );
-                        }}
+                        onInputChange={(_) => {}}
                       />
                     </Box>
                   )}
@@ -406,28 +329,7 @@ export default function AthleteTrainingExerciseSets({
               )}
             </Grid>
 
-            <Grid size={0.5} display="flex" alignItems="flex-end">
-              {supersetIndex !== undefined &&
-                setIndex !== undefined &&
-                componentId &&
-                trainingId &&
-                activeTraining &&
-                ExerciseSetService.isSetCompleted(
-                  {
-                    trainingId,
-                    componentId,
-                    exerciseId: exercise.id,
-                    supersetIndex: supersetIndex,
-                    setIndex: setIndex,
-                  },
-                  activeTraining.workloads
-                ) && (
-                  <CheckCircle
-                    fontSize="small"
-                    sx={{ color: theme.palette.primary.main, mb: 0.45 }}
-                  />
-                )}
-            </Grid>
+            <Grid size={0.5} display="flex" alignItems="flex-end"></Grid>
           </Grid>
         );
       })}

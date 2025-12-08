@@ -108,7 +108,16 @@ export default function TrainingStation() {
   useEffect(() => {
     if (!(userExercises || []).some((e) => e.id === selectedExercise?.id)) {
       setSelectedExercise((userExercises || [])[0] || null);
-      setSelectedSetIndex(0);
+
+      const userExerciseWorkloads = workloads.filter(
+        (w) =>
+          w.userId === selectedUser?.uid &&
+          w.exerciseId === selectedExercise?.id
+      );
+
+      const completedSets = (userExerciseWorkloads || []).length;
+
+      setSelectedSetIndex(completedSets);
     }
   }, [selectedUser, station]);
 
@@ -340,9 +349,16 @@ export default function TrainingStation() {
                 }}
                 onClick={async () => {
                   if (isSetCompleted) {
-                    setWorkloads((prev) =>
-                      prev.filter((w) => w.id !== foundWorkload?.id)
+                    const newWorkloads = workloads.filter(
+                      (w) => w.id !== foundWorkload?.id
                     );
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (foundWorkload as any).id = undefined; // force update - remove id to make it "un-posted"
+
+                    newWorkloads.push(foundWorkload);
+
+                    setWorkloads(newWorkloads);
                     return;
                   }
 
@@ -355,14 +371,16 @@ export default function TrainingStation() {
                   )
                     return;
 
-                  const workload = createEmptyPartialWorkload({
-                    individualTraining,
-                    workloads,
-                    userId: selectedUser.uid,
-                    componentId: component.id,
-                    exerciseId: selectedExercise.id,
-                    setIndex: selectedSetIndex,
-                  });
+                  const workload =
+                    foundWorkload ||
+                    createEmptyPartialWorkload({
+                      training: individualTraining,
+                      workloads,
+                      userId: selectedUser.uid,
+                      componentId: component.id,
+                      exerciseId: selectedExercise.id,
+                      setIndex: selectedSetIndex,
+                    });
 
                   if (!workload) return;
 

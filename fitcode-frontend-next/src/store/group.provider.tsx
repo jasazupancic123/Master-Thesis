@@ -99,8 +99,9 @@ export function GroupProvider(
               : t
           ),
         })),
-      (snapshot) =>
-        setTrainings((prev) => ({ ...prev, data: snapshot.trainings })),
+      (snapshot) => {
+        setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
+      },
       async () =>
         await TrainingController.getInstance().move(training.id, {
           from: newFrom,

@@ -241,6 +241,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       (snapshot) => {
         toast.error('Failed to add member');
         setTraining(snapshot.training);
+
         setTrainings((prev) => ({ ...prev, data: snapshot.trainings }));
       },
       async () =>
@@ -286,10 +287,29 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     setTraining(training);
     setLoading(false);
 
-    // put training id in url, but don't push to history
-    const url = `/groups/${group.id}?training=${training.id}`;
-    if (component) url.concat(`&component=${component.id}`);
-    window.history.replaceState(null, '', url);
+    // --- URL update (guarded) ---
+    const params = new URLSearchParams(window.location.search);
+
+    const currentTraining = params.get('training');
+    const currentComponent = params.get('component');
+
+    const nextTraining = String(training.id);
+    const nextComponent = component ? String(component.id) : null;
+
+    // Only update if something actually changes
+    if (
+      currentTraining === nextTraining &&
+      currentComponent === nextComponent
+    ) {
+      return;
+    }
+
+    params.set('training', nextTraining);
+    if (nextComponent) params.set('component', nextComponent);
+    else params.delete('component');
+
+    const newUrl = `/groups/${group.id}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
   }, [selectedPeriod, trainings]);
 
   useEffect(() => {
