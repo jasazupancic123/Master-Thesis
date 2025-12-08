@@ -245,6 +245,7 @@ export default function MobileMovementValidation(
     left: 0,
     right: exerciseDetectionDataRef.current?.rightSide ? 0 : undefined,
   });
+  const pxToCmRatioRef = useRef<number | null>(null);
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
@@ -490,6 +491,7 @@ export default function MobileMovementValidation(
           recordedRepsRef,
           lastRecordedRepRef,
           currentInvalidAnglesRef,
+          pxToCmRatioRef,
           videoRef,
           canvasRef,
           canvasCtxRef,
@@ -735,6 +737,7 @@ export default function MobileMovementValidation(
             maxRomValue: rep.maxRomValue,
             startRomValue: rep.startRomValue,
             extremumRomValue: rep.extremeValue,
+            totalRomCm: rep.totalRomCm,
           } as RepInfo;
         }),
         repsR: recordedRepsRef.current.right
@@ -752,6 +755,7 @@ export default function MobileMovementValidation(
                 maxRomValue: rep.maxRomValue,
                 startRomValue: rep.startRomValue,
                 extremumRomValue: rep.extremeValue,
+                totalRomCm: rep.totalRomCm,
               } as RepInfo;
             })
           : undefined,
