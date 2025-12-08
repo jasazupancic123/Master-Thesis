@@ -179,6 +179,22 @@ export const getPrescribedCompletedPairs = (
           ? (workload.tempoIdleR.toFixed(2) as unknown as number)
           : undefined,
     },
+    {
+      name: 'ROM (cm)',
+      prescribed: workload.rom?.toFixed(2) as unknown as number | undefined,
+      completed:
+        workload.rom !== undefined
+          ? (workload.rom.toFixed(2) as unknown as number)
+          : undefined,
+    },
+    {
+      name: 'ROM R (cm)',
+      prescribed: workload.romR?.toFixed(2) as unknown as number | undefined,
+      completed:
+        workload.romR !== undefined
+          ? (workload.romR.toFixed(2) as unknown as number)
+          : undefined,
+    },
   ].filter(
     (pair) => pair.prescribed !== undefined || pair.completed !== undefined
   );
