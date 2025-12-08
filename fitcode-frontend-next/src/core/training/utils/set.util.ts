@@ -222,7 +222,7 @@ export class TrainingExerciseSetUtil {
       options.find((o) => o.field === preferredField) || options[0];
     const field = option.field as ExerciseMainParamNoSets;
     const value = (data?.[field] ?? option.defaultValue) as ExerciseSet[T];
-    set[field] = value as never;
+    set[field] = value;
 
     if (field === 'tempoEcc') {
       // edge case -> populate all other tempos as well

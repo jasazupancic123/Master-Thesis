@@ -34,7 +34,6 @@ import {
 import { SPORTS } from '@/lib/common/const/sport.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 
@@ -44,27 +43,6 @@ export default function ProfilePage() {
   const { user, setUser, role } = useAuthenticatedAuth();
   const router = useRouter();
   const screenSize = useScreenSize();
-
-  const { user: profileGlobal, setUser: setProfileGlobal } = useProfile();
-
-  const [profile, setProfile] = useState<Omit<User, 'createdAt' | 'updatedAt'>>(
-    {
-      uid: user.uid,
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
-      photoURLBase64: profileGlobal?.photoURLBase64 || '',
-      role: user.role,
-      email: user.email!,
-      sport: profileGlobal?.sport,
-      level: profileGlobal?.level,
-      gender: profileGlobal?.gender,
-      birthDate: profileGlobal?.birthDate,
-      wellness: profileGlobal?.wellness || {
-        date: new Date(),
-        userId: user.uid,
-      },
-    }
-  );
 
   const [isCapturingFace, setIsCapturingFace] = useState<boolean>(false);
   const [captures, setCaptures] = useState<{
@@ -80,21 +58,19 @@ export default function ProfilePage() {
 
   const [updatedUser, setUpdatedUser] = useState(false);
 
-  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
-    const newUser = { ...user, [key]: value };
+  // multiple key/value update
+  function handleChangeUser<K extends keyof User>(updates: Partial<User>) {
+    const newUser = { ...user, ...updates };
     setUser(newUser);
     setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
     if (updatedUser) {
-      if (!profile) return;
-
       handleApiRequest(
         router,
-        () => UserController.getInstance().update(profile.uid, profile),
+        () => UserController.getInstance().update(user.uid, user),
         (_) => {
-          setProfileGlobal((prev) => ({ ...prev!, ...profile }));
           toast.success('Profile updated successfully');
         },
         undefined,
@@ -169,8 +145,7 @@ export default function ProfilePage() {
                 maxDimensionCrop: 300,
               });
 
-            handleChangeUser('photoURL', url);
-            handleChangeUser('photoURLBase64', base64);
+            handleChangeUser({ photoURL: url, photoURLBase64: base64 });
           }}
         />
 
@@ -186,7 +161,7 @@ export default function ProfilePage() {
             variant="outlined"
             sx={{ flex: 1 }}
             value={user?.displayName}
-            onChange={(e) => handleChangeUser('displayName', e.target.value)}
+            onChange={(e) => handleChangeUser({ displayName: e.target.value })}
           />
         </Box>
 
@@ -195,10 +170,10 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
             <InputLabel>Gender</InputLabel>
             <Select
-              value={profile?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
+              value={user?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
               label="Gender"
               onChange={(e) =>
-                handleChangeUser('gender', e.target.value as Gender)
+                handleChangeUser({ gender: e.target.value as Gender })
               }
             >
               <MenuItem value="" disabled>
@@ -217,9 +192,9 @@ export default function ProfilePage() {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Date of Birth"
-              value={profile?.birthDate ? dayjs(profile?.birthDate) : null}
+              value={user?.birthDate ? dayjs(user?.birthDate) : null}
               onChange={(newValue) =>
-                handleChangeUser('birthDate', newValue?.toDate())
+                handleChangeUser({ birthDate: newValue?.toDate() })
               }
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true } }}
@@ -237,9 +212,9 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport</InputLabel>
             <Select
-              value={profile?.sport}
+              value={user?.sport}
               label="Sport"
-              onChange={(e) => handleChangeUser('sport', e.target.value)}
+              onChange={(e) => handleChangeUser({ sport: e.target.value })}
             >
               {SPORTS.map((s) => (
                 <MenuItem key={s} value={s}>
@@ -251,10 +226,10 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport Level</InputLabel>
             <Select
-              value={profile?.level ?? ''}
+              value={user?.level ?? ''}
               label="Sport Level"
               onChange={(e) =>
-                handleChangeUser('level', e.target.value as SportLevel)
+                handleChangeUser({ level: e.target.value as SportLevel })
               }
             >
               <MenuItem value="" disabled>

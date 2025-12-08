@@ -9,7 +9,6 @@ import { core } from '@/core/core.service';
 import { ExerciseController } from '@/core/exercise/exercise.controller';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
-import type { Group } from '@/core/institution/type/group.type';
 import type {
   InitInstitution,
   Institution,

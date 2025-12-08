@@ -22,7 +22,6 @@ export default function DashboardAddInstitution() {
   const { users, setUsers } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { setInstitutions } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -78,7 +77,6 @@ export default function DashboardAddInstitution() {
         )[0];
 
         setUsers((prev) => ({ ...prev, data: [...(prev.data || []), user] }));
-        setInstitutions((prev) => [...prev, institution]);
         setEmail('');
         setPassword('');
         setConfirmPassword('');

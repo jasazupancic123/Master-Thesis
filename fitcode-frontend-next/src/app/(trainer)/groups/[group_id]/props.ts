@@ -23,7 +23,6 @@ export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
   group: Group;
-  institution: Institution;
   trainings: Training[];
 }
 
@@ -34,8 +33,6 @@ export type GroupContextProps = GroupIdPageProps & {
   setGroup: SetState<Group>;
   selectedGroup: Group;
   setSelectedGroup: SetState<Group>;
-  institution: Institution;
-  setInstitution: SetState<Institution>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
   dateFrom: Dayjs;

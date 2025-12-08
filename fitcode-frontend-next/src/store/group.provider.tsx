@@ -26,21 +26,13 @@ export const useGroup = () => useContext(GroupContext)!;
 export function GroupProvider(
   props: GroupIdPageProps & React.PropsWithChildren
 ) {
-  const {
-    children,
-    group: providedGroup,
-    institution: providedInstitution,
-    trainings: allTrainings,
-  } = props;
-
+  const { children, group: providedGroup, trainings: allTrainings } = props;
   const { users: allUsers, setTrainings } = useMain();
 
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
   const [selectedGroup, setSelectedGroup] = useState({ ...group });
-  const [institution, setInstitution] =
-    useState<Institution>(providedInstitution);
 
   // find the cycle which is in the current date, else undefined:
   const todaysCycle = group.cycles.find((c) =>
@@ -128,8 +120,6 @@ export function GroupProvider(
   const value: IGroupCtx = {
     filter,
     setFilter,
-    institution,
-    setInstitution,
     group,
     setGroup,
     selectedGroup,

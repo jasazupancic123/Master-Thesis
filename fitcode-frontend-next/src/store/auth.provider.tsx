@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { AuthController } from '@/core/auth/auth.controller';
-import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
 import type { UserRole } from '@/core/user/enum/user-role.enum';
 import type { User } from '@/core/user/type/user.type';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
@@ -36,11 +35,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     user: undefined,
     role: undefined,
   });
-
-  function setCustomClaims(claims: CustomClaims) {
-    if (state.status === 'authenticated')
-      setState((prevState) => ({ ...prevState, customClaims: claims }));
-  }
 
   function setUser(data: Partial<User>) {
     if (state.status !== 'authenticated') return;
