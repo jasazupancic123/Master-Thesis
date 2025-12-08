@@ -14,6 +14,12 @@ interface Props {
 }
 
 export default function Alert({ type, errorMessage, color }: Props) {
+  console.log(
+    'alert component rendered with type:',
+    type,
+    'and errorMessage:',
+    errorMessage
+  );
   const router = useRouter();
   const screenSize = useScreenSize();
 
