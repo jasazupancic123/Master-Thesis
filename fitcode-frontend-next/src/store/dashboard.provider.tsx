@@ -24,8 +24,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 export interface IDashboardContext {
   filter: ILink;
   setFilter: SetState<ILink>;
-  institutions: Institution[];
-  setInstitutions: SetState<Institution[]>;
   selectedGroups: Group[];
   setSelectedGroups: SetState<Group[]>;
   detectedChanges: boolean;
@@ -48,20 +46,11 @@ export const useDashboard = () => useContext(DashboardContext)!;
 export function DashboardProvider(props: React.PropsWithChildren) {
   const { children } = props;
   const { role } = useAuthenticatedAuth();
-  const {
-    users,
-    institution,
-    setInstitution,
-    institutions: propsInstitutions,
-  } = useMain();
+  const { users, institution, setInstitution } = useMain();
 
   const groups = institution.groups || [];
-
   const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
-  const [institutions, setInstitutions] = useState<Institution[]>(() =>
-    core.institution.mapUsers(propsInstitutions || [], users.data || [])
-  );
 
   useEffect(() => {
     if (!users.data.length) return;
@@ -116,8 +105,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
   const value: IDashboardContext = {
     filter,
     setFilter,
-    institutions,
-    setInstitutions,
     selectedGroups,
     setSelectedGroups,
     detectedChanges,
@@ -125,7 +112,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
     updateInstitution: async (institutionId, input) => {
       const prevState = {
         institution: structuredClone(institution),
-        institutions: structuredClone(institutions),
       };
 
       function mapper(inst: InitInstitution): InitInstitution {
@@ -144,7 +130,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         },
         (snapshot) => {
           setInstitution(snapshot.institution);
-          setInstitutions(snapshot.institutions);
           toast.error('Failed to update institution name');
         },
         () => InstitutionController.getInstance().update(institutionId, input),
@@ -301,6 +286,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
                 ),
               }
         );
+
         setSelectedGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
@@ -355,6 +341,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
                 ),
               }
         );
+
         setSelectedGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );

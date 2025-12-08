@@ -17,19 +17,15 @@ export async function handleAddCycle(
     addCycleInput: AddCycleInput;
   },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) {
   const { router, addCycleInput } = input;
-  const { useGroup, useSliderCycles } = context;
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setGroup,
-    setCycle,
-    setInstitution,
-  } = useGroup;
+  const { useMain, useGroup, useSliderCycles } = context;
+  const { setInstitution } = useMain;
+  const { selectedGroup, setSelectedGroup, setGroup, setCycle } = useGroup;
   const { setSortedCycles } = useSliderCycles;
   const { name, description, from, to } = addCycleInput;
 
@@ -99,15 +95,9 @@ export async function handleDeleteCycle(
 ) {
   const { router } = input;
   const { useMain, useGroup, useSliderCycles } = context;
-  const { setTrainings } = useMain;
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setGroup,
-    cycle,
-    setCycle,
-    setInstitution,
-  } = useGroup;
+  const { setInstitution, setTrainings } = useMain;
+  const { selectedGroup, setSelectedGroup, setGroup, cycle, setCycle } =
+    useGroup;
 
   const { editCycle, setEditCycle } = useSliderCycles;
 
@@ -169,13 +159,15 @@ export const updateCycleState = (
     newCycle: Cycle;
   },
   context: {
+    useMain: IMainContext;
     useGroup: IGroupCtx;
     useSliderCycles: SliderCyclesProviderReturnType;
   }
 ) => {
   const { newCycle } = input;
-  const { useGroup, useSliderCycles } = context;
-  const { group, setGroup, setInstitution } = useGroup;
+  const { useMain, useGroup, useSliderCycles } = context;
+  const { setInstitution } = useMain;
+  const { group, setGroup } = useGroup;
   const { sortedCycles, setSortedCycles } = useSliderCycles;
 
   const newCycles = sortedCycles.map((c) =>

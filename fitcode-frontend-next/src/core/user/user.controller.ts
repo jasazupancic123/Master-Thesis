@@ -45,6 +45,6 @@ export class UserController extends BaseController {
   }
 
   async upsertWellness(body: CreateWellness) {
-    return this.api.post<Wellness>('/', body);
+    return this.api.post<Wellness>('/wellness', body);
   }
 }
