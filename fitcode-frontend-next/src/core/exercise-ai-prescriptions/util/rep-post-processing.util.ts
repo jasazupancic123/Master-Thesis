@@ -271,8 +271,9 @@ export class RepPostProcessingUtil {
   setRepRom(input: {
     currentRepRef: RefObject<Rep | null>;
     initialValues: number[];
+    pxToCmRatioRef: RefObject<number | null>;
   }) {
-    const { currentRepRef, initialValues } = input;
+    const { currentRepRef, initialValues, pxToCmRatioRef } = input;
 
     if (!currentRepRef.current) return;
 
@@ -282,5 +283,12 @@ export class RepPostProcessingUtil {
     currentRepRef.current.minRomValue = min;
     currentRepRef.current.maxRomValue = max;
     currentRepRef.current.startRomValue = initialValues[0];
+    currentRepRef.current.totalRomCm =
+      pxToCmRatioRef.current !== null
+        ? lib.common.number.roundToStep(
+            (max - min) / pxToCmRatioRef.current,
+            0.1
+          )
+        : undefined;
   }
 }
