@@ -52,6 +52,17 @@ export default function RomStatistic({ completedSet }: Props) {
       .map((r) => `Rep ${r.repNumber}: ${r.totalRomCm?.toFixed(2)}cm`)
       .join(', ');
 
+    const avgTotalRomL =
+      completedSet.repsL
+        .map((r) => r.totalRomCm || 0)
+        .reduce((a, b) => a + b, 0) / completedSet.repsL.length;
+
+    const avgTotalRomR =
+      (completedSet.repsR || [])
+        .map((r) => r.totalRomCm || 0)
+        .reduce((a, b) => a + b, 0) /
+      (completedSet.repsR ? completedSet.repsR.length : 1);
+
     console.log('completedSet', completedSet);
 
     console.log('romLString', romLString);
@@ -76,6 +87,10 @@ export default function RomStatistic({ completedSet }: Props) {
         Left ROMs: {romLString}
         <br />
         Right ROMs: {romRString}
+        <br />
+        Average Left total ROM: {avgTotalRomL.toFixed(2)}cm
+        <br />
+        Average Right total ROM: {avgTotalRomR.toFixed(2)}cm
       </Typography>
     );
   }
@@ -114,6 +129,17 @@ export default function RomStatistic({ completedSet }: Props) {
   console.log('romLString', romLString);
   console.log('romRString', romRString);
 
+  const avgTotalRomL =
+    completedSet.repsL
+      .map((r) => r.totalRomCm || 0)
+      .reduce((a, b) => a + b, 0) / completedSet.repsL.length;
+
+  const avgTotalRomR =
+    (completedSet.repsR || [])
+      .map((r) => r.totalRomCm || 0)
+      .reduce((a, b) => a + b, 0) /
+    (completedSet.repsR ? completedSet.repsR.length : 1);
+
   // if (isNaN(percentDiff) || !isFinite(percentDiff)) return null;
 
   return (
@@ -135,6 +161,10 @@ export default function RomStatistic({ completedSet }: Props) {
       Left ROMs: {romLString}
       <br />
       Right ROMs: {romRString}
+      <br />
+      Average Left total ROM: {avgTotalRomL.toFixed(2)}cm
+      <br />
+      Average Right total ROM: {avgTotalRomR.toFixed(2)}cm
     </Typography>
   );
 }
