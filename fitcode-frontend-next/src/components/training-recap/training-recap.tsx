@@ -38,7 +38,7 @@ import UserSelect from '@/ui/user-select';
 export default function TrainingRecap() {
   const screenSize = useScreenSize();
 
-  const { submitWorkloads } = useTrainingRecap();
+  const { workloads, submitWorkloads } = useTrainingRecap();
 
   const [openSelectedWorkloadModal, setOpenSelectedWorkloadModal] =
     useState(false);
@@ -91,6 +91,14 @@ export default function TrainingRecap() {
     setOpenSelectedWorkloadModal
   );
 
+  const uniqueUsers = Array.from(
+    new Set(workloads.map((w) => w.userId))
+  ).length;
+
+  const uniqueExercises = Array.from(
+    new Set(workloads.map((w) => w.exerciseId))
+  ).length;
+
   const isSmallSize = screenSize.isMobile;
 
   return (
@@ -107,7 +115,10 @@ export default function TrainingRecap() {
         px: 1,
       }}
     >
-      <TrainingRecapHeader />
+      <TrainingRecapHeader
+        uniqueUsers={uniqueUsers}
+        uniqueExercises={uniqueExercises}
+      />
       <Box
         width="100%"
         display="flex"
@@ -176,7 +187,10 @@ export default function TrainingRecap() {
               <Box display="flex" gap={0.5} alignItems="center">
                 <Group fontSize="small" />
                 <Typography variant="caption">
-                  {selectedAthletes.length} selected
+                  {selectedAthletes.length === 0
+                    ? 'All'
+                    : selectedAthletes.length}{' '}
+                  selected
                 </Typography>
               </Box>
             </Box>
@@ -230,7 +244,10 @@ export default function TrainingRecap() {
               <Box display="flex" gap={0.5} alignItems="center">
                 <FitnessCenter fontSize="small" />
                 <Typography variant="caption">
-                  {selectedExercises.length} selected
+                  {selectedExercises.length === 0
+                    ? 'All'
+                    : selectedExercises.length}{' '}
+                  selected
                 </Typography>
               </Box>
             </Box>
@@ -287,6 +304,12 @@ export default function TrainingRecap() {
             '& .MuiDataGrid-cell--editable': {
               backgroundColor: 'rgba(25, 118, 210, 0.04)', // subtle hint
             },
+            background: theme.palette.background.default,
+            // change header bg color
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: alpha(theme.palette.background.light, 0.8),
+            },
+            backgroundColor: theme.palette.background.default,
           }}
           // --- editing via model props ---
           editMode="row"
@@ -295,7 +318,7 @@ export default function TrainingRecap() {
           processRowUpdate={(row) => processRowUpdate(row, setUpdatedWorkloads)}
           onRowEditStop={handleRowEditStop}
           // --- deletion via selection model ---
-          rowSelectionModel={rowSelectionModel}
+          rowSelectionModel={rowSelectionModel ? rowSelectionModel : undefined}
           onRowSelectionModelChange={setRowSelectionModel}
         />
       </Box>

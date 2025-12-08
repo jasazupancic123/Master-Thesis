@@ -85,6 +85,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     await auth.signOut();
     await controller.logout();
     if (redirect) {
+      console.log('Redirecting to sign-in page after logout');
       window.location.href = LINK_SIGN_IN.href;
     }
     router.refresh();
@@ -174,6 +175,7 @@ export function withAuth<P extends object>(
     }
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
+      console.log('Unauthorized access, redirecting to sign-in page');
       router.replace(LINK_SIGN_IN.href);
       router.refresh();
       router.refresh();

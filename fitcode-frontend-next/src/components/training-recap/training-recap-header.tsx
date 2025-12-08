@@ -7,26 +7,24 @@ import { useCoachTraining } from '@/store/coach-training.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
 
-export default function TrainingRecapHeader() {
+interface Props {
+  uniqueUsers: number;
+  uniqueExercises: number;
+}
+
+export default function TrainingRecapHeader(props: Props) {
   const pathname = usePathname();
   const screenSize = useScreenSize();
 
   const { training, group } = useCoachTraining();
-  const { workloads } = useTrainingRecap();
+
+  const { uniqueUsers, uniqueExercises } = props;
 
   const componentId = pathname.split('/')[4];
 
   const component = training.components.find((comp) => comp.id === componentId);
 
   if (!component) return null;
-
-  const uniqueUsers = Array.from(
-    new Set(workloads.map((w) => w.userId))
-  ).length;
-
-  const uniqueExercises = Array.from(
-    new Set(workloads.map((w) => w.exerciseId))
-  ).length;
 
   const IconComponent = lib.common.component.getIcon(componentId);
 
