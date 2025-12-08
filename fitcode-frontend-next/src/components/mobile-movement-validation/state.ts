@@ -119,6 +119,7 @@ export const predictWebcam = async (state: {
   recordedRepsRef: RefObject<RecordedReps>;
   lastRecordedRepRef: RefObject<Rep | null>;
   currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
+  pxToCmRatioRef: RefObject<number | null>;
   exerciseDetectionDataRef: RefObject<ExerciseAiPrescriptionData | undefined>;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -162,6 +163,7 @@ export const predictWebcam = async (state: {
     recordedRepsRef,
     lastRecordedRepRef,
     currentInvalidAnglesRef,
+    pxToCmRatioRef,
     exerciseDetectionDataRef,
     currentSideMutexRef,
     videoRef,
@@ -405,6 +407,7 @@ export const predictWebcam = async (state: {
           exerciseDetectionData,
           currentSideMutexRef,
           currentInvalidAnglesRef,
+          pxToCmRatioRef,
           leftData: {
             side: 'L',
             repStateRef: repStateRefL,
@@ -691,4 +694,20 @@ export function getTempoObject(state: { recordedReps: Rep[] }): {
     con: avgTimeFromExtremeToEndS.toFixed(2) as unknown as number,
     idle: avgIdleTimeS.toFixed(2) as unknown as number,
   };
+}
+
+export function getAvgTotalRomCm(state: {
+  recordedReps: Rep[];
+}): number | null {
+  const { recordedReps } = state;
+
+  if (!recordedReps.length) return null;
+
+  let totalRomCm = 0;
+
+  for (const rep of recordedReps) {
+    totalRomCm += rep.totalRomCm || 0;
+  }
+
+  return totalRomCm / recordedReps.length;
 }
