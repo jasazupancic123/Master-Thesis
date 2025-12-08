@@ -121,6 +121,7 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
         photoURLBase64: input.photoURLBase64,
         sport: input.sport,
         wellness: { userId: input.uid, date: new Date() },
+        faceEmbedding: [],
       },
       { timestamps: true },
     );

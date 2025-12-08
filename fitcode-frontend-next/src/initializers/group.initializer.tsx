@@ -9,8 +9,9 @@ import { useMain } from '@/store/main.provider';
 export default function GroupInitializer({
   children,
 }: React.PropsWithChildren) {
-  const { groups, institution, trainings } = useMain();
+  const { institution, trainings } = useMain();
   const pathname = usePathname();
+  const groups = institution.groups || [];
 
   const institutionId = institution.id;
   const groupId = pathname.split('/')[2];

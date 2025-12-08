@@ -17,7 +17,7 @@ import { useMain } from '@/store/main.provider';
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;
 
 export default function useInstitutionMembers() {
-  const { users, setUsers, groups, setGroups } = useMain();
+  const { users, setUsers } = useMain();
   const { setFormData } = useRegisterMemberForm();
 
   const {
@@ -82,7 +82,6 @@ export default function useInstitutionMembers() {
     const prevState = {
       institution: structuredClone(selectedInstitution),
       selectedGroups: selectedGroups ? structuredClone(selectedGroups) : [],
-      groups: structuredClone(groups || []),
       users: structuredClone(users || []),
     };
 
@@ -118,19 +117,6 @@ export default function useInstitutionMembers() {
             members: prev!.members.filter((member) => member.id !== userId),
           }));
 
-        setGroups((prev) =>
-          prev.map((group) => {
-            if (!group.membersIds.includes(userId)) return group;
-            return {
-              ...group,
-              membersIds: group.membersIds.filter((id) => id !== userId),
-              members: (group.members || []).filter(
-                (member) => member.uid !== userId
-              ),
-            };
-          })
-        );
-
         setSelectedGroups((prev) =>
           prev.map((group) => {
             if (!group.membersIds.includes(userId)) return group;
@@ -147,7 +133,6 @@ export default function useInstitutionMembers() {
       (snapshot) => {
         setSelectedInstitution(snapshot.institution);
         setSelectedGroups(snapshot.selectedGroups);
-        setGroups(snapshot.groups);
         setUsers(snapshot.users);
       },
       async () => {
@@ -198,7 +183,6 @@ export default function useInstitutionMembers() {
         email,
         password,
         role: registerRole,
-        photoURL: '',
       });
 
       if (registerRole === UserRole.ATHLETE) {

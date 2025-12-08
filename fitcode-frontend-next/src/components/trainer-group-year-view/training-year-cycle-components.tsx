@@ -209,7 +209,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                   updateCycleState(
                                     { newCycle },
                                     {
-                                      useMain: mainContext,
                                       useGroup: groupContext,
                                       useSliderCycles: sortedCyclesContext,
                                     }
@@ -259,7 +258,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 updateCycleState(
                                   { newCycle },
                                   {
-                                    useMain: mainContext,
                                     useGroup: groupContext,
                                     useSliderCycles: sortedCyclesContext,
                                   }
@@ -313,7 +311,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                       updateCycleState(
                                         { newCycle },
                                         {
-                                          useMain: mainContext,
                                           useGroup: groupContext,
                                           useSliderCycles: sortedCyclesContext,
                                         }
@@ -358,7 +355,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                     updateCycleState(
                                       { newCycle },
                                       {
-                                        useMain: mainContext,
                                         useGroup: groupContext,
                                         useSliderCycles: sortedCyclesContext,
                                       }

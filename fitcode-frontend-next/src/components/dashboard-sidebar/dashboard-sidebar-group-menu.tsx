@@ -32,7 +32,6 @@ interface Props {
 
 export default function DashboardSidebarGroupMenu(props: Props) {
   const { role } = useAuthenticatedAuth();
-  const { groups } = useMain();
   const { selectedInstitution, selectedGroups, setSelectedGroups } =
     useDashboard();
 
@@ -49,7 +48,7 @@ export default function DashboardSidebarGroupMenu(props: Props) {
     if (!selectedInstitution) return;
 
     const filteredGroups = (selectedInstitution.groups || []).filter((g) =>
-      groups.some((sg) => sg.id === g.id)
+      selectedInstitution.groups?.some((sg) => sg.id === g.id)
     );
 
     setInstitutionAndTrainerGroups(filteredGroups);
@@ -133,7 +132,7 @@ export default function DashboardSidebarGroupMenu(props: Props) {
                 onClick={async () => {
                   setSelectedGroups(
                     (selectedInstitution?.groups || []).filter((g) =>
-                      groups.some((sg) => sg.id === g.id)
+                      selectedInstitution?.groups?.some((sg) => sg.id === g.id)
                     ) || []
                   );
                   setOpenGroupsMenu(false);

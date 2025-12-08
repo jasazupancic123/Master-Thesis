@@ -26,7 +26,7 @@ import MyModal from '@/ui/modal';
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { users, setGroups } = useMain();
+  const { users } = useMain();
   const {
     selectedInstitution,
     setSelectedInstitution,
@@ -74,11 +74,10 @@ export default function AddGroupModal(props: ModalProps) {
               groups: [...(selectedInstitution.groups || []), group],
             });
 
-            setGroups((prev) => [...prev, group]);
-
             setSelectedGroups((prev) =>
               prev.length === 1 ? [group] : [...prev, group]
             );
+
             setOpen(false);
             setShortName('');
             setGroupName('');

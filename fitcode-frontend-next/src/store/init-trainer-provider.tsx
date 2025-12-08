@@ -15,7 +15,6 @@ export default async function InitTrainerProvider({
 }: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
   if (!session) redirect(LINK_SIGN_IN.href);
 
   try {
@@ -23,7 +22,7 @@ export default async function InitTrainerProvider({
 
     const controller = Controller.getInstance();
     const { profile, institutions, exerciseAiPrescriptions } =
-      await controller.app.init({ session });
+      await controller.app.init(opts);
 
     if (lib.firebase.auth.isAthlete(profile.role))
       throw new Error('Not a trainer or manager');

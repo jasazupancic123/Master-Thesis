@@ -207,7 +207,6 @@ export default function MultiCycleSliderLayout(
                 },
               },
               {
-                useMain: mainContext,
                 useGroup: groupContext,
                 useSliderCycles: sliderCyclesContext,
               }

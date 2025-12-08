@@ -145,7 +145,12 @@ export class AuthService {
     }
   }
 
-  async upsert(data: CreateUserDto): Promise<FirebaseUser> {
+  async upsert(
+    data: Pick<
+      CreateUserDto,
+      'email' | 'displayName' | 'role' | 'photoURL' | 'password'
+    >,
+  ): Promise<FirebaseUser> {
     const { auth } = this.firebase;
     const { email, password, displayName, role, photoURL } = data;
 

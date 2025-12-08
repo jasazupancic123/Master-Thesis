@@ -16,7 +16,7 @@ import MyModal from '@/ui/modal';
 
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();
-  const { users, setGroups } = useMain();
+  const { users } = useMain();
   const { selectedGroups, setSelectedGroups, setSelectedInstitution } =
     useDashboard();
 
@@ -76,10 +76,6 @@ export default function EditGroupModal(props: ModalProps) {
                       g.id === group.id ? group : g
                     ),
                   }
-            );
-
-            setGroups((prev) =>
-              prev.map((g) => (g.id === group.id ? group : g))
             );
 
             setSelectedGroups((prev) =>

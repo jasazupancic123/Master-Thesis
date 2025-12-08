@@ -16,7 +16,6 @@ export default async function InitAthleteProvider({
 }: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
   if (!session) redirect(LINK_SIGN_IN.href);
 
   try {

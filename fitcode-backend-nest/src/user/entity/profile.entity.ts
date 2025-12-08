@@ -35,6 +35,8 @@ export class Profile extends TimestampEntity {
   faceEmbedding?: number[];
 
   @IsString()
+  @IsNotEmpty()
+  @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   photoURLBase64?: string;

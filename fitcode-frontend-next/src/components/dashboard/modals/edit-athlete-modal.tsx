@@ -39,7 +39,6 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const [file, setFile] = useState<File | null>(null);
 
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-
   if (!userToEdit) return;
 
   return (
@@ -62,9 +61,7 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
 
           url = uploadedUrl;
           base64 = uploadedBase64;
-
           onUserChange('photoURL', url);
-          onUserChange('photoURLBase64', base64);
         }
 
         const photoUrl = url || userToEdit.photoURL;
@@ -73,6 +70,7 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           force: url !== null || base64 !== undefined ? true : false,
           passedUser: {
             ...userToEdit,
+            photoURLBase64: base64,
             photoURL:
               typeof photoUrl === 'string' && photoUrl.length > 0
                 ? photoUrl
