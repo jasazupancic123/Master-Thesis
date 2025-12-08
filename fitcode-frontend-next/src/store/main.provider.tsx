@@ -39,11 +39,9 @@ export interface MainProviderProps extends React.PropsWithChildren {
 export interface IMainContext extends MainProviderProps {
   users: Fetch<User[]>;
   exercises: Exercise[];
-  groups: Group[];
   setUser: SetState<User>;
   setUsers: SetState<Fetch<User[]>>;
   setExercises: SetState<Exercise[]>;
-  setGroups: SetState<Group[]>;
   setActiveTraining: SetState<ActiveTraining | null>;
   setExerciseAiPrescriptions: SetState<ExerciseAiPrescription[]>;
   wellness: WellnessZScore[];
@@ -72,7 +70,6 @@ export default function MainProvider(props: MainProviderProps) {
 
   const [user, setUser] = useState(props.user);
   const [institution, setInstitution] = useState(_institution);
-  const [groups, setGroups] = useState<Group[]>(_institution.groups);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [trainings, setTrainings] = useState(initFetch<Training[]>([]));
   const [protocols, setProtocols] = useState(initFetch<TrainingProtocol[]>([]));
@@ -104,10 +101,6 @@ export default function MainProvider(props: MainProviderProps) {
   // map users on fetch
   useEffect(() => {
     if (!users.data.length) return;
-    setGroups(
-      institution.groups.map((g) => core.group.mapMembers(g, users.data))
-    );
-
     setInstitution((prev) => core.institution.mapUsers([prev], users.data)[0]);
   }, [users]);
 
@@ -213,8 +206,6 @@ export default function MainProvider(props: MainProviderProps) {
     exercises,
     setExercises,
     reloadExercises,
-    groups,
-    setGroups,
     setActiveTraining,
     exerciseAiPrescriptions,
     setExerciseAiPrescriptions,

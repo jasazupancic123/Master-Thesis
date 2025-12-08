@@ -29,10 +29,7 @@ interface UsersDataGridProps {
   filter?: (user: User) => boolean;
   displayColumns?: (keyof User | 'actions' | 'role')[];
   onRowClick?: (user: User) => void;
-  onRowUpdate?: (
-    userId: string,
-    changes: UpdateUser & { role?: UserRole }
-  ) => Promise<void>;
+  onRowUpdate?: (userId: string, changes: UpdateUser) => Promise<void>;
   selectMode?: boolean;
   initialSelection?: string[];
   onSelectToggle?: (user: User, selected: boolean) => void;

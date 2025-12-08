@@ -34,7 +34,7 @@ export default function FaceCapturePreviewsModal(
     setOpen,
   } = props;
 
-  const { user, customClaims, setCustomClaims } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
 
   const { setCaptures, setPreviews, previews, captures, setIsCapturingFace } =
     faceCaptureProps;
@@ -124,8 +124,6 @@ export default function FaceCapturePreviewsModal(
             if (!user) return;
 
             await uploadFaceCaptures({
-              customClaims,
-              setCustomClaims,
               captures,
               user,
               router,

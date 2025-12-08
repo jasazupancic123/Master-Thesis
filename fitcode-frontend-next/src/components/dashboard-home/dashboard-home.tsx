@@ -32,7 +32,7 @@ export default function DashboardHome() {
   const { activeTraining, trainings } = mainContext;
   const selectedGroups = dashboardContext
     ? dashboardContext.selectedGroups
-    : mainContext.groups;
+    : mainContext.institution.groups || [];
 
   const { componentItems, activeComponent } = useDashboardHomeComponents(
     selectedGroups,

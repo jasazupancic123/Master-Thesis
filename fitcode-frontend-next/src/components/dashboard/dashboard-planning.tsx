@@ -21,22 +21,25 @@ export default function DashboardGroups() {
   const router = useRouter();
 
   const { role } = useAuthenticatedAuth();
-  const { groups } = useMain();
+  const { institution } = useMain();
 
-  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups);
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>(
+    institution.groups || []
+  );
   const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
     if (search.trim() === '') {
-      setFilteredGroups(groups);
+      setFilteredGroups(institution.groups || []);
       return;
     }
     const lowerSearch = search.toLowerCase();
-    const filtered = groups.filter((group) =>
+    const filtered = institution.groups?.filter((group) =>
       group.name.toLowerCase().includes(lowerSearch)
     );
+
     setFilteredGroups(filtered);
-  }, [search, groups]);
+  }, [search, institution.groups]);
 
   const permissionOk =
     lib.firebase.auth.isTrainer(role) || lib.firebase.auth.isManager(role);

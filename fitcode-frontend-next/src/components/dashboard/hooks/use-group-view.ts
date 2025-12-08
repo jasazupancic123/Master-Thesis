@@ -4,7 +4,8 @@ import type { Group } from '@/core/institution/type/group.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useDashboardGroupView() {
-  const { groups } = useMain();
+  const { institution } = useMain();
+  const groups = institution.groups || [];
 
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);

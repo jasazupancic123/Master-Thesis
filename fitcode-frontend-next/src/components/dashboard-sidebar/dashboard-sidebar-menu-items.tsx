@@ -31,7 +31,7 @@ interface Props {
 export default function DashboardSidebarMenuItems(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { institutions, groups } = useMain();
+  const { institutions, institution } = useMain();
 
   const {
     filter,
@@ -169,7 +169,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
               setSelectedInstitution(institution);
               setSelectedGroups(
                 (institution.groups || []).filter((group) =>
-                  groups.some((g) => g.id === group.id)
+                  institution?.groups?.some((g) => g.id === group.id)
                 )
               );
               setOpenMenu(false);

@@ -14,14 +14,10 @@ export default function CoachTrainingInitializer({
   children,
 }: React.PropsWithChildren) {
   const pathname = usePathname();
-
-  const { groups } = useMain();
-
   const [state, setState] = useState<TrainingIdPageProps | null>(null);
-
   const { users, institution, exercises } = useMain();
-
   const controller = Controller.getInstance();
+  const groups = institution.groups || [];
 
   useEffect(() => {
     async function init() {

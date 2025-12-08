@@ -10,7 +10,6 @@ import { useMain } from '@/store/main.provider';
 
 export default function FlaggedAthletes() {
   const { users, wellness } = useMain();
-
   const { selectedGroups } = useDashboard();
 
   const LIMIT = 7; // max number of flagged athletes to show

@@ -105,6 +105,7 @@ export default function DashboardGroupCardUsers(props: Props) {
                     {user.email}
                   </Typography>
                 </Box>
+
                 {hoveredUser.userId === user.uid &&
                   hoveredUser.groupId === group.id && (
                     <Tooltip title="Remove from group">
@@ -138,11 +139,7 @@ export default function DashboardGroupCardUsers(props: Props) {
                           m: 0,
                         }}
                       >
-                        <Remove
-                          sx={{
-                            fontSize: 16,
-                          }}
-                        />
+                        <Remove sx={{ fontSize: 16 }} />
                       </IconButton>
                     </Tooltip>
                   )}

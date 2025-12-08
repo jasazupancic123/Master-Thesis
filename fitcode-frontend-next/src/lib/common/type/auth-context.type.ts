@@ -18,8 +18,6 @@ export type IAuthContext =
       status: 'authenticated';
       user: User;
       role: UserRole;
-      customClaims: CustomClaims;
-      setCustomClaims: (claims: CustomClaims) => void;
       setUser: (data: Partial<Pick<User, 'displayName' | 'photoURL'>>) => void;
       logout: (redirect?: boolean) => Promise<void>;
       handleUserChange: (user: User | null) => AuthState;

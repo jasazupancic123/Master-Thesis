@@ -36,11 +36,18 @@ export type User = Pick<
   };
 
 export type CreateUser = Pick<
-  FirebaseUser,
-  'email' | 'displayName' | 'photoURL'
+  User,
+  | 'email'
+  | 'displayName'
+  | 'photoURLBase64'
+  | 'sport'
+  | 'level'
+  | 'gender'
+  | 'birthDate'
+  | 'role'
 > & {
   password: string;
-  role: UserRole;
+  photoURL?: string;
 };
 
 export type UpdateUser = Partial<

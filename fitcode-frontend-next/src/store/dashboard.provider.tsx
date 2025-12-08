@@ -51,11 +51,11 @@ export function DashboardProvider(props: React.PropsWithChildren) {
   const { role } = useAuthenticatedAuth();
   const {
     users,
-    groups,
-    setGroups,
     institution: propsInstitution,
     institutions: propsInstitutions,
   } = useMain();
+
+  const groups = propsInstitution.groups || [];
 
   const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
@@ -65,36 +65,19 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
   const [selectedInstitution, setSelectedInstitution] =
     useState<Institution | null>(() => {
-      const institution = propsInstitutions.find(
-        (i) => i.id === propsInstitution.id
+      return (
+        propsInstitutions.find((i) => i.id === propsInstitution.id) || null
       );
-
-      if (!institution) return null;
-
-      institution.groups = groups.filter(
-        (g) => g.institutionId === institution.id
-      );
-
-      return institution;
     });
 
   useEffect(() => {
     if (!users.data.length) return;
 
     // map groups and instituton
-    // setInstitutions((prev) => core.institution.mapUsers(prev, users));
-
     setSelectedInstitution((prev) => {
       if (!prev) return prev;
-
       const institution = core.institution.mapUsers([prev], users.data)[0];
-      institution.groups = groups.filter(
-        (g) => g.institutionId === institution.id
-      );
-
-      for (const group of institution.groups)
-        core.group.mapMembers(group, users.data);
-
+      for (const group of groups) core.group.mapMembers(group, users.data);
       return institution;
     });
   }, [users]);
@@ -205,7 +188,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
           prev ? { ...prev, groups: (prev.groups || []).map(mapper) } : prev
         );
         setSelectedGroups((prev) => prev.map(mapper));
-        setGroups((prev) => prev.map(mapper));
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -332,9 +314,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         setSelectedGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
-        setGroups((prev) =>
-          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
-        );
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -387,9 +366,6 @@ export function DashboardProvider(props: React.PropsWithChildren) {
               }
         );
         setSelectedGroups((prev) =>
-          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
-        );
-        setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
       };

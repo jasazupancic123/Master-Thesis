@@ -11,8 +11,6 @@ import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 
 export async function uploadFaceCaptures(state: {
-  customClaims: CustomClaims;
-  setCustomClaims: (claims: CustomClaims) => void;
   captures: FaceCaptures;
   user: User;
   router: AppRouterInstance;

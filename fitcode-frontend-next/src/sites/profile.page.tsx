@@ -41,8 +41,7 @@ import FileUpload from '@/ui/file-upload';
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const { user, setUser, customClaims } = useAuthenticatedAuth();
-
+  const { user, setUser, role } = useAuthenticatedAuth();
   const router = useRouter();
   const screenSize = useScreenSize();
 
@@ -144,9 +143,9 @@ export default function ProfilePage() {
             sx={{ p: 0, m: 0 }}
             onClick={() => {
               if (
-                customClaims.role.includes(UserRole.TRAINER) ||
-                customClaims.role.includes(UserRole.ADMIN) ||
-                customClaims.role.includes(UserRole.MANAGER)
+                role === UserRole.TRAINER ||
+                role === UserRole.ADMIN ||
+                role === UserRole.MANAGER
               ) {
                 router.push(LINK_DASHBOARD.href);
               } else router.push(LINK_ATHLETE_HOME.href);

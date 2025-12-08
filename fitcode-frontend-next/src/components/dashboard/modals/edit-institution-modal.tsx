@@ -148,9 +148,9 @@ export default function EditInstitutionModal({
             </Tabs>
           </Box>
 
-          <CustomTabPanel value={tab} index={0}>
+          {/* <CustomTabPanel value={tab} index={0}>
             <UsersDataGrid users={users} onRowUpdate={() => updateUser()} />
-          </CustomTabPanel>
+          </CustomTabPanel> */}
 
           <CustomTabPanel value={tab} index={1}>
             <GroupsDataGrid

@@ -38,8 +38,8 @@ export const useDashboardUserEdit = () => useContext(DashboardUserEditContext)!;
 export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
-  const { users, setUsers, setGroups } = useMain();
-  const { setSelectedInstitution } = useDashboard();
+  const { users, setUsers } = useMain();
+  const { setSelectedInstitution, setSelectedGroups } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
@@ -102,7 +102,7 @@ export function DashboardUserEditProvider({
       setFilteredUsers(mapUsers);
       setCurrentUsers(mapUsers);
 
-      setGroups((prev) =>
+      setSelectedGroups((prev) =>
         prev.map((g) => core.group.mapMembers(g, mappedUsers))
       );
 

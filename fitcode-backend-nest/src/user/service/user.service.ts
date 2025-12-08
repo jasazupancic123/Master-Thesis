@@ -208,7 +208,7 @@ export class UserService implements Permission<Profile, Institution> {
       });
 
       await this.firebase.auth.setCustomUserClaims(user.uid, customClaims);
-      await this.createProfile({ uid: user.uid, email: input.email });
+      await this.createProfile({ ...input, uid: user.uid });
 
       created = { ...user, customClaims } as AuthUser;
     } catch (e) {
@@ -308,7 +308,7 @@ export class UserService implements Permission<Profile, Institution> {
     if (this.firebase.isAdmin(mainUser)) return true;
 
     // athlete can update only himself
-    if (this.firebase.isAthlete(userToUpdate))
+    if (this.firebase.isAthlete(mainUser))
       return mainUser.uid === userToUpdate.uid;
 
     // manager can update himself, trainers and athletes in his institutions

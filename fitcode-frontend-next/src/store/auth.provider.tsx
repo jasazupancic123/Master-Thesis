@@ -23,7 +23,6 @@ export type AuthState = {
   status: AuthStatus;
   user?: User;
   role?: UserRole;
-  customClaims?: CustomClaims;
 };
 
 export const AuthProvider = (props: React.PropsWithChildren) => {
@@ -36,7 +35,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     status: 'loading',
     user: undefined,
     role: undefined,
-    customClaims: undefined,
   });
 
   function setCustomClaims(claims: CustomClaims) {
@@ -61,7 +59,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
         status: 'unauthenticated',
         user: undefined,
         role: undefined,
-        customClaims: undefined,
       };
     } else {
       // user is logged in
@@ -80,6 +77,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     if (redirect) {
       window.location.href = LINK_SIGN_IN.href;
     }
+
     router.refresh();
     router.refresh();
   }
@@ -107,8 +105,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     auth.currentUser &&
     state.status === 'authenticated' &&
     state.user &&
-    state.role &&
-    state.customClaims
+    state.role
   )
     return (
       <AuthContext.Provider
@@ -116,8 +113,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
           status: 'authenticated',
           user: state.user!,
           role: state.role!,
-          customClaims: state.customClaims!,
-          setCustomClaims,
           handleUserChange,
           setUser,
           logout,
