@@ -16,8 +16,6 @@ import { useMain } from '@/store/main.provider';
 import { useTrainings } from '@/store/trainings.provider';
 
 export interface ITrainingInProgressUtilsCtx {
-  showUndoneSetsError: boolean;
-  setShowUndoneSetsError: SetState<boolean>;
   openCancelTrainingModal: boolean;
   setOpenCancelTrainingModal: SetState<boolean>;
   openFinishTrainingModal: boolean;
@@ -55,7 +53,6 @@ export function TrainingInProgressUtilsProvider({
 
   const { selectedTrackingMethod } = useAthleteHeader();
 
-  const [showUndoneSetsError, setShowUndoneSetsError] = useState(false);
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
@@ -75,7 +72,10 @@ export function TrainingInProgressUtilsProvider({
 
   const handlePauseTraining = async () => {
     const training = trainingInProgress?.training;
-    const component = trainingInProgress?.selectedComponent;
+    const component = trainingInProgress?.training.components.find(
+      (c) => c.id === trainingInProgress.componentId
+    );
+
     if (!training || !component) return;
 
     try {
@@ -108,7 +108,10 @@ export function TrainingInProgressUtilsProvider({
 
   const handleCompleteTraining = async () => {
     const training = trainingInProgress?.training;
-    const component = trainingInProgress?.selectedComponent;
+    const component = trainingInProgress?.training.components.find(
+      (c) => c.id === trainingInProgress.componentId
+    );
+
     if (!training || !component) return;
 
     try {
@@ -144,7 +147,13 @@ export function TrainingInProgressUtilsProvider({
 
   const handleEdit = () => {
     if (trainingInProgress) {
-      const isTrainingEmpty = trainingInProgress.supersets.every(
+      const component = trainingInProgress.training.components.find(
+        (c) => c.id === trainingInProgress.componentId
+      );
+
+      if (!component) return;
+
+      const isTrainingEmpty = component.supersets.every(
         (superset) => superset.exercises.length === 0
       );
 
@@ -165,8 +174,6 @@ export function TrainingInProgressUtilsProvider({
   };
 
   const value: ITrainingInProgressUtilsCtx = {
-    showUndoneSetsError,
-    setShowUndoneSetsError,
     openCancelTrainingModal,
     setOpenCancelTrainingModal,
     openFinishTrainingModal,

@@ -5,10 +5,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type { TrainingInProgressIndexDB } from '@/core/training/type/training-in-progress-indexdb';
-import type { Workload } from '@/core/training/type/workload.type';
 import { lib } from '@/lib';
 import { type SetState } from '@/lib/common/type/state.type';
 
@@ -19,21 +17,6 @@ interface ITrainingsContextProps {
   trainingInProgress: TrainingInProgress | null;
   setTrainingInProgress: SetState<TrainingInProgress | null>;
   isLoaded: boolean;
-  updateTrainingInProgress: (
-    exercise: TrainingExercise,
-    supersetIndex: number
-  ) => void;
-  updateWorkloadValue: (
-    id: {
-      trainingId: string;
-      componentId: string;
-      exerciseId: string;
-      supersetIndex: number;
-      setNumber: number;
-    },
-    field: keyof Workload,
-    value: Workload[keyof Workload]
-  ) => void;
 }
 
 const TrainingsContext = createContext<ITrainingsContextProps | undefined>(
@@ -50,7 +33,7 @@ export type ITrainingsContextDefined = Omit<
 };
 
 export const TrainingsProvider = (props: React.PropsWithChildren) => {
-  const { activeTraining, setActiveTraining } = useMain();
+  const { activeTraining } = useMain();
   const { children } = props;
 
   const [trainingInProgress, setTrainingInProgress] =
@@ -93,9 +76,9 @@ export const TrainingsProvider = (props: React.PropsWithChildren) => {
 
       if (storedTrainingInProgress) {
         setTrainingInProgress({
-          training: activeTraining,
-          selectedComponent: component,
           userId: user.uid,
+          training: activeTraining,
+          componentId: component.id,
           supersets: component.supersets,
           startOfTraining: storedTrainingInProgress?.startOfTraining || null,
           recordedSets: storedTrainingInProgress?.recordedSets || [],
@@ -133,81 +116,6 @@ export const TrainingsProvider = (props: React.PropsWithChildren) => {
     await lib.common.indexedDb.items.delete(STORED_TRAINING_IN_PROGRESS);
   };
 
-  const updateWorkloadValue = <K extends keyof Workload>(
-    id: {
-      trainingId: string;
-      componentId: string;
-      exerciseId: string;
-      supersetIndex: number;
-      setNumber: number;
-    },
-    field: K,
-    value: Workload[K]
-  ) => {
-    if (!activeTraining) return;
-
-    const workload = activeTraining.workloads.find(
-      (w) =>
-        w.trainingId === id.trainingId &&
-        w.componentId === id.componentId &&
-        w.exerciseId === id.exerciseId &&
-        w.supersetIndex === id.supersetIndex &&
-        w.setNumber === id.setNumber
-    );
-
-    if (!workload) return;
-
-    if (!(field in workload)) return;
-
-    // TS now knows this is safe:
-    workload[field] = value;
-
-    setActiveTraining((prev) =>
-      !prev
-        ? prev
-        : {
-            ...prev,
-            workloads: (prev.workloads || []).map((wl) =>
-              wl.id === workload.id ? workload : wl
-            ),
-          }
-    );
-  };
-
-  const updateTrainingInProgress = (
-    exercise: TrainingExercise,
-    supersetIndex: number
-  ) => {
-    if (!trainingInProgress) return;
-
-    const newTrainingInProgress: TrainingInProgress = {
-      ...trainingInProgress,
-      selectedComponent: {
-        ...trainingInProgress.selectedComponent,
-        supersets: trainingInProgress.selectedComponent.supersets.map(
-          (superset) => ({
-            ...superset,
-            exercises: superset.exercises.map((ex) =>
-              ex.id === exercise.id ? exercise : ex
-            ),
-          })
-        ),
-      },
-      supersets: trainingInProgress.supersets.map((superset, index) =>
-        index === supersetIndex
-          ? {
-              ...superset,
-              exercises: superset.exercises.map((ex) =>
-                ex.id === exercise.id ? exercise : ex
-              ),
-            }
-          : superset
-      ),
-    };
-
-    setTrainingInProgress(newTrainingInProgress);
-  };
-
   return (
     <TrainingsContext.Provider
       value={{
@@ -215,8 +123,6 @@ export const TrainingsProvider = (props: React.PropsWithChildren) => {
         trainingInProgress,
         setTrainingInProgress,
         isLoaded,
-        updateTrainingInProgress,
-        updateWorkloadValue,
       }}
     >
       {children}

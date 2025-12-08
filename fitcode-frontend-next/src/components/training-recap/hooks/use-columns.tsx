@@ -9,9 +9,9 @@ import { Avatar, Box, IconButton } from '@mui/material';
 import type { GridColDef, GridRowModesModel } from '@mui/x-data-grid';
 import { GridActionsCellItem, GridRowModes } from '@mui/x-data-grid';
 
+import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useTrainingRecap } from '@/store/training-recap.provider';
-import { Workload } from '@/core/training/type/workload.type';
 
 export default function useTrainingRecapColumns(
   rowModesModel: GridRowModesModel,

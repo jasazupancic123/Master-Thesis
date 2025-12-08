@@ -28,6 +28,15 @@ export default function EditableTextField({
   const [value, setValue] = useState(propValue);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const handleClick = () => setEditing(true);
+
+  const handleSave = async () => {
+    setEditing(false);
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== propValue) await onChange?.(trimmed);
+    else setValue(propValue);
+  };
+
   useEffect(() => {
     setValue(propValue);
   }, [propValue]);
@@ -48,15 +57,6 @@ export default function EditableTextField({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [editing, value, propValue, onFocusOutSave]);
-
-  const handleClick = () => setEditing(true);
-
-  const handleSave = async () => {
-    setEditing(false);
-    const trimmed = value.trim();
-    if (trimmed && trimmed !== propValue) await onChange?.(trimmed);
-    else setValue(propValue);
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

@@ -27,16 +27,9 @@ export function handleInitTrainingInProgressComponent(context: {
     newTrainingInProgress.startOfTraining = dayjs();
   }
 
-  if (!newTrainingInProgress.supersets) {
-    newTrainingInProgress.supersets =
-      newTrainingInProgress.selectedComponent.supersets;
-  }
-
-  const component =
-    newTrainingInProgress.selectedComponent ||
-    newTrainingInProgress.training.components.find(
-      (c) => c.id === newTrainingInProgress.selectedComponent?.id
-    );
+  const component = newTrainingInProgress.training.components.find(
+    (c) => c.id === newTrainingInProgress.componentId
+  );
 
   if (!component) return;
 

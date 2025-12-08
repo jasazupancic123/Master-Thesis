@@ -6,8 +6,6 @@ import {
   IndeterminateCheckBox,
   KeyboardArrowDown,
   KeyboardArrowRight,
-  PlayCircle,
-  StopCircle,
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
@@ -170,84 +168,34 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   )}
                 </>
                 {training && dayjs(training.from).isSame(dayjs(), 'day') && (
-                  <>
-                    <Tooltip title="Start component">
-                      <IconButton
-                        sx={{ p: 0, m: 0 }}
-                        onClick={async () => {
-                          if (!training || !component) return;
+                  <Tooltip title="Create station">
+                    <IconButton
+                      sx={{ p: 0, m: 0 }}
+                      onClick={async () => {
+                        if (!training || !component) return;
 
-                          handleApiRequest(
-                            router,
-                            () =>
-                              TrainingController.getInstance().startTrainingComponent(
-                                training.id,
-                                component.id
-                              ),
-                            () => {
-                              toast.success('Component started successfully.');
-                            },
-                            undefined,
-                            'Failed to start component.'
-                          );
-                        }}
-                      >
-                        <PlayCircle fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="End component">
-                      <IconButton
-                        sx={{ p: 0, m: 0 }}
-                        onClick={() => {
-                          if (!training || !component) return;
+                        handleApiRequest(
+                          router,
+                          () =>
+                            TrainingController.getInstance().startTrainingComponent(
+                              training.id,
+                              component.id
+                            ),
+                          () => {
+                            toast.success('Component started successfully.');
 
-                          handleApiRequest(
-                            router,
-                            () =>
-                              TrainingController.getInstance().completeTrainingComponent(
-                                training.id,
-                                component.id
-                              ),
-                            () => {
-                              toast.success('Component ended successfully.');
-                            },
-                            undefined,
-                            'Failed to end component.'
-                          );
-                        }}
-                      >
-                        <StopCircle fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Create station">
-                      <IconButton
-                        sx={{ p: 0, m: 0 }}
-                        onClick={async () => {
-                          if (!training || !component) return;
-
-                          handleApiRequest(
-                            router,
-                            () =>
-                              TrainingController.getInstance().startTrainingComponent(
-                                training.id,
-                                component.id
-                              ),
-                            () => {
-                              toast.success('Component started successfully.');
-
-                              router.push(
-                                `/training/${training.id}/component/${component.id}/station`
-                              );
-                            },
-                            undefined,
-                            'Failed to create station.'
-                          );
-                        }}
-                      >
-                        <Dock fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </>
+                            router.push(
+                              `/training/${training.id}/component/${component.id}/station`
+                            );
+                          },
+                          undefined,
+                          'Failed to create station.'
+                        );
+                      }}
+                    >
+                      <Dock fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 )}
               </Box>
             )}

@@ -20,7 +20,7 @@ export default function useRecoveryTime(
   const { activeTraining } = useMain();
 
   const { trainingInProgress } = useTrainings() || {};
-  const { setIndex, supersetIndex } = useTrainingInProgress() || {};
+  const { setIndex, supersetIndex, workloads } = useTrainingInProgress() || {};
 
   const [lastCompletedWorkload, setLastCompletedWorkload] = useState<
     Workload | undefined
@@ -37,15 +37,15 @@ export default function useRecoveryTime(
     const lastCompletedWorkload = ExerciseSetService.findLastCompletedWorkload(
       {
         trainingId: trainingInProgress.training.id,
-        componentId: trainingInProgress.selectedComponent.id,
+        componentId: trainingInProgress.componentId,
         exerciseId: exercise.id,
         supersetIndex: supersetIndex,
       },
-      activeTraining.workloads
+      workloads
     );
 
     setLastCompletedWorkload(lastCompletedWorkload);
-  }, [trainingInProgress, activeTraining]);
+  }, [trainingInProgress, activeTraining, workloads]);
 
   const isRecTime = selected === ExerciseParamFieldEnum.REC_TIME;
 
@@ -87,5 +87,5 @@ export default function useRecoveryTime(
     return () => {
       clearInterval(intervalId);
     };
-  }, [lastCompletedWorkload, isRecTime, exercise, setIndex]);
+  }, [lastCompletedWorkload, isRecTime, exercise, setIndex, workloads]);
 }
