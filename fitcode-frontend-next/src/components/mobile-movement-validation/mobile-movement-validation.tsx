@@ -16,7 +16,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import TempoChart from '../charts/tempo/tempo-chart';
-import { updateTrainingExerciseWithAI } from '../training-in-progress/actions/actions-exercise';
 import { finishSet } from '../training-in-progress/actions/actions-exercise-set';
 import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
@@ -24,7 +23,6 @@ import {
   enableCam,
   getStatusMessage,
   getTempoObject,
-  getTempoString,
   predictWebcam,
   setupVideoAndContex,
 } from './state';
@@ -135,7 +133,7 @@ export default function MobileMovementValidation(
     stationViewProps,
   } = props;
 
-  const { handleUpsertSet } = trainingInProgressContext || {};
+  const { workloads, handleUpsertSet } = trainingInProgressContext || {};
 
   // If stationViewProps is undefined, then we are in normal athlete view, so use authenticated user
   const user =
@@ -546,7 +544,6 @@ export default function MobileMovementValidation(
     // });
 
     // Coach training station view - handle set finish differently
-
     if (stationViewProps) {
       if (!setSelectedTrackingMethod || !selectedExercise) return;
 
@@ -591,20 +588,20 @@ export default function MobileMovementValidation(
           componentId,
           router,
           handleUpsertSetFromStationView,
-          workloadInput: {
-            reps: recordedRepsRef.current.left.length,
-            repsR: recordedRepsRef.current.right
-              ? recordedRepsRef.current.right.length
-              : undefined,
-            tempoEcc: tempoL ? tempoL.ecc : undefined,
-            tempoIso: tempoL ? tempoL.iso : undefined,
-            tempoCon: tempoL ? tempoL.con : undefined,
-            tempoIdle: tempoL ? tempoL.idle : undefined,
-            tempoEccR: tempoR ? tempoR.ecc : undefined,
-            tempoIsoR: tempoR ? tempoR.iso : undefined,
-            tempoConR: tempoR ? tempoR.con : undefined,
-            tempoIdleR: tempoR ? tempoR.idle : undefined,
-          },
+        },
+        workloadInput: {
+          reps: recordedRepsRef.current.left.length,
+          repsR: recordedRepsRef.current.right
+            ? recordedRepsRef.current.right.length
+            : undefined,
+          tempoEcc: tempoL ? tempoL.ecc : undefined,
+          tempoIso: tempoL ? tempoL.iso : undefined,
+          tempoCon: tempoL ? tempoL.con : undefined,
+          tempoIdle: tempoL ? tempoL.idle : undefined,
+          tempoEccR: tempoR ? tempoR.ecc : undefined,
+          tempoIsoR: tempoR ? tempoR.iso : undefined,
+          tempoConR: tempoR ? tempoR.con : undefined,
+          tempoIdleR: tempoR ? tempoR.idle : undefined,
         },
         isAiRecorded: true,
         workloads: workloads || [],
@@ -672,11 +669,11 @@ export default function MobileMovementValidation(
         }
       }
 
-      const tempoL = getTempoString({
+      const tempoL = getTempoObject({
         recordedReps: recordedRepsRef.current.left,
       });
       const tempoR = recordedRepsRef.current.right
-        ? getTempoString({
+        ? getTempoObject({
             recordedReps: recordedRepsRef.current.right,
           })
         : null;
@@ -808,17 +805,6 @@ export default function MobileMovementValidation(
         currentRecordedSets.push(recordedSet);
       }
 
-      updateTrainingExerciseWithAI(
-        recordedRepsRef.current.left.length,
-        recordedRepsRef.current.right?.length,
-        tempoL,
-        tempoR,
-        selectedExercise,
-        true,
-        { ...trainingContext, trainingInProgress },
-        trainingInProgressContext
-      );
-
       await finishSet({
         userId: user.uid,
         exercise: selectedExercise,
@@ -829,7 +815,21 @@ export default function MobileMovementValidation(
         setTrainingInProgress,
         handleUpsertSet,
         isAiRecorded: true,
-        workloads: activeTraining?.workloads || [],
+        workloads,
+        workloadInput: {
+          reps: recordedRepsRef.current.left.length,
+          repsR: recordedRepsRef.current.right
+            ? recordedRepsRef.current.right.length
+            : undefined,
+          tempoEcc: tempoL ? tempoL.ecc : undefined,
+          tempoIso: tempoL ? tempoL.iso : undefined,
+          tempoCon: tempoL ? tempoL.con : undefined,
+          tempoIdle: tempoL ? tempoL.idle : undefined,
+          tempoEccR: tempoR ? tempoR.ecc : undefined,
+          tempoIsoR: tempoR ? tempoR.iso : undefined,
+          tempoConR: tempoR ? tempoR.con : undefined,
+          tempoIdleR: tempoR ? tempoR.idle : undefined,
+        },
         imagesL: recordedRepsRef.current.left
           .map((rep) => {
             if (!rep.extremumImageUrl) return null;

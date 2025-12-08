@@ -1,5 +1,15 @@
 'use client';
 
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useState } from 'react';
@@ -9,11 +19,12 @@ import { handleOnDragEnd } from './actions/actions-dnd';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
-import TrainingMembersSubgroup from './training-members-subgroups';
+import TrainingMembersSubgroup from './training-members-subgroup';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { User } from '@/core/user/type/user.type';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -36,11 +47,44 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
   const { members, sortedMembers, item } = trainingMembersContext;
   const { subgroups } = trainingMembersSubgroupsContext;
+
+  const [activeMember, setActiveMember] = useState<User | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 100, tolerance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
+
   if (selectedAthlete) return null;
 
   return (
-    <>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={pointerWithin}
+      onDragStart={(e) => {
+        const user = users.data.find((m) => m.uid === e.active.id);
+        if (user) setActiveMember(user);
+      }}
+      onDragEnd={(e: DragEndEvent) => {
+        handleOnDragEnd(e, {
+          useMain: mainContext,
+          useGroup: groupContext,
+          useTrainerDayViewContext: trainerDayViewContext,
+          useTrainingMembersSubgroups: trainingMembersSubgroupsContext,
+          useTrainingMembers: trainingMembersContext,
+        });
+
+        setActiveMember(null);
+      }}
+    >
       <Stack
         direction="row"
         px={2}
@@ -71,21 +115,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             overflow: 'visible',
           }}
         >
-          <Box
-            onDragEnd={(result) =>
-              handleOnDragEnd(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                { result: result as any },
-                {
-                  useMain: mainContext,
-                  useGroup: groupContext,
-                  useTrainerDayViewContext: trainerDayViewContext,
-                  useTrainingMembersSubgroups: trainingMembersSubgroupsContext,
-                  useTrainingMembers: trainingMembersContext,
-                }
-              )
-            }
-          >
+          <Box>
             {/* No members to display*/}
             {!training && sortedMembers.length === 0 && (
               <Typography variant="caption" color="textSecondary">
@@ -180,6 +210,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         anchorEl={anchorEl}
                         setAnchorEl={setAnchorEl}
                         trainingMembersContext={trainingMembersContext}
+                        activeMember={activeMember}
                       />
                     );
                   })}
@@ -187,6 +218,18 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           </Box>
         </Stack>
       </Stack>
-    </>
+      <DragOverlay>
+        {activeMember ? (
+          <Avatar
+            src={activeMember.photoURL || USER_AVATAR_IMG_URL}
+            sx={{
+              width: 50,
+              height: 50,
+              filter: 'grayscale(100%)',
+            }}
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

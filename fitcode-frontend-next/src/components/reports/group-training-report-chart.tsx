@@ -50,6 +50,39 @@ export default function GroupTrainingReportChart({
       ? `${group.id}_${selectedComponentId}`
       : group.id;
 
+    const updateData = (attendanceData: AttendanceData) => {
+      setData(
+        members.map((m) => {
+          const filterByUser = (t: Training) => t.membersIds.includes(m.uid);
+          const filterByDate = (t: Training) =>
+            isBefore(t.from, endOfDay(new Date()));
+
+          const attended = attendanceData[m.uid]?.attended || 0;
+          const prescribed = trainings.data.filter((t) =>
+            selectedComponentId
+              ? filterByUser(t) &&
+                filterByDate(t) &&
+                t.components.some((c) => c.id === selectedComponentId)
+              : filterByUser(t) && filterByDate(t)
+          ).length;
+
+          const attendance =
+            prescribed > 0 ? Math.round((attended / prescribed) * 100) : 0;
+
+          return {
+            attended,
+            realization: lib.common.number.roundToDecimal(
+              (attendanceData[m.uid]?.realization || 0) * 100,
+              2
+            ),
+            name: m.displayName || m.email || m.uid,
+            prescribed,
+            attendance,
+          };
+        })
+      );
+    };
+
     if (cache.has(key)) {
       updateData(cache.get(key)!);
       return;
@@ -69,39 +102,6 @@ export default function GroupTrainingReportChart({
 
     fetchAttendance();
   }, [selectedGroups, selectedComponentId]);
-
-  const updateData = (attendanceData: AttendanceData) => {
-    setData(
-      members.map((m) => {
-        const filterByUser = (t: Training) => t.membersIds.includes(m.uid);
-        const filterByDate = (t: Training) =>
-          isBefore(t.from, endOfDay(new Date()));
-
-        const attended = attendanceData[m.uid]?.attended || 0;
-        const prescribed = trainings.data.filter((t) =>
-          selectedComponentId
-            ? filterByUser(t) &&
-              filterByDate(t) &&
-              t.components.some((c) => c.id === selectedComponentId)
-            : filterByUser(t) && filterByDate(t)
-        ).length;
-
-        const attendance =
-          prescribed > 0 ? Math.round((attended / prescribed) * 100) : 0;
-
-        return {
-          attended,
-          realization: lib.common.number.roundToDecimal(
-            (attendanceData[m.uid]?.realization || 0) * 100,
-            2
-          ),
-          name: m.displayName || m.email || m.uid,
-          prescribed,
-          attendance,
-        };
-      })
-    );
-  };
 
   return (
     <BarChart

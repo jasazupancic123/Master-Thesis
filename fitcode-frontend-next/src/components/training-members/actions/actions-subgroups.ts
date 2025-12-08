@@ -157,6 +157,24 @@ const handleAddSubgroup = (
     );
   });
 
+  updatedSubgroups = updatedSubgroups.map((subgroup) => {
+    if (!subgroup.membersIds || subgroup.id === newSubgroup.id) return subgroup;
+
+    const filteredMemberIds = subgroup.membersIds.filter(
+      (id) => !createSubgroup.membersIds.includes(id)
+    );
+
+    const filteredMembers = (subgroup.members || []).filter(
+      (m) => !createSubgroup.membersIds.includes(m.uid)
+    );
+
+    return {
+      ...subgroup,
+      membersIds: filteredMemberIds,
+      members: filteredMembers,
+    };
+  });
+
   const newComponent = { ...component, subgroups: updatedSubgroups };
 
   setSelectedAthlete(undefined);

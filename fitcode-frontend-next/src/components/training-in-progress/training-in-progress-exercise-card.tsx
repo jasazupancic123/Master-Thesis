@@ -35,6 +35,7 @@ export default function TrainingInProgressExerciseCard() {
     supersetIndex,
     setIndex,
     setSetIndex,
+    workloads,
   } = trainingInProgressContext;
   const { trainingInProgress } = trainingContext;
 
@@ -53,7 +54,7 @@ export default function TrainingInProgressExerciseCard() {
       selectedTrackingMethod={selectedTrackingMethod}
       setSelectedTrackingMethod={setSelectedTrackingMethod}
       trainingId={trainingInProgress.training.id}
-      componentId={trainingInProgress.selectedComponent.id}
+      componentId={trainingInProgress.componentId}
       supersetIndex={supersetIndex!}
       setIndex={setIndex!}
     />
@@ -191,12 +192,12 @@ export default function TrainingInProgressExerciseCard() {
                 ? ExerciseSetService.isSetCompleted(
                     {
                       trainingId: trainingInProgress.training.id,
-                      componentId: trainingInProgress.selectedComponent.id,
+                      componentId: trainingInProgress.componentId,
                       exerciseId: selectedExercise.id,
                       supersetIndex: supersetIndex,
                       setIndex: s.setNumber - 1,
                     },
-                    activeTraining.workloads
+                    workloads
                   )
                 : false;
 

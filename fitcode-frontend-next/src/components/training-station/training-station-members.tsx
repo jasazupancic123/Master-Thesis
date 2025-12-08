@@ -10,7 +10,15 @@ import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function TrainingStationMembers() {
   const { users: allUsers } = useMain();
-  const { station, selectedUser, setSelectedUser } = useCoachTrainingStation();
+  const {
+    individualTrainings,
+    station,
+    selectedUser,
+    selectedExercise,
+    setSelectedUser,
+    setSelectedSetIndex,
+    workloads,
+  } = useCoachTrainingStation();
 
   const users = allUsers.data.filter((u) =>
     station?.users.some((su) => su.uid === u.uid)
@@ -83,7 +91,35 @@ export default function TrainingStationMembers() {
                     cursor: 'pointer',
                     filter: 'grayscale(100%)',
                   }}
-                  onClick={() => setSelectedUser(user)}
+                  onClick={() => {
+                    setSelectedUser(user);
+
+                    const individualTraining = individualTrainings.find(
+                      (it) => it.userId === user.uid
+                    );
+
+                    if (!individualTraining) return;
+
+                    const individualExercise = individualTraining.components
+                      .flatMap((c) => c.supersets.flatMap((s) => s.exercises))
+                      .find((ie) => ie.id === selectedExercise?.id);
+
+                    if (!individualExercise) return;
+
+                    const userExerciseWorkloads = workloads.filter(
+                      (w) =>
+                        w.userId === user.uid &&
+                        w.exerciseId === selectedExercise?.id
+                    );
+
+                    const completedSets =
+                      userExerciseWorkloads.length >=
+                      individualExercise.sets.length
+                        ? 0
+                        : userExerciseWorkloads.length;
+
+                    setSelectedSetIndex(completedSets);
+                  }}
                 />
               </Box>
 
