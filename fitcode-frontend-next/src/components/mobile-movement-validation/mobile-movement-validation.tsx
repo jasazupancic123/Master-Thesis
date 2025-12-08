@@ -470,8 +470,7 @@ export default function MobileMovementValidation(
       poseLandmarker,
       videoRef,
       setError,
-      looserConstraints:
-        POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
+      looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
       predictWebcam: async () =>
         await predictWebcam({
           statusRef,
@@ -515,7 +514,6 @@ export default function MobileMovementValidation(
           finishAiDetection,
           setRepCount,
           setStartedExitTimeout,
-          reloadModel,
         }),
     });
   }, [poseLandmarker]);
@@ -920,35 +918,6 @@ export default function MobileMovementValidation(
       drawingUtilsRef,
     });
   }, [canvasRef]);
-
-  const reloadModel = async () => {
-    if (POSE_DETECTION_CONSTANTS.DISABLE_MODEL_RELOAD) return;
-
-    if (reloadingModelRef.current === true) return;
-
-    if (
-      loadedPoseLandmarkerTimestampRef.current &&
-      Math.abs(
-        dayjs().diff(loadedPoseLandmarkerTimestampRef.current, 'seconds')
-      ) < POSE_DETECTION_CONSTANTS.TIME_BETWEEN_MODEL_RELOAD_S
-    ) {
-      return;
-    }
-
-    setPoseLandmarker(null);
-
-    reloadingModelRef.current = true;
-
-    await lib.common.generic.sleep(2); // wait for 2 secodns before reloading
-
-    const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef, true);
-
-    keypointHistoryRef.current.clear();
-
-    setPoseLandmarker(lm);
-
-    reloadingModelRef.current = false;
-  };
 
   useEffect(() => {
     // Post save images to firestore

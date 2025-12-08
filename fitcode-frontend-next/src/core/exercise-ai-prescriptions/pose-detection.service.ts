@@ -45,7 +45,6 @@ export class PoseDetectionService {
     doItTimestamp: RefObject<Date | null>;
     reloadingModelRef: RefObject<boolean>;
     POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
-    reloadModel: () => Promise<void>;
   }) {
     const {
       statusRef,
@@ -64,7 +63,6 @@ export class PoseDetectionService {
       doItTimestamp,
       reloadingModelRef,
       POSE_DETECTION_CONSTANTS,
-      reloadModel,
     } = state;
 
     const initStatuses =
@@ -95,7 +93,6 @@ export class PoseDetectionService {
         doItTimestamp,
         reloadingModelRef,
         POSE_DETECTION_CONSTANTS,
-        reloadModel,
       });
 
       if (!validStatus) return;
