@@ -7,6 +7,7 @@ import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { User } from '@/core/user/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   member: User;
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function DashboardInstitutionMember(props: Props) {
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
 
   const { member, isBeingDragged, isDragging } = props;
 
@@ -23,7 +24,7 @@ export default function DashboardInstitutionMember(props: Props) {
     id: member.uid,
   });
 
-  const isTrainer = selectedInstitution?.members?.some(
+  const isTrainer = institution?.members?.some(
     (m) => m.id === member.uid && m.role === UserRole.TRAINER
   );
 

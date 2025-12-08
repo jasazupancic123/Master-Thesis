@@ -26,21 +26,14 @@ import MyModal from '@/ui/modal';
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { users } = useMain();
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    setDetectedChanges,
-    setSelectedGroups,
-  } = useDashboard();
+  const { users, institution, setInstitution } = useMain();
+  const { setDetectedChanges, setSelectedGroups } = useDashboard();
 
   const { open, setOpen } = props;
 
   const [groupName, setGroupName] = useState('');
   const [shortName, setShortName] = useState('');
   const [owner, setOwner] = useState<User | null>(null);
-
-  if (!selectedInstitution) return null;
 
   return (
     <MyModal
@@ -60,7 +53,7 @@ export default function AddGroupModal(props: ModalProps) {
           shortName: shortName,
           membersIds: [],
           trainerIds: [owner.uid],
-          institutionId: selectedInstitution.id,
+          institutionId: institution.id,
         };
 
         handleApiRequest(
@@ -69,9 +62,9 @@ export default function AddGroupModal(props: ModalProps) {
           (group) => {
             group = core.group.mapMembers(group, users.data);
 
-            setSelectedInstitution({
-              ...selectedInstitution,
-              groups: [...(selectedInstitution.groups || []), group],
+            setInstitution({
+              ...institution,
+              groups: [...(institution.groups || []), group],
             });
 
             setSelectedGroups((prev) =>
@@ -125,14 +118,14 @@ export default function AddGroupModal(props: ModalProps) {
             value={owner?.uid || ''}
             onChange={(e) => {
               const trainerId = e.target.value;
-              const selectedTrainer = selectedInstitution.trainers.find(
+              const selectedTrainer = institution.trainers.find(
                 (trainer) => trainer.uid === trainerId
               );
               setOwner(selectedTrainer || null);
             }}
             sx={{ mb: 2, minWidth: 200 }}
           >
-            {(selectedInstitution?.trainers || []).map((trainer) => (
+            {(institution?.trainers || []).map((trainer) => (
               <MenuItem key={trainer.uid} value={trainer.uid}>
                 <Typography>{trainer.displayName}</Typography>
               </MenuItem>

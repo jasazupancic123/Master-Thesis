@@ -32,8 +32,8 @@ interface Props {
 
 export default function DashboardSidebarGroupMenu(props: Props) {
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution, selectedGroups, setSelectedGroups } =
-    useDashboard();
+  const { institution } = useMain();
+  const { selectedGroups, setSelectedGroups } = useDashboard();
 
   const { achorElRef, openGroupsMenu, setOpenGroupsMenu } = props;
 
@@ -45,14 +45,12 @@ export default function DashboardSidebarGroupMenu(props: Props) {
     useState<Group[]>([]);
 
   useEffect(() => {
-    if (!selectedInstitution) return;
-
-    const filteredGroups = (selectedInstitution.groups || []).filter((g) =>
-      selectedInstitution.groups?.some((sg) => sg.id === g.id)
+    const filteredGroups = (institution.groups || []).filter((g) =>
+      institution.groups?.some((sg) => sg.id === g.id)
     );
 
     setInstitutionAndTrainerGroups(filteredGroups);
-  }, [selectedInstitution]);
+  }, [institution]);
 
   const groupActions = [
     lib.firebase.auth.isManager(role)
@@ -131,8 +129,8 @@ export default function DashboardSidebarGroupMenu(props: Props) {
                 value={DASHBOARD_ALL_GROUPS_SELECTED_ID}
                 onClick={async () => {
                   setSelectedGroups(
-                    (selectedInstitution?.groups || []).filter((g) =>
-                      selectedInstitution?.groups?.some((sg) => sg.id === g.id)
+                    (institution?.groups || []).filter((g) =>
+                      institution?.groups?.some((sg) => sg.id === g.id)
                     ) || []
                   );
                   setOpenGroupsMenu(false);

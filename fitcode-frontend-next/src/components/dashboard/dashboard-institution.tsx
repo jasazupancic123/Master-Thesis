@@ -38,7 +38,7 @@ export default function DashboardInstitution() {
     onHoverUser,
   } = useDashboardUserEdit();
 
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
   const { removeUser } = useInstitutionMembers();
 
   const [search, setSearch] = useState('');
@@ -58,15 +58,15 @@ export default function DashboardInstitution() {
   useEffect(() => {
     const current =
       selectedView === AthletesTrainers.ATHLETES
-        ? selectedInstitution?.athletes
-        : (selectedInstitution?.trainers ?? []);
+        ? institution?.athletes
+        : (institution?.trainers ?? []);
 
     if (!current) return;
     setSearch('');
     setCurrentUsers(current);
     setFilteredUsers(current);
     setLoading(false);
-  }, [selectedView, selectedInstitution]);
+  }, [selectedView, institution]);
 
   return (
     <Box
@@ -285,9 +285,9 @@ export default function DashboardInstitution() {
         )}
       </Box>
 
-      {selectedInstitution && (
+      {institution && (
         <EditInstitutionModal
-          institution={selectedInstitution}
+          institution={institution}
           open={openEditInstitutionModal}
           onClose={() => setOpenEditInstitutionModal(false)}
         />
@@ -298,7 +298,7 @@ export default function DashboardInstitution() {
         setOpen={setOpenEditAthleteModal}
       />
 
-      {selectedInstitution && (
+      {institution && (
         <ImportWorkloadsModal
           open={openImportWorkloadsModal}
           setOpen={setOpenImportWorkloadsModal}

@@ -31,22 +31,14 @@ interface Props {
 export default function DashboardSidebarMenuItems(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { institutions, institution } = useMain();
+  const { institutions, institution, setInstitution } = useMain();
 
-  const {
-    filter,
-    setFilter,
-    selectedInstitution,
-    setSelectedInstitution,
-    setSelectedGroups,
-  } = useDashboard();
+  const { filter, setFilter, setSelectedGroups } = useDashboard();
 
   const { setDrawerOpen } = props;
 
   const anchorElRef = useRef<HTMLDivElement | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
-
-  if (!selectedInstitution) return null;
 
   const dashboardItems: ILink[] = DASHBOARD_VIEWS(role!).concat(
     lib.firebase.auth.isManager(role) || lib.firebase.auth.isAdmin(role)
@@ -54,10 +46,10 @@ export default function DashboardSidebarMenuItems(props: Props) {
           {
             id: INSTITUTION_PAGE_ID,
             href: '',
-            label: selectedInstitution.name,
+            label: institution.name,
             icon: (
               <Image
-                src={selectedInstitution.imageUrl}
+                src={institution.imageUrl}
                 alt="Institution"
                 unoptimized={lib.common.env.unoptimizeImages()}
                 width={19}
@@ -146,51 +138,6 @@ export default function DashboardSidebarMenuItems(props: Props) {
           </Box>
         );
       })}
-
-      <Menu
-        anchorEl={anchorElRef.current}
-        open={openMenu && lib.firebase.auth.isAdmin(role)}
-        onClose={() => {
-          setOpenMenu(false);
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-      >
-        {institutions.map((institution) => (
-          <MenuItem
-            key={institution.id}
-            onClick={() => {
-              setSelectedInstitution(institution);
-              setSelectedGroups(
-                (institution.groups || []).filter((group) =>
-                  institution?.groups?.some((g) => g.id === group.id)
-                )
-              );
-              setOpenMenu(false);
-            }}
-          >
-            <Box
-              width="100%"
-              display="flex"
-              alignItems="center"
-              justifyContent="flex-start"
-              gap={1}
-            >
-              <Avatar
-                src={institution.imageUrl || ''}
-                sx={{ width: 25, height: 25 }}
-              />
-              <Typography>{institution.name}</Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Menu>
     </Box>
   );
 }
