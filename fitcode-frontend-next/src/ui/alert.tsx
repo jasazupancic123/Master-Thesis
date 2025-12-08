@@ -49,6 +49,7 @@ export default function Alert({ type, errorMessage, color }: Props) {
         <Button
           variant="contained"
           onClick={() => {
+            console.log('Navigating to sign-in page from Alert component');
             router.push(LINK_SIGN_IN.href);
             router.refresh();
             router.refresh();
