@@ -15,7 +15,10 @@ export default async function InitTrainerProvider({
 }: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!session) redirect(LINK_SIGN_IN.href);
+  if (!session) {
+    console.log('No session found for coach, redirecting to sign-in page');
+    redirect(LINK_SIGN_IN.href);
+  }
 
   try {
     const opts: FetchOptions = { session };

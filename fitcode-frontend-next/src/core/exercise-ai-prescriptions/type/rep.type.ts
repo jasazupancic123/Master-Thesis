@@ -54,6 +54,7 @@ export type Rep = {
   maxRomValue?: number; // the maximum value reached during the rep
   startRomValue?: number; // the value when the rep started
   extremumRomValue?: number; // the ROM value at the extreme point
+  totalRomCm?: number; // maxRomValue - minRomValue
 };
 
 export type RepInfo = {
@@ -73,6 +74,7 @@ export type RepInfo = {
   maxRomValue?: number; // the maximum value reached during the rep
   startRomValue?: number; // the value when the rep started
   extremumRomValue?: number; // the ROM value at the extreme point
+  totalRomCm?: number; // maxRomValue - minRomValue
 };
 
 export type RecordedReps = {

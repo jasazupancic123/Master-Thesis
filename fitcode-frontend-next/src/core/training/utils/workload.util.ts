@@ -219,6 +219,14 @@ export class WorkloadUtil {
             workloadInput?.tempoIdleR !== undefined
               ? workloadInput.tempoIdleR
               : existingWorkload.tempoIdleR,
+          rom:
+            workloadInput?.rom !== undefined
+              ? workloadInput.rom
+              : existingWorkload.rom,
+          romR:
+            workloadInput?.romR !== undefined
+              ? workloadInput.romR
+              : existingWorkload.romR,
           photoURLs:
             workloadInput?.photoURLs || existingWorkload.photoURLs || [],
         }
@@ -244,14 +252,42 @@ export class WorkloadUtil {
           loadKgR: set.loadKgR,
           vel: set.vel,
           velR: set.velR,
-          tempoEcc: workloadInput?.tempoEcc || set.tempoEcc,
-          tempoIso: workloadInput?.tempoIso || set.tempoIso,
-          tempoCon: workloadInput?.tempoCon || set.tempoCon,
-          tempoIdle: workloadInput?.tempoIdle || set.tempoIdle,
-          tempoEccR: workloadInput?.tempoEccR || set.tempoEccR,
-          tempoIsoR: workloadInput?.tempoIsoR || set.tempoIsoR,
-          tempoConR: workloadInput?.tempoConR || set.tempoConR,
-          tempoIdleR: workloadInput?.tempoIdleR || set.tempoIdleR,
+          tempoEcc:
+            workloadInput?.tempoEcc !== undefined
+              ? workloadInput?.tempoEcc
+              : set.tempoEcc,
+          tempoIso:
+            workloadInput?.tempoIso !== undefined
+              ? workloadInput?.tempoIso
+              : set.tempoIso,
+          tempoCon:
+            workloadInput?.tempoCon !== undefined
+              ? workloadInput?.tempoCon
+              : set.tempoCon,
+          tempoIdle:
+            workloadInput?.tempoIdle !== undefined
+              ? workloadInput?.tempoIdle
+              : set.tempoIdle,
+          tempoEccR:
+            workloadInput?.tempoEccR !== undefined
+              ? workloadInput?.tempoEccR
+              : set.tempoEccR,
+          tempoIsoR:
+            workloadInput?.tempoIsoR !== undefined
+              ? workloadInput?.tempoIsoR
+              : set.tempoIsoR,
+          tempoConR:
+            workloadInput?.tempoConR !== undefined
+              ? workloadInput?.tempoConR
+              : set.tempoConR,
+          tempoIdleR:
+            workloadInput?.tempoIdleR !== undefined
+              ? workloadInput?.tempoIdleR
+              : set.tempoIdleR,
+          rom:
+            workloadInput?.rom !== undefined ? workloadInput?.rom : undefined,
+          romR:
+            workloadInput?.romR !== undefined ? workloadInput?.romR : undefined,
           eff: set.eff,
           effR: set.effR,
           recTime: set.recTime,
@@ -261,8 +297,6 @@ export class WorkloadUtil {
           photoURLs: workloadInput?.photoURLs || [],
           rir: undefined,
           rirR: undefined,
-          rom: undefined,
-          romR: undefined,
           from: new Date(),
           to: new Date(),
         };

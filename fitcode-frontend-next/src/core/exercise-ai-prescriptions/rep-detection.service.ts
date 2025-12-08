@@ -6,7 +6,7 @@ import type { AINumericConstantName } from './enum/ai-numeric-constant-name.enum
 import { ConditionDirection } from './enum/condition-detection.enum';
 import { CurrentSideMutexValues } from './enum/current-side-mutex-values.enum';
 import { HorizontalVertical } from './enum/horizontal-vertical.enum';
-import type { KeypointId } from './enum/keypoint-id';
+import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
 import { RepStatus } from './enum/rep-state';
 import { StatusDetectionService } from './status-detection.service';
@@ -81,6 +81,7 @@ export class RepDetectionService {
     exerciseDetectionData: ExerciseAiPrescriptionData;
     currentSideMutexRef: RefObject<CurrentSideMutex>;
     currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
+    pxToCmRatioRef: RefObject<number | null>;
     valueType: KeypointValueType;
     avgFps: AvgFps;
     initedFirstFrameInRecordingMode: RefObject<boolean>;
@@ -97,6 +98,7 @@ export class RepDetectionService {
       exerciseDetectionData,
       currentSideMutexRef,
       currentInvalidAnglesRef,
+      pxToCmRatioRef,
       valueType,
       avgFps,
       initedFirstFrameInRecordingMode,
@@ -105,6 +107,25 @@ export class RepDetectionService {
       POSE_DETECTION_CONSTANTS,
       setRepCount,
     } = state;
+
+    if (pxToCmRatioRef.current === null) {
+      const hipToKneeCm = 50; // average value
+
+      const leftHip = this.keypoint.getDesiredKeypointFromArray(
+        currentFrameKeypoints,
+        KeypointId.LEFT_HIP
+      );
+      const leftKnee = this.keypoint.getDesiredKeypointFromArray(
+        currentFrameKeypoints,
+        KeypointId.LEFT_KNEE
+      );
+
+      if (leftHip && leftKnee) {
+        const distPxX = Math.abs(leftHip.position.y - leftKnee.position.y);
+
+        pxToCmRatioRef.current = distPxX / hipToKneeCm;
+      }
+    }
 
     const lAndR = [leftData, rightData].filter((side) => side !== undefined);
 
@@ -288,6 +309,7 @@ export class RepDetectionService {
               keypointId,
               valueType,
               direction,
+              pxToCmRatioRef,
               avgFps,
               POSE_DETECTION_CONSTANTS,
             });
@@ -1320,6 +1342,7 @@ export class RepDetectionService {
     keypointId: KeypointId;
     valueType: KeypointValueType;
     direction: ConditionDirection;
+    pxToCmRatioRef: RefObject<number | null>;
     avgFps: AvgFps;
     POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }) {
@@ -1330,6 +1353,7 @@ export class RepDetectionService {
       valueType,
       direction,
       avgFps,
+      pxToCmRatioRef,
       POSE_DETECTION_CONSTANTS,
     } = state;
 
@@ -1366,7 +1390,11 @@ export class RepDetectionService {
       timeAtExtremumEndKeypoint,
     });
 
-    this.repPostProcessing.setRepRom({ currentRepRef, initialValues });
+    this.repPostProcessing.setRepRom({
+      currentRepRef,
+      initialValues,
+      pxToCmRatioRef,
+    });
   }
 
   static saveRepTimesToJsonFiles = (state: {
