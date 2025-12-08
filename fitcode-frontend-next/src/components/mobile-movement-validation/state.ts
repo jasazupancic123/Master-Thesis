@@ -119,6 +119,7 @@ export const predictWebcam = async (state: {
   recordedRepsRef: RefObject<RecordedReps>;
   lastRecordedRepRef: RefObject<Rep | null>;
   currentInvalidAnglesRef: RefObject<ExerciseAngleCondition[]>;
+  pxToCmRatioRef: RefObject<number | null>;
   exerciseDetectionDataRef: RefObject<ExerciseAiPrescriptionData | undefined>;
   currentSideMutexRef: RefObject<CurrentSideMutex>;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -162,6 +163,7 @@ export const predictWebcam = async (state: {
     recordedRepsRef,
     lastRecordedRepRef,
     currentInvalidAnglesRef,
+    pxToCmRatioRef,
     exerciseDetectionDataRef,
     currentSideMutexRef,
     videoRef,
@@ -405,6 +407,7 @@ export const predictWebcam = async (state: {
           exerciseDetectionData,
           currentSideMutexRef,
           currentInvalidAnglesRef,
+          pxToCmRatioRef,
           leftData: {
             side: 'L',
             repStateRef: repStateRefL,
