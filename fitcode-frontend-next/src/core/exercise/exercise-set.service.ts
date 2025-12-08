@@ -23,7 +23,7 @@ export class ExerciseSetService {
         w.setNumber === id.setIndex + 1
     );
 
-    if (!workload) return false;
+    if (!workload || !workload.id) return false;
 
     return ![SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(
       workload.status
@@ -71,7 +71,8 @@ export class ExerciseSetService {
         w.componentId === id.componentId &&
         w.exerciseId === id.exerciseId &&
         w.supersetIndex === id.supersetIndex &&
-        ![SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(w.status)
+        ![SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(w.status) &&
+        w.id !== undefined
     ).length;
   }
 

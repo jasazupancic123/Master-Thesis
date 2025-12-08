@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useMain } from './main.provider';
 import { useTrainings } from './trainings.provider';
 import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
@@ -34,8 +33,8 @@ export interface ITrainingInProgressContext {
   initedAudioEnabled: boolean;
   setInitedAudioEnabled: SetState<boolean>;
   setSetIndex: SetState<number | undefined>;
-  currentAiRecordedWorkload: Workload | null;
-  setCurrentAiRecordedWorkload: SetState<Workload | null>;
+  workloads: Workload[];
+  setWorkloads: SetState<Workload[]>;
   handleUpsertSet: (
     body: Omit<CreateWorkload, 'userId'>,
     state: {
@@ -54,6 +53,18 @@ export interface ITrainingInProgressContext {
     exerciseId: string,
     setIndex: number
   ) => Promise<void>;
+  updateWorkloadValue: (
+    id: {
+      userId: string;
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+      setNumber: number;
+    },
+    field: keyof Workload,
+    value: Workload[keyof Workload]
+  ) => void;
 }
 
 const TrainingInProgressContext =
@@ -62,10 +73,7 @@ const TrainingInProgressContext =
 export const useTrainingInProgress = () =>
   useContext(TrainingInProgressContext)!;
 
-export const TrainingInProgressProvider = ({
-  children,
-}: React.PropsWithChildren) => {
-  const { setActiveTraining } = useMain();
+export const TrainingInProgressProvider = ({ children }: React.PropsWithChildren) => {
   const { trainingInProgress, setTrainingInProgress } = useTrainings();
 
   const router = useRouter();
@@ -80,29 +88,10 @@ export const TrainingInProgressProvider = ({
 
   const [setIndex, setSetIndex] = useState<number | undefined>(undefined);
 
-  const [currentAiRecordedWorkload, setCurrentAiRecordedWorkload] =
-    useState<Workload | null>(null);
-
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   const [initedAudioEnabled, setInitedAudioEnabled] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (
-      !currentAiRecordedWorkload ||
-      !selectedExercise ||
-      setIndex === undefined
-    )
-      return;
-
-    const isSameExercise =
-      currentAiRecordedWorkload.componentId ===
-        trainingInProgress?.selectedComponent.id &&
-      currentAiRecordedWorkload.exerciseId === selectedExercise.id &&
-      currentAiRecordedWorkload.supersetIndex === supersetIndex &&
-      currentAiRecordedWorkload.setNumber === setIndex + 1;
-
-    if (!isSameExercise) setCurrentAiRecordedWorkload(null);
-  }, [selectedExercise, supersetIndex, setIndex]);
+  const [workloads, setWorkloads] = useState<Workload[]>([]);
 
   useEffect(() => {
     const fetchAudioSetting = async () => {
@@ -130,6 +119,76 @@ export const TrainingInProgressProvider = ({
     updateIndexedDbAudioSetting();
   }, [audioEnabled]);
 
+  // Workloads listener
+  useEffect(() => {
+    if (!trainingInProgress) return;
+
+    const unsub = lib.firebase.firestore.listenCollection<Workload>(
+      `trainings/${trainingInProgress.training.id}/training-workload`,
+      (snapshot) => {
+        const data: Workload[] = snapshot.docs.map((doc) =>
+          lib.firebase.firestore.serialize(doc.data())
+        );
+
+        setWorkloads(data);
+      },
+      (error) => {
+        console.error('Error loading workloads:', error);
+      }
+    );
+
+    return () => unsub();
+  }, [trainingInProgress?.training.id]);
+
+  const updateWorkloadValue = <K extends keyof Workload>(
+    id: {
+      userId: string;
+      trainingId: string;
+      componentId: string;
+      exerciseId: string;
+      supersetIndex: number;
+      setNumber: number;
+    },
+    field: K,
+    value: Workload[K]
+  ) => {
+    if (!trainingInProgress) return;
+
+    const workload = workloads.find(
+      (w) =>
+        w.trainingId === id.trainingId &&
+        w.componentId === id.componentId &&
+        w.exerciseId === id.exerciseId &&
+        w.supersetIndex === id.supersetIndex &&
+        w.setNumber === id.setNumber
+    );
+
+    if (!workload) {
+      const newWorkload =
+        core.training.workload.createEmptyWorkloadFromTraining(
+          id,
+          trainingInProgress.training
+        );
+
+      if (!newWorkload) return;
+
+      newWorkload[field] = value;
+
+      setWorkloads((prev) => [...prev, newWorkload]);
+      return;
+    }
+
+    if (!(field in workload)) return;
+
+    workload[field] = value;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (workload as any).id = undefined; // force update - remove id to make it "un-posted"
+
+    setWorkloads((prev) =>
+      prev.map((w) => (w.id === workload.id ? workload : w))
+    );
+  };
+
   async function handleUpsertSet(
     body: Omit<CreateWorkload, 'userId'>,
     state: {
@@ -145,11 +204,10 @@ export const TrainingInProgressProvider = ({
       exerciseId,
       supersetIndex: stateSupersetIndex,
       setIndex: stateSetIndex,
-      isAiRecorded,
     } = state || {};
 
     if (
-      !trainingInProgress?.selectedComponent ||
+      !trainingInProgress?.componentId ||
       !trainingInProgress.userId ||
       !trainingInProgress.training
     )
@@ -184,85 +242,18 @@ export const TrainingInProgressProvider = ({
       body.from = dayjs().subtract(currentSetActiveTimeS, 'second').toDate();
     }
 
-    let updatedPreviousWorkload: Workload | undefined = undefined;
-
-    if (workloads.length > 0 && stateSetIndex > 0) {
-      // we have previous workloads and this is not the first set
-      const prevWorkload = workloads.find(
-        (w) =>
-          w.trainingId === trainingInProgress.training.id &&
-          w.componentId === trainingInProgress.selectedComponent.id &&
-          w.exerciseId === exerciseId &&
-          w.supersetIndex === stateSupersetIndex &&
-          w.setNumber === stateSetIndex // previous set (setNumber is 1-based, setIndex is 0-based)
-      );
-
-      if (prevWorkload) {
-        const recTime = Math.abs(
-          dayjs(body.from).diff(
-            dayjs(prevWorkload.to || prevWorkload.from),
-            'second'
-          )
-        );
-
-        prevWorkload.recTime = recTime;
-        if (prevWorkload.repsR) prevWorkload.recTimeR = recTime;
-
-        updatedPreviousWorkload = prevWorkload;
-      }
-    }
-
     handleApiRequest(
       router,
       () =>
         TrainingController.getInstance().upsertSet(
           trainingInProgress.training.id,
-          trainingInProgress.selectedComponent.id,
+          trainingInProgress.componentId,
           exerciseId,
           stateSupersetIndex,
           stateSetIndex + 1,
           { ...body, userId: trainingInProgress.userId }
         ),
-      (workload) => {
-        if (isAiRecorded) setCurrentAiRecordedWorkload(workload);
-
-        setActiveTraining((prev) => {
-          if (!prev) return prev;
-
-          let prevWorkloads = [...prev.workloads];
-
-          const workloadExists = prevWorkloads.find(
-            (w) => w.id === workload.id
-          );
-
-          prevWorkloads = workloadExists
-            ? prevWorkloads.map((w) => (w.id === workload.id ? workload : w))
-            : [...prevWorkloads, workload];
-
-          if (updatedPreviousWorkload !== undefined) {
-            // update previous workload in state
-
-            const previousWorkloadExists = prevWorkloads.find(
-              (w) => w.id === updatedPreviousWorkload?.id
-            );
-
-            prevWorkloads = previousWorkloadExists
-              ? prevWorkloads.map((w) =>
-                  w.id === updatedPreviousWorkload?.id
-                    ? updatedPreviousWorkload
-                    : w
-                )
-              : [...prevWorkloads, updatedPreviousWorkload];
-          }
-
-          prevWorkloads = prevWorkloads.filter((w) => w !== undefined);
-
-          return {
-            ...prev,
-            workloads: prevWorkloads,
-          };
-        });
-
+      (_) => {
         toast.success('Saved');
       }
     );
@@ -277,7 +268,7 @@ export const TrainingInProgressProvider = ({
         {
           action: TrainingAction.ADD_EXERCISE,
           ref: {
-            componentId: trainingInProgress.selectedComponent.id,
+            componentId: trainingInProgress.componentId,
             supersetIndex: supersetIndex!,
             exerciseId: exercise.id,
           },
@@ -292,26 +283,32 @@ export const TrainingInProgressProvider = ({
         exercise,
       };
 
-      setTrainingInProgress({
+      const updatedTrainingInProgress = {
         ...trainingInProgress,
-        selectedComponent: {
-          ...trainingInProgress.selectedComponent,
-          supersets: trainingInProgress.selectedComponent.supersets.map(
-            (superset) => ({
-              ...superset,
-              exercises: [...superset.exercises, newTrainingExercise],
-            })
+        training: {
+          ...trainingInProgress.training,
+          components: trainingInProgress.training.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: [
+                            ...superset.exercises,
+                            newTrainingExercise,
+                          ],
+                        }
+                      : superset
+                  ),
+                }
+              : component
           ),
         },
-        supersets: trainingInProgress.supersets.map((superset, index) =>
-          index === supersetIndex
-            ? {
-                ...superset,
-                exercises: [...superset.exercises, newTrainingExercise],
-              }
-            : superset
-        ),
-      });
+      };
+
+      setTrainingInProgress(updatedTrainingInProgress);
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to add exercise');
@@ -327,7 +324,7 @@ export const TrainingInProgressProvider = ({
         {
           action: TrainingAction.REMOVE_EXERCISE,
           ref: {
-            componentId: trainingInProgress.selectedComponent.id,
+            componentId: trainingInProgress.componentId,
             supersetIndex: supersetIndex!,
             exerciseId,
           },
@@ -335,29 +332,31 @@ export const TrainingInProgressProvider = ({
         }
       );
 
-      // update local state
-      setTrainingInProgress({
+      const updatedTrainingInProgress = {
         ...trainingInProgress,
-        selectedComponent: {
-          ...trainingInProgress.selectedComponent,
-          supersets: trainingInProgress.selectedComponent.supersets.map(
-            (superset) => ({
-              ...superset,
-              exercises: superset.exercises.filter((e) => e.id !== exerciseId),
-            })
+        training: {
+          ...trainingInProgress.training,
+          components: trainingInProgress.training.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.filter(
+                            (e) => e.id !== exerciseId
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
           ),
         },
-        supersets: trainingInProgress.supersets.map((superset, index) =>
-          index === supersetIndex
-            ? {
-                ...superset,
-                exercises: superset.exercises.filter(
-                  (e) => e.id !== exerciseId
-                ),
-              }
-            : superset
-        ),
-      });
+      };
+
+      setTrainingInProgress(updatedTrainingInProgress);
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to remove exercise');
@@ -378,7 +377,7 @@ export const TrainingInProgressProvider = ({
         {
           action: TrainingAction.ADD_SET,
           ref: {
-            componentId: trainingInProgress.selectedComponent.id,
+            componentId: trainingInProgress.componentId,
             supersetIndex: supersetIndex!,
             exerciseId: selectedExercise!.id,
           },
@@ -401,36 +400,34 @@ export const TrainingInProgressProvider = ({
 
       setSelectedExercise(newExercise);
 
-      // update local state
-      setTrainingInProgress({
+      const updatedTrainingInProgress = {
         ...trainingInProgress,
-        selectedComponent: {
-          ...trainingInProgress.selectedComponent,
-          supersets: trainingInProgress.selectedComponent.supersets.map(
-            (superset, sIndex) =>
-              sIndex === supersetIndex
-                ? {
-                    ...superset,
-                    exercises: superset.exercises.map((exercise) =>
-                      exercise.id === selectedExercise.id
-                        ? newExercise
-                        : exercise
-                    ),
-                  }
-                : superset
+        training: {
+          ...trainingInProgress.training,
+          components: trainingInProgress.training.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.map((exercise) =>
+                            exercise.id === selectedExercise.id
+                              ? newExercise
+                              : exercise
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
           ),
         },
-        supersets: trainingInProgress.supersets.map((superset, sIndex) =>
-          sIndex === supersetIndex
-            ? {
-                ...superset,
-                exercises: superset.exercises.map((exercise) =>
-                  exercise.id === selectedExercise.id ? newExercise : exercise
-                ),
-              }
-            : superset
-        ),
-      });
+      };
+
+      // update local state
+      setTrainingInProgress(updatedTrainingInProgress);
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to add set');
@@ -446,7 +443,7 @@ export const TrainingInProgressProvider = ({
         {
           action: TrainingAction.REMOVE_SET,
           ref: {
-            componentId: trainingInProgress.selectedComponent.id,
+            componentId: trainingInProgress.componentId,
             supersetIndex: supersetIndex!,
             exerciseId,
           },
@@ -454,48 +451,50 @@ export const TrainingInProgressProvider = ({
         }
       );
 
-      // update local state
-      setTrainingInProgress({
+      const updatedSelectedExercise =
+        selectedExercise?.id === exerciseId
+          ? {
+              ...selectedExercise,
+              sets: selectedExercise.sets.filter(
+                (_, index) => index !== setIndex
+              ),
+            }
+          : selectedExercise;
+
+      setSelectedExercise(updatedSelectedExercise);
+
+      const updatedTrainingInProgress = {
         ...trainingInProgress,
-        selectedComponent: {
-          ...trainingInProgress.selectedComponent,
-          supersets: trainingInProgress.selectedComponent.supersets.map(
-            (superset, sIndex) =>
-              sIndex === supersetIndex
-                ? {
-                    ...superset,
-                    exercises: superset.exercises.map((exercise) =>
-                      exercise.id === exerciseId
-                        ? {
-                            ...exercise,
-                            sets: exercise.sets.filter(
-                              (_, index) => index !== setIndex
-                            ),
-                          }
-                        : exercise
-                    ),
-                  }
-                : superset
+        training: {
+          ...trainingInProgress.training,
+          components: trainingInProgress.training.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, sIndex) =>
+                    sIndex === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.map((exercise) =>
+                            exercise.id === exerciseId
+                              ? {
+                                  ...exercise,
+                                  sets: exercise.sets.filter(
+                                    (_, index) => index !== setIndex
+                                  ),
+                                }
+                              : exercise
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
           ),
         },
-        supersets: trainingInProgress.supersets.map((superset, sIndex) =>
-          sIndex === supersetIndex
-            ? {
-                ...superset,
-                exercises: superset.exercises.map((exercise) =>
-                  exercise.id === exerciseId
-                    ? {
-                        ...exercise,
-                        sets: exercise.sets.filter(
-                          (_, index) => index !== setIndex
-                        ),
-                      }
-                    : exercise
-                ),
-              }
-            : superset
-        ),
-      });
+      };
+
+      setTrainingInProgress(updatedTrainingInProgress);
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to remove set');
@@ -516,12 +515,13 @@ export const TrainingInProgressProvider = ({
         setAudioEnabled,
         initedAudioEnabled,
         setInitedAudioEnabled,
-        currentAiRecordedWorkload,
-        setCurrentAiRecordedWorkload,
+        workloads,
+        setWorkloads,
         addExerciseToSuperset,
         removeExerciseFromSuperset,
         addSetToExercise,
         removeSetFromExercise,
+        updateWorkloadValue,
       }}
     >
       {children}

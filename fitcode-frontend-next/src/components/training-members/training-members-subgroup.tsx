@@ -1,26 +1,23 @@
 'use client';
 
+import { useSortable } from '@dnd-kit/sortable';
 import { MoreVert } from '@mui/icons-material';
 import {
-  Avatar,
   Box,
   Card,
   IconButton,
   Menu,
   MenuItem,
-  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
-import {
-  handleDeleteSubgroup,
-  updateSelectedAthleteSubgroup,
-} from './actions/actions-subgroups';
+import { handleDeleteSubgroup } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
+import SubgroupMember from './subgroup-member';
+import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
@@ -32,6 +29,7 @@ interface TrainingMembersSubgroupProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   trainingMembersContext: UseTrainingMembersReturnType;
+  activeMember: AuthUser | null;
 }
 
 export default function TrainingMembersSubgroup(
@@ -43,14 +41,11 @@ export default function TrainingMembersSubgroup(
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
 
-  const { users } = mainContext;
-
   const {
     component,
     training,
     setSelectedSubgroup,
     selectedSubgroup,
-    selectedAthlete,
     setSelectedAthlete,
     selectedExerciseIds,
     setSelectedExerciseIds,
@@ -62,9 +57,14 @@ export default function TrainingMembersSubgroup(
     anchorEl,
     setAnchorEl,
     trainingMembersContext,
+    activeMember,
   } = props;
 
   const { members } = trainingMembersContext;
+
+  const { listeners, setNodeRef } = useSortable({
+    id: subgroup.id,
+  });
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -121,6 +121,7 @@ export default function TrainingMembersSubgroup(
           display: 'inline-block',
           cursor: 'pointer',
           position: 'relative',
+          userSelect: 'none',
         }}
       >
         {subgroup.id !== DEFAULT_SUBGROUP_ID &&
@@ -182,8 +183,12 @@ export default function TrainingMembersSubgroup(
           }}
         >
           <Card
-            key={`card-${subgroup.id}`}
+            key={`${subgroup.id}`}
+            ref={setNodeRef}
+            {...listeners}
             sx={{
+              minWidth: 50,
+              minHeight: 50,
               m: 0.1,
               ml: 0,
               backgroundColor: theme.palette.background.default,
@@ -199,45 +204,12 @@ export default function TrainingMembersSubgroup(
               if (!member) return null;
 
               return (
-                <Box key={`${member.uid}-${index}`}>
-                  <Box
-                    key={`${subgroup.id}-${member.uid}-tooltip`}
-                    sx={{ p: 0, m: 0 }}
-                    onClick={() => {
-                      updateSelectedAthleteSubgroup(member, subgroup.id, {
-                        ...trainerDayViewContext,
-                        training,
-                        component,
-                      });
-                    }}
-                    borderRadius={selectedAthlete === member ? '50%' : 0}
-                    border={
-                      selectedAthlete === member
-                        ? `2px solid ${theme.palette.primary.main}`
-                        : 'none'
-                    }
-                    zIndex={1000}
-                  >
-                    <Tooltip
-                      title={member.email}
-                      sx={{ mx: 1, my: '0px !important', p: 0 }}
-                    >
-                      <Avatar
-                        className="avatar-border"
-                        src={
-                          users.find((m) => m.uid === member.uid)?.photoURL ||
-                          USER_AVATAR_IMG_URL
-                        }
-                        sx={{
-                          width: 50,
-                          height: 50,
-                          m: selectedAthlete === member ? 0.25 : 0.5,
-                          filter: 'grayscale(100%)',
-                        }}
-                      ></Avatar>
-                    </Tooltip>
-                  </Box>
-                </Box>
+                <SubgroupMember
+                  key={`${member.uid}-${index}`}
+                  member={member}
+                  subgroup={subgroup}
+                  activeMember={activeMember}
+                />
               );
             })}
           </Card>

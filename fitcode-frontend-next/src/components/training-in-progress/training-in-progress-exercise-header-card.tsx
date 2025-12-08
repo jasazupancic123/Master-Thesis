@@ -40,6 +40,7 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
     selectedExercise,
     setSelectedExercise,
     setSetIndex,
+    workloads,
   } = useTrainingInProgress();
 
   const { exercise, superset, supersetIndex, getExerciseRef } = props;
@@ -48,23 +49,12 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
 
   const exerciseObject = exercise.exercise;
 
-  const workloads = !trainingInProgress
-    ? []
-    : (activeTraining?.workloads || []).filter((wl) => {
-        return (
-          wl.trainingId === trainingInProgress.training.id &&
-          wl.componentId === trainingInProgress.selectedComponent.id &&
-          wl.exerciseId === exercise.id &&
-          wl.supersetIndex === supersetIndex
-        );
-      });
-
   const lastCompletedWorkload = !trainingInProgress
     ? undefined
     : ExerciseSetService.findLastCompletedWorkload(
         {
           trainingId: trainingInProgress.training.id,
-          componentId: trainingInProgress.selectedComponent.id,
+          componentId: trainingInProgress.componentId,
           exerciseId: exercise.id,
           supersetIndex: supersetIndex,
         },
@@ -102,11 +92,11 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
   const completedSets = ExerciseSetService.getCompletedExerciseSetsCount(
     {
       trainingId: trainingInProgress.training.id,
-      componentId: trainingInProgress.selectedComponent.id,
+      componentId: trainingInProgress.componentId,
       exerciseId: exercise.id,
       supersetIndex: supersetIndex,
     },
-    activeTraining.workloads
+    workloads
   );
 
   const progress = (completedSets / exercise.sets.length) * 100;
@@ -126,7 +116,13 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
       flexDirection="column"
       alignItems="center"
       onClick={() => {
-        const newSupersetIndex = trainingInProgress.supersets.indexOf(superset);
+        const component = trainingInProgress.training.components.find(
+          (c) => c.id === trainingInProgress.componentId
+        );
+
+        if (!component) return;
+
+        const newSupersetIndex = component.supersets.indexOf(superset);
 
         if (newSupersetIndex === -1) return;
 

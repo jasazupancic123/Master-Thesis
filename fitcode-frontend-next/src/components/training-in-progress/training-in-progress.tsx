@@ -14,9 +14,7 @@ import React, {
 import AthleteHeader from '../athlete/athlete-header';
 import { handleInitTrainingInProgressComponent } from './actions/actions-training-in-progress';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
-import { useUndoneExercises } from './context/undone-exercises.provider';
 import FinishPauseTrainingModal from './modals/finish-pause-training-modal';
-import UndoneSetsErrorModal from './modals/undone-sets-error-modal';
 import TrainingInProgressExerciseContainer from './training-in-progress-exercise-container';
 import TrainingInProgressExerciseHeaderCard from './training-in-progress-exercise-header-card';
 import { preloadPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
@@ -43,7 +41,6 @@ export default function TrainingInProgress() {
   const trainingInProgressContext = useTrainingInProgress();
   const trainingInProgressUtilsContext = useTrainingInProgressUtils();
   const athleteHeaderContext = useAthleteHeader();
-  const undoneExercisesContext = useUndoneExercises();
 
   // add exercises modal
   const [searchExercisesText, setSearchExercisesText] = useState('');
@@ -62,8 +59,6 @@ export default function TrainingInProgress() {
     setOpenFinishTrainingModal,
     openAddExerciseModal,
     setOpenAddExerciseModal,
-    showUndoneSetsError,
-    setShowUndoneSetsError,
     edit,
   } = trainingInProgressUtilsContext;
 
@@ -122,8 +117,7 @@ export default function TrainingInProgress() {
         training: activeTraining,
         recordedSets: [],
         startOfTraining: dayjs(),
-        supersets: [],
-        selectedComponent: component,
+        componentId: component.id,
       };
 
       handleInitTrainingInProgressComponent({
@@ -196,7 +190,6 @@ export default function TrainingInProgress() {
       {selectedTrackingMethod !== TrackingMethod.CAMERA && (
         <>
           <AthleteHeader
-            trainingInProgressUndoneExercisesContext={undoneExercisesContext}
             trainingInProgressContext={trainingInProgressContext}
             trainingInProgressUtilsContext={trainingInProgressUtilsContext}
           />
@@ -214,7 +207,11 @@ export default function TrainingInProgress() {
               mx: 'auto',
             }}
           >
-            {(trainingInProgress.supersets || []).map((superset, i) => {
+            {(
+              trainingInProgress.training.components.find(
+                (c) => c.id === trainingInProgress.componentId
+              )?.supersets || []
+            ).map((superset, i) => {
               if (!superset.exercises.length) return null;
 
               const isSelected = supersetIndex === i; // <- key change
@@ -302,8 +299,9 @@ export default function TrainingInProgress() {
       )}
 
       {trainingInProgress &&
-      trainingInProgress.supersets &&
-      trainingInProgress.supersets.length ? (
+      trainingInProgress.training.components.find(
+        (c) => c.id === trainingInProgress.componentId
+      )?.supersets?.length ? (
         <TrainingInProgressExerciseContainer />
       ) : (
         <Box
@@ -326,11 +324,6 @@ export default function TrainingInProgress() {
         open={openFinishTrainingModal}
         setOpen={setOpenFinishTrainingModal}
         finish={true}
-      />
-
-      <UndoneSetsErrorModal
-        open={showUndoneSetsError}
-        setOpen={setShowUndoneSetsError}
       />
 
       <MyModal

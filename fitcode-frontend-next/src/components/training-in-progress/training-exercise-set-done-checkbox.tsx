@@ -1,13 +1,8 @@
 import { Box, Typography, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
 
-import {
-  finishSet,
-  unmarkExerciseSetAsCompleted,
-} from './actions/actions-exercise-set';
+import { finishSet } from './actions/actions-exercise-set';
 import { handleAdvanceInSuperset } from './actions/actions-superset';
 import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
@@ -25,7 +20,6 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const { user } = useAuthenticatedAuth();
   const mainContext = useMain();
-  const { activeTraining, setActiveTraining } = mainContext;
   const trainingContext = useTrainings();
   const trainingInProgressContext = useTrainingInProgress();
 
@@ -33,55 +27,27 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
 
   const { trainingInProgress, setTrainingInProgress } = trainingContext;
 
-  const { currentAiRecordedWorkload, handleUpsertSet } =
+  const { handleUpsertSet, workloads, setWorkloads } =
     trainingInProgressContext;
 
   const { exercise, setIndex, supersetIndex } = props;
 
-  const isRecorded =
-    currentAiRecordedWorkload &&
-    trainingInProgress &&
-    currentAiRecordedWorkload.componentId ===
-      trainingInProgress.selectedComponent.id &&
-    currentAiRecordedWorkload.exerciseId === exercise.id &&
-    currentAiRecordedWorkload.supersetIndex === supersetIndex &&
-    currentAiRecordedWorkload.setNumber === setIndex + 1;
+  if (!exercise || !trainingInProgress) return null;
 
-  useEffect(() => {
-    if (!trainingInProgress) return;
-
-    const completed = ExerciseSetService.isSetCompleted(
-      {
-        trainingId: trainingInProgress.training.id,
-        componentId: trainingInProgress.selectedComponent.id,
-        exerciseId: exercise.id,
-        supersetIndex,
-        setIndex,
-      },
-      activeTraining?.workloads || []
-    );
-
-    setIsCompleted(completed);
-  }, [activeTraining, exercise, supersetIndex, setIndex]);
-
-  const [isCompleted, setIsCompleted] = useState<boolean>(
-    trainingInProgress
-      ? ExerciseSetService.isSetCompleted(
-          {
-            trainingId: trainingInProgress.training.id,
-            componentId: trainingInProgress.selectedComponent.id,
-            exerciseId: exercise.id,
-            supersetIndex,
-            setIndex,
-          },
-          activeTraining?.workloads || []
+  const foundWorkload =
+    supersetIndex !== null
+      ? workloads.find(
+          (w) =>
+            w.userId === trainingInProgress.userId &&
+            w.exerciseId === exercise.id &&
+            w.setNumber === setIndex + 1 &&
+            w.componentId === trainingInProgress.componentId &&
+            w.trainingId === trainingInProgress.training.id &&
+            w.supersetIndex === supersetIndex
         )
-      : false
-  );
+      : undefined;
 
-  if (!exercise || !trainingInProgress) {
-    return null;
-  }
+  const isSetCompleted = foundWorkload && foundWorkload.id !== undefined;
 
   return (
     <Box
@@ -89,11 +55,9 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
         p: 0.1,
         borderRadius: 2,
         cursor: 'pointer',
-        border: isRecorded
-          ? `1px solid ${theme.palette.text.primary}`
-          : isCompleted
-            ? `1px solid ${theme.palette.primary.main}`
-            : `1px solid ${theme.palette.text.primary}`,
+        border: isSetCompleted
+          ? `1px solid ${theme.palette.primary.main}`
+          : `1px solid ${theme.palette.text.primary}`,
         mr: 5,
         my: 'auto',
       }}
@@ -106,30 +70,15 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
         alignItems="center"
         sx={{
           borderRadius: 2,
-          backgroundColor: isRecorded
-            ? theme.palette.background.default
-            : isCompleted
-              ? theme.palette.primary.main
-              : theme.palette.background.default,
-          border: isRecorded
-            ? `1px solid transparent`
-            : isCompleted
-              ? `1px solid ${theme.palette.primary.main}`
-              : `1px solid transparent`,
+          backgroundColor: isSetCompleted
+            ? theme.palette.primary.main
+            : theme.palette.background.default,
+          border: isSetCompleted
+            ? `1px solid ${theme.palette.primary.main}`
+            : `1px solid transparent`,
         }}
         onClick={async () => {
           if (setIndex === undefined) return;
-
-          if (isRecorded) {
-            // if it's recorded, then it was already saved, just advance
-            handleAdvanceInSuperset({
-              useMain: mainContext,
-              useTraining: { ...trainingContext, trainingInProgress },
-              useTrainingInProgress: trainingInProgressContext,
-              useTrainingInProgressUtils: trainingInProgressUtilsContext,
-            });
-            return;
-          }
 
           const recordedSet = trainingInProgress.recordedSets.find(
             (s) =>
@@ -138,7 +87,7 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
               s.setIndex === setIndex
           );
 
-          if (!isCompleted) {
+          if (!isSetCompleted) {
             await finishSet({
               userId: user.uid,
               exercise,
@@ -146,10 +95,11 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
               setIndex,
               trainingInProgress,
               setTrainingInProgress,
+              workloadInput: {},
               imagesL: recordedSet?.imagesL || [],
               imagesR: recordedSet?.imagesR || [],
               handleUpsertSet,
-              workloads: activeTraining?.workloads || [],
+              workloads,
             });
 
             handleAdvanceInSuperset(
@@ -162,14 +112,16 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
               true
             );
           } else {
-            unmarkExerciseSetAsCompleted(
-              {
-                exerciseId: exercise.id,
-                setIndex,
-                supersetIndex,
-              },
-              setActiveTraining
+            const newWorkloads = workloads.filter(
+              (w) => w.id !== foundWorkload?.id
             );
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (foundWorkload as any).id = undefined; // force update - remove id to make it "un-posted"
+
+            newWorkloads.push(foundWorkload);
+
+            setWorkloads(newWorkloads);
           }
         }}
       >
@@ -178,14 +130,12 @@ export default function TrainingExerciseSetDoneCheckbox(props: Props) {
           fontWeight={500}
           textAlign="center"
           sx={{
-            color: isRecorded
-              ? theme.palette.text.primary
-              : isCompleted
-                ? theme.palette.text.secondary
-                : theme.palette.text.primary,
+            color: isSetCompleted
+              ? theme.palette.text.secondary
+              : theme.palette.text.primary,
           }}
         >
-          {isRecorded ? 'Complete' : isCompleted ? 'Done' : 'Complete'}
+          {isSetCompleted ? 'Done' : 'Complete'}
         </Typography>
       </Box>
     </Box>
