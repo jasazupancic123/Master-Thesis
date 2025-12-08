@@ -27,6 +27,7 @@ export type AuthState = {
 };
 
 export const AuthProvider = (props: React.PropsWithChildren) => {
+  console.log('AuthProvider rendered');
   const auth = getFirebaseAuth();
   const { children } = props;
   const router = useRouter();
@@ -40,11 +41,13 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
   });
 
   function setCustomClaims(claims: CustomClaims) {
+    console.log('setCustomClaims called with claims:', claims);
     if (state.status === 'authenticated')
       setState((prevState) => ({ ...prevState, customClaims: claims }));
   }
 
   function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
+    console.log('setUser called with data:', data);
     if (state.status !== 'authenticated') return;
     setState((prevState) => ({
       ...prevState,
@@ -53,9 +56,13 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
   }
 
   function handleUserChange(user: AuthUser | null): AuthState {
+    console.log('handleUserChange called with user');
     let newState: AuthState = { ...state, status: 'loading' };
 
     if (!user) {
+      console.log(
+        'no user found in handleUserChange, setting state to unauthenticated'
+      );
       // user is logged out
       newState = {
         status: 'unauthenticated',
@@ -64,6 +71,9 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
         customClaims: undefined,
       };
     } else {
+      console.log(
+        'user found in handleUserChange, setting state to authenticated'
+      );
       // user is logged in
       const customClaims = user.customClaims;
       const role = customClaims.role?.[0];
@@ -76,15 +86,19 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
       };
     }
 
+    console.log('New auth state:', newState);
+
     setState(newState);
     return newState;
   }
 
   async function logout(redirect = true): Promise<void> {
+    console.log('LOGOUT called');
     handleUserChange(null);
     await auth.signOut();
     await controller.logout();
     if (redirect) {
+      console.log('Redirecting to sign-in page after logout');
       window.location.href = LINK_SIGN_IN.href;
     }
     router.refresh();
@@ -92,16 +106,20 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
   }
 
   useEffect(() => {
+    console.log('Checking auth state readiness', auth);
     auth.authStateReady().then();
   }, [auth]);
 
   useEffect(() => {
     const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
+      console.log('Auth state changed, firebaseUser:', firebaseUser);
       if (firebaseUser) {
+        console.log('User is logged in, fetching ID token and user data');
         const idToken = await firebaseUser.getIdToken();
         const user = await controller.sessionLogin(idToken);
         handleUserChange(user);
       } else {
+        console.log('User is logged out, clearing auth state');
         await AuthController.getInstance().logout();
         handleUserChange(null);
       }
@@ -141,6 +159,8 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
       </AuthContext.Provider>
     );
 
+  console.log('Rendering unauthenticated AuthProvider');
+
   return (
     <AuthContext.Provider
       value={{ status: 'unauthenticated', handleUserChange }}
@@ -174,6 +194,7 @@ export function withAuth<P extends object>(
     }
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
+      console.log('Unauthorized access, redirecting to sign-in page');
       router.replace(LINK_SIGN_IN.href);
       router.refresh();
       router.refresh();

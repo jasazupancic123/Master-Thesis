@@ -21,6 +21,7 @@ import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
+  getAvgTotalRomCm,
   getStatusMessage,
   getTempoObject,
   predictWebcam,
@@ -245,6 +246,7 @@ export default function MobileMovementValidation(
     left: 0,
     right: exerciseDetectionDataRef.current?.rightSide ? 0 : undefined,
   });
+  const pxToCmRatioRef = useRef<number | null>(null);
 
   // FPS and Error
   const [fps, setFps] = useState<number | null>(null);
@@ -490,6 +492,7 @@ export default function MobileMovementValidation(
           recordedRepsRef,
           lastRecordedRepRef,
           currentInvalidAnglesRef,
+          pxToCmRatioRef,
           videoRef,
           canvasRef,
           canvasCtxRef,
@@ -569,6 +572,15 @@ export default function MobileMovementValidation(
           })
         : null;
 
+      const romLCm = getAvgTotalRomCm({
+        recordedReps: recordedRepsRef.current.left,
+      });
+      const romRCm = recordedRepsRef.current.right
+        ? getAvgTotalRomCm({
+            recordedReps: recordedRepsRef.current.right,
+          })
+        : null;
+
       const {
         individualTraining,
         workloads,
@@ -602,6 +614,8 @@ export default function MobileMovementValidation(
           tempoIsoR: tempoR ? tempoR.iso : undefined,
           tempoConR: tempoR ? tempoR.con : undefined,
           tempoIdleR: tempoR ? tempoR.idle : undefined,
+          rom: romLCm || undefined,
+          romR: romRCm || undefined,
         },
         isAiRecorded: true,
         workloads: workloads || [],
@@ -678,6 +692,15 @@ export default function MobileMovementValidation(
           })
         : null;
 
+      const romLCm = getAvgTotalRomCm({
+        recordedReps: recordedRepsRef.current.left,
+      });
+      const romRCm = recordedRepsRef.current.right
+        ? getAvgTotalRomCm({
+            recordedReps: recordedRepsRef.current.right,
+          })
+        : null;
+
       let currentRecordedSets = trainingInProgress.recordedSets || [];
 
       const romLKeypoints = recordedRepsRef.current.left
@@ -735,6 +758,7 @@ export default function MobileMovementValidation(
             maxRomValue: rep.maxRomValue,
             startRomValue: rep.startRomValue,
             extremumRomValue: rep.extremeValue,
+            totalRomCm: rep.totalRomCm,
           } as RepInfo;
         }),
         repsR: recordedRepsRef.current.right
@@ -752,6 +776,7 @@ export default function MobileMovementValidation(
                 maxRomValue: rep.maxRomValue,
                 startRomValue: rep.startRomValue,
                 extremumRomValue: rep.extremeValue,
+                totalRomCm: rep.totalRomCm,
               } as RepInfo;
             })
           : undefined,
@@ -829,6 +854,8 @@ export default function MobileMovementValidation(
           tempoIsoR: tempoR ? tempoR.iso : undefined,
           tempoConR: tempoR ? tempoR.con : undefined,
           tempoIdleR: tempoR ? tempoR.idle : undefined,
+          rom: romLCm || undefined,
+          romR: romRCm || undefined,
         },
         imagesL: recordedRepsRef.current.left
           .map((rep) => {
