@@ -109,23 +109,21 @@ export class RepDetectionService {
     } = state;
 
     if (pxToCmRatioRef.current === null) {
-      const shoulderWidthCm = 100; // average shoulder width in cm
+      const hipToKneeCm = 50; // average value
 
-      const leftShoulder = this.keypoint.getDesiredKeypointFromArray(
+      const leftHip = this.keypoint.getDesiredKeypointFromArray(
         currentFrameKeypoints,
-        KeypointId.LEFT_SHOULDER
+        KeypointId.LEFT_HIP
       );
-      const rightShoulder = this.keypoint.getDesiredKeypointFromArray(
+      const leftKnee = this.keypoint.getDesiredKeypointFromArray(
         currentFrameKeypoints,
-        KeypointId.RIGHT_SHOULDER
+        KeypointId.LEFT_KNEE
       );
 
-      if (leftShoulder && rightShoulder) {
-        const distPxX = Math.abs(
-          leftShoulder.position.x - rightShoulder.position.x
-        );
+      if (leftHip && leftKnee) {
+        const distPxX = Math.abs(leftHip.position.y - leftKnee.position.y);
 
-        pxToCmRatioRef.current = distPxX / shoulderWidthCm;
+        pxToCmRatioRef.current = distPxX / hipToKneeCm;
       }
     }
 
