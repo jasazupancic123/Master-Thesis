@@ -12,7 +12,7 @@ import useDashboardHomeComponents from './hooks/use-components.hook';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { useAthlete } from '@/store/athlete.provider';

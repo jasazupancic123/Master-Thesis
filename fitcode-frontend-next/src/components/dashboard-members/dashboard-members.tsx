@@ -30,7 +30,7 @@ import useDashboardMembers from './hooks/use-members.hook';
 import useDashboardMembersDrag from './hooks/use-members-drag.hook';
 import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
 import { theme } from '@/app/style';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
@@ -346,10 +346,9 @@ export default function DashboardMembers() {
           onFileUpload={async (file) => {
             setIsUploadingMembers(true);
 
-            const authUsers = await uploadUsers(file);
-
+            const users = await uploadUsers(file);
             setOpenAddMemberViaCsvModal(false);
-            setCsvUserEmails(authUsers.map((d) => d.email!));
+            setCsvUserEmails(users.map((d) => d.email!));
           }}
         />
       </MyModal>

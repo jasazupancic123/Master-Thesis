@@ -141,7 +141,7 @@ export default function MobileMovementValidation(
   const user =
     !stationViewProps && authenticatedUser
       ? authenticatedUser
-      : (mainContext?.users || []).find((u) => u.uid === userId) || null;
+      : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
 

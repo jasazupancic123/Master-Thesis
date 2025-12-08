@@ -12,7 +12,7 @@ import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import slugify from 'slugify';
 
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { ILink } from '@/lib/common/type/link.type';
 
 export function linkPngIcon(

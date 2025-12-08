@@ -35,7 +35,7 @@ export default async function InitAthleteProvider({
 
     const institution = await controller.institution.init(institutionId, opts);
     const data: MainProviderProps = {
-      profile,
+      user: profile,
       institutions,
       institution,
       activeTraining,

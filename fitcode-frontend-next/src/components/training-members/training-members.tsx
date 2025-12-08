@@ -137,7 +137,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           <Avatar
                             className="avatar-border"
                             src={
-                              users.find((m) => m.uid === member.uid)
+                              users.data.find((m) => m.uid === member.uid)
                                 ?.photoURL || USER_AVATAR_IMG_URL
                             }
                             sx={{

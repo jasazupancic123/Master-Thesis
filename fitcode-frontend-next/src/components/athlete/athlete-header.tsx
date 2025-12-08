@@ -26,7 +26,7 @@ import type { IUndoneExercisesCtx } from '../training-in-progress/context/undone
 import BottomNavigation from './bottom-navigation';
 import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingService } from '@/core/training/training.service';
 import { lib } from '@/lib';

@@ -16,14 +16,14 @@ export default function useTrainingComponentMembers(props: UseMembersProps) {
     .filter(
       (p) => p.id === componentId && p.status === WorkloadStatus.IN_PROGRESS
     )
-    .map((p) => users.find((u) => u.uid === p.userId))
+    .map((p) => users.data.find((u) => u.uid === p.userId))
     .filter((u) => u !== undefined);
 
   const completedMembers = progress
     .filter(
       (p) => p.id === componentId && p.status === WorkloadStatus.COMPLETED
     )
-    .map((p) => users.find((u) => u.uid === p.userId))
+    .map((p) => users.data.find((u) => u.uid === p.userId))
     .filter((u) => u !== undefined);
 
   return { membersInProgress, completedMembers };

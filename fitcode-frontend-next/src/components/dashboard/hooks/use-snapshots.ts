@@ -5,7 +5,7 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { useEffect } from 'react';
 
 import type { Institution } from '@/core/institution/type/institution.type';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import type { FirestoreEntity } from '@/lib/firebase/type/firestore.type';

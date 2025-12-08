@@ -11,7 +11,6 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import { useTheme } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -21,13 +20,11 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import FaceCapture from '@/components/face-capture/face-capture';
-import { AuthController } from '@/core/auth/auth.controller';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import { Gender } from '@/core/profile/enum/gender.enum';
-import { SportLevel } from '@/core/profile/enum/sport-level.enum';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { ProfileController } from '@/core/profile/profile.controller';
-import type { Profile } from '@/core/profile/type/user.type';
+import { Gender } from '@/core/user/enum/gender.enum';
+import { SportLevel } from '@/core/user/enum/sport-level.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
+import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import {
@@ -46,23 +43,29 @@ const DEFAULT_MARGIN = 1;
 export default function ProfilePage() {
   const { user, setUser, customClaims } = useAuthenticatedAuth();
 
-  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { profile: profileGlobal, setProfile: setProfileGlobal } = useProfile();
+  const { user: profileGlobal, setUser: setProfileGlobal } = useProfile();
 
-  const [profile, setProfile] = useState<
-    Omit<Profile, 'createdAt' | 'updatedAt'>
-  >({
-    uid: user.uid,
-    email: user.email!,
-    sport: profileGlobal?.sport,
-    level: profileGlobal?.level,
-    gender: profileGlobal?.gender,
-    birthDate: profileGlobal?.birthDate,
-    wellness: profileGlobal?.wellness || { date: new Date(), userId: user.uid },
-  });
+  const [profile, setProfile] = useState<Omit<User, 'createdAt' | 'updatedAt'>>(
+    {
+      uid: user.uid,
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      photoURLBase64: profileGlobal?.photoURLBase64 || '',
+      role: user.role,
+      email: user.email!,
+      sport: profileGlobal?.sport,
+      level: profileGlobal?.level,
+      gender: profileGlobal?.gender,
+      birthDate: profileGlobal?.birthDate,
+      wellness: profileGlobal?.wellness || {
+        date: new Date(),
+        userId: user.uid,
+      },
+    }
+  );
 
   const [isCapturingFace, setIsCapturingFace] = useState<boolean>(false);
   const [captures, setCaptures] = useState<{
@@ -76,74 +79,27 @@ export default function ProfilePage() {
     left?: string;
   }>({});
 
-  const [updatedProfile, setUpdatedProfile] = useState(false);
   const [updatedUser, setUpdatedUser] = useState(false);
 
-  function handleChangeProfile<K extends keyof Profile>(
-    key: K,
-    value: Profile[K]
-  ) {
-    const newProfile = { ...profile, [key]: value };
-    setProfile(newProfile);
-    setUpdatedProfile(true);
-  }
-
-  function handleChangeUser<K extends keyof AuthUser>(
-    key: K,
-    value: AuthUser[K]
-  ) {
+  function handleChangeUser<K extends keyof User>(key: K, value: User[K]) {
     const newUser = { ...user, [key]: value };
     setUser(newUser);
     setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
-    if (updatedProfile) {
+    if (updatedUser) {
       if (!profile) return;
-      const { sport, level, gender, birthDate } = profile;
 
       handleApiRequest(
         router,
-        () =>
-          ProfileController.getInstance().update({
-            sport,
-            level,
-            gender,
-            birthDate,
-            userId: profile.uid,
-          }),
+        () => UserController.getInstance().update(profile.uid, profile),
         (_) => {
-          setProfileGlobal((prev) => ({
-            ...prev!,
-            sport,
-            level,
-            gender,
-            birthDate,
-          }));
-
+          setProfileGlobal((prev) => ({ ...prev!, ...profile }));
           toast.success('Profile updated successfully');
         },
         undefined,
         'Failed to update profile'
-      );
-    }
-
-    if (updatedUser) {
-      // logic here
-      const { displayName, photoURL } = user;
-
-      handleApiRequest(
-        router,
-        () =>
-          AuthController.getInstance().updateUser(user.uid, {
-            displayName,
-            photoURL,
-          }),
-        (_) => {
-          toast.success('User updated successfully');
-        },
-        undefined,
-        'Failed to update user'
       );
     }
   }
@@ -215,7 +171,7 @@ export default function ProfilePage() {
               });
 
             handleChangeUser('photoURL', url);
-            handleChangeProfile('photoURLBase64', base64);
+            handleChangeUser('photoURLBase64', base64);
           }}
         />
 
@@ -243,7 +199,7 @@ export default function ProfilePage() {
               value={profile?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
               label="Gender"
               onChange={(e) =>
-                handleChangeProfile('gender', e.target.value as Gender)
+                handleChangeUser('gender', e.target.value as Gender)
               }
             >
               <MenuItem value="" disabled>
@@ -264,7 +220,7 @@ export default function ProfilePage() {
               label="Date of Birth"
               value={profile?.birthDate ? dayjs(profile?.birthDate) : null}
               onChange={(newValue) =>
-                handleChangeProfile('birthDate', newValue?.toDate())
+                handleChangeUser('birthDate', newValue?.toDate())
               }
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true } }}
@@ -284,7 +240,7 @@ export default function ProfilePage() {
             <Select
               value={profile?.sport}
               label="Sport"
-              onChange={(e) => handleChangeProfile('sport', e.target.value)}
+              onChange={(e) => handleChangeUser('sport', e.target.value)}
             >
               {SPORTS.map((s) => (
                 <MenuItem key={s} value={s}>
@@ -299,7 +255,7 @@ export default function ProfilePage() {
               value={profile?.level ?? ''}
               label="Sport Level"
               onChange={(e) =>
-                handleChangeProfile('level', e.target.value as SportLevel)
+                handleChangeUser('level', e.target.value as SportLevel)
               }
             >
               <MenuItem value="" disabled>

@@ -18,24 +18,24 @@ import {
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { UpdateUser, User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import ImageUpload from '@/ui/image-upload';
 
 interface UsersDataGridProps {
-  users: AuthUser[];
-  filter?: (user: AuthUser) => boolean;
-  displayColumns?: (keyof AuthUser | 'actions' | 'role')[];
-  onRowClick?: (user: AuthUser) => void;
+  users: User[];
+  filter?: (user: User) => boolean;
+  displayColumns?: (keyof User | 'actions' | 'role')[];
+  onRowClick?: (user: User) => void;
   onRowUpdate?: (
     userId: string,
     changes: UpdateUser & { role?: UserRole }
   ) => Promise<void>;
   selectMode?: boolean;
   initialSelection?: string[];
-  onSelectToggle?: (user: AuthUser, selected: boolean) => void;
+  onSelectToggle?: (user: User, selected: boolean) => void;
 }
 
 const roleColors: Record<
@@ -76,7 +76,7 @@ export default function UsersDataGrid({
     if (initialSelection) setSelectedIds(new Set(initialSelection));
   }, [initialSelection]);
 
-  const toggleSelection = (user: AuthUser) => {
+  const toggleSelection = (user: User) => {
     const newSet = new Set(selectedIds);
     if (newSet.has(user.uid)) newSet.delete(user.uid);
     else newSet.add(user.uid);
@@ -108,11 +108,11 @@ export default function UsersDataGrid({
     if (!oldRow) return newRow;
 
     setRows((prev) =>
-      prev.map((u) => (u.uid === newRow.id ? (newRow as AuthUser) : u))
+      prev.map((u) => (u.uid === newRow.id ? (newRow as User) : u))
     );
 
     const changes = Object.keys(newRow).reduce((acc, key) => {
-      if (newRow[key] !== oldRow[key as keyof AuthUser] && key !== 'id')
+      if (newRow[key] !== oldRow[key as keyof User] && key !== 'id')
         acc[key] = newRow[key];
       return acc;
     }, {} as Partial<GridRowModel>);
@@ -313,14 +313,14 @@ export default function UsersDataGrid({
       columns={
         displayColumns
           ? columns.filter((c) =>
-              displayColumns.includes(c.field as keyof AuthUser)
+              displayColumns.includes(c.field as keyof User)
             )
           : columns
       }
       pageSizeOptions={[5, 10, 25]}
       disableRowSelectionOnClick
       onRowClick={(params) =>
-        !selectMode ? onRowClick?.(params.row as AuthUser) : undefined
+        !selectMode ? onRowClick?.(params.row as User) : undefined
       }
       editMode="row"
       rowModesModel={model}

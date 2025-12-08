@@ -13,7 +13,9 @@ export default function useTrainingMembers() {
 
   const item = training || group;
 
-  const members = users.filter((user) => item.membersIds.includes(user.uid));
+  const members = users.data.filter((user) =>
+    item.membersIds.includes(user.uid)
+  );
 
   const sortedMembers = [...members].sort((a, b) => {
     if (!training) return 0;

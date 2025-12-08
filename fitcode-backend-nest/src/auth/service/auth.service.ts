@@ -18,6 +18,8 @@ import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { User } from '@src/user/entity/user.entity';
+import { UserService } from '@src/user/service/user.service';
 
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AuthUser } from '../entity/auth-user.entity';
@@ -31,9 +33,11 @@ export class AuthService {
     private readonly firebase: FirebaseService,
     @Inject(forwardRef(() => InstitutionService))
     private readonly institutionService: Wrapper<InstitutionService>,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
   ) {}
 
-  async sessionLogin(idToken: string, res: Response): Promise<AuthUser | null> {
+  async sessionLogin(idToken: string, res: Response): Promise<User | null> {
     try {
       const user = await this.verify(idToken);
 
@@ -54,7 +58,10 @@ export class AuthService {
         path: '/',
       });
 
-      return user;
+      const profile = await this.userService.findOneById(user.uid);
+      if (!profile) throw new NotFoundException('User profile not found');
+
+      return profile;
     } catch (e) {
       this.logger.error('Session login failed', e);
       return null;

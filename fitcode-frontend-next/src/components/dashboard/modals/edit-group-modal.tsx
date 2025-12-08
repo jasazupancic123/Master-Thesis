@@ -65,7 +65,7 @@ export default function EditGroupModal(props: ModalProps) {
               input
             ),
           (group) => {
-            group = core.group.mapMembers(group, users);
+            group = core.group.mapMembers(group, users.data);
 
             setSelectedInstitution((prev) =>
               !prev

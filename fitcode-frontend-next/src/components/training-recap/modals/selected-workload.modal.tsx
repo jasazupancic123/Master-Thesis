@@ -27,7 +27,7 @@ export default function SelectedWorkloadModal(props: ModalProps & Props) {
 
   if (!workload) return null;
 
-  const user = users.find((u) => u.uid === workload.userId)!;
+  const user = users.data.find((u) => u.uid === workload.userId)!;
   const exercise = exercises.find((e) => e.id === workload.exerciseId)!;
 
   if (!user || !exercise) return null;

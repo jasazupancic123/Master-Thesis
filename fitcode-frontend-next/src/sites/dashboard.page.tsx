@@ -31,7 +31,7 @@ import { useMain } from '@/store/main.provider';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();
-  const { profile, reloadExercises } = useMain();
+  const { user: profile, reloadExercises } = useMain();
   const { filter, institutions, selectedInstitution } = useDashboard();
 
   const renderContent = () => {
