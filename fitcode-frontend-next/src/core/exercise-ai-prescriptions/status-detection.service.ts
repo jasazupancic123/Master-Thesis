@@ -61,7 +61,6 @@ export class StatusDetectionService {
       videoHeight: number;
       doItTimestamp: RefObject<Date | null>;
       reloadingModelRef: RefObject<boolean>;
-      reloadModel: () => Promise<void>;
       POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
     }
   ): Promise<boolean> {
@@ -82,7 +81,6 @@ export class StatusDetectionService {
       doItTimestamp,
       reloadingModelRef,
       POSE_DETECTION_CONSTANTS,
-      reloadModel,
     } = state;
 
     let detectedJitterThisFrame = false;
@@ -91,13 +89,6 @@ export class StatusDetectionService {
 
     switch (detectionStatus) {
       case DetectionStatus.NOT_FULLY_IN_FRAME: {
-        if (!detectedJitterThisFrame) {
-          detectedJitterThisFrame = await this.checkJitter({
-            keypointHistory,
-            reloadModel,
-            reloadingModelRef,
-          });
-        }
         const isFullyInFrame = this.checkIsFullyInFrame(
           keypoints,
           POSE_DETECTION_CONSTANTS
@@ -119,13 +110,6 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_FACING_CAMERA: {
-        if (!detectedJitterThisFrame) {
-          detectedJitterThisFrame = await this.checkJitter({
-            keypointHistory,
-            reloadModel,
-            reloadingModelRef,
-          });
-        }
         const isFacingCamera = this.checkIsFacingCamera(
           keypoints,
           POSE_DETECTION_CONSTANTS,
@@ -154,14 +138,6 @@ export class StatusDetectionService {
         );
       }
       case DetectionStatus.NOT_STILL: {
-        if (!detectedJitterThisFrame) {
-          detectedJitterThisFrame = await this.checkJitter({
-            keypointHistory,
-            reloadModel,
-            reloadingModelRef,
-          });
-        }
-
         const bufferCutOff = this.keypoint.getFramesCountFromSeconds(
           1,
           avgFps?.value || 30
@@ -528,119 +504,6 @@ export class StatusDetectionService {
       variances.reduce((acc, varian) => acc + varian, 0) / keypoints.length;
 
     return Math.sqrt(variance);
-  };
-
-  private async checkJitter(state: {
-    keypointHistory: KeypointHistory;
-    reloadModel: () => Promise<void>;
-    reloadingModelRef: RefObject<boolean>;
-  }): Promise<boolean> {
-    const { keypointHistory, reloadModel, reloadingModelRef } = state;
-
-    if (reloadingModelRef.current) return false;
-
-    const detectedJitter = this.detectJitter(keypointHistory);
-
-    if (detectedJitter) {
-      await reloadModel();
-    }
-
-    return detectedJitter;
-  }
-
-  private detectJitter = (keypointHistory: KeypointHistory): boolean => {
-    if (!keypointHistory || keypointHistory.history.length < 2) return false;
-
-    let isJittering = false;
-
-    const anglesToCheckForJittering: ExerciseAngleCondition[] = [
-      {
-        id: 'nose-shoulders-hip-left',
-        name: 'NOSE - SHOULDERS - HIP',
-        point1: [KeypointId.NOSE],
-        point2: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
-        origin: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
-        threshold: 40, // degrees
-        moreLess: MoreLess.LESS,
-      },
-      {
-        id: 'shoulders-hip-ankle-left',
-        name: 'SHOULDERS - HIP - ANKLE',
-        point1: [KeypointId.LEFT_SHOULDER, KeypointId.RIGHT_SHOULDER],
-        point2: [KeypointId.LEFT_ANKLE],
-        origin: [KeypointId.LEFT_HIP, KeypointId.RIGHT_HIP],
-        threshold: 40, // degrees
-        moreLess: MoreLess.LESS,
-      },
-    ];
-
-    const currentFrame =
-      keypointHistory.history[keypointHistory.history.length - 1];
-    const previousFrame =
-      keypointHistory.history[keypointHistory.history.length - 2];
-
-    const consecutiveFrames = [previousFrame, currentFrame];
-
-    anglesToCheckForJittering.forEach((angle) => {
-      const currentAndPrevAngle = [];
-
-      for (const frame of consecutiveFrames) {
-        const point1Keypoints = this.feedback.getAnglePointKeypoints(
-          angle.point1,
-          frame
-        );
-        const point2Keypoints = this.feedback.getAnglePointKeypoints(
-          angle.point2,
-          frame
-        );
-        const originKeypoints = this.feedback.getAnglePointKeypoints(
-          angle.origin,
-          frame
-        );
-
-        if (
-          angle.point1.length !== point1Keypoints.length ||
-          angle.point2.length !== point2Keypoints.length ||
-          angle.origin.length !== originKeypoints.length
-        ) {
-          // some keypoints are missing, cannot calculate angle
-          return;
-        }
-
-        const point1 = this.keypoint.getAvgPointCoordinates(
-          point1Keypoints,
-          true
-        );
-        const point2 = this.keypoint.getAvgPointCoordinates(
-          point2Keypoints,
-          true
-        );
-        const origin = this.keypoint.getAvgPointCoordinates(
-          originKeypoints,
-          true
-        );
-
-        if (!point1 || !point2 || !origin) return;
-
-        const deg = this.angle.calculateAngle(point1, point2, origin);
-
-        if (deg === null) return;
-
-        currentAndPrevAngle.push(deg);
-      }
-
-      if (!currentAndPrevAngle || currentAndPrevAngle.length < 2) return;
-
-      const angleDiff = Math.abs(
-        currentAndPrevAngle[1] - currentAndPrevAngle[0]
-      );
-
-      const isAngleJittering = angleDiff > angle.threshold;
-
-      if (isAngleJittering) isJittering = true;
-    });
-
-    return isJittering;
   };
 
   checkExerciseRepStartConditions(
