@@ -45,7 +45,7 @@ export class ExerciseRepository extends FirestoreRepository<Exercise> {
         coeffRel: input.coeffRel || 1,
         coeffLoad: input.coeffLoad || 0.5,
         coeffBw: input.coeffBw || 0.5,
-        coeff1Rm: input.coeff1Rm || 1.5,
+        coeff1Rm: input.coeff1Rm || 1,
         params: input.params || [],
         isUnilateral: input.isUnilateral || false,
         components: input.components || ['other'],

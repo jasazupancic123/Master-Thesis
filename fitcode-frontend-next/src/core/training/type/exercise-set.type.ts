@@ -21,6 +21,8 @@ export interface ExerciseSetPrimarySide {
   recTime?: number; // in seconds
   recDist?: number; // in meters, for distance-based recovery
   eff?: number; // 1 - 4
+  pace?: number; // e.g. in seconds/km
+  watts?: number; // e.g. power output in watts
   time?: number; // in seconds, for time-based sets
   dist?: number; // in meters, for distance-based sets
 }
@@ -38,6 +40,8 @@ export interface ExerciseSetSecondarySide {
   recTimeR?: number;
   recDistR?: number;
   effR?: number;
+  paceR?: number;
+  wattsR?: number;
   timeR?: number;
   distR?: number;
 }

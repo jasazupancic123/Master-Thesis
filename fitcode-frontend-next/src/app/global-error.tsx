@@ -16,6 +16,7 @@ interface Props {
 const onest = Onest({ subsets: ['latin'] });
 
 export default function GlobalError({ error }: Props) {
+  console.log('GlobalError:', error);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,8 +25,6 @@ export default function GlobalError({ error }: Props) {
 
   const mainColor = '#EAFF48';
   const textMainColor = '#D9D9D9';
-
-  console.log('Rendering GlobalError component:', error);
 
   return (
     <html>
@@ -57,9 +56,6 @@ export default function GlobalError({ error }: Props) {
               color: '#000000',
             }}
             onClick={() => {
-              console.log(
-                'Navigating to sign-in page from GlobalError component'
-              );
               router.push(LINK_SIGN_IN.href);
               router.refresh();
               router.refresh();

@@ -21,10 +21,6 @@ export class UserController extends BaseController {
     return this.instance;
   }
 
-  async findMe() {
-    return this.api.get<User>('/');
-  }
-
   async import(input: ImportUsers) {
     return this.api.post<{
       successful: User[];
