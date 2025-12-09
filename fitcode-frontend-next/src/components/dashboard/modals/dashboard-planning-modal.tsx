@@ -13,7 +13,7 @@ export default function DashboardPlanningModal(props: ModalProps) {
   const router = useRouter();
 
   const { role } = useAuthenticatedAuth();
-  const { groups } = useMain();
+  const { institution } = useMain();
 
   const { open, setOpen } = props;
 
@@ -60,7 +60,7 @@ export default function DashboardPlanningModal(props: ModalProps) {
           flexWrap="wrap"
           gap={4}
         >
-          {groups
+          {institution.groups
             .sort((g1, g2) => g1.name.localeCompare(g2.name))
             .map((group) => {
               return (
