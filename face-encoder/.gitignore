@@ -68,3 +68,4 @@ Thumbs.db
 
 # Docker
 *.dockerfile
+models/

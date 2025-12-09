@@ -1,0 +1,25 @@
+face_detector_config:
+  path: /tmp/models/scrfd.onnx
+  input_shape: [1920, 1080, 3]
+  input_dtype: float32
+  providers:
+  - provider:
+      provider_name: CPUExecutionProvider
+  nms: 0.5
+  probability: 0.4
+  max_faces: null
+
+face_post_processor_config:
+  filter_faces: true
+  min_relative_width: 0.01
+  reduce_percentage_bbox_filter: 0.25
+
+face_embedder_config:
+  path: /tmp/models/embedder.onnx
+  input_shape: [112, 112, 3]
+  input_dtype: float32
+  providers:
+  - provider:
+      provider_name: CPUExecutionProvider
+  normalization_type: "normalize-128"
+  transpose: true

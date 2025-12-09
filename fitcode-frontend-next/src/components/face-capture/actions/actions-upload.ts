@@ -55,7 +55,10 @@ export async function uploadFaceCaptures(state: {
       return;
     }
 
-    await UserController.getInstance().saveFaceEmbeddings(res.faceEmbedding);
+    await UserController.getInstance().saveFaceEmbeddings(
+      user.uid,
+      res.faceEmbedding
+    );
     toast.success('Face images uploaded successfully');
   } catch (e) {
     console.error('Error uploading face images', e);
