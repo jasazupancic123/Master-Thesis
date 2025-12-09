@@ -1,4 +1,11 @@
-import { Box, FormControl, MenuItem, Select, TextField } from '@mui/material';
+import {
+  alpha,
+  Box,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
@@ -131,7 +138,7 @@ export function NumberExerciseParam(props: Props) {
                   textAlign: 'center',
                   pr: 0,
                   pl: 0,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   '& .MuiSelect-select': {
                     textAlign: 'center',
                     display: 'flex',
@@ -139,6 +146,8 @@ export function NumberExerciseParam(props: Props) {
                     justifyContent: 'center',
                     pr: 0,
                     pl: 0,
+                    color: alpha(theme.palette.text.primary, 0.75),
+                    // color: theme.palette.background.lightBorder,
                   },
                   '& .MuiInputBase-input': {
                     textAlign: 'center',

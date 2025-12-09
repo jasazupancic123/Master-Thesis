@@ -1,4 +1,4 @@
-import { Box, Tooltip } from '@mui/material';
+import { alpha, Box, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -67,7 +67,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           bottom: 0,
           backgroundColor: selectedExerciseIds.some((ex) => ex === exercise.id)
             ? '#312f2fff'
-            : theme.palette.background.light,
+            : alpha(theme.palette.background.light, 0.75),
           zIndex: 0,
         }}
         onClick={(e) => {

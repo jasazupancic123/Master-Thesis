@@ -15,6 +15,7 @@ import { useRef, useState } from 'react';
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import {
+  DASHBOARD_PLANNING_ID,
   DASHBOARD_VIEWS,
   INSTITUTION_PAGE_ID,
 } from '@/lib/common/const/nav.const';
@@ -23,6 +24,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import DashboardPlanningModal from '../dashboard/modals/dashboard-planning-modal';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;
@@ -43,8 +45,10 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
   const { setDrawerOpen } = props;
 
-  const anchorElRef = useRef<HTMLDivElement | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
+  const [openPlanningModal, setOpenPlanningModal] = useState(false);
+
+  const anchorElRef = useRef<HTMLDivElement | null>(null);
 
   if (!selectedInstitution) return null;
 
@@ -90,15 +94,16 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
         return (
           <Box key={item.id} width="100%" display="flex" flexDirection="column">
-            {item.id === INSTITUTION_PAGE_ID && (
-              <Divider
-                sx={{
-                  width: '100%',
-                  borderColor: theme.palette.divider,
-                  mb: 1,
-                }}
-              />
-            )}
+            {item.id === INSTITUTION_PAGE_ID ||
+              (item.id === DASHBOARD_PLANNING_ID && (
+                <Divider
+                  sx={{
+                    width: '100%',
+                    borderColor: theme.palette.divider,
+                    mb: 1,
+                  }}
+                />
+              ))}
             <Box
               ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
               width="100%"
@@ -106,6 +111,11 @@ export default function DashboardSidebarMenuItems(props: Props) {
               justifyContent="flex-start"
               alignItems="center"
               onClick={() => {
+                if (item.id === DASHBOARD_PLANNING_ID) {
+                  setOpenPlanningModal(true);
+                  return;
+                }
+
                 setFilter(item);
                 if (setDrawerOpen) setDrawerOpen(false);
               }}
@@ -126,7 +136,14 @@ export default function DashboardSidebarMenuItems(props: Props) {
               }}
             >
               {item.icon}
-              <Typography fontSize={14} fontWeight={600}>
+              <Typography
+                fontSize={14}
+                fontWeight={600}
+                sx={{
+                  textTransform:
+                    item.id === DASHBOARD_PLANNING_ID ? 'uppercase' : 'none',
+                }}
+              >
                 {item.label}
               </Typography>
 
@@ -191,6 +208,11 @@ export default function DashboardSidebarMenuItems(props: Props) {
           </MenuItem>
         ))}
       </Menu>
+
+      <DashboardPlanningModal
+        open={openPlanningModal}
+        setOpen={setOpenPlanningModal}
+      />
     </Box>
   );
 }

@@ -101,9 +101,10 @@ export default function TodaySessionsComponent(props: Props) {
           {IconComponent && (
             <SvgIcon
               component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
-              inheritViewBox
               sx={{
+                width: 28,
                 fontSize: 20,
+                mb: 0.5,
                 color: theme.palette.text.primary,
                 // force shapes inside the svg to use currentColor
                 '& path, & rect, & circle, & polygon, & ellipse, & line, & polyline':

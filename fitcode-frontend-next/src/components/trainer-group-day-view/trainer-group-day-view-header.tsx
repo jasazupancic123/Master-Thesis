@@ -33,6 +33,7 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
   const screenSize = useScreenSize();
 
   const {
+    group,
     trainings,
     setDateFrom,
     setDateTo,
@@ -70,58 +71,68 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
     return (
       <Box
         display="flex"
-        flexDirection={smallDisplay ? 'row' : 'column'}
+        flexDirection="column"
+        alignItems={smallDisplay ? 'center' : 'flex-start'}
         ml={smallDisplay ? 0 : 2}
         py={smallDisplay ? 1 : 0}
-        justifyContent={smallDisplay ? 'center' : undefined}
-        gap={smallDisplay ? 4 : 0.5}
+        gap={1}
       >
-        {['AM', 'PM'].map((period) => {
-          const isPeriodSelected = selectedPeriod?.value === period;
-          return (
-            <Box
-              key={period}
-              display="flex"
-              flexDirection={smallDisplay ? 'column-reverse' : 'row'}
-              alignItems="center"
-              gap={smallDisplay ? 0 : 1}
-            >
-              <Typography
-                fontSize={12}
-                fontWeight={600}
-                sx={{
-                  color: isPeriodSelected
-                    ? theme.palette.text.secondary
-                    : undefined,
-                  cursor: 'pointer',
-                  backgroundColor: isPeriodSelected
-                    ? theme.palette.primary.main
-                    : 'transparent',
-                  borderRadius: 18,
-                  px: 1,
-                }}
-                onClick={() => {
-                  if (detectedChanges) {
-                    toast.error('Unsaved changes will be lost', {
-                      icon: '⚠️',
-                      duration: 2000,
-                    });
-
-                    setDetectedChanges(false);
-                    return;
-                  }
-                  const newPeriod = {
-                    key: new Date(),
-                    value: period as 'AM' | 'PM',
-                  };
-                  setSelectedPeriod(newPeriod);
-                }}
+        <Typography variant="h6" fontSize={16}>
+          {group.name}
+        </Typography>
+        <Box
+          display="flex"
+          flexDirection={smallDisplay ? 'row' : 'column'}
+          justifyContent={smallDisplay ? 'center' : undefined}
+          gap={smallDisplay ? 4 : 0.5}
+        >
+          {['AM', 'PM'].map((period) => {
+            const isPeriodSelected = selectedPeriod?.value === period;
+            return (
+              <Box
+                key={period}
+                display="flex"
+                flexDirection={smallDisplay ? 'column-reverse' : 'row'}
+                alignItems="center"
+                gap={smallDisplay ? 0 : 1}
               >
-                {period}
-              </Typography>
-            </Box>
-          );
-        })}
+                <Typography
+                  fontSize={12}
+                  fontWeight={600}
+                  sx={{
+                    color: isPeriodSelected
+                      ? theme.palette.text.secondary
+                      : undefined,
+                    cursor: 'pointer',
+                    backgroundColor: isPeriodSelected
+                      ? theme.palette.primary.main
+                      : 'transparent',
+                    borderRadius: 18,
+                    px: 1,
+                  }}
+                  onClick={() => {
+                    if (detectedChanges) {
+                      toast.error('Unsaved changes will be lost', {
+                        icon: '⚠️',
+                        duration: 2000,
+                      });
+
+                      setDetectedChanges(false);
+                      return;
+                    }
+                    const newPeriod = {
+                      key: new Date(),
+                      value: period as 'AM' | 'PM',
+                    };
+                    setSelectedPeriod(newPeriod);
+                  }}
+                >
+                  {period}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
     );
   }

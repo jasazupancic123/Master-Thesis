@@ -4,6 +4,7 @@ import type { Group } from '@/core/institution/type/group.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
+import dayjs from 'dayjs';
 
 export default function useDashboardHomeComponents(
   selectedGroups: Group[],
@@ -36,9 +37,15 @@ export default function useDashboardHomeComponents(
   useEffect(() => {
     const componentIdCounter: { id: string; count: number }[] = [];
 
+    const startOfWeek = dayjs().startOf('week');
+    const endOfWeek = dayjs().endOf('week');
+
     trainings
-      .filter((training) =>
-        selectedGroups.some((group) => group.id === training.groupId)
+      .filter(
+        (training) =>
+          selectedGroups.some((group) => group.id === training.groupId) &&
+          dayjs(training.to).isAfter(startOfWeek) &&
+          dayjs(training.from).isBefore(endOfWeek)
       )
       .forEach((training) => {
         training.components.forEach((component) => {
