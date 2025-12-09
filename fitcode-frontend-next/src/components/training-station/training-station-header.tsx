@@ -20,30 +20,6 @@ export default function TrainingStationHeader(props: Props) {
     station.users.some((u) => u.uid === t.userId)
   );
 
-  let prescribedWorkloadsCount = 0;
-
-  currentIndividualTrainings.forEach((training) => {
-    const trainingComponent = training.components.find(
-      (c) => c.id === component?.id
-    );
-    if (!trainingComponent) return;
-
-    const trainingExercises = trainingComponent.supersets
-      .flatMap((s) => s.exercises)
-      .filter((e) => station.exercises.some((se) => se.id === e.id));
-
-    trainingExercises.forEach((exercise) => {
-      prescribedWorkloadsCount += exercise.sets.length;
-    });
-  });
-
-  const completedWorkloads = workloads.filter(
-    (w) =>
-      station.users.some((u) => u.uid === w.userId) &&
-      station.exercises.some((e) => e.id === w.exerciseId) &&
-      w.id !== undefined
-  ).length;
-
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start" gap={2}>
       <Box

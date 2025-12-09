@@ -9,17 +9,13 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { Workload } from '@/core/training/type/workload.type';
 import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
-import { useDashboard } from '@/store/dashboard.provider';
 import DataGridCellPercentageDiff from '@/ui/data-grid-cell-percentage-diff';
-import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportDataGridData(
   selectedAthlete: User | null,
   selectedTraining: Training | null,
   cache: Map<string, Workload[]>
 ) {
-  const { institution } = useMain();
-
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [rows, setRows] = useState<DataGridRowAthleteExerciseRow[]>([]);
 

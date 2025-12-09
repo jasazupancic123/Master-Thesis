@@ -15,10 +15,10 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import SelectInput from '@/ui/select-input/select-input';
-import { useMain } from '@/store/main.provider';
 
 const TEMP_PROTOCOL_ID = '__create_new__';
 

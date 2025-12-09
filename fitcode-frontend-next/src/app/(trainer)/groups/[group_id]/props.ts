@@ -5,7 +5,6 @@ import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Cycle } from '@/core/institution/type/cycle.type';
 import type { Group } from '@/core/institution/type/group.type';
-import type { Institution } from '@/core/institution/type/institution.type';
 import type { MainSet } from '@/core/training/enum/main-set.enum';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Superset } from '@/core/training/type/superset.type';

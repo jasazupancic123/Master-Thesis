@@ -103,7 +103,6 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
                 UserController.getInstance().saveFaceEmbeddings(
                   res.faceEmbedding
                 ),
-
               () => {
                 toast.success('Face embeddings saved successfully');
               },

@@ -12,7 +12,6 @@ import { InstitutionController } from '@/core/institution/institution.controller
 import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
 import type {
   InitInstitution,
-  Institution,
   UpdateInstitution,
 } from '@/core/institution/type/institution.type';
 import type { User } from '@/core/user/type/user.type';

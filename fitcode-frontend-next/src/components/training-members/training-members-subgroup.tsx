@@ -17,11 +17,11 @@ import { handleDeleteSubgroup } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
 import SubgroupMember from './subgroup-member';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
+import type { User } from '@/core/user/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { User } from '@/core/user/type/user.type';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;

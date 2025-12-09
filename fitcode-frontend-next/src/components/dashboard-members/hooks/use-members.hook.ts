@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import type { User } from '@/core/user/type/user.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useDashboardMembers() {

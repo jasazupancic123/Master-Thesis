@@ -16,7 +16,6 @@ import toast from 'react-hot-toast';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
 import GroupsDataGrid from '../groups-data-grid';
-import UsersDataGrid from '@/components/users-data-grid/users-data-grid';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
