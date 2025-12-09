@@ -40,13 +40,11 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
   });
 
   function setCustomClaims(claims: CustomClaims) {
-    console.log('setCustomClaims called with claims:', claims);
     if (state.status === 'authenticated')
       setState((prevState) => ({ ...prevState, customClaims: claims }));
   }
 
   function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
-    console.log('setUser called with data:', data);
     if (state.status !== 'authenticated') return;
     setState((prevState) => ({
       ...prevState,
