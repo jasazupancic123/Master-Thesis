@@ -216,7 +216,10 @@ export default function MainProvider(props: MainProviderProps) {
     institution,
     setInstitution,
     institutions: props.institutions,
-    wellness: users.data.map((p) => p.wellness).flat(),
+    wellness: users.data
+      .map((p) => p.wellness)
+      .filter(Boolean)
+      .flat(),
     activeTraining,
   };
 
