@@ -9,6 +9,7 @@ import type {
 import { DataGrid, GridRowEditStopReasons } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 
+import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { Method } from '@/core/exercise/type/method.type';
 
 interface Props {
@@ -141,7 +142,7 @@ export default function MethodsDataGrid({
   ];
 
   return (
-    <Box sx={{ height: 640, width: '100%', p: 2 }}>
+    <Box maxWidth={MAX_WIDTH_DASHBOARD_ITEM} sx={{ width: '100%', py: 2 }}>
       <DataGrid
         style={{
           backgroundColor: theme.palette.background.paper,
@@ -156,6 +157,9 @@ export default function MethodsDataGrid({
             : columns
         }
         pageSizeOptions={[5, 10, 25]}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 10, page: 0 } },
+        }}
         disableRowSelectionOnClick
         onRowClick={(params) =>
           !selectMode ? onRowClick?.(params.row as Method) : undefined
@@ -172,7 +176,6 @@ export default function MethodsDataGrid({
           selectMode && selectedIds.has(params.row.uid) ? 'selected-row' : ''
         }
         sx={{
-          m: -3,
           '& .selected-row': { backgroundColor: 'rgba(25, 118, 210, 0.1)' },
           '& .MuiDataGrid-cell': {
             display: 'flex',
@@ -182,6 +185,7 @@ export default function MethodsDataGrid({
             display: 'flex',
             alignItems: 'center',
           },
+          overflowY: 'hidden',
         }}
       />
     </Box>

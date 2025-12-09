@@ -10,9 +10,9 @@ import type { TrainingExercise } from '@/core/training/type/training-exercise.ty
 import type { Workload } from '@/core/training/type/workload.type';
 import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { useMain } from '@/store/main.provider';
 
 interface Props {
   exercise: TrainingExercise;

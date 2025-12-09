@@ -159,18 +159,7 @@ export default function TrainerCycleView() {
               py: 1,
             }}
           >
-            {(screenSize.isMobile || screenSize.isSmallTablet
-              ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-              : [
-                  'Monday',
-                  'Tuesday',
-                  'Wednesday',
-                  'Thursday',
-                  'Friday',
-                  'Saturday',
-                  'Sunday',
-                ]
-            ).map((day, j) => (
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, j) => (
               <Typography
                 key={j}
                 width="calc(100% / 7)"
@@ -193,6 +182,7 @@ export default function TrainerCycleView() {
                 <Fragment key={i}>
                   <TrainingWeek
                     week={week.map(({ date }) => dayjs(date!))}
+                    weekIndex={i}
                     selected={selectedComponents}
                     cycleView
                     setSelected={(component) =>

@@ -1,9 +1,4 @@
-import {
-  Groups,
-  Logout,
-  Menu as MenuIcon,
-  Settings,
-} from '@mui/icons-material';
+import { Logout, Menu as MenuIcon, Settings } from '@mui/icons-material';
 import {
   Avatar,
   Box,
@@ -17,8 +12,6 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-import type { Institution } from '@/core/institution/type/institution.type';
-import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_PROFILE,
@@ -27,10 +20,8 @@ import {
   LINKS_SIDEBAR_DAHBOARD_VIEW,
 } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import SelectInputHorizontal from '@/ui/select-input/select-input-horizontal';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardMenuMobile() {
   const { user, role, logout } = useAuthenticatedAuth();

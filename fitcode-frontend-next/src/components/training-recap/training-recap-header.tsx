@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { lib } from '@/lib';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { useTrainingRecap } from '@/store/training-recap.provider';
 
 interface Props {
   uniqueUsers: number;

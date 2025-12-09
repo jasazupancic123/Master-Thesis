@@ -73,7 +73,9 @@ const TrainingInProgressContext =
 export const useTrainingInProgress = () =>
   useContext(TrainingInProgressContext)!;
 
-export const TrainingInProgressProvider = ({ children }: React.PropsWithChildren) => {
+export const TrainingInProgressProvider = ({
+  children,
+}: React.PropsWithChildren) => {
   const { trainingInProgress, setTrainingInProgress } = useTrainings();
 
   const router = useRouter();
