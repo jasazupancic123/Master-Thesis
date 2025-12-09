@@ -36,8 +36,8 @@ export class UserController extends BaseController {
     return this.api.post<User>('/register', input, options);
   }
 
-  async saveFaceEmbeddings(faceEmbedding: number[]) {
-    return this.api.post<object>('/embed', { faceEmbedding });
+  async saveFaceEmbeddings(userId: string, faceEmbedding: number[]) {
+    return this.api.post<object>('/embed', { userId, faceEmbedding });
   }
 
   async upsertWellness(body: CreateWellness) {
