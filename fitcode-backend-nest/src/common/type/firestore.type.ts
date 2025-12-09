@@ -66,6 +66,7 @@ export type InstitutionMemberRef = InstitutionRef & UserRef;
 export type TrainingProtocolRef = InstitutionRef & { protocolId: string };
 export type MethodRef = { methodId: string };
 export type ExerciseRef = { exerciseId: string };
+export type UserExerciseStatsRef = UserRef & ExerciseRef;
 
 export type UserRef = { uid: string }; // auth user uid
 export type ProfileRef = UserRef;

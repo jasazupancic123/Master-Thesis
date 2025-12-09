@@ -8,8 +8,11 @@ export enum FirestoreCollection {
   INSTITUTION = 'institutions',
   INSTITUTION_MEMBERS = 'institution-members',
   GROUP = 'groups',
-  PROFILE = 'profile',
+
+  // user-related
+  USER = 'profile',
   WELLNESS = 'wellness',
+  USER_EXERCISE_STATS = 'user-exercise-stats',
 
   // training
   TRAINING = 'trainings',

@@ -27,6 +27,7 @@ import {
   WorkloadMeta,
 } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
+import { UserService } from '@src/user/service/user.service';
 
 import { TrainingStatus } from '../enum/training-status.enum';
 import { TrainingComponentUserStatusRepository } from '../repository/training-component-user-status.repository';
@@ -39,6 +40,7 @@ export class WorkloadService {
     private readonly firebase: FirebaseService,
     private readonly repository: WorkloadRepository,
     private readonly trainingComponentUserStatusRepository: TrainingComponentUserStatusRepository,
+    private readonly userService: UserService,
   ) {}
 
   getDoc(id: WorkloadRef) {
@@ -166,13 +168,20 @@ export class WorkloadService {
       delete workload.from;
       delete workload.to;
       delete workload.recTime;
-
       await this.repository.update(ref, workload);
-      return { ...existing, ...workload, updatedAt: new Date() };
-    }
+    } else await this.repository.save(ref, workload);
 
-    await this.repository.save(ref, workload);
-    return { ...workload, createdAt: new Date(), updatedAt: new Date() };
+    // update rep max stats if applicable
+    if (workload.reps && workload.loadKg)
+      await this.userService.checkAndSaveRepMax(
+        { uid: ref.userId, exerciseId: ref.exerciseId },
+        workload.reps,
+        workload.loadKg,
+      );
+
+    return existing
+      ? { ...existing, ...workload, updatedAt: new Date() }
+      : { ...workload, createdAt: new Date(), updatedAt: new Date() };
   }
 
   /**

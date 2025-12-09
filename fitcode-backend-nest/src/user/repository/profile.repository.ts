@@ -16,7 +16,7 @@ import { Profile } from '../entity/profile.entity';
 
 @Injectable()
 export class ProfileRepository extends FirestoreRepository<Profile> {
-  collectionName = FirestoreCollection.PROFILE;
+  collectionName = FirestoreCollection.USER;
 
   constructor(readonly firebase: FirebaseService) {
     super(firebase);

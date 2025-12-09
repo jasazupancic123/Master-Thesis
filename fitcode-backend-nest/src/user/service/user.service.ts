@@ -15,11 +15,13 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 import { AuthService } from '@src/auth/service/auth.service';
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
 import {
   CustomClaims,
   FirebaseUser,
 } from '@src/common/type/firebase-auth.type';
+import { UserExerciseStatsRef } from '@src/common/type/firestore.type';
 import { BatchOperation } from '@src/common/type/orm.type';
 import { ValidateRowError } from '@src/common/type/validate.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -32,12 +34,15 @@ import { ImportUserDto } from '../dto/import-users.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { Profile } from '../entity/profile.entity';
 import { User } from '../entity/user.entity';
+import { UserExerciseStats } from '../entity/user-exercise-stats.entity';
 import { ProfileRepository } from '../repository/profile.repository';
+import { UserExerciseStatsRepository } from '../repository/user-exercise-stats.repository';
 import { UserType } from '../type/user.type';
 
 @Injectable()
 export class UserService implements Permission<Profile, Institution> {
   constructor(
+    private readonly common: CommonService,
     private readonly firebase: FirebaseService,
     private readonly repository: ProfileRepository,
     @Inject(forwardRef(() => AuthService))
@@ -46,6 +51,7 @@ export class UserService implements Permission<Profile, Institution> {
     private readonly institutionService: Wrapper<InstitutionService>,
     @Inject(forwardRef(() => MemberService))
     private readonly memberService: Wrapper<MemberService>,
+    private readonly userExerciseStatsRepository: UserExerciseStatsRepository,
   ) {}
 
   async findOneById(uid: string): Promise<User> {
@@ -242,6 +248,43 @@ export class UserService implements Permission<Profile, Institution> {
       updatedAt: new Date(),
       wellness: { userId: created.uid, date: new Date() },
     };
+  }
+
+  async getExerciseStats(
+    ref: UserExerciseStatsRef,
+  ): Promise<UserExerciseStats> {
+    return await this.userExerciseStatsRepository.findById(ref);
+  }
+
+  async checkAndSaveRepMax(
+    ref: UserExerciseStatsRef,
+    reps: number,
+    loadKg: number,
+  ) {
+    // calculate new 1RM
+    const newRepMax = this.common.number.rm(loadKg, reps);
+
+    // find current rep max (or 0 if none)
+    const stats = await this.userExerciseStatsRepository.findById(ref);
+    const currentRepMax = stats?.repMax
+      ? this.common.number.rm(stats.repMax.loadKg, stats.repMax.reps)
+      : 0;
+
+    if (newRepMax > currentRepMax) {
+      // new 1RM is better, save it
+      if (!stats)
+        await this.userExerciseStatsRepository.save({
+          userId: ref.uid,
+          exerciseId: ref.exerciseId,
+          timestamp: new Date(),
+          repMax: { reps, loadKg },
+        });
+      else
+        await this.userExerciseStatsRepository.update(ref, {
+          timestamp: new Date(),
+          repMax: { reps, loadKg },
+        });
+    }
   }
 
   canView(user: FirebaseUser, entity: User, institution?: Institution) {

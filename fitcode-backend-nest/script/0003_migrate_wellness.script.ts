@@ -12,7 +12,7 @@ runScript('0003 Migrate Wellness', async () => {
 
   // for each profile, find the latest wellness and save it to the profile document
   const profiles = (
-    await firebase.firestore.collection(FirestoreCollection.PROFILE).get()
+    await firebase.firestore.collection(FirestoreCollection.USER).get()
   ).docs.map((doc) =>
     firebase.serialize(doc.data() as FirestoreEntity<Profile>),
   );
@@ -21,7 +21,7 @@ runScript('0003 Migrate Wellness', async () => {
 
   for (const profile of profiles) {
     const wellnessCollection = firebase.firestore
-      .collection(FirestoreCollection.PROFILE)
+      .collection(FirestoreCollection.USER)
       .doc(profile.uid)
       .collection(FirestoreCollection.WELLNESS);
 
@@ -52,7 +52,7 @@ runScript('0003 Migrate Wellness', async () => {
         };
 
     await firebase.firestore
-      .collection(FirestoreCollection.PROFILE)
+      .collection(FirestoreCollection.USER)
       .doc(profile.uid)
       .update({ wellness });
 

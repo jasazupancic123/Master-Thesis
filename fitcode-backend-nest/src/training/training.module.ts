@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PeriodizationModule } from '@src/periodization/periodization.module';
+import { UserModule } from '@src/user/user.module';
 
 import { AttributeModule } from '../attribute/attribute.module';
 import { ExerciseModule } from '../exercise/exercise.module';
@@ -22,6 +23,7 @@ import { TrainingController } from './training.controller';
     InstitutionModule,
     PeriodizationModule,
     ExerciseModule,
+    UserModule,
   ],
   providers: [
     WorkloadRepository,
