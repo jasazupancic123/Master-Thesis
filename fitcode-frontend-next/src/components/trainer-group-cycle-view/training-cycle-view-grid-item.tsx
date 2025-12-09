@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { DragIndicator } from '@mui/icons-material';
 import type { SvgIconProps } from '@mui/material';
-import { IconButton, Tooltip, Typography } from '@mui/material';
+import { alpha, IconButton, SvgIcon, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import type { ElementType } from 'react';
 import React, { useRef } from 'react';
@@ -13,6 +13,7 @@ import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import { theme } from '@/app/style';
 
 export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const screenSize = useScreenSize();
@@ -107,8 +108,53 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             >
               <div>
                 {IconComponent && (
-                  <IconComponent
-                    onClick={async (e) => {
+                  <SvgIcon
+                    component={IconComponent}
+                    sx={{
+                      width: screenSize.isMobile ? 12 : 18,
+                      height: screenSize.isMobile ? 12 : 18,
+                      margin: !componentCalendarView
+                        ? !screenSize.isMobile &&
+                          !screenSize.isLandscapeMobile &&
+                          !isSameDayAsSelectedComponent
+                          ? 1
+                          : isSameDayAsSelectedComponent
+                            ? 0.5
+                            : 0
+                        : !screenSize.isMobile &&
+                            !screenSize.isLandscapeMobile &&
+                            !screenSize.isTablet &&
+                            !isSameDayAsSelectedComponent
+                          ? 1
+                          : !isSameDayAsSelectedComponent && screenSize.isTablet
+                            ? 2
+                            : isSameDayAsSelectedComponent &&
+                                screenSize.isTablet
+                              ? 1.5
+                              : isSameDayAsSelectedComponent &&
+                                  !screenSize.isMobile
+                                ? 0.5
+                                : !isSameDayAsSelectedComponent &&
+                                    screenSize.isMobile
+                                  ? 0.5
+                                  : 0,
+                      mx:
+                        screenSize.isMobile || screenSize.isLandscapeMobile
+                          ? 1
+                          : undefined,
+                      mb: 0.5,
+                      cursor: 'pointer',
+                      border: isSameDayAsSelectedComponent
+                        ? '1px solid'
+                        : undefined,
+                      borderRadius: isSameDayAsSelectedComponent
+                        ? '50%'
+                        : undefined,
+                      p: isSameDayAsSelectedComponent ? 0.5 : undefined,
+                    }}
+                    onClick={async (
+                      e: React.MouseEvent<SVGSVGElement, MouseEvent>
+                    ) => {
                       if (
                         periodizationView &&
                         selectedTrainings &&
@@ -161,60 +207,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                         component!.field
                       );
                     }}
-                    style={{
-                      height: screenSize.isSmallerThanLaptop ? 20 : 25,
-                      width: screenSize.isSmallerThanLaptop ? 20 : 25,
-                    }}
-                    sx={{
-                      color: cycleView
-                        ? target?.color
-                        : componentCalendarView
-                          ? trainingComponent.color
-                          : selected && selectedTarget
-                            ? selectedTarget.color
-                            : undefined,
-                      margin: !componentCalendarView
-                        ? !screenSize.isMobile &&
-                          !screenSize.isLandscapeMobile &&
-                          !isSameDayAsSelectedComponent
-                          ? 1
-                          : isSameDayAsSelectedComponent
-                            ? 0.5
-                            : 0
-                        : !screenSize.isMobile &&
-                            !screenSize.isLandscapeMobile &&
-                            !screenSize.isTablet &&
-                            !isSameDayAsSelectedComponent
-                          ? 1
-                          : !isSameDayAsSelectedComponent && screenSize.isTablet
-                            ? 2
-                            : isSameDayAsSelectedComponent &&
-                                screenSize.isTablet
-                              ? 1.5
-                              : isSameDayAsSelectedComponent &&
-                                  !screenSize.isMobile
-                                ? 0.5
-                                : !isSameDayAsSelectedComponent &&
-                                    screenSize.isMobile
-                                  ? 0.5
-                                  : 0,
-                      mx:
-                        screenSize.isMobile || screenSize.isLandscapeMobile
-                          ? 1
-                          : undefined,
-                      mb:
-                        periodizationView || componentCalendarView
-                          ? 0
-                          : undefined,
-                      cursor: 'pointer',
-                      border: isSameDayAsSelectedComponent
-                        ? '1px solid'
-                        : undefined,
-                      borderRadius: isSameDayAsSelectedComponent
-                        ? '50%'
-                        : undefined,
-                      p: isSameDayAsSelectedComponent ? 0.5 : undefined,
-                    }}
+                    fontSize="small"
                   />
                 )}
 
@@ -255,7 +248,12 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         }}
         // onPointerDown={(e) => e.stopPropagation()}
       >
-        <DragIndicator fontSize="small" />
+        <DragIndicator
+          sx={{
+            fontSize: 16,
+            color: alpha(theme.palette.text.primary, 0.7),
+          }}
+        />
       </IconButton>
     </Box>
   );

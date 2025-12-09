@@ -1,6 +1,7 @@
 import {
   Add,
   CalendarTodayOutlined,
+  LocalLibraryOutlined,
   Logout,
   Settings,
   SpaOutlined,
@@ -83,12 +84,16 @@ export const LINK_CONTACT_US = link(
   'contact-us'
 );
 export const LINK_ABOUT_US = link('About Us', '/#about-us', null, 'about-us');
-export const LINK_METHODOLOGIES = link(
-  'Methodology',
-  '/methodology',
-  null,
-  'methodology'
+
+/*
+export const LINK_DASHBOARD_PLANNING = linkPngIcon(
+  'Planning',
+  '/dashboard/groups',
+  DASHBOARD_PLANNING_ID,
+  `${DASHBOARD_ICONS_FOLDER}/groups.png`,
+  DASHBOARD_ICONS_DIMENSION
 );
+*/
 
 // all standalone app links
 export const LINK_INDEX = link('Home', '/#home', null, 'home');
@@ -145,6 +150,13 @@ export const DASHBOARD_MAIN = '/dashboard';
 export const DASHBOARD_ICONS_FOLDER = '/dashboard-icons';
 const DASHBOARD_ICONS_DIMENSION = 18;
 
+export const LINK_METHODOLOGIES = link(
+  'Methodology',
+  '/methodology',
+  <LocalLibraryOutlined sx={{ fontSize: DASHBOARD_ICONS_DIMENSION }} />,
+  'methodology'
+);
+
 export const LINK_DASHBOARD_HOME = linkPngIcon(
   'Dashboard',
   '/dashboard',
@@ -185,10 +197,12 @@ export const LINK_DASHBOARD_SETTINGS = linkPngIcon(
   DASHBOARD_ICONS_DIMENSION
 );
 
+export const DASHBOARD_PLANNING_ID = 'dashboard-groups';
+
 export const LINK_DASHBOARD_PLANNING = linkPngIcon(
   'Planning',
   '/dashboard/groups',
-  'dashboard-groups',
+  DASHBOARD_PLANNING_ID,
   `${DASHBOARD_ICONS_FOLDER}/groups.png`,
   DASHBOARD_ICONS_DIMENSION
 );
@@ -220,6 +234,7 @@ export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
     LINK_DASHBOARD_REPORTS,
     LINK_DASHBOARD_MEMBERS,
     LINK_DASHBOARD_EXERCISES,
+    LINK_METHODOLOGIES,
     LINK_DASHBOARD_SETTINGS,
     LINK_DASHBOARD_PLANNING,
   ];

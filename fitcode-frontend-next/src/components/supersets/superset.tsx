@@ -94,11 +94,7 @@ export default function Superset({ superset, supersetIndex }: Props) {
               ? '1.1px'
               : '1px',
           borderRadius: '5px',
-          border: `1px solid ${
-            superset.warmup || superset.cooldown
-              ? alpha(theme.palette.text.primary, 0.5)
-              : alpha(theme.palette.primary.main, 0.75)
-          }`,
+          border: `1px solid ${alpha(theme.palette.text.primary, 0.4)}`,
           position: 'relative',
           zIndex: 100,
         }}

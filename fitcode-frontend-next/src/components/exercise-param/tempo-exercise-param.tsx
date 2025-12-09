@@ -1,4 +1,5 @@
 import {
+  alpha,
   Box,
   Button,
   FormControl,
@@ -120,7 +121,7 @@ export function TempoExerciseParam({
                   textAlign: 'center',
                   pr: 0,
                   pl: 0,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   '& .MuiSelect-select': {
                     textAlign: 'center',
                     display: 'flex',
@@ -128,6 +129,7 @@ export function TempoExerciseParam({
                     justifyContent: 'center',
                     pr: 0,
                     pl: 0,
+                    color: alpha(theme.palette.text.primary, 0.75),
                   },
                   '& .MuiInputBase-input': {
                     textAlign: 'center',

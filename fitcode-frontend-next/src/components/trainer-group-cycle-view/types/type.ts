@@ -9,6 +9,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   week: Dayjs[];
+  weekIndex?: number;
   selected?: Component[];
   setSelected?: SetState<Component[]>;
   componentCalendarView?: boolean;
