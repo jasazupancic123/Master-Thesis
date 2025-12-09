@@ -1,10 +1,7 @@
 import type { ITrainingInProgressUtilsCtx } from '../context/training-in.progress-utils.provider';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { Superset } from '@/core/training/type/superset.type';
-import type {
-  TrainingExercise,
-  TrainingExerciseExtended,
-} from '@/core/training/type/training-exercise.type';
+import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { IMainContext } from '@/store/main.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import type { ITrainingsContextDefined } from '@/store/trainings.provider';
@@ -19,29 +16,12 @@ export function handleChangeSuperset(
 ) {
   const { superset, i } = input;
 
-  const { useMain, useTraining, useTrainingInProgress } = context;
+  const { useTrainingInProgress } = context;
 
-  const { activeTraining } = useMain;
-  const { trainingInProgress } = useTraining;
-  const {
-    setSelectedExercise,
-    setSetIndex,
-    setSupersetIndex,
-    supersetIndex,
-    workloads,
-  } = useTrainingInProgress;
+  const { setSelectedExercise, setSetIndex, setSupersetIndex, supersetIndex } =
+    useTrainingInProgress;
 
   if (supersetIndex === undefined) return;
-
-  const undoneExercises = ExerciseSetService.getUndoneExercisesFromSuperset(
-    superset,
-    {
-      trainingId: trainingInProgress.training.id,
-      supersetIndex,
-      componentId: trainingInProgress.componentId,
-    },
-    workloads
-  );
 
   setSupersetIndex(i);
   setSelectedExercise(superset.exercises[0] || null);
@@ -61,7 +41,6 @@ export const handleFinishSuperset = async (context: {
     useTrainingInProgressUtils,
   } = context;
 
-  const { activeTraining } = useMain;
   const { trainingInProgress } = useTraining;
   const { supersetIndex, workloads } = useTrainingInProgress;
 
@@ -136,7 +115,6 @@ export const handleAdvanceInSuperset = (
     useTrainingInProgressUtils,
   } = context;
 
-  const { activeTraining } = useMain;
   const { trainingInProgress, setTrainingInProgress } = useTraining;
 
   const {

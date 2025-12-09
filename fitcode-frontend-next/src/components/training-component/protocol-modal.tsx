@@ -25,21 +25,22 @@ export default function ProtocolModal({
   onConfirm,
   onDelete,
 }: Props) {
-  const { protocols, exercises } = useMain();
+  const { exercises } = useMain();
   const {
     training,
+    setTraining,
     component,
+    setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
-    setTraining,
+    protocols,
     setSupersets,
-    setComponent,
   } = useTrainerDayView();
 
   if (!training || !component) return null;
 
   function replaceSupersets() {
-    if (!data) return;
+    if (!data || !component) return;
 
     const supersets = structuredClone(data.supersets);
     for (const s of supersets)
@@ -48,21 +49,40 @@ export default function ProtocolModal({
       });
 
     setSupersets(supersets);
-    setComponent({ ...component!, supersets });
-    setTraining((t) => ({
-      ...t!,
-      components: t!.components.map((c) =>
-        c.id === component!.id ? { ...component!, supersets }! : c
-      ),
-    }));
+
+    const updatedComponent = selectedSubgroup
+      ? {
+          ...component,
+          subgroups: component.subgroups.map((sg) => {
+            if (sg.id === selectedSubgroup.id) {
+              return { ...sg, supersets };
+            }
+            return sg;
+          }),
+        }
+      : { ...component, supersets };
 
     if (selectedSubgroup)
       setSelectedSubgroup({ ...selectedSubgroup, supersets });
 
+    setComponent(updatedComponent);
+    setTraining((prev) =>
+      !prev
+        ? prev
+        : {
+            ...prev,
+            components: prev.components.map((c) => {
+              if (c.id === updatedComponent.id) return updatedComponent;
+              return c;
+            }),
+          }
+    );
+
     setData(null); // close modal
   }
 
-  const exists = protocols.data.find((p) => p.id === data?.id);
+  const exists = protocols.find((p) => p.id === data?.id);
+
   return (
     <Box>
       <MyModal

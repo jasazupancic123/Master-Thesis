@@ -8,12 +8,10 @@ import { ConditionDirection } from './enum/condition-detection.enum';
 import { DetectionStatus } from './enum/detection-status';
 import { KeypointId } from './enum/keypoint-id';
 import { KeypointValueType } from './enum/keypoint-value-type';
-import { MoreLess } from './enum/more-less.enum';
 import { RepStatus } from './enum/rep-state';
 import { FeedbackService } from './feedback.service';
 import type {
   ExerciseAiPrescriptionData,
-  ExerciseAngleCondition,
   ExerciseRepStartCondition,
 } from './type/exercise-detection-data';
 import type { Keypoint } from './type/keypoint.type';
@@ -71,7 +69,6 @@ export class StatusDetectionService {
       statusRef,
       canProceedIntoReadyStateRef,
       keypointBuffer,
-      keypointHistory,
       exerciseDetectionData,
       avgFps,
       recordingTimestampRef,
@@ -82,8 +79,6 @@ export class StatusDetectionService {
       reloadingModelRef,
       POSE_DETECTION_CONSTANTS,
     } = state;
-
-    let detectedJitterThisFrame = false;
 
     if (reloadingModelRef.current === true) return false;
 
