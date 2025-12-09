@@ -158,6 +158,7 @@ export const Components: Component[] = [
       'loadKg',
       'loadRm',
       'loadBw',
+      'vel',
       'tempoEcc',
       'tempoIso',
       'tempoCon',
