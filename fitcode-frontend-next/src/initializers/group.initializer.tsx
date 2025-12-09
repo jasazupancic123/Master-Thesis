@@ -1,14 +1,12 @@
 'use client';
 
 import { notFound, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
-import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
+import { TrainingController } from '@/core/training/training.controller';
 import { GroupProvider } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { Training } from '@/core/training/type/training.type';
-import { TrainingController } from '@/core/training/training.controller';
 
 export default function GroupInitializer({
   children,

@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import type { SxProps } from '@mui/material';
-import { useTheme } from '@mui/material';
+import { alpha, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { addMinutes } from 'date-fns';
@@ -25,6 +25,7 @@ import { useMain } from '@/store/main.provider';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
+  weekIndex?: number;
   componentCalendarView?: boolean;
   periodizationView?: boolean;
   cycleView?: boolean;
@@ -95,7 +96,11 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
           backgroundColor: theme.palette.background.default,
           cursor:
             cycle &&
-            lib.common.date.isBetween(date, cycle.from, cycle.to) &&
+            lib.common.date.isBetween(
+              date,
+              dayjs(cycle.from).startOf('day').toDate(),
+              dayjs(cycle.to).endOf('day').toDate()
+            ) &&
             !dayjs(date).isBefore(dayjs(), 'day')
               ? 'pointer'
               : 'default',
@@ -104,39 +109,51 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
         {['AM', 'PM'].map((period) => {
           const dateString = dayjs(date).format('D. M.');
           const isSameDayAsToday = dayjs(date).isSame(dayjs(), 'day');
-          const isBeforeToday = dayjs(date).isBefore(dayjs(), 'day');
 
           return (
             <React.Fragment key={period}>
               <DateCell date={date.toDate()} period={period as 'AM' | 'PM'}>
+                {period === 'AM' && (
+                  <Typography
+                    sx={{
+                      fontSize: '0.7rem',
+                      opacity: 0.7,
+                      zIndex: 1,
+                      fontWeight: isSameDayAsToday ? 800 : 600,
+                      backgroundColor: isSameDayAsToday
+                        ? theme.palette.primary.main
+                        : theme.palette.background.dark,
+                      color: isSameDayAsToday
+                        ? theme.palette.background.default
+                        : theme.palette.text.primary,
+                      borderRadius: '4px',
+                      px: 0.5,
+                    }}
+                  >
+                    {dateString}
+                  </Typography>
+                )}
                 <Box
                   key={period}
                   sx={{
                     position: 'relative',
-                    height: '70px !important',
+                    height: '60px !important',
                     borderRight:
                       j < 6
-                        ? `2px solid ${theme.palette.background.light}`
-                        : 'none',
-                    backgroundColor: isBeforeToday
-                      ? theme.palette.background.default
-                      : undefined,
-                    borderBottom:
-                      period === 'PM' && isInCycle
-                        ? `1px solid transparent`
+                        ? `1px solid ${alpha(theme.palette.text.primary, 0.075)}`
                         : 'none',
                     backgroundImage:
                       period === 'PM' && isInCycle
                         ? `repeating-linear-gradient(
                           to right,
-                          ${theme.palette.background.lightBorder} 0,
-                          ${theme.palette.background.lightBorder} 6px,
-                          transparent 6px,
-                          transparent 12px
+                          ${alpha(theme.palette.background.lightBorder, 0.3)} 0,
+                          ${alpha(theme.palette.background.lightBorder, 0.3)} 3px,
+                          transparent 3px,
+                          transparent 7px
                         )`
                         : 'none',
                     backgroundRepeat: 'repeat-x',
-                    backgroundPosition: 'bottom left',
+                    backgroundPosition: 'top left',
                     backgroundSize: '14px 1px', // controls dash+gap
                   }}
                   onClick={() => {
@@ -160,22 +177,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                     );
                   }}
                 >
-                  {period === 'AM' && (
-                    <Typography
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        left: 6,
-                        fontSize: '0.7rem',
-                        opacity: 0.7,
-                        zIndex: 1,
-                        fontWeight: isSameDayAsToday ? 1000 : undefined,
-                      }}
-                    >
-                      {dateString}
-                    </Typography>
-                  )}
-
                   {/* Trainings */}
                   {getFilteredTrainings(date, {
                     periodizationView,
@@ -189,14 +190,10 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                     return (
                       <Box
                         key={key}
-                        height="70px !important"
                         sx={{
                           cursor: 'pointer',
                           p: 0,
                           m: 0,
-                          backgroundColor: componentCalendarView
-                            ? '#1e3045'
-                            : undefined,
                         }}
                         onClick={(e) => {
                           if (

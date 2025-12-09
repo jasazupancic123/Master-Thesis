@@ -3,8 +3,8 @@ import { AuthController } from './auth/auth.controller';
 import { ExerciseController } from './exercise/exercise.controller';
 import { ExerciseAiPrescriptionsController } from './exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 import { InstitutionController } from './institution/institution.controller';
-import { UserController } from './user/user.controller';
 import { TrainingController } from './training/training.controller';
+import { UserController } from './user/user.controller';
 
 export class Controller {
   private static instance: Controller;

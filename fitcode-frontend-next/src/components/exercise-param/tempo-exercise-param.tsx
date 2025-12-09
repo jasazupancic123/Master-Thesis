@@ -1,4 +1,5 @@
 import {
+  alpha,
   Box,
   Button,
   FormControl,
@@ -120,7 +121,7 @@ export function TempoExerciseParam({
                   textAlign: 'center',
                   pr: 0,
                   pl: 0,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   '& .MuiSelect-select': {
                     textAlign: 'center',
                     display: 'flex',
@@ -128,6 +129,7 @@ export function TempoExerciseParam({
                     justifyContent: 'center',
                     pr: 0,
                     pl: 0,
+                    color: alpha(theme.palette.text.primary, 0.75),
                   },
                   '& .MuiInputBase-input': {
                     textAlign: 'center',
@@ -226,9 +228,14 @@ export function TempoExerciseParam({
             size="small"
             onClick={(e) => setAnchorEl(e.currentTarget)}
             disabled={readOnly || disableSets}
+            sx={{
+              pt: 0.15,
+            }}
           >
             {/* parsed value for tempo */}
-            <Typography sx={{ textAlign: 'center', fontSize: 12 }}>
+            <Typography
+              sx={{ textAlign: 'center', fontSize: 12, fontWeight: 550, py: 0 }}
+            >
               {`${value[0]}:${value[1]}:${value[2]}:${value[3]}`}
             </Typography>
           </Button>
