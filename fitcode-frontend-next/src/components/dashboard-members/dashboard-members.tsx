@@ -37,11 +37,11 @@ import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import { useMain } from '@/store/main.provider';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();

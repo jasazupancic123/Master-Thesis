@@ -33,6 +33,7 @@ import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constan
 import { handleUpdateTraining } from './actions/actions-training';
 import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
+import { InstitutionController } from '@/core/institution/institution.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_DASHBOARD,
@@ -44,13 +45,12 @@ import {
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import FilterButton from '@/ui/filter-button';
-import { useDashboard } from '@/store/dashboard.provider';
-import { InstitutionController } from '@/core/institution/institution.controller';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
@@ -69,10 +69,8 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
-  useDashboard;
 
   const { institution } = mainContext;
-  const { groups } = institution;
 
   const {
     setGroup,

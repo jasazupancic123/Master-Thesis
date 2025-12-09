@@ -7,12 +7,13 @@ import { Box } from '@mui/material';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
-import DashboardGroups from '@/components/dashboard/dashboard-planning';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
 import DashboardMembers from '@/components/dashboard-members/dashboard-members';
+import MethodsDataGrid from '@/components/methodology/methods-data-grid';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { Methods } from '@/core/exercise/constant/method.constant';
 import { lib } from '@/lib';
 import {
   INSTITUTION_PAGE_ID,
@@ -24,6 +25,7 @@ import {
   LINK_DASHBOARD_REPORTS,
   LINK_DASHBOARD_SCHEDULE,
   LINK_DASHBOARD_SETTINGS,
+  LINK_METHODOLOGIES,
 } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -65,13 +67,17 @@ export default function DashboardPage() {
         );
       }
       case LINK_DASHBOARD_PLANNING.id: {
-        return <DashboardGroups />;
+        // We have modal for this
+        return <></>;
       }
       case LINK_DASHBOARD_EXERCISES.id: {
         return <ExercisesPage />;
       }
       case LINK_DASHBOARD_ADD_INSTITUTION.id: {
         return <DashboardAddInstitution />;
+      }
+      case LINK_METHODOLOGIES.id: {
+        return <MethodsDataGrid items={Methods} />;
       }
       case INSTITUTION_PAGE_ID: {
         return <DashboardInstitution />;

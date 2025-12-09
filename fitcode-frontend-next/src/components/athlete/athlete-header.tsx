@@ -25,9 +25,9 @@ import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/contex
 import BottomNavigation from './bottom-navigation';
 import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { UserRole } from '@/core/user/enum/user-role.enum';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { TrainingService } from '@/core/training/training.service';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
