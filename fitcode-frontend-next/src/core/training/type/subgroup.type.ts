@@ -1,7 +1,7 @@
 import type { PeriodizationType } from '../enum/periodization-type.enum';
 import type { Superset, UpdateSuperset } from './superset.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { IdEntity } from '@/core/entity.type';
+import type { User } from '@/core/user/type/user.type';
 
 export type Subgroup = IdEntity & {
   name: string;
@@ -11,7 +11,7 @@ export type Subgroup = IdEntity & {
   parentId?: string;
 
   // mapped properties
-  members?: AuthUser[];
+  members?: User[];
   color?: string;
 };
 

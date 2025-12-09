@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { endOfDay, max, min, subDays } from 'date-fns';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -43,7 +43,7 @@ export class TrainingReportService {
   ) {}
 
   async recalculateReportsForUser(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     userId: string,
   ) {
@@ -86,7 +86,7 @@ export class TrainingReportService {
   }
 
   async findReportsByUser(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
   ): Promise<TrainingReport[]> {
     // find workloads for last 10 trainings of the user and calculate reports
@@ -170,7 +170,7 @@ export class TrainingReportService {
 
   @LogMethod()
   async getGroupAttendanceReport(
-    user: User,
+    user: FirebaseUser,
     ref: GroupRef,
     componentId?: string,
   ): Promise<Record<string, GroupTrainingReportItem>> {
@@ -183,7 +183,7 @@ export class TrainingReportService {
 
   @LogMethod()
   async getTrainingsRealizationReportByUser(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     uid: string, // athlete uid
     componentId?: string,
@@ -208,7 +208,7 @@ export class TrainingReportService {
 
   @LogMethod()
   async getExerciseWorkloadsByManyUsers(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     exerciseId: string,
     userIds: string[],
@@ -233,7 +233,7 @@ export class TrainingReportService {
 
   @LogMethod()
   async getTrainingWorkloads(
-    user: User,
+    user: FirebaseUser,
     trainingId: string,
   ): Promise<Workload[]> {
     const training = await this.trainingService.findOneByIdOrFail(user, {

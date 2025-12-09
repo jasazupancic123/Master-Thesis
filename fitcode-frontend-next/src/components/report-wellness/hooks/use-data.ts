@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { INVALID_Z_SCORE } from '../const/invalid-z-score';
 import type { WellnessChartRow } from '../types/wellness-chart-row';
 import type { MetricConfig } from '../types/wellness-metrics.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import type { User } from '@/core/user/type/user.type';
+import type { WellnessZScore } from '@/core/user/type/wellness.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useWellnessReportData(
-  members: AuthUser[],
+  members: User[],
   todaysWellness: WellnessZScore[],
   metricConfig: MetricConfig
 ) {

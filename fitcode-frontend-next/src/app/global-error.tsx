@@ -16,6 +16,7 @@ interface Props {
 const onest = Onest({ subsets: ['latin'] });
 
 export default function GlobalError({ error }: Props) {
+  console.log('GlobalError:', error);
   const router = useRouter();
 
   useEffect(() => {

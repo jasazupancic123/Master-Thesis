@@ -109,7 +109,7 @@ export class InstitutionTestRepository extends TestRepositoryMixin<Institution>(
       await this.auth.deleteUsers(userIds);
       for (const uid of userIds)
         await this.firebase.firestore
-          .collection(FirestoreCollection.PROFILE)
+          .collection(FirestoreCollection.USER)
           .doc(uid)
           .delete();
     } catch {

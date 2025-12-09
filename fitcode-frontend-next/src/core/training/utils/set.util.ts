@@ -11,6 +11,7 @@ import {
   DIST,
   EFF,
   KG,
+  PACE,
   REC_DIST,
   REC_TIME,
   REPS,
@@ -21,6 +22,7 @@ import {
   TEMPO_ISO,
   TIME,
   VEL,
+  WATTS,
 } from '@/core/exercise/constant/exercise-param.constant';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 
@@ -82,6 +84,12 @@ export class TrainingExerciseSetUtil {
     )
       options.push(TEMPO_ECC);
 
+    if (this.hasParam(exercise, 'pace') || this.hasParam(exercise, 'paceR'))
+      options.push(PACE);
+
+    if (this.hasParam(exercise, 'watts') || this.hasParam(exercise, 'wattsR'))
+      options.push(WATTS);
+
     return options;
   }
 
@@ -92,11 +100,14 @@ export class TrainingExerciseSetUtil {
     return options;
   }
 
-  getLoadType(set?: ExerciseSet): 'loadKg' | 'loadRm' | 'loadBw' | undefined {
+  getLoadType(
+    set?: ExerciseSet
+  ): 'loadKg' | 'loadRm' | 'loadBw' | 'vel' | undefined {
     if (!set) return undefined;
     if (set.loadRm !== undefined) return 'loadRm';
     if (set.loadBw !== undefined) return 'loadBw';
     if (set.loadKg !== undefined) return 'loadKg';
+    if (set.vel !== undefined) return 'vel';
     return undefined;
   }
 
@@ -108,10 +119,14 @@ export class TrainingExerciseSetUtil {
     return undefined;
   }
 
-  getEffType(set?: ExerciseSet): 'eff' | 'tempoEcc' | undefined {
+  getEffType(
+    set?: ExerciseSet
+  ): 'eff' | 'tempoEcc' | 'watts' | 'pace' | undefined {
     if (!set) return undefined;
     if (set.eff !== undefined) return 'eff';
     if (set.tempoEcc !== undefined) return 'tempoEcc';
+    if (set.watts !== undefined) return 'watts';
+    if (set.pace !== undefined) return 'pace';
     return undefined;
   }
 
@@ -189,6 +204,10 @@ export class TrainingExerciseSetUtil {
       a.tempoIdleR === b.tempoIdleR &&
       a.vel === b.vel &&
       a.velR === b.velR &&
+      a.pace === b.pace &&
+      a.paceR === b.paceR &&
+      a.watts === b.watts &&
+      a.wattsR === b.wattsR &&
       a.recTime === b.recTime &&
       a.recTimeR === b.recTimeR &&
       a.recDist === b.recDist &&
@@ -222,7 +241,7 @@ export class TrainingExerciseSetUtil {
       options.find((o) => o.field === preferredField) || options[0];
     const field = option.field as ExerciseMainParamNoSets;
     const value = (data?.[field] ?? option.defaultValue) as ExerciseSet[T];
-    set[field] = value as never;
+    set[field] = value;
 
     if (field === 'tempoEcc') {
       // edge case -> populate all other tempos as well

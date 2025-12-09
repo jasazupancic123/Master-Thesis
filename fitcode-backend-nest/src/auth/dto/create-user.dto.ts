@@ -1,41 +1,23 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-import { AuthUser } from '../entity/user.entity';
-import { UserRole } from '../enum/user-role.enum';
+import { User } from '@src/user/entity/user.entity';
 
-export type CreateUser = AuthUser & { password: string };
-
-export class CreateUserDto implements Omit<CreateUser, 'uid' | 'customClaims'> {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  email: string;
-
+export class CreateUserDto extends PickType(User, [
+  'email',
+  'displayName',
+  'photoURL',
+  'photoURLBase64',
+  'sport',
+  'level',
+  'gender',
+  'birthDate',
+  'role',
+] as const) {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
   password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  displayName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
-  @Expose()
-  @IsOptional()
-  photoURL?: string;
-
-  @IsEnum(UserRole)
-  @IsNotEmpty()
-  @ApiProperty({ enum: UserRole })
-  @Expose()
-  role: UserRole;
 }

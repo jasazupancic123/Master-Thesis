@@ -3,7 +3,6 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -11,6 +10,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingComponentUserStatus } from '@/core/training/type/training-component-user-status.type';
 import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { LINK_ATHLETE_HOME } from '@/lib/common/const/nav.const';
 import type { SetState } from '@/lib/common/type/state.type';
@@ -24,7 +24,7 @@ export async function startTrainingComponent(
     useTrainings: ITrainingsContext;
   },
   state: {
-    user: AuthUser;
+    user: User;
     training: Training;
     selectedComponent: TrainingComponent | null;
     setOpen: SetState<boolean>;

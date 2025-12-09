@@ -16,6 +16,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import Logo from '@/ui/logo';
 import ProfileCard from '@/ui/profile-card';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;
@@ -24,7 +25,8 @@ interface Props {
 export default function DashboardSidebar(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { selectedInstitution, selectedGroups } = useDashboard();
+  const { institution } = useMain();
+  const { selectedGroups } = useDashboard();
 
   const { setDrawerOpen } = props;
 
@@ -35,8 +37,6 @@ export default function DashboardSidebar(props: Props) {
   );
 
   const anchorElGroupsRef = useRef<HTMLDivElement>(null);
-
-  if (!selectedInstitution) return null;
 
   const shortGroupName =
     selectedGroups.length === 1 ? selectedGroups[0]?.shortName : 'All';

@@ -1,7 +1,7 @@
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Group } from '@/core/institution/type/group.type';
-import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
 
 export interface Institution extends BaseEntity {
   name: string;
@@ -11,9 +11,9 @@ export interface Institution extends BaseEntity {
   exerciseRevisions?: number;
 
   // mapped properties
-  owner: AuthUser;
-  trainers: AuthUser[];
-  athletes: AuthUser[];
+  owner: User;
+  trainers: User[];
+  athletes: User[];
   groups?: Group[];
 }
 

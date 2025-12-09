@@ -89,6 +89,24 @@ const TEMPO_IDLE: Attribute<ExerciseSet> = {
   defaultValue: 0,
 };
 
+const PACE: Attribute<ExerciseSet> = {
+  field: 'pace',
+  name: 'Pace',
+  description: 'pace',
+  unit: 's/km',
+  type: AttributeType.Number,
+  defaultValue: 300, // 5 min/km
+};
+
+const WATTS: Attribute<ExerciseSet> = {
+  field: 'watts',
+  name: 'Watts',
+  description: 'power output',
+  unit: 'W',
+  type: AttributeType.Number,
+  defaultValue: 300, // 5 min/km
+};
+
 const TIME: Attribute<ExerciseSet> = {
   field: 'time',
   name: 'Time',
@@ -146,6 +164,10 @@ export const ExerciseParamAttribute: Record<
   tempoIsoR: TEMPO_ISO,
   tempoConR: TEMPO_CON,
   tempoIdleR: TEMPO_IDLE,
+  pace: PACE,
+  paceR: PACE,
+  watts: WATTS,
+  wattsR: WATTS,
   vel: VEL,
   velR: VEL,
   time: TIME,

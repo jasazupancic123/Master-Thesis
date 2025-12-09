@@ -1,26 +1,27 @@
 import { useEffect } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Workload } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportData(
   reportType: 'single' | 'comparison',
-  selectedUser: AuthUser | null,
-  selectedUsers: AuthUser[],
+  selectedUser: User | null,
+  selectedUsers: User[],
   selectedExercise: Exercise | null,
   cache: Map<string, Workload[]>,
   groupByTraining: boolean,
   setData: SetState<Workload[]>,
   setAllSetsData: SetState<Workload[]>
 ) {
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
 
   async function getAthleteExerciseWorkloads(
-    user: AuthUser,
+    user: User,
     exercise: Exercise,
     key: string,
     averagePerTraining?: boolean // for comparison reports
@@ -28,7 +29,7 @@ export default function useAthleteExerciseReportData(
     const workloads = cache.has(key)
       ? cache.get(key)!
       : await TrainingController.getInstance().getExerciseWorkloadsByManyUsers(
-          selectedInstitution!.id,
+          institution!.id,
           exercise.id,
           [user.uid]
         );
@@ -137,7 +138,7 @@ export default function useAthleteExerciseReportData(
     selectedUser,
     selectedUsers,
     selectedExercise,
-    selectedInstitution,
+    institution,
     groupByTraining,
   ]);
 }

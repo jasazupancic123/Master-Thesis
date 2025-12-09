@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import { useMain } from '@/store/main.provider';
 import { useTrainingRecap } from '@/store/training-recap.provider';
 
@@ -9,14 +9,14 @@ export default function useTrainingRecapSelectedAthletes() {
 
   const { workloads } = useTrainingRecap();
 
-  const [filteredAthletes, setFilteredAthletes] = useState<AuthUser[]>([]);
+  const [filteredAthletes, setFilteredAthletes] = useState<User[]>([]);
 
   const [searchAthlete, setSearchAthlete] = useState<string>('');
 
   useEffect(() => {
     const userIds = workloads.map((w) => w.userId);
 
-    const allAthletes = users.filter((u) => userIds.includes(u.uid));
+    const allAthletes = users.data.filter((u) => userIds.includes(u.uid));
 
     if (searchAthlete.trim() === '') {
       setFilteredAthletes(allAthletes);

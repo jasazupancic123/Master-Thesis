@@ -20,13 +20,11 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import FaceCapture from '@/components/face-capture/face-capture';
-import { AuthController } from '@/core/auth/auth.controller';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import { Gender } from '@/core/profile/enum/gender.enum';
-import { SportLevel } from '@/core/profile/enum/sport-level.enum';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
-import { ProfileController } from '@/core/profile/profile.controller';
-import type { Profile } from '@/core/profile/type/user.type';
+import { Gender } from '@/core/user/enum/gender.enum';
+import { SportLevel } from '@/core/user/enum/sport-level.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
+import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import {
@@ -36,31 +34,15 @@ import {
 import { SPORTS } from '@/lib/common/const/sport.const';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useProfile } from '@/store/profile.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage() {
-  const { user, setUser, customClaims } = useAuthenticatedAuth();
-
+  const { user, setUser, role } = useAuthenticatedAuth();
   const router = useRouter();
   const screenSize = useScreenSize();
-
-  const { profile: profileGlobal, setProfile: setProfileGlobal } = useProfile();
-
-  const [profile, setProfile] = useState<
-    Omit<Profile, 'createdAt' | 'updatedAt'>
-  >({
-    uid: user.uid,
-    email: user.email!,
-    sport: profileGlobal?.sport,
-    level: profileGlobal?.level,
-    gender: profileGlobal?.gender,
-    birthDate: profileGlobal?.birthDate,
-    wellness: profileGlobal?.wellness || { date: new Date(), userId: user.uid },
-  });
 
   const [isCapturingFace, setIsCapturingFace] = useState<boolean>(false);
   const [captures, setCaptures] = useState<{
@@ -74,74 +56,25 @@ export default function ProfilePage() {
     left?: string;
   }>({});
 
-  const [updatedProfile, setUpdatedProfile] = useState(false);
   const [updatedUser, setUpdatedUser] = useState(false);
 
-  function handleChangeProfile<K extends keyof Profile>(
-    key: K,
-    value: Profile[K]
-  ) {
-    const newProfile = { ...profile, [key]: value };
-    setProfile(newProfile);
-    setUpdatedProfile(true);
-  }
-
-  function handleChangeUser<K extends keyof AuthUser>(
-    key: K,
-    value: AuthUser[K]
-  ) {
-    const newUser = { ...user, [key]: value };
+  // multiple key/value update
+  function handleChangeUser<K extends keyof User>(updates: Partial<User>) {
+    const newUser = { ...user, ...updates };
     setUser(newUser);
     setUpdatedUser(true);
   }
 
   async function handleSaveProfile() {
-    if (updatedProfile) {
-      if (!profile) return;
-      const { sport, level, gender, birthDate } = profile;
-
+    if (updatedUser) {
       handleApiRequest(
         router,
-        () =>
-          ProfileController.getInstance().update({
-            sport,
-            level,
-            gender,
-            birthDate,
-            userId: profile.uid,
-          }),
+        () => UserController.getInstance().update(user.uid, user),
         (_) => {
-          setProfileGlobal((prev) => ({
-            ...prev!,
-            sport,
-            level,
-            gender,
-            birthDate,
-          }));
-
           toast.success('Profile updated successfully');
         },
         undefined,
         'Failed to update profile'
-      );
-    }
-
-    if (updatedUser) {
-      // logic here
-      const { displayName, photoURL } = user;
-
-      handleApiRequest(
-        router,
-        () =>
-          AuthController.getInstance().updateUser(user.uid, {
-            displayName,
-            photoURL,
-          }),
-        (_) => {
-          toast.success('User updated successfully');
-        },
-        undefined,
-        'Failed to update user'
       );
     }
   }
@@ -186,9 +119,9 @@ export default function ProfilePage() {
             sx={{ p: 0, m: 0 }}
             onClick={() => {
               if (
-                customClaims.role.includes(UserRole.TRAINER) ||
-                customClaims.role.includes(UserRole.ADMIN) ||
-                customClaims.role.includes(UserRole.MANAGER)
+                role === UserRole.TRAINER ||
+                role === UserRole.ADMIN ||
+                role === UserRole.MANAGER
               ) {
                 router.push(LINK_DASHBOARD.href);
               } else router.push(LINK_ATHLETE_HOME.href);
@@ -212,8 +145,7 @@ export default function ProfilePage() {
                 maxDimensionCrop: 300,
               });
 
-            handleChangeUser('photoURL', url);
-            handleChangeProfile('photoURLBase64', base64);
+            handleChangeUser({ photoURL: url, photoURLBase64: base64 });
           }}
         />
 
@@ -229,7 +161,7 @@ export default function ProfilePage() {
             variant="outlined"
             sx={{ flex: 1 }}
             value={user?.displayName}
-            onChange={(e) => handleChangeUser('displayName', e.target.value)}
+            onChange={(e) => handleChangeUser({ displayName: e.target.value })}
           />
         </Box>
 
@@ -238,10 +170,10 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
             <InputLabel>Gender</InputLabel>
             <Select
-              value={profile?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
+              value={user?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
               label="Gender"
               onChange={(e) =>
-                handleChangeProfile('gender', e.target.value as Gender)
+                handleChangeUser({ gender: e.target.value as Gender })
               }
             >
               <MenuItem value="" disabled>
@@ -260,9 +192,9 @@ export default function ProfilePage() {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Date of Birth"
-              value={profile?.birthDate ? dayjs(profile?.birthDate) : null}
+              value={user?.birthDate ? dayjs(user?.birthDate) : null}
               onChange={(newValue) =>
-                handleChangeProfile('birthDate', newValue?.toDate())
+                handleChangeUser({ birthDate: newValue?.toDate() })
               }
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true } }}
@@ -280,9 +212,9 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport</InputLabel>
             <Select
-              value={profile?.sport}
+              value={user?.sport}
               label="Sport"
-              onChange={(e) => handleChangeProfile('sport', e.target.value)}
+              onChange={(e) => handleChangeUser({ sport: e.target.value })}
             >
               {SPORTS.map((s) => (
                 <MenuItem key={s} value={s}>
@@ -294,10 +226,10 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport Level</InputLabel>
             <Select
-              value={profile?.level ?? ''}
+              value={user?.level ?? ''}
               label="Sport Level"
               onChange={(e) =>
-                handleChangeProfile('level', e.target.value as SportLevel)
+                handleChangeUser({ level: e.target.value as SportLevel })
               }
             >
               <MenuItem value="" disabled>

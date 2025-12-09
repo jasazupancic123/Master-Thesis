@@ -23,8 +23,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 
-const firebaseStorage = lib.firebase.storage;
-
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
@@ -65,6 +63,19 @@ export default function ExerciseModal({
 
       return { ...prev, [field]: newValue };
     });
+  }
+
+  function handleCoefficientChange(
+    field: keyof Exercise,
+    min: number,
+    max: number,
+    value: string
+  ) {
+    let val = parseFloat(value);
+    if (val < min) val = min;
+    if (val > max) val = max;
+
+    setData((prev) => ({ ...prev, [field]: val }));
   }
 
   useEffect(() => {
@@ -144,7 +155,7 @@ export default function ExerciseModal({
                 initialFileUrl={data.videoUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
-                  const url = await firebaseStorage.uploadFile(file, path);
+                  const url = await lib.firebase.storage.uploadFile(file, path);
                   setData((prev) => ({ ...prev, videoUrl: url }));
                 }}
               />
@@ -159,7 +170,7 @@ export default function ExerciseModal({
                 initialFileUrl={data.imageUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
-                  const url = await firebaseStorage.uploadFile(file, path);
+                  const url = await lib.firebase.storage.uploadFile(file, path);
                   setData((prev) => ({ ...prev, imageUrl: url }));
                 }}
               />
@@ -273,6 +284,66 @@ export default function ExerciseModal({
               );
             })
           )}
+
+          <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
+            <Divider>Coefficients</Divider>
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <TextField
+              fullWidth
+              label="Main Exercise Relation Coefficient"
+              type="number"
+              variant="outlined"
+              inputProps={{ step: '0.1' }}
+              value={data.coeffRel || ''}
+              onChange={(e) => {
+                handleCoefficientChange('coeffRel', 0, 2, e.target.value);
+              }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <TextField
+              fullWidth
+              label="Training Load Coefficient"
+              type="number"
+              variant="outlined"
+              inputProps={{ step: '0.1' }}
+              value={data.coeffLoad || ''}
+              onChange={(e) => {
+                handleCoefficientChange('coeffLoad', 0, 1, e.target.value);
+              }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <TextField
+              fullWidth
+              label="Bodyweight Intensity Coefficient"
+              type="number"
+              variant="outlined"
+              inputProps={{ step: '0.1' }}
+              value={data.coeffBw || ''}
+              onChange={(e) => {
+                handleCoefficientChange('coeffBw', 0, 1, e.target.value);
+              }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <TextField
+              fullWidth
+              label="Rep Max Intensity Coefficient"
+              type="number"
+              variant="outlined"
+              inputProps={{ step: '0.1' }}
+              value={data.coeff1Rm || ''}
+              onChange={(e) => {
+                handleCoefficientChange('coeff1Rm', 0, 4, e.target.value);
+              }}
+            />
+          </Grid>
         </Grid>
       </Box>
     </MyModal>

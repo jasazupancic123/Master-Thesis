@@ -1,4 +1,4 @@
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import type { WellnessZScore } from '@/core/user/type/wellness.type';
 
 export type WellnessMetric = 'sleep' | 'fatigue' | 'soreness';
 

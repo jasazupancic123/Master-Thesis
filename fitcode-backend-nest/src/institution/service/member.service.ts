@@ -16,8 +16,8 @@ import {
 import { BatchOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { ProfileService } from '@src/profile/service/profile.service';
-import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
+import { UserService } from '@src/user/service/user.service';
+import { UserType } from '@src/user/type/user.type';
 
 import { INSTITUTION_ATHLETE_EVENT } from '../constant/update-institution-athlete-event.constant';
 import { UpdateInstitutionMemberDto } from '../dto/update-institution-members.dto';
@@ -33,19 +33,16 @@ export class MemberService {
     private readonly repository: InstitutionMembersRepository,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: Wrapper<AuthService>,
-    @Inject(forwardRef(() => ProfileService))
-    private readonly profileService: Wrapper<ProfileService>,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAllByInstitution(
     institution: Institution,
-    skipFields: (keyof AuthProfileMerged)[] = [],
-  ): Promise<AuthProfileMerged[]> {
-    return await this.profileService.findAllByInstitution(
-      institution,
-      skipFields,
-    );
+    skipFields: (keyof UserType)[] = [],
+  ): Promise<UserType[]> {
+    return await this.userService.findAllByInstitution(institution, skipFields);
   }
 
   async addOrRemove(

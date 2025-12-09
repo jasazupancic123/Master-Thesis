@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 
 import { useCoachTraining } from './coach-training.provider';
 import { INDEX_DB_TRAINING_STATIONS_ID } from '@/components/training-station/const/index-db-stations-id';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
@@ -19,6 +18,7 @@ import type {
   PartialWorkload,
   Workload,
 } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -35,8 +35,8 @@ interface ITrainingStationProvider extends TrainingStationProps {
   setComponent: SetState<TrainingComponent | null>;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: SetState<TrainingExercise | null>;
-  selectedUser: AuthUser | null;
-  setSelectedUser: SetState<AuthUser | null>;
+  selectedUser: User | null;
+  setSelectedUser: SetState<User | null>;
   selectedSetIndex: number | undefined;
   setSelectedSetIndex: SetState<number | undefined>;
   workloads: Workload[];
@@ -89,7 +89,7 @@ export const TrainingStationProvider = (
 
   const [station, setStation] = useState<TrainingStation | null>(null);
 
-  const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);

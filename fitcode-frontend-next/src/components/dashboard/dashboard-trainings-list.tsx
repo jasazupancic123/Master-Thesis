@@ -34,7 +34,8 @@ interface Props {
 export default function DashboardTrainingsList(props: Props) {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { groups } = useMain();
+  const { institution } = useMain();
+  const groups = institution.groups || [];
 
   const { trainings, filter, upcoming } = props;
 

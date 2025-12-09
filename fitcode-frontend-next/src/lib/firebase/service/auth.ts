@@ -9,7 +9,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { getFirebaseAuth } from '@/lib/firebase/config';
 
 export class FirebaseAuthUtil {

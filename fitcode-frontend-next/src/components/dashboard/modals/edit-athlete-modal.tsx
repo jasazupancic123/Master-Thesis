@@ -12,8 +12,8 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
-import { Gender } from '@/core/profile/enum/gender.enum';
-import { SportLevel } from '@/core/profile/enum/sport-level.enum';
+import { Gender } from '@/core/user/enum/gender.enum';
+import { SportLevel } from '@/core/user/enum/sport-level.enum';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
@@ -32,21 +32,13 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
 
-  const {
-    userToEdit,
-    setUserToEdit,
-    profileToEdit,
-    updateUserProfile,
-    toggleUser,
-    onProfileChange,
-    onUserChange,
-  } = useDashboardUserEdit();
+  const { userToEdit, setUserToEdit, toggleUser, onUserChange, updateUser } =
+    useDashboardUserEdit();
 
   const [base64Preview, setBase64Preview] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-
   if (!userToEdit) return;
 
   return (
@@ -58,7 +50,7 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
         setIsUpdatingProfile(true);
 
         let url: string | null = userToEdit.photoURL;
-        let base64: string | undefined = profileToEdit?.photoURLBase64;
+        let base64: string | undefined = userToEdit?.photoURLBase64;
 
         if (file) {
           const path = `user/${userToEdit.uid}/${file.name}`;
@@ -69,28 +61,21 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
 
           url = uploadedUrl;
           base64 = uploadedBase64;
-
           onUserChange('photoURL', url);
-          onProfileChange('photoURLBase64', base64);
         }
 
         const photoUrl = url || userToEdit.photoURL;
 
-        await updateUserProfile({
+        await updateUser({
           force: url !== null || base64 !== undefined ? true : false,
           passedUser: {
             ...userToEdit,
+            photoURLBase64: base64,
             photoURL:
               typeof photoUrl === 'string' && photoUrl.length > 0
                 ? photoUrl
                 : null,
           },
-          passedProfile: profileToEdit
-            ? {
-                ...profileToEdit,
-                photoURLBase64: base64 || profileToEdit?.photoURLBase64,
-              }
-            : undefined,
         });
 
         setOpen(false);
@@ -170,11 +155,9 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
             <InputLabel>Gender</InputLabel>
             <Select
-              value={profileToEdit?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
+              value={userToEdit?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
               label="Gender"
-              onChange={(e) =>
-                onProfileChange('gender', e.target.value as Gender)
-              }
+              onChange={(e) => onUserChange('gender', e.target.value as Gender)}
             >
               <MenuItem value="" disabled>
                 Select Gender
@@ -194,15 +177,13 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
             <DatePicker
               label="Date of Birth"
               value={
-                profileToEdit?.birthDate
-                  ? dayjs(profileToEdit?.birthDate)
-                  : null
+                userToEdit?.birthDate ? dayjs(userToEdit?.birthDate) : null
               }
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true } }}
               sx={{ flex: 1 }}
               onChange={(newValue) =>
-                onProfileChange('birthDate', newValue?.toDate())
+                onUserChange('birthDate', newValue?.toDate())
               }
             />
           </LocalizationProvider>
@@ -217,9 +198,9 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport</InputLabel>
             <Select
-              value={profileToEdit?.sport || ''}
+              value={userToEdit?.sport || ''}
               label="Sport"
-              onChange={(e) => onProfileChange('sport', e.target.value)}
+              onChange={(e) => onUserChange('sport', e.target.value)}
             >
               {SPORTS.map((s) => (
                 <MenuItem key={s} value={s}>
@@ -232,10 +213,10 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport Level</InputLabel>
             <Select
-              value={profileToEdit?.level ?? ''}
+              value={userToEdit?.level ?? ''}
               label="Sport Level"
               onChange={(e) =>
-                onProfileChange('level', e.target.value as SportLevel)
+                onUserChange('level', e.target.value as SportLevel)
               }
             >
               <MenuItem value="" disabled>

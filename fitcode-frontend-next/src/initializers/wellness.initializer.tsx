@@ -7,17 +7,14 @@ import {
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
 import Alert from '../ui/alert';
-import type {
-  Wellness,
-  WellnessZScore,
-} from '@/core/profile/type/wellness.type';
+import type { Wellness, WellnessZScore } from '@/core/user/type/wellness.type';
 import { useMain } from '@/store/main.provider';
 import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer(props: React.PropsWithChildren) {
   const { children } = props;
 
-  const { profile } = useMain();
+  const { user: profile } = useMain();
   const [wellness, setWellness] = useState<Wellness | null>(
     getCachedWellness()
   );

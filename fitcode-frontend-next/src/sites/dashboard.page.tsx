@@ -33,8 +33,13 @@ import { useMain } from '@/store/main.provider';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();
-  const { profile, reloadExercises } = useMain();
-  const { filter, institutions, selectedInstitution } = useDashboard();
+  const {
+    user: profile,
+    reloadExercises,
+    institution,
+    institutions,
+  } = useMain();
+  const { filter } = useDashboard();
 
   const renderContent = () => {
     switch (filter.id) {
@@ -99,7 +104,7 @@ export default function DashboardPage() {
       </Box>
     );
 
-  if (!selectedInstitution)
+  if (!institution)
     return (
       <Box
         sx={{

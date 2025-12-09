@@ -1,5 +1,5 @@
 import { BaseController } from '../base.controller';
-import type { AuthUser, CreateUser, UpdateUser } from './type/user.type';
+import type { User } from '../user/type/user.type';
 import type { FetchOptions } from '@/lib/common/type/api.type';
 
 export class AuthController extends BaseController {
@@ -15,31 +15,11 @@ export class AuthController extends BaseController {
   }
 
   async sessionLogin(idToken: string, options?: FetchOptions) {
-    return this.api.post<AuthUser | null>(
-      '/session-login',
-      { idToken },
-      options
-    );
+    return this.api.post<User | null>('/session-login', { idToken }, options);
   }
 
   async logout(options?: FetchOptions) {
     return this.api.post('/logout', {}, options);
-  }
-
-  async findMe(options?: FetchOptions) {
-    return this.api.get<AuthUser>('/me', options);
-  }
-
-  async findById(id: string, options?: FetchOptions) {
-    return this.api.get<AuthUser>(`/${id}`, options);
-  }
-
-  async updateUser(id: string, input: UpdateUser, options?: FetchOptions) {
-    return this.api.patch(`/${id}`, input, options);
-  }
-
-  async registerUser(input: CreateUser, options?: FetchOptions) {
-    return this.api.post<AuthUser>('/register', input, options);
   }
 
   async verifyLink(token: string, options?: FetchOptions) {

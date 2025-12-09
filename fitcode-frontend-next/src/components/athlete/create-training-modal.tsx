@@ -41,11 +41,13 @@ export default function CreateTrainingModal({
   setOpen,
   onCreateTraining,
 }: Props) {
-  const { exercises, institutions, groups } = useMain();
+  const { exercises, institutions, institution } = useMain();
   const institutionId = institutions?.[0]?.id;
 
   const DEFAULT_GROUP =
-    core.group.getGroupsWithCurrentActiveCycles(groups || [])?.[0] || null;
+    core.group.getGroupsWithCurrentActiveCycles(
+      institution.groups || []
+    )?.[0] || null;
 
   const [group, setGroup] = useState<Group | null>(DEFAULT_GROUP);
   const [component, setComponent] = useState(DEFAULT_COMPONENT);
@@ -162,13 +164,15 @@ export default function CreateTrainingModal({
           label="Group"
           value={(group?.id as string) || ''}
           setValue={(val) =>
-            setGroup(groups?.find((g) => g.id === val) || null)
+            setGroup(institution.groups?.find((g) => g.id === val) || null)
           }
           disableNoneChoice
           icon={null}
           itemKey="id"
           itemName="name"
-          items={core.group.getGroupsWithCurrentActiveCycles(groups || [])}
+          items={core.group.getGroupsWithCurrentActiveCycles(
+            institution.groups || []
+          )}
           sx={{ mt: 2 }}
         />
 

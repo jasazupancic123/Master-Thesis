@@ -40,7 +40,7 @@ import type {
 } from '@/core/exercise/type/exercise.type';
 import { EXERCISE_POSES } from '@/core/exercise-ai-prescriptions/const/exercise-poses';
 import type { ExerciseAiPrescription } from '@/core/exercise-ai-prescriptions/type/exercise-detection-data';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { LINK_METHODOLOGIES } from '@/lib/common/const/nav.const';

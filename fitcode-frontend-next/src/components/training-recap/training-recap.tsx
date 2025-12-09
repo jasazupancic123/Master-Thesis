@@ -23,9 +23,9 @@ import useTrainingRecapSelectedExercises from './hooks/use-selected-exercises';
 import SelectedWorkloadModal from './modals/selected-workload.modal';
 import TrainingRecapHeader from './training-recap-header';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import {
   EXERCISE_DEFAULT_IMG_URL,
   USER_AVATAR_IMG_URL,
@@ -54,7 +54,7 @@ export default function TrainingRecap() {
   const athleteAnchorElRef = useRef<HTMLElement | null>(null);
   const exerciseAnchorElRef = useRef<HTMLElement | null>(null);
 
-  const [selectedAthletes, setSelectedAthletes] = useState<AuthUser[]>([]);
+  const [selectedAthletes, setSelectedAthletes] = useState<User[]>([]);
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
 
   const { filteredAthletes, searchAthlete, setSearchAthlete } =

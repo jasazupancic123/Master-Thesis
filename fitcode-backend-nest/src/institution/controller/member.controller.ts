@@ -5,7 +5,7 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 
 import { InstitutionService } from '../service/institution.service';
 
@@ -17,7 +17,7 @@ export class MemberController {
   @Get()
   @Auth()
   async findAllByInstitution(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
   ) {
     return await this.institutionService.findAllMembers(user, institutionId, [
@@ -29,7 +29,7 @@ export class MemberController {
   @Patch('athlete')
   @Auth([UserRole.MANAGER])
   async addAthlete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
@@ -43,7 +43,7 @@ export class MemberController {
   @Delete('athlete')
   @Auth([UserRole.MANAGER])
   async removeAthlete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
@@ -57,7 +57,7 @@ export class MemberController {
   @Patch('trainer')
   @Auth([UserRole.MANAGER])
   async addTrainer(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {
@@ -71,7 +71,7 @@ export class MemberController {
   @Delete('trainer')
   @Auth([UserRole.MANAGER])
   async removeTrainer(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() { userId }: UserIdDto,
   ) {

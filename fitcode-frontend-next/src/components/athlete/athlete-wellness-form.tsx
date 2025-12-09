@@ -10,7 +10,7 @@ import HeatmapFront from '@/assets/svg/heatmap_front_yellow.svg';
 import MuscleMapWithTooltip from '@/components/muscle-map-with-tooltip/muscle-map-with-tooltip';
 import { HEATMAP_COLORS } from '@/core/const/color.const';
 import { core } from '@/core/core.service';
-import type { Wellness } from '@/core/profile/type/wellness.type';
+import type { Wellness } from '@/core/user/type/wellness.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 

@@ -1,6 +1,6 @@
 import { Box, TextField } from '@mui/material';
 
-import type { Wellness } from '@/core/profile/type/wellness.type';
+import type { Wellness } from '@/core/user/type/wellness.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size.provider';
 

@@ -88,6 +88,20 @@ export class ExerciseSetPrimarySide {
   @Expose()
   eff?: number; // rpe (rate of perceived exertion)
 
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  pace?: number; // in seconds/km
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  watts?: number; // in watts
+
   @IsInt()
   @Min(0)
   @IsOptional()
@@ -188,6 +202,20 @@ export class ExerciseSetSecondarySide {
   @IsOptional()
   @Expose()
   effR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  paceR?: number; // in seconds/km
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  wattsR?: number; // in watts
 
   @IsInt()
   @Min(0)

@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function Alert({ type, errorMessage, color }: Props) {
+  console.log(type, errorMessage);
   const router = useRouter();
   const screenSize = useScreenSize();
 
@@ -49,7 +50,6 @@ export default function Alert({ type, errorMessage, color }: Props) {
         <Button
           variant="contained"
           onClick={() => {
-            console.log('Navigating to sign-in page from Alert component');
             router.push(LINK_SIGN_IN.href);
             router.refresh();
             router.refresh();
