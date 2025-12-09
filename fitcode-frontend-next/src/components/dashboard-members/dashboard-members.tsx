@@ -30,7 +30,7 @@ import useDashboardMembers from './hooks/use-members.hook';
 import useDashboardMembersDrag from './hooks/use-members-drag.hook';
 import RegisterUsersDashboardModal from './modals/dashboard-register-users-modal';
 import { theme } from '@/app/style';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
@@ -41,13 +41,13 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
   const { role } = useAuthenticatedAuth();
-
-  const { selectedInstitution, selectedGroups } = useDashboard();
-
+  const { institution } = useMain();
+  const { selectedGroups } = useDashboard();
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers } =
     useInstitutionMembers();
 
@@ -82,8 +82,6 @@ export default function DashboardMembers() {
 
   const [wrapInstitutionMembers, setWrapInstitutionMembers] = useState(false);
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
-
-  if (!selectedInstitution) return null;
 
   return (
     <DashboardPageContainer>
@@ -122,7 +120,7 @@ export default function DashboardMembers() {
               gap={0.5}
             >
               <Image
-                src={selectedInstitution.imageUrl}
+                src={institution.imageUrl}
                 alt="Institution"
                 unoptimized={lib.common.env.unoptimizeImages()}
                 width={24}
@@ -346,10 +344,9 @@ export default function DashboardMembers() {
           onFileUpload={async (file) => {
             setIsUploadingMembers(true);
 
-            const authUsers = await uploadUsers(file);
-
+            const users = await uploadUsers(file);
             setOpenAddMemberViaCsvModal(false);
-            setCsvUserEmails(authUsers.map((d) => d.email!));
+            setCsvUserEmails(users.map((d) => d.email!));
           }}
         />
       </MyModal>

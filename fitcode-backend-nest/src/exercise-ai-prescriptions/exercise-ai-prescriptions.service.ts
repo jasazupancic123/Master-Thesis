@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { LogMethod } from '@src/common/decorator/log-method.decorator';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { ExerciseAiPrescription } from './entity/exercise-ai-prescriptions';
@@ -25,7 +25,7 @@ export class ExerciseAiPrescriptionsService {
 
   @LogMethod()
   async upsertMany(
-    user: User,
+    user: FirebaseUser,
     prescriptions: ExerciseAiPrescription[],
   ): Promise<ExerciseAiPrescription[]> {
     const isAdmin = this.firebase.isAdmin(user);

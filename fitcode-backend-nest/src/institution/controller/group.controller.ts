@@ -13,7 +13,7 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
 import { UserIdDto } from '@src/common/dto/user-id.dto';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 
 import { CreateGroupDto } from '../dto/create-group.dto';
@@ -33,7 +33,7 @@ export class GroupController {
   @Get()
   @Auth()
   async findAllByInstitution(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
   ) {
     return await this.institutionService.findAllGroups(user, institutionId);
@@ -41,14 +41,17 @@ export class GroupController {
 
   @Post()
   @Auth([UserRole.MANAGER])
-  async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
+  async create(
+    @RequestUser() user: FirebaseUser,
+    @Body() body: CreateGroupDto,
+  ) {
     return await this.groupService.create(user, body);
   }
 
   @Patch(':groupId')
   @Auth()
   async update(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() body: UpdateGroupDto,
@@ -60,7 +63,7 @@ export class GroupController {
   @Patch('update/batch')
   @Auth()
   async batchUpdate(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() { groups }: BatchUpdateGroupsDto,
   ) {
@@ -71,7 +74,7 @@ export class GroupController {
   @Delete(':groupId')
   @Auth([UserRole.MANAGER])
   async delete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
   ) {
@@ -82,7 +85,7 @@ export class GroupController {
   @Patch(':groupId/athlete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async addAthlete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
@@ -97,7 +100,7 @@ export class GroupController {
   @Delete(':groupId/athlete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async removeAthlete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
@@ -112,7 +115,7 @@ export class GroupController {
   @Patch(':groupId/trainer')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async addTrainer(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
@@ -127,7 +130,7 @@ export class GroupController {
   @Delete(':groupId/trainer')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async removeTrainer(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() { userId }: UserIdDto,
@@ -142,7 +145,7 @@ export class GroupController {
   @Post(':groupId/cycle')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async addCycle(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Body() body: Cycle,
@@ -154,7 +157,7 @@ export class GroupController {
   @Delete(':groupId/cycle/:cycleId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async removeCycle(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,

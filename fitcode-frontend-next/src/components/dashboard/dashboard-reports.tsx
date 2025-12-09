@@ -146,7 +146,7 @@ export default function DashboardReports() {
               />
 
               {/* <AthleteTrainingsRealizationChart
-                institutionId={selectedInstitution!.id}
+                institutionId={institution!.id}
                 athleteId={selectedUser.uid}
                 componentId={
                   selectedComponent && !Array.isArray(selectedComponent)

@@ -109,6 +109,24 @@ export const TEMPO_IDLE: Attribute<ExerciseSet> = {
   defaultValue: 0,
 };
 
+export const PACE: Attribute<ExerciseSet> = {
+  field: 'pace',
+  name: 'Pace',
+  description: 'pace',
+  unit: 's/km',
+  type: AttributeType.Number,
+  defaultValue: 300, // 5 min/km
+};
+
+export const WATTS: Attribute<ExerciseSet> = {
+  field: 'watts',
+  name: 'Watts',
+  description: 'power output',
+  unit: 'W',
+  type: AttributeType.Number,
+  defaultValue: 300, // 5 min/km
+};
+
 export const TIME: Attribute<ExerciseSet> = {
   field: 'time',
   name: 'Time',

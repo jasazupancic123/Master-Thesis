@@ -13,7 +13,7 @@ export default function CycleProgress() {
 
   const selectedGroups = dashboardContext
     ? dashboardContext.selectedGroups
-    : mainContext.groups;
+    : mainContext.institution.groups || [];
 
   const { cyclesWithProgress } = useDashboardCycles(selectedGroups);
 

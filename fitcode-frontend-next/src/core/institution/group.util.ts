@@ -1,11 +1,11 @@
 import dayjs from 'dayjs';
 
+import type { User } from '../user/type/user.type';
 import type { Cycle } from './type/cycle.type';
 import type { Group } from './type/group.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
 
 export class GroupUtil {
-  mapMembers(item: Group, users: AuthUser[]) {
+  mapMembers(item: Group, users: User[]) {
     item.members = item.membersIds
       .map((userId) => users.find(({ uid }) => uid === userId)!)
       .filter(Boolean);

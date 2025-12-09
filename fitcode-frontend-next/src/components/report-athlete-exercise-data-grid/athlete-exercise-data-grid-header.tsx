@@ -12,16 +12,16 @@ import dayjs from 'dayjs';
 
 import useAthleteExerciseReportDataGridHeader from './hooks/use-header';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Training } from '@/core/training/type/training.type';
+import type { User } from '@/core/user/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
 
 interface Props {
-  selectedAthlete: AuthUser | null;
-  setSelectedAthlete: SetState<AuthUser | null>;
+  selectedAthlete: User | null;
+  setSelectedAthlete: SetState<User | null>;
   selectedTraining: Training | null;
   setSelectedTraining: SetState<Training | null>;
 }

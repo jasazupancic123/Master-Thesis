@@ -64,7 +64,7 @@ export default function useAthleteChartSeries(
       const selectedParam = comparisonParam || 'loadKg';
 
       const newComparisonSeries = userIds.map((userId, idx) => {
-        const userName = users.find((u) => u.uid === userId)?.displayName;
+        const userName = users.data.find((u) => u.uid === userId)?.displayName;
 
         const filteredTrainingIds = trainingIds.slice(range[0] - 1, range[1]);
 

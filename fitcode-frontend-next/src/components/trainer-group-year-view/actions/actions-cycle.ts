@@ -23,15 +23,10 @@ export async function handleAddCycle(
   }
 ) {
   const { router, addCycleInput } = input;
-
   const { useMain, useGroup, useSliderCycles } = context;
-
-  const { setGroups } = useMain;
-
+  const { setInstitution } = useMain;
   const { selectedGroup, setSelectedGroup, setGroup, setCycle } = useGroup;
-
   const { setSortedCycles } = useSliderCycles;
-
   const { name, description, from, to } = addCycleInput;
 
   if (!name || !from || !to) {
@@ -72,10 +67,17 @@ export async function handleAddCycle(
 
       const newGroup = { ...selectedGroup, cycles: newCycles };
       setGroup(newGroup);
-      setGroups((prev) =>
-        prev.map((g) => (g.id === newGroup.id ? newGroup : g))
-      );
       setSelectedGroup(newGroup);
+      setInstitution((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          groups: (prev.groups || []).map((g) =>
+            g.id === newGroup.id ? newGroup : g
+          ),
+        };
+      });
+
       toast.success('Cycle added successfully.');
     },
     undefined,
@@ -93,7 +95,7 @@ export async function handleDeleteCycle(
 ) {
   const { router } = input;
   const { useMain, useGroup, useSliderCycles } = context;
-  const { setGroups, setTrainings } = useMain;
+  const { setInstitution, setTrainings } = useMain;
   const { selectedGroup, setSelectedGroup, setGroup, cycle, setCycle } =
     useGroup;
 
@@ -121,20 +123,26 @@ export async function handleDeleteCycle(
         ...prev,
         cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
       }));
+
       setGroup((prev) => ({
         ...prev,
         cycles: prev.cycles.filter((c) => c.id !== editCycle.id),
       }));
-      setGroups((prev) =>
-        prev.map((g) =>
-          g.id === selectedGroup.id
-            ? {
-                ...g,
-                cycles: g.cycles.filter((c) => c.id !== editCycle.id),
-              }
-            : g
-        )
-      );
+
+      setInstitution((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          groups: (prev.groups || []).map((g) =>
+            g.id === selectedGroup.id
+              ? {
+                  ...g,
+                  cycles: g.cycles.filter((c) => c.id !== editCycle.id),
+                }
+              : g
+          ),
+        };
+      });
 
       setEditCycle(null);
 
@@ -157,13 +165,9 @@ export const updateCycleState = (
   }
 ) => {
   const { newCycle } = input;
-
   const { useMain, useGroup, useSliderCycles } = context;
-
-  const { setGroups } = useMain;
-
+  const { setInstitution } = useMain;
   const { group, setGroup } = useGroup;
-
   const { sortedCycles, setSortedCycles } = useSliderCycles;
 
   const newCycles = sortedCycles.map((c) =>
@@ -189,14 +193,18 @@ export const updateCycleState = (
     };
   });
 
-  setGroups((prev) =>
-    prev.map((g) =>
-      g.id === group.id
-        ? {
-            ...g,
-            cycles: newStateCycles,
-          }
-        : g
-    )
-  );
+  setInstitution((prev) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      groups: (prev.groups || []).map((g) =>
+        g.id === group.id
+          ? {
+              ...g,
+              cycles: newStateCycles,
+            }
+          : g
+      ),
+    };
+  });
 };

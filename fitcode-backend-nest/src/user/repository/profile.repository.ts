@@ -16,7 +16,7 @@ import { Profile } from '../entity/profile.entity';
 
 @Injectable()
 export class ProfileRepository extends FirestoreRepository<Profile> {
-  collectionName = FirestoreCollection.PROFILE;
+  collectionName = FirestoreCollection.USER;
 
   constructor(readonly firebase: FirebaseService) {
     super(firebase);
@@ -121,6 +121,7 @@ export class ProfileRepository extends FirestoreRepository<Profile> {
         photoURLBase64: input.photoURLBase64,
         sport: input.sport,
         wellness: { userId: input.uid, date: new Date() },
+        faceEmbedding: [],
       },
       { timestamps: true },
     );

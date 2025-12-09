@@ -16,12 +16,12 @@ import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroup
 import { handleDeleteSubgroup } from './actions/actions-subgroups';
 import type { UseTrainingMembersReturnType } from './hooks/use-members.hook';
 import SubgroupMember from './subgroup-member';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { User } from '@/core/user/type/user.type';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -29,7 +29,7 @@ interface TrainingMembersSubgroupProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: SetState<HTMLElement | null>;
   trainingMembersContext: UseTrainingMembersReturnType;
-  activeMember: AuthUser | null;
+  activeMember: User | null;
 }
 
 export default function TrainingMembersSubgroup(

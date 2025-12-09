@@ -1,6 +1,6 @@
-import type { User } from '@src/common/type/firebase-auth.type';
+import type { FirebaseUser } from '@src/common/type/firebase-auth.type';
 
 export type AuthUser = Pick<
-  User,
+  FirebaseUser,
   'uid' | 'email' | 'displayName' | 'photoURL' | 'customClaims'
 >;

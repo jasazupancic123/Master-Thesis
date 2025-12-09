@@ -4,7 +4,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { Auth } from '@src/common/decorator/auth.decorator';
 import { RequestUser } from '@src/common/decorator/request-user.decorator';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
@@ -18,7 +18,7 @@ export class InstitutionController {
   @Get()
   @Auth()
   @ApiOperation({ summary: 'Get all institutions for user' })
-  async findAll(@RequestUser() user: User) {
+  async findAll(@RequestUser() user: FirebaseUser) {
     return await this.institutionService.findAll(user);
   }
 
@@ -26,7 +26,7 @@ export class InstitutionController {
   @Auth()
   @ApiOperation({ summary: 'Get institution by id' })
   async init(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
   ) {
     return await this.institutionService.init(user, institutionId);
@@ -34,14 +34,17 @@ export class InstitutionController {
 
   @Post()
   @Auth([UserRole.ADMIN])
-  async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
+  async create(
+    @RequestUser() user: FirebaseUser,
+    @Body() body: CreateInstitutionDto,
+  ) {
     return await this.institutionService.create(user, body);
   }
 
   @Patch(':institutionId')
   @Auth([UserRole.MANAGER])
   async update(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body() body: UpdateInstitutionDto,
   ) {

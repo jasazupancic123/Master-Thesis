@@ -1,4 +1,4 @@
-import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import { FaceCaptureStep } from '@/core/user/enum/face-capture-step.enum';
 
 export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
   const { clientWidth, clientHeight } = canvas;

@@ -14,7 +14,7 @@ import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import {
   InstitutionMemberRef,
   InstitutionRef,
@@ -22,8 +22,8 @@ import {
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
-import { AuthProfileMerged } from '@src/profile/type/auth-profile-merged.type';
 import { TrainingProtocol } from '@src/training/entity/training-protocol.entity';
+import { UserType } from '@src/user/type/user.type';
 
 import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
@@ -55,7 +55,7 @@ export class InstitutionService implements Permission<Institution> {
   ) {}
 
   async findById(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
   ): Promise<Institution | null> {
     const institution = await this.repository.findById(institutionId);
@@ -71,7 +71,7 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   async findByIdOrFail(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
   ): Promise<Institution> {
     const institution = await this.findById(user, institutionId);
@@ -79,7 +79,7 @@ export class InstitutionService implements Permission<Institution> {
     return institution;
   }
 
-  async findAll(user: User): Promise<Institution[]> {
+  async findAll(user: FirebaseUser): Promise<Institution[]> {
     switch (this.firebase.getRole(user)) {
       case UserRole.ADMIN:
         return await this.repository.findAll();
@@ -94,20 +94,20 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   @LogMethod()
-  async findAllGroups(user: User, institutionId: string): Promise<Group[]> {
+  async findAllGroups(
+    user: FirebaseUser,
+    institutionId: string,
+  ): Promise<Group[]> {
     await this.findByIdOrFail(user, institutionId);
     return await this.groupRepository.getAllByInstitution({ institutionId });
   }
 
   @LogMethod()
   async findAllMembers(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
-    skipFields: (keyof AuthProfileMerged)[] = [
-      'photoURLBase64',
-      'faceEmbedding',
-    ],
-  ): Promise<AuthProfileMerged[]> {
+    skipFields: (keyof UserType)[] = ['photoURLBase64', 'faceEmbedding'],
+  ): Promise<UserType[]> {
     const institution = await this.findByIdOrFail(user, institutionId);
     return await this.memberService.findAllByInstitution(
       institution,
@@ -117,7 +117,7 @@ export class InstitutionService implements Permission<Institution> {
 
   @LogMethod()
   async findAllProtocols(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
   ): Promise<TrainingProtocol[]> {
     const institution = await this.findByIdOrFail(user, institutionId);
@@ -129,7 +129,10 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   @LogMethod()
-  async init(user: User, institutionId: string): Promise<InitInstitution> {
+  async init(
+    user: FirebaseUser,
+    institutionId: string,
+  ): Promise<InitInstitution> {
     const institution = await this.findByIdOrFail(user, institutionId);
     const groups = await this.groupRepository.getAllByInstitution(
       { institutionId },
@@ -140,7 +143,10 @@ export class InstitutionService implements Permission<Institution> {
   }
 
   @LogMethod()
-  async create(user: User, input: CreateInstitutionDto): Promise<Institution> {
+  async create(
+    user: FirebaseUser,
+    input: CreateInstitutionDto,
+  ): Promise<Institution> {
     if (!this.firebase.isAdmin(user))
       throw new UnauthorizedException('Only admin can create institutions');
 
@@ -178,7 +184,7 @@ export class InstitutionService implements Permission<Institution> {
 
   @LogMethod()
   async update(
-    user: User,
+    user: FirebaseUser,
     ref: InstitutionRef,
     input: UpdateInstitutionDto,
   ): Promise<Institution> {
@@ -192,7 +198,7 @@ export class InstitutionService implements Permission<Institution> {
 
   @LogMethod()
   async updateMember(
-    user: User,
+    user: FirebaseUser,
     ref: InstitutionRef,
     input: UpdateInstitutionMemberDto,
   ) {
@@ -234,12 +240,12 @@ export class InstitutionService implements Permission<Institution> {
     return institution.members.filter((m) => m.role === UserRole.ATHLETE);
   }
 
-  isManager(institution: Institution, user: User): boolean {
+  isManager(institution: Institution, user: FirebaseUser): boolean {
     if (!institution) return false;
     return this.firebase.isManager(user) && institution.ownerId === user.uid;
   }
 
-  isTrainer(institution: Institution, user: User): boolean {
+  isTrainer(institution: Institution, user: FirebaseUser): boolean {
     if (!institution) return false;
     return (
       this.firebase.isTrainer(user) &&
@@ -247,7 +253,7 @@ export class InstitutionService implements Permission<Institution> {
     );
   }
 
-  isAthlete(institution: Institution, user: User): boolean {
+  isAthlete(institution: Institution, user: FirebaseUser): boolean {
     if (!institution) return false;
     return (
       this.firebase.isAthlete(user) &&
@@ -255,7 +261,7 @@ export class InstitutionService implements Permission<Institution> {
     );
   }
 
-  canView(user: User, institution: Institution) {
+  canView(user: FirebaseUser, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
     if (this.isManager(institution, user)) return true;
     if (this.isTrainer(institution, user)) return true;
@@ -263,14 +269,14 @@ export class InstitutionService implements Permission<Institution> {
     return false;
   }
 
-  canEdit(user: User, institution: Institution) {
+  canEdit(user: FirebaseUser, institution: Institution) {
     if (this.firebase.isAdmin(user)) return true;
     if (this.isManager(institution, user)) return true;
     return false;
   }
 
   canEditExtended(
-    user: User,
+    user: FirebaseUser,
     institution: Institution,
     options?: { allowTrainer?: boolean; allowAthlete?: boolean },
   ) {

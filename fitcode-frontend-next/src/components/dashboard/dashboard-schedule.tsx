@@ -15,11 +15,12 @@ import useDashboardScheduleSnapshots from './hooks/use-snapshots';
 import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardSchedule() {
   const theme = useTheme();
 
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
 
   const { completedTrainings, upcomingTrainings } = useTrainingPlan();
 
@@ -29,7 +30,7 @@ export default function DashboardSchedule() {
     DashboardTrainingPlanFilter.TRAININGS
   );
 
-  if (!selectedInstitution) return null;
+  if (!institution) return null;
 
   return (
     <DashboardPageContainer>

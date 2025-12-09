@@ -1,7 +1,6 @@
 import { CameraEnhanceOutlined } from '@mui/icons-material';
 import { Box, Card, Typography } from '@mui/material';
 import Image from 'next/image';
-import React from 'react';
 
 import { theme } from '@/app/style';
 import type { Exercise } from '@/core/exercise/type/exercise.type';

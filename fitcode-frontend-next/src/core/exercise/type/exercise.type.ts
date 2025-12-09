@@ -8,6 +8,10 @@ export type Exercise = BaseEntity &
     ownerId: string;
     name: string;
     disabled: boolean;
+    coeffRel?: number;
+    coeffLoad?: number;
+    coeffBw?: number;
+    coeff1Rm?: number;
     institutionId?: string;
     imageUrl?: string;
     videoUrl?: string;
@@ -37,6 +41,10 @@ export type CreateExercise = Pick<
   | 'name'
   | 'isUnilateral'
   | 'disabled'
+  | 'coeffRel'
+  | 'coeffLoad'
+  | 'coeffBw'
+  | 'coeff1Rm'
   | 'imageUrl'
   | 'videoUrl'
   | 'instruction'

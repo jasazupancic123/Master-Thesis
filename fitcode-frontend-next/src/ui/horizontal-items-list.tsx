@@ -7,8 +7,8 @@ import type { RefObject } from 'react';
 import { Fragment, useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Training } from '@/core/training/type/training.type';
+import type { User } from '@/core/user/type/user.type';
 import type { Day } from '@/lib/common/service/date.util';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useGroup } from '@/store/group.provider';
@@ -32,7 +32,7 @@ interface Props {
   addButtonOnEnd?: boolean;
   onButtonClick?: () => void;
   scrollHorizontalListLeftRef?: RefObject<number>;
-  selectedAthlete?: AuthUser;
+  selectedAthlete?: User;
   trainings?: Training[];
   day?: Day;
 }

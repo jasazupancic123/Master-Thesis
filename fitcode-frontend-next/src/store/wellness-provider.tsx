@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from 'react';
 
-import type { Wellness } from '@/core/profile/type/wellness.type';
+import type { Wellness } from '@/core/user/type/wellness.type';
 
 interface Props {
   wellness: Wellness;

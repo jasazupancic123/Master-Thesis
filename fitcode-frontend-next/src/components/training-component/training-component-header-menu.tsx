@@ -24,10 +24,10 @@ const TEMP_PROTOCOL_ID = '__create_new__';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
-  const { protocols, setProtocols } = useMain();
+  const { protocols, setProtocols, institution } = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
-  const { setDetectedChanges, institution } = groupContext;
+  const { setDetectedChanges } = groupContext;
 
   const {
     training,

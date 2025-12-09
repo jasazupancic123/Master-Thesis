@@ -105,7 +105,7 @@ const onDragEndSubgroup = (
 
   // Add member to the new subgroup
   if (over?.id === DEFAULT_SUBGROUP_ID) {
-    const newMember = users.find((user) => user.uid === active.id);
+    const newMember = users.data.find((user) => user.uid === active.id);
 
     if (!newMember) return;
 

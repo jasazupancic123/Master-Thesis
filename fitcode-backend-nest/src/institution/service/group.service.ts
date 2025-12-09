@@ -12,7 +12,7 @@ import { UpdateMemberDto } from '@src/common/dto/user-id.dto';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { GroupRef } from '@src/common/type/firestore.type';
 import {
   BatchDeleteOperation,
@@ -48,7 +48,7 @@ export class GroupService implements Permission<Group, Institution> {
     private readonly institutionService: InstitutionService,
   ) {}
 
-  async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
+  async findOneById(user: FirebaseUser, ref: GroupRef): Promise<Group | null> {
     // find group
     const group = await this.repository.findById(ref);
     if (!group || group.deletedAt) return null;
@@ -65,14 +65,14 @@ export class GroupService implements Permission<Group, Institution> {
     return group;
   }
 
-  async findOneByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
+  async findOneByIdOrFail(user: FirebaseUser, ref: GroupRef): Promise<Group> {
     const group = await this.findOneById(user, ref);
     if (!group) throw new NotFoundException('Group does not exist');
     return group;
   }
 
   @LogMethod()
-  async create(user: User, input: CreateGroupDto): Promise<Group> {
+  async create(user: FirebaseUser, input: CreateGroupDto): Promise<Group> {
     const { name, shortName, membersIds, institutionId, trainerIds } = input;
 
     // validate
@@ -81,7 +81,20 @@ export class GroupService implements Permission<Group, Institution> {
       input.institutionId,
     );
 
-    await this.authService.findAllOrFail(user, { ids: membersIds });
+    const users = await this.firebase.authUsers({
+      ids: [...membersIds, ...trainerIds],
+    });
+
+    // check that all users exist and that they belong to the institution
+    for (const u of users) {
+      if (
+        !this.institutionService.isAthlete(institution, u) &&
+        !this.institutionService.isTrainer(institution, u)
+      )
+        throw new BadRequestException(
+          `User ${u.displayName} is not part of the institution`,
+        );
+    }
 
     if (!this.institutionService.canEdit(user, institution))
       throw new UnauthorizedException(
@@ -92,8 +105,12 @@ export class GroupService implements Permission<Group, Institution> {
       id: null,
       name,
       shortName: shortName || name.slice(0, SHORT_GROUP_NAME_MAX_LENGTH),
-      trainerIds,
-      membersIds,
+      trainerIds: users
+        .filter((u) => this.firebase.isTrainer(u))
+        .map((u) => u.uid),
+      membersIds: users
+        .filter((u) => this.firebase.isAthlete(u))
+        .map((u) => u.uid),
       institutionId,
       cycles: [],
     };
@@ -109,7 +126,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   @LogMethod()
   async update(
-    user: User,
+    user: FirebaseUser,
     ref: GroupRef,
     input: UpdateGroupDto,
   ): Promise<Group> {
@@ -157,7 +174,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   @LogMethod()
   async batchUpdate(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     input: BatchUpdateOneGroupDto[],
   ) {
@@ -219,7 +236,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async addCycle(user: User, ref: GroupRef, cycle: Cycle) {
+  async addCycle(user: FirebaseUser, ref: GroupRef, cycle: Cycle) {
     // validate
     const group = await this.findOneByIdOrFail(user, ref);
     if (!this.canEdit(user, group, group.institution))
@@ -239,7 +256,11 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async removeCycle(user: User, ref: GroupRef, cycleId: string): Promise<void> {
+  async removeCycle(
+    user: FirebaseUser,
+    ref: GroupRef,
+    cycleId: string,
+  ): Promise<void> {
     // validate
     const group = await this.findOneByIdOrFail(user, ref);
     if (!this.canEdit(user, group, group.institution))
@@ -270,7 +291,11 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async updateAthletes(user: User, ref: GroupRef, input: UpdateMemberDto) {
+  async updateAthletes(
+    user: FirebaseUser,
+    ref: GroupRef,
+    input: UpdateMemberDto,
+  ) {
     const { userId: memberId, add } = input;
 
     // validate
@@ -314,7 +339,11 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async updateTrainers(user: User, ref: GroupRef, input: UpdateMemberDto) {
+  async updateTrainers(
+    user: FirebaseUser,
+    ref: GroupRef,
+    input: UpdateMemberDto,
+  ) {
     const { userId: trainerId, add } = input;
 
     // validate
@@ -377,7 +406,7 @@ export class GroupService implements Permission<Group, Institution> {
   }
 
   @LogMethod()
-  async delete(user: User, ref: GroupRef): Promise<void> {
+  async delete(user: FirebaseUser, ref: GroupRef): Promise<void> {
     const group = await this.findOneByIdOrFail(user, ref);
 
     if (!this.canDelete(user, group, group.institution))
@@ -453,20 +482,20 @@ export class GroupService implements Permission<Group, Institution> {
     return false;
   }
 
-  canView(user: User, group: Group, institution?: Institution) {
+  canView(user: FirebaseUser, group: Group, institution?: Institution) {
     if (group.membersIds.includes(user.uid)) return true; // athlete is member
     if (group.trainerIds.includes(user.uid)) return true; // trainer is owner
     if (institution) return this.institutionService.canView(user, institution);
     return false;
   }
 
-  canEdit(user: User, group: Group, institution: Institution) {
+  canEdit(user: FirebaseUser, group: Group, institution: Institution) {
     if (this.institutionService.isManager(institution, user)) return true; // institution manager can edit group
     if (group.trainerIds.includes(user.uid)) return true; // owner of the group (trainer) can edit group
     return false;
   }
 
-  canDelete(user: User, entity: Group, root?: Institution) {
+  canDelete(user: FirebaseUser, entity: Group, root?: Institution) {
     // only if user is manager and institution owner
     if (this.institutionService.isManager(root!, user)) return true;
     return false;
