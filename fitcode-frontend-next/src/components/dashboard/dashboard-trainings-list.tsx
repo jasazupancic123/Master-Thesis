@@ -228,6 +228,34 @@ export default function DashboardTrainingsList(props: Props) {
                               <EditNote fontSize="small" />{' '}
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Create Station">
+                            <IconButton
+                              sx={{ p: 0, m: 0 }}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().startTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    router.push(
+                                      `/training/${training.id}/component/${component.id}/station`
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to create station.'
+                                );
+                              }}
+                            >
+                              <Dock fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </>
                       ) : (
                         <>
