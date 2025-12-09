@@ -24,18 +24,6 @@ export default function TrainingStationMembers() {
     station?.users.some((su) => su.uid === u.uid)
   );
 
-  const [search, setSearch] = useState('');
-
-  const filteredUsers = useMemo<User[]>(() => {
-    if (search.trim() === '') return users;
-
-    const lowerSearch = search.toLowerCase();
-
-    return users.filter((athlete) =>
-      athlete.displayName?.toLowerCase().includes(lowerSearch)
-    );
-  }, [station, users, search]);
-
   return (
     <Box
       width="100%"
@@ -44,16 +32,6 @@ export default function TrainingStationMembers() {
       alignItems="center"
       gap={2}
     >
-      <SearchBar
-        placeholder="Search athletes"
-        value={search}
-        maxWidth={300}
-        handleSearchChange={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setSearch(e.target.value);
-        }}
-      />
       <Box
         display="flex"
         flexWrap="wrap"
@@ -61,86 +39,103 @@ export default function TrainingStationMembers() {
         alignItems="flex-start"
         gap={2}
       >
-        {filteredUsers
-          .sort((a, b) =>
-            (a.displayName || '').localeCompare(b.displayName || '')
-          )
-          .map((user) => (
+        {users.map((user) => (
+          <Box
+            key={user.uid}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="flex-start"
+          >
             <Box
-              key={user.uid}
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="flex-start"
+              sx={{
+                border:
+                  selectedUser?.uid === user.uid
+                    ? `2px solid ${theme.palette.primary.main}`
+                    : '2px solid transparent',
+                borderRadius: '50%',
+              }}
             >
-              <Box
+              <Avatar
+                key={user.uid}
+                src={user.photoURL || USER_AVATAR_IMG_URL}
                 sx={{
-                  border:
-                    selectedUser?.uid === user.uid
-                      ? `2px solid ${theme.palette.primary.main}`
-                      : '2px solid transparent',
-                  borderRadius: '50%',
+                  width: 50,
+                  height: 50,
+                  cursor: 'pointer',
+                  filter: 'grayscale(100%)',
                 }}
-              >
-                <Avatar
-                  key={user.uid}
-                  src={user.photoURL || USER_AVATAR_IMG_URL}
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    cursor: 'pointer',
-                    filter: 'grayscale(100%)',
-                  }}
-                  onClick={() => {
-                    setSelectedUser(user);
+                onClick={() => {
+                  setSelectedUser(user);
 
-                    const individualTraining = individualTrainings.find(
-                      (it) => it.userId === user.uid
-                    );
+                  const individualTraining = individualTrainings.find(
+                    (it) => it.userId === user.uid
+                  );
 
-                    if (!individualTraining) return;
+                  if (!individualTraining) return;
 
-                    const individualExercise = individualTraining.components
-                      .flatMap((c) => c.supersets.flatMap((s) => s.exercises))
-                      .find((ie) => ie.id === selectedExercise?.id);
+                  const individualExercise = individualTraining.components
+                    .flatMap((c) => c.supersets.flatMap((s) => s.exercises))
+                    .find((ie) => ie.id === selectedExercise?.id);
 
-                    if (!individualExercise) return;
+                  if (!individualExercise) return;
 
-                    const userExerciseWorkloads = workloads.filter(
-                      (w) =>
-                        w.userId === user.uid &&
-                        w.exerciseId === selectedExercise?.id
-                    );
+                  const userExerciseWorkloads = workloads.filter(
+                    (w) =>
+                      w.userId === user.uid &&
+                      w.exerciseId === selectedExercise?.id
+                  );
 
-                    const completedSets =
-                      userExerciseWorkloads.length >=
-                      individualExercise.sets.length
-                        ? 0
-                        : userExerciseWorkloads.length;
+                  const completedSets =
+                    userExerciseWorkloads.length >=
+                    individualExercise.sets.length
+                      ? 0
+                      : userExerciseWorkloads.length;
 
-                    setSelectedSetIndex(completedSets);
-                  }}
-                />
-              </Box>
-
-              <Typography
-                fontSize={12}
-                textAlign="center"
-                sx={{
-                  mt: 0.5,
-                  maxWidth: 60,
-                  WebkitLineClamp: 2,
-                  display: '-webkit-box',
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  setSelectedSetIndex(completedSets);
                 }}
-              >
-                {user.displayName}
-              </Typography>
+              />
             </Box>
-          ))}
+
+            <Typography
+              fontSize={12}
+              textAlign="center"
+              sx={{
+                mt: 0.5,
+                maxWidth: 60,
+                WebkitLineClamp: 2,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {user.displayName}
+            </Typography>
+          </Box>
+        ))}
       </Box>
+      {selectedUser && (
+        <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+          <Avatar
+            src={selectedUser.photoURL || USER_AVATAR_IMG_URL}
+            sx={{
+              width: 150,
+              height: 150,
+            }}
+          />
+          <Typography
+            fontSize={20}
+            fontWeight={700}
+            textAlign="center"
+            sx={{
+              textTransform: 'uppercase',
+            }}
+          >
+            {selectedUser.displayName}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 }

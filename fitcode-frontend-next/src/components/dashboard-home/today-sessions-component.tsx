@@ -75,6 +75,14 @@ export default function TodaySessionsComponent(props: Props) {
     }
   }
 
+  const subgroups = component.subgroups.filter((sg) =>
+    sg.membersIds.includes(user.uid)
+  );
+  const virtualSubgroup = subgroups.find((sg) => sg.parentId);
+  const subgroup = virtualSubgroup || subgroups[0];
+
+  const supersets = (subgroup || component).supersets;
+
   return (
     <Box
       key={`${component.id}-${index}`}
@@ -97,7 +105,7 @@ export default function TodaySessionsComponent(props: Props) {
           setOpen((prev) => !prev);
         }}
       >
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={1} mt={2}>
           {IconComponent && (
             <SvgIcon
               component={IconComponent as React.ElementType} // handles SvgIconComponent or your SvgC
@@ -190,12 +198,12 @@ export default function TodaySessionsComponent(props: Props) {
           )}
         </Box>
       </Box>
-      <Collapse in={open} timeout={500} unmountOnExit>
+      <Collapse in={open} timeout={500} unmountOnExit sx={{ mt: 2 }}>
         <Box
           width="100%"
           display="flex"
           flexDirection="column"
-          gap={2}
+          gap={4}
           mt={1}
           sx={{
             opacity: open ? 1 : 0,
@@ -203,7 +211,7 @@ export default function TodaySessionsComponent(props: Props) {
             transition: 'opacity 300ms ease, transform 300ms ease',
           }}
         >
-          {component.supersets.map((superset, i) => (
+          {supersets.map((superset, i) => (
             <Box
               key={`superset-${i}`}
               width="100%"

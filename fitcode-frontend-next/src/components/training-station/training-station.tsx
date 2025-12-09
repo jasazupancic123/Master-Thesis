@@ -239,28 +239,41 @@ export default function TrainingStation() {
           flexDirection="column"
           justifyContent="flex-start"
           alignItems="center"
-          gap={0.5}
         >
           <Box
+            width={60}
+            height={60}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
             sx={{
-              border: `3px solid ${theme.palette.primary.main}`,
-              borderRadius: '50%',
+              backgroundColor: isAiReady
+                ? theme.palette.primary.main
+                : theme.palette.grey[700],
+              borderRadius: '25%',
+            }}
+            onClick={() => {
+              if (!isAiReady) return;
+
+              if (isSetCompleted) {
+                toast.error('Current set is already completed.');
+                return;
+              }
+
+              setView(TrackingMethod.CAMERA);
             }}
           >
-            <Avatar
-              key={selectedUser?.uid}
-              src={selectedUser?.photoURL || USER_AVATAR_IMG_URL}
+            <Box
+              width={60 / 3}
+              height={60 / 3}
               sx={{
-                width: 100,
-                height: 100,
-                filter: 'grayscale(100%)',
+                backgroundColor: theme.palette.background.default,
+                borderRadius: '50%',
               }}
             />
           </Box>
-          <Typography fontSize={16} fontWeight={700} textAlign="center">
-            {selectedUser?.displayName || 'Unknown User'}
-          </Typography>
         </Grid>
+
         <Grid
           size={6}
           display="flex"
@@ -275,6 +288,14 @@ export default function TrainingStation() {
           >
             {selectedExercise &&
               individualExercise?.sets.map((_, setIndex) => {
+                const supersetIndex = individualTraining
+                  ? getSupersetIndex(
+                      individualTraining,
+                      component!.id,
+                      selectedExercise!.id
+                    )
+                  : null;
+
                 const isSetDone =
                   workloads.find((w) => {
                     return (
@@ -283,12 +304,7 @@ export default function TrainingStation() {
                       w.setNumber === setIndex + 1 &&
                       w.componentId === component?.id &&
                       w.trainingId === individualTraining?.id &&
-                      w.supersetIndex ===
-                        getSupersetIndex(
-                          individualTraining,
-                          component!.id,
-                          selectedExercise!.id
-                        )
+                      w.supersetIndex === supersetIndex
                     );
                   })?.id !== undefined || false;
 
@@ -414,39 +430,6 @@ export default function TrainingStation() {
           )}
         </Grid>
       </Grid>
-
-      <Box
-        width={60}
-        height={60}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        sx={{
-          backgroundColor: isAiReady
-            ? theme.palette.primary.main
-            : theme.palette.grey[700],
-          borderRadius: '25%',
-        }}
-        onClick={() => {
-          if (!isAiReady) return;
-
-          if (isSetCompleted) {
-            toast.error('Current set is already completed.');
-            return;
-          }
-
-          setView(TrackingMethod.CAMERA);
-        }}
-      >
-        <Box
-          width={60 / 3}
-          height={60 / 3}
-          sx={{
-            backgroundColor: theme.palette.background.default,
-            borderRadius: '50%',
-          }}
-        />
-      </Box>
 
       <NewStationModal
         open={openNewStationModal}
