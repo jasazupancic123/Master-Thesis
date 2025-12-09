@@ -13,12 +13,12 @@ import type { Superset } from '@/core/training/type/superset.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
+import type { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 import type { UserProgress } from '@/core/training/type/workload.type';
 import type { Day } from '@/lib/common/service/date.util';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
-import { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 

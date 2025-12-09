@@ -22,7 +22,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
-import { useDefaultDates } from '@mui/x-date-pickers/internals';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -64,7 +63,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
 
   const {
     week,
-    weekIndex,
     componentCalendarView,
     periodizationView,
     cycleView,
@@ -111,7 +109,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
         {['AM', 'PM'].map((period) => {
           const dateString = dayjs(date).format('D. M.');
           const isSameDayAsToday = dayjs(date).isSame(dayjs(), 'day');
-          const isBeforeToday = dayjs(date).isBefore(dayjs(), 'day');
 
           return (
             <React.Fragment key={period}>

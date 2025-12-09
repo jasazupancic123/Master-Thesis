@@ -1,10 +1,10 @@
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import type { Group } from '@/core/institution/type/group.type';
 import { TrainingStatus } from '@/core/training/enum/training-status.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
-import dayjs from 'dayjs';
 
 export default function useDashboardHomeComponents(
   selectedGroups: Group[],
