@@ -1,20 +1,13 @@
 import { KeyboardArrowDown } from '@mui/icons-material';
-import {
-  alpha,
-  Avatar,
-  Box,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { alpha, Box, Divider, IconButton, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
+import DashboardPlanningModal from '../dashboard/modals/dashboard-planning-modal';
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import {
+  DASHBOARD_PLANNING_ID,
   DASHBOARD_VIEWS,
   INSTITUTION_PAGE_ID,
 } from '@/lib/common/const/nav.const';
@@ -37,8 +30,10 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
   const { setDrawerOpen } = props;
 
-  const anchorElRef = useRef<HTMLDivElement | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
+  const [openPlanningModal, setOpenPlanningModal] = useState(false);
+
+  const anchorElRef = useRef<HTMLDivElement | null>(null);
 
   const dashboardItems: ILink[] = DASHBOARD_VIEWS(role!).concat(
     lib.firebase.auth.isManager(role) || lib.firebase.auth.isAdmin(role)
@@ -82,15 +77,16 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
         return (
           <Box key={item.id} width="100%" display="flex" flexDirection="column">
-            {item.id === INSTITUTION_PAGE_ID && (
-              <Divider
-                sx={{
-                  width: '100%',
-                  borderColor: theme.palette.divider,
-                  mb: 1,
-                }}
-              />
-            )}
+            {item.id === INSTITUTION_PAGE_ID ||
+              (item.id === DASHBOARD_PLANNING_ID && (
+                <Divider
+                  sx={{
+                    width: '100%',
+                    borderColor: theme.palette.divider,
+                    mb: 1,
+                  }}
+                />
+              ))}
             <Box
               ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
               width="100%"
@@ -98,6 +94,11 @@ export default function DashboardSidebarMenuItems(props: Props) {
               justifyContent="flex-start"
               alignItems="center"
               onClick={() => {
+                if (item.id === DASHBOARD_PLANNING_ID) {
+                  setOpenPlanningModal(true);
+                  return;
+                }
+
                 setFilter(item);
                 if (setDrawerOpen) setDrawerOpen(false);
               }}
@@ -118,7 +119,14 @@ export default function DashboardSidebarMenuItems(props: Props) {
               }}
             >
               {item.icon}
-              <Typography fontSize={14} fontWeight={600}>
+              <Typography
+                fontSize={14}
+                fontWeight={600}
+                sx={{
+                  textTransform:
+                    item.id === DASHBOARD_PLANNING_ID ? 'uppercase' : 'none',
+                }}
+              >
                 {item.label}
               </Typography>
 
@@ -138,6 +146,10 @@ export default function DashboardSidebarMenuItems(props: Props) {
           </Box>
         );
       })}
+      <DashboardPlanningModal
+        open={openPlanningModal}
+        setOpen={setOpenPlanningModal}
+      />
     </Box>
   );
 }

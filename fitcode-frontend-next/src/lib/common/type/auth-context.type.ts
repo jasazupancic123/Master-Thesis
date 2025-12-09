@@ -1,4 +1,3 @@
-import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
 import type { UserRole } from '@/core/user/enum/user-role.enum';
 import type { User } from '@/core/user/type/user.type';
 import type { AuthState } from '@/store/auth.provider';

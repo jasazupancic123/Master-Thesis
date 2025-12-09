@@ -12,7 +12,6 @@ import type {
 } from '@/app/(trainer)/groups/[group_id]/props';
 import type { Cycle } from '@/core/institution/type/cycle.type';
 import type { Group } from '@/core/institution/type/group.type';
-import type { Institution } from '@/core/institution/type/institution.type';
 import { TrainingController } from '@/core/training/training.controller';
 import { lib } from '@/lib';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';

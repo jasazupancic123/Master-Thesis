@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 
 import type { FaceCaptures } from '../types/face.type';
 import type { AuthController } from '@/core/auth/auth.controller';
-import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
 import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
 import type { User } from '@/core/user/type/user.type';
 import { UserController } from '@/core/user/user.controller';

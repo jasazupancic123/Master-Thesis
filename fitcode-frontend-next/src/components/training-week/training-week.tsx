@@ -12,6 +12,7 @@ import MyModal from '@/ui/modal';
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const {
     week,
+    weekIndex,
     selected,
     componentCalendarView,
     periodizationView,
@@ -59,6 +60,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             <Box display="flex" flexDirection="row" justifyContent="center">
               <TrainingWeekDates
                 week={week}
+                weekIndex={weekIndex}
                 componentCalendarView={componentCalendarView}
                 periodizationView={periodizationView}
                 cycleView={cycleView}
