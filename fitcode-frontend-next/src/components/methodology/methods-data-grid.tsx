@@ -9,12 +9,8 @@ import type {
 import { DataGrid, GridRowEditStopReasons } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 
+import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { Method } from '@/core/exercise/type/method.type';
-import {
-  DASHBOARD_SIDEBAR_WIDTH,
-  DASHBOARD_SIDEBAR_WIDTH_NUMERIC,
-  MAX_WIDTH_DASHBOARD_ITEM,
-} from '../trainer-group-day-view/constant/dimensions.constant';
 
 interface Props {
   items: Method[];

@@ -1,15 +1,13 @@
+import { alpha, Box, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+
 import { theme } from '@/app/style';
-import { Group } from '@/core/institution/type/group.type';
 import { lib } from '@/lib';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { SearchBar } from '@/ui/search-bar/search-bar';
-import { alpha, Box, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 
 export default function DashboardPlanningModal(props: ModalProps) {
   const router = useRouter();
@@ -18,21 +16,6 @@ export default function DashboardPlanningModal(props: ModalProps) {
   const { groups } = useMain();
 
   const { open, setOpen } = props;
-
-  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups);
-  const [search, setSearch] = useState<string>('');
-
-  useEffect(() => {
-    if (search.trim() === '') {
-      setFilteredGroups(groups);
-      return;
-    }
-    const lowerSearch = search.toLowerCase();
-    const filtered = groups.filter((group) =>
-      group.name.toLowerCase().includes(lowerSearch)
-    );
-    setFilteredGroups(filtered);
-  }, [search, groups]);
 
   const permissionOk =
     lib.firebase.auth.isTrainer(role) || lib.firebase.auth.isManager(role);
@@ -58,9 +41,14 @@ export default function DashboardPlanningModal(props: ModalProps) {
           px: 10,
         }}
       >
-        <Typography variant="h6" fontSize={16} lineHeight={1} sx={{
+        <Typography
+          variant="h6"
+          fontSize={16}
+          lineHeight={1}
+          sx={{
             color: alpha(theme.palette.text.primary, 0.6),
-        }}>
+          }}
+        >
           Select group
         </Typography>
 
@@ -72,7 +60,7 @@ export default function DashboardPlanningModal(props: ModalProps) {
           flexWrap="wrap"
           gap={4}
         >
-          {filteredGroups
+          {groups
             .sort((g1, g2) => g1.name.localeCompare(g2.name))
             .map((group) => {
               return (

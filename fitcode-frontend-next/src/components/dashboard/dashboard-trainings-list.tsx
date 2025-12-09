@@ -4,28 +4,26 @@ import {
   Circle,
   Dock,
   EditNote,
-  EditOutlined,
   PlayCircleOutline,
   StopCircleOutlined,
-  Visibility,
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { Fragment } from 'react';
+import toast from 'react-hot-toast';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
 import { theme } from '@/app/style';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
+import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { handleApiRequest } from '@/lib/common/type/state.type';
-import { TrainingController } from '@/core/training/training.controller';
-import toast from 'react-hot-toast';
 
 interface Props {
   trainings: Training[];

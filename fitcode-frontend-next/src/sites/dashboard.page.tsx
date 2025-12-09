@@ -11,7 +11,9 @@ import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
 import DashboardMembers from '@/components/dashboard-members/dashboard-members';
+import MethodsDataGrid from '@/components/methodology/methods-data-grid';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { Methods } from '@/core/exercise/constant/method.constant';
 import { lib } from '@/lib';
 import {
   INSTITUTION_PAGE_ID,
@@ -28,8 +30,6 @@ import {
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import MethodsDataGrid from '@/components/methodology/methods-data-grid';
-import { Methods } from '@/core/exercise/constant/method.constant';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();

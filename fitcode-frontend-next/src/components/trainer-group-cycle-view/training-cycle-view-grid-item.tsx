@@ -9,11 +9,11 @@ import toast from 'react-hot-toast';
 
 import useTrainingCycleComponents from './hooks/use-components';
 import type { TrainingCycleViewGridItemProps } from './types/type';
+import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
 import { lib } from '@/lib';
 import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { theme } from '@/app/style';
 
 export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const screenSize = useScreenSize();
@@ -24,7 +24,6 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     cycleView,
     trainingComponent,
     isSameDayAsSelectedComponent,
-    selected,
     selectedTrainings,
     setSelectedTrainings,
     basePeriodizationTraining,

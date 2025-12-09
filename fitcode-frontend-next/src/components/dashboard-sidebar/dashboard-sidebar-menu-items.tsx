@@ -12,6 +12,7 @@ import {
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
+import DashboardPlanningModal from '../dashboard/modals/dashboard-planning-modal';
 import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import {
@@ -24,7 +25,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import DashboardPlanningModal from '../dashboard/modals/dashboard-planning-modal';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;

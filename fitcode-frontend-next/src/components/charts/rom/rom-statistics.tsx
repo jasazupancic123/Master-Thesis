@@ -63,11 +63,6 @@ export default function RomStatistic({ completedSet }: Props) {
         .reduce((a, b) => a + b, 0) /
       (completedSet.repsR ? completedSet.repsR.length : 1);
 
-    console.log('completedSet', completedSet);
-
-    console.log('romLString', romLString);
-    console.log('romRString', romRString);
-
     return (
       <Typography
         textAlign="center"
@@ -123,11 +118,6 @@ export default function RomStatistic({ completedSet }: Props) {
   const romRString = (completedSet.repsR || [])
     .map((r) => `Rep ${r.repNumber}: ${r.totalRomCm?.toFixed(2)}cm`)
     .join(', ');
-
-  console.log('completedSet', completedSet);
-
-  console.log('romLString', romLString);
-  console.log('romRString', romRString);
 
   const avgTotalRomL =
     completedSet.repsL

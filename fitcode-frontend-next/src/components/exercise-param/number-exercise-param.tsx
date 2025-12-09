@@ -305,12 +305,13 @@ export function NumberExerciseParam(props: Props) {
                 minHeight: trainingInProgressPrimaryItem ? 24 : undefined,
                 p: 0.5,
                 py: trainingInProgressPrimaryItem ? 1 : undefined,
+                pt: trainingInProgressPrimaryItem ? 1 : 0.2,
                 textAlign: 'center',
                 color: colorToPrimary
                   ? `${theme.palette.primary.main} !important`
                   : theme.palette.text.primary,
                 fontSize: 12,
-                fontWeight: 400,
+                fontWeight: 550,
               },
               '& .MuiInputBase-input.Mui-disabled': {
                 color: readOnly ? 'white !important' : undefined,
