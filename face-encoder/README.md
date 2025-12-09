@@ -17,6 +17,8 @@ This service is designed to be deployed on **Google Cloud Run**, but can also be
 
 ## Setup & Run Locally
 
+### Python Virtual Environment
+
 1. Clone the repository or copy the service files:
     ```bash
     git clone <repo-url>
@@ -37,12 +39,24 @@ This service is designed to be deployed on **Google Cloud Run**, but can also be
 
 4. Run the service (locally):
     ```bash
-    uvicorn main:app --reload
+    LOCAL_DEV=1 uvicorn main:app --reload
     ```
 
 5. Open your browser to access API docs:
     ```
     http://127.0.0.1:8000/docs
+    ```
+
+### Docker
+
+1. Build the Docker image:
+    ```bash
+    docker build -t face-encoder .
+    ```
+
+2. Run the Docker container:
+    ```bash
+    docker run -it -p 8080:8080 -e LOCAL_DEV=1 face-encoder
     ```
 
 ---
@@ -64,5 +78,9 @@ gcloud projects list
 gcloud config set project <YOUR_PROJECT_ID>
 
 # Deploy the service
-gcloud run deploy --source .
+gcloud run deploy face-encoder \
+    --source . \
+    --region me-central1 \
+    --set-env-vars GCS_BUCKET_NAME=blindoff-storage \
+    --memory 1Gi
 ```

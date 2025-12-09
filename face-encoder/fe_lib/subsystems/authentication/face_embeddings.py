@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from fe_lib.subsystems.models.base import BaseModel, BaseModelConfig
+from fe_lib.subsystems.base_models.base import BaseModel, BaseModelConfig
 
 
 class FaceEmbedderConfig(BaseModelConfig):

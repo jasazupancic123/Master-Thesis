@@ -430,7 +430,7 @@ export class UserService implements Permission<Profile, Institution> {
       uid: user.uid,
       email: user.email!,
       role: user.customClaims?.role?.[0],
-      faceEmbedding: [],
+      faceEmbedding: profile.faceEmbedding || [],
       displayName: user.displayName || '',
       photoURL: user.photoURL,
       sport: profile.sport,

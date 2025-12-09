@@ -2,6 +2,14 @@ import base64
 import logging
 import os
 
+# first, log all files/folders inside /app for debugging
+logging.info("Listing files in /app for debugging:")
+for root, dirs, files in os.walk("/app"):
+    for name in files:
+        logging.info(os.path.join(root, name))
+    for name in dirs:
+        logging.info(os.path.join(root, name))
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -25,10 +33,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-GCS_BUCKET_NAME = os.environ["GCS_BUCKET_NAME"]
-GCS_SCRFD_MODEL_PATH = os.getenv("GCS_SCRFD_MODEL_PATH", "models/scrfd.onnx")
-GCS_EMBEDDER_MODEL_PATH = os.getenv("GCS_EMBEDDER_MODEL_PATH", "models/embedder.onnx")
-LOCAL_MODEL_DIR = Path("/tmp/models")
+
+LOCAL_DEV = os.getenv("LOCAL_DEV") == "1"
+
+if not LOCAL_DEV:
+    # Cloud environment: read env vars for GCS
+    GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+    GCS_SCRFD_MODEL_PATH = os.getenv("GCS_SCRFD_MODEL_PATH", "models/scrfd.onnx")
+    GCS_EMBEDDER_MODEL_PATH = os.getenv("GCS_EMBEDDER_MODEL_PATH", "models/embedder.onnx")
+    LOCAL_MODEL_DIR = Path("/tmp/models")
 
 
 def download_models_from_gcs() -> tuple[str, str]:
@@ -62,8 +75,14 @@ def download_models_from_gcs() -> tuple[str, str]:
 async def lifespan(app: FastAPI):
     logger.info("Starting up...")
 
-    # Download models from GCS
-    scrfd_path, embedder_path = download_models_from_gcs()
+    if LOCAL_DEV:
+        # Use local models
+        scrfd_path = "models/scrfd.onnx"
+        embedder_path = "models/embedder.onnx"
+        logger.info("LOCAL_DEV=1, using local model files, skipping GCS download")
+    else:
+        # Download from GCS
+        scrfd_path, embedder_path = download_models_from_gcs()
 
     config = FaceRecognitionProcessConfig.from_yaml("config.yaml")
 
