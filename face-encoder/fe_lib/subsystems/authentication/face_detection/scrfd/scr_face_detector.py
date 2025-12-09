@@ -3,7 +3,7 @@ import numpy as np
 from fe_lib.subsystems.authentication.face_detection.base import DetectedFace, FaceDetector
 from fe_lib.subsystems.authentication.face_detection.scrfd.base import Detections, SCRFDBase
 from fe_lib.subsystems.authentication.face_detection.scrfd.schemas import Bbox, Face, Point, Threshold
-from fe_lib.subsystems.models.base import BaseModel, BaseModelConfig
+from fe_lib.subsystems.base_models.base import BaseModel, BaseModelConfig
 
 
 class SCRFaceDetectorConfig(BaseModelConfig):

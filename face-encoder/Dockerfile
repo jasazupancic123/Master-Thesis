@@ -1,11 +1,14 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --upgrade pip &&\
+    pip install -r requirements.txt
 
-COPY . .
+COPY fe_lib/ fe_lib/
+COPY config.yaml .
+COPY main.py .
 
 ENV PORT=8080
 

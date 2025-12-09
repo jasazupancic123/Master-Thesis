@@ -4,7 +4,7 @@ from typing import Any, Generic, TypeVar
 import numpy as np
 import onnxruntime
 
-from fe_lib.subsystems.models.base.base_model_config import BaseModelConfig
+from fe_lib.subsystems.base_models.base.base_model_config import BaseModelConfig
 
 T = TypeVar("T", bound="BaseModelConfig")
 
