@@ -23,12 +23,18 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import LoadingOverlay from '@/ui/loading-overlay';
 import MyModal from '@/ui/modal';
+import { UserController } from '@/core/user/user.controller';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { useRouter } from 'next/navigation';
+import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
+import toast from 'react-hot-toast';
 
 const DEFAULT_MARGIN = 1;
 
 export const DASHBOARD_MEMBERS_AVATAR_SIZE = 50;
 
 export default function EditAthleteModal({ open, setOpen }: ModalProps) {
+  const router = useRouter();
   const screenSize = useScreenSize();
   const { user } = useAuthenticatedAuth();
 
@@ -52,6 +58,8 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
         let url: string | null = userToEdit.photoURL;
         let base64: string | undefined = userToEdit?.photoURLBase64;
 
+        let postedBase64: string | undefined = undefined;
+
         if (file) {
           const path = `user/${userToEdit.uid}/${file.name}`;
           const { url: uploadedUrl, base64: uploadedBase64 } =
@@ -61,11 +69,13 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
 
           url = uploadedUrl;
           base64 = uploadedBase64;
+          postedBase64 = uploadedBase64;
           onUserChange('photoURL', url);
         }
 
         const photoUrl = url || userToEdit.photoURL;
 
+        // Update user profile
         await updateUser({
           force: url !== null || base64 !== undefined ? true : false,
           passedUser: {
@@ -77,6 +87,34 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
                 : null,
           },
         });
+
+        // Upload face embeddings
+        if (postedBase64) {
+          try {
+            const res = await new FaceEncoderController().embed(postedBase64);
+            if (!res.faceEmbedding || res.faceEmbedding.length === 0) {
+              toast.error('Empty face embeddings received');
+              return;
+            }
+
+            handleApiRequest(
+              router,
+              () =>
+                UserController.getInstance().saveFaceEmbeddings(
+                  res.faceEmbedding
+                ),
+
+              () => {
+                toast.success('Face embeddings saved successfully');
+              },
+              undefined,
+              'Failed to save face embeddings.'
+            );
+          } catch (error) {
+            toast.error('Failed to generate face embeddings.');
+            console.log('Face Embedding Error:', error);
+          }
+        }
 
         setOpen(false);
         setBase64Preview('');
