@@ -32,6 +32,7 @@ import type {
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
+import { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 
 // eslint-disable-next-line
 export interface ITrainerDayViewContext extends TrainerDayViewContextProps {}
@@ -49,7 +50,11 @@ export type TrainerDayViewCtxExtended = Omit<
 export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { exercises, setTrainings } = useMain();
+  const {
+    protocols: mainProviderProtocols,
+    exercises,
+    setTrainings,
+  } = useMain();
   const {
     cycle,
     setCycle,
@@ -85,6 +90,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [loading, setLoading] = useState(false);
+  const [protocols, setProtocols] = useState<TrainingProtocol[]>([]);
   const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
 
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
@@ -174,6 +180,13 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
       { pagination, exercises, setFilteredExercises, setPagination }
     );
   }, [component, pagination.page]);
+
+  /**
+   * Sync protocols with main provider
+   */
+  useEffect(() => {
+    setProtocols(structuredClone([...mainProviderProtocols.data]));
+  }, [mainProviderProtocols]);
 
   useEffect(() => {
     if (!training) return;
@@ -629,6 +642,8 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     setPagination,
     search,
     setSearch,
+    protocols,
+    setProtocols,
     previousSelectedAthlete,
     expandedExercisesView,
     setExpandedExercisesView,

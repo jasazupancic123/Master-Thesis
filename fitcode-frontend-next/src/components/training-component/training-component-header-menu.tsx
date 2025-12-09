@@ -24,7 +24,6 @@ const TEMP_PROTOCOL_ID = '__create_new__';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
-  const { protocols, setProtocols } = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
   const { setDetectedChanges, institution } = groupContext;
@@ -34,6 +33,8 @@ export default function TrainingComponentHeaderMenu() {
     component,
     selectedSubgroup,
     selectedAthlete,
+    protocols,
+    setProtocols,
     addWarmupSuperset,
     addCooldownSuperset,
     applyMethod,
@@ -51,6 +52,7 @@ export default function TrainingComponentHeaderMenu() {
   const [openPeriodizationModal, setOpenPeriodizationModal] = useState(false);
 
   if (!training || !component) return null;
+
   const methodologies = core.training.component.findMethodologies(component.id);
 
   const warmupExists = (selectedSubgroup || component).supersets.some(
@@ -208,7 +210,9 @@ export default function TrainingComponentHeaderMenu() {
             selectedItemSize={12}
             selectSize="small"
             sx={{ maxWidth: 75 }}
-            items={protocols.data.filter((p) => p.componentId === component.id)}
+            items={protocols
+              .filter((p) => p.componentId === component.id)
+              .sort((a, b) => a.name.localeCompare(b.name))}
             itemKey="id"
             itemName="name"
             placeholder="None"
@@ -217,7 +221,7 @@ export default function TrainingComponentHeaderMenu() {
               if (protocolId === TEMP_PROTOCOL_ID) return;
 
               setDetectedChanges(true);
-              const protocol = protocols.data.find((g) => g.id === protocolId)!;
+              const protocol = protocols.find((g) => g.id === protocolId)!;
               setProtocol(protocol);
             }}
             onCreateNew={() => {
@@ -257,11 +261,11 @@ export default function TrainingComponentHeaderMenu() {
                   }
                 );
 
-                const updatedProtocols = protocols.data.map((p) =>
+                const updatedProtocols = protocols.map((p) =>
                   p.id === data.id ? data : p
                 );
 
-                setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
+                setProtocols(updatedProtocols);
                 setProtocol(null);
                 toast.success('Protocol updated successfully');
                 return;
@@ -274,10 +278,7 @@ export default function TrainingComponentHeaderMenu() {
                   data
                 );
 
-              setProtocols((prev) => ({
-                ...prev,
-                data: [...prev.data, protocol],
-              }));
+              setProtocols((prev) => [...prev, protocol]);
 
               setProtocol(null);
               toast.success('Protocol created successfully');
@@ -288,11 +289,11 @@ export default function TrainingComponentHeaderMenu() {
           }}
           onDelete={async (protocolId) => {
             if (protocolId === TEMP_PROTOCOL_ID) {
-              const updatedProtocols = protocols.data.filter(
+              const updatedProtocols = protocols.filter(
                 (p) => p.id !== TEMP_PROTOCOL_ID
               );
 
-              setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
+              setProtocols(updatedProtocols);
               setProtocol(null);
               return;
             }
@@ -303,11 +304,11 @@ export default function TrainingComponentHeaderMenu() {
                 protocolId
               );
 
-              const updatedProtocols = protocols.data.filter(
+              const updatedProtocols = protocols.filter(
                 (p) => p.id !== protocolId
               );
 
-              setProtocols((prev) => ({ ...prev, data: updatedProtocols }));
+              setProtocols(updatedProtocols);
               setProtocol(null);
               toast.success('Protocol deleted successfully');
             } catch (e) {
