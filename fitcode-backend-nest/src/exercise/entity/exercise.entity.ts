@@ -72,6 +72,7 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
   @Expose()
   @IsOptional()
   coeffRel?: number;
+  // eg. incline dumbell bench press has relative coefficient 66% to flat barbell bench press
 
   @IsNumber()
   @Min(0)
@@ -95,7 +96,7 @@ export class Exercise extends IntersectionType(BaseEntity, ExerciseAttributes) {
 
   @IsNumber()
   @Min(0)
-  @Max(5)
+  @Max(4)
   @ApiPropertyOptional()
   @Expose()
   @IsOptional()

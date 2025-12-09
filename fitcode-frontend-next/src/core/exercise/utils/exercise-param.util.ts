@@ -9,6 +9,7 @@ import {
   DIST,
   EFF,
   KG,
+  PACE,
   REC_DIST,
   REC_TIME,
   REPS,
@@ -19,6 +20,7 @@ import {
   TEMPO_ISO,
   TIME,
   VEL,
+  WATTS,
 } from '../constant/exercise-param.constant';
 
 type LateralitySide = 'l' | 'r' | 'lr';
@@ -45,6 +47,10 @@ export class ExerciseParamUtil {
     tempoIsoR: 'tempoIso',
     tempoConR: 'tempoCon',
     tempoIdleR: 'tempoIdle',
+    pace: 'paceR',
+    paceR: 'pace',
+    watts: 'wattsR',
+    wattsR: 'watts',
     vel: 'velR',
     velR: 'vel',
     eff: 'effR',
@@ -77,6 +83,10 @@ export class ExerciseParamUtil {
       tempoIsoR: TEMPO_ISO,
       tempoConR: TEMPO_CON,
       tempoIdleR: TEMPO_IDLE,
+      pace: PACE,
+      paceR: PACE,
+      watts: WATTS,
+      wattsR: WATTS,
       vel: VEL,
       velR: VEL,
       time: TIME,
@@ -110,7 +120,9 @@ export class ExerciseParamUtil {
       case 'tempoCon':
       case 'tempoIdle':
       case 'eff':
-        return ['tempoEcc', 'eff']; // effort group
+      case 'pace':
+      case 'watts':
+        return ['tempoEcc', 'eff', 'pace', 'watts']; // effort group
       case 'recTime':
       case 'recDist':
         return ['recTime', 'recDist']; // recovery group
@@ -152,7 +164,7 @@ export class ExerciseParamUtil {
     side: LateralitySide,
     options?: GroupOptions
   ): ExerciseParamField[] {
-    return this.getGroupFields(['eff'], side, options);
+    return this.getGroupFields(['eff', 'pace', 'watts'], side, options);
   }
 
   getRecFields(
