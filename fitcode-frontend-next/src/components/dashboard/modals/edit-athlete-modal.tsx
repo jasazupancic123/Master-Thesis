@@ -9,25 +9,25 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
+import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
 import { Gender } from '@/core/user/enum/gender.enum';
 import { SportLevel } from '@/core/user/enum/sport-level.enum';
+import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import LoadingOverlay from '@/ui/loading-overlay';
 import MyModal from '@/ui/modal';
-import { UserController } from '@/core/user/user.controller';
-import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useRouter } from 'next/navigation';
-import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
-import toast from 'react-hot-toast';
 
 const DEFAULT_MARGIN = 1;
 
@@ -101,6 +101,7 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
               router,
               () =>
                 UserController.getInstance().saveFaceEmbeddings(
+                  userToEdit.uid,
                   res.faceEmbedding
                 ),
               () => {

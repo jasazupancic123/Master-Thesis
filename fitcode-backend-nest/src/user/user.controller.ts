@@ -64,12 +64,16 @@ export class UserController {
   }
 
   @Post('embed')
-  @Auth([UserRole.ATHLETE])
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async saveFaceEmbeddings(
     @RequestUser() user: FirebaseUser,
     @Body() body: SaveFaceEmbeddingsDto,
   ) {
-    return await this.userService.saveFaceEmbedding(user, body.faceEmbedding);
+    return await this.userService.saveFaceEmbedding(
+      user,
+      body.userId,
+      body.faceEmbedding,
+    );
   }
 
   @Post('wellness')

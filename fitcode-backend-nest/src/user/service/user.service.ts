@@ -176,9 +176,16 @@ export class UserService implements Permission<Profile, Institution> {
   @LogMethod()
   async saveFaceEmbedding(
     user: FirebaseUser,
+    userId: string,
     embedding: number[],
   ): Promise<void> {
-    await this.repository.update(user.uid, { faceEmbedding: embedding });
+    const athlete = await this.findOneById(user.uid);
+    if (!athlete) throw new NotFoundException('User not found');
+
+    if (!this.canEdit(user, athlete))
+      throw new ForbiddenException('Cannot edit user');
+
+    await this.repository.update(userId, { faceEmbedding: embedding });
   }
 
   @LogMethod()
