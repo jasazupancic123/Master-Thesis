@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import type { Group } from '@/core/institution/type/group.type';
@@ -36,9 +37,15 @@ export default function useDashboardHomeComponents(
   useEffect(() => {
     const componentIdCounter: { id: string; count: number }[] = [];
 
+    const startOfWeek = dayjs().startOf('week');
+    const endOfWeek = dayjs().endOf('week');
+
     trainings
-      .filter((training) =>
-        selectedGroups.some((group) => group.id === training.groupId)
+      .filter(
+        (training) =>
+          selectedGroups.some((group) => group.id === training.groupId) &&
+          dayjs(training.to).isAfter(startOfWeek) &&
+          dayjs(training.from).isBefore(endOfWeek)
       )
       .forEach((training) => {
         training.components.forEach((component) => {

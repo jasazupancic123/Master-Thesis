@@ -2,23 +2,26 @@
 
 import {
   Circle,
+  Dock,
   EditNote,
-  EditOutlined,
   PlayCircleOutline,
-  Visibility,
+  StopCircleOutlined,
 } from '@mui/icons-material';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { Fragment } from 'react';
+import toast from 'react-hot-toast';
 
 import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
 import { theme } from '@/app/style';
 import { Components } from '@/core/exercise/constant/components.constant';
 import { Targets } from '@/core/exercise/constant/target.constant';
 import type { Component } from '@/core/exercise/type/component.type';
+import { TrainingController } from '@/core/training/training.controller';
 import type { Training } from '@/core/training/type/training.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
+import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -150,31 +153,197 @@ export default function DashboardTrainingsList(props: Props) {
                       </Typography>
                     </Box>
                     <Box
-                      width="60px"
                       display="flex"
-                      justifyContent="center"
+                      justifyContent="flex-end"
                       alignItems="center"
                       gap={1}
                     >
                       {!upcoming ? (
                         <>
-                          <Visibility fontSize="small" />
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(
-                                `/training/${training.id}/component/${component.id}/recap`
-                              );
-                            }}
-                            sx={{ p: 0, m: 0 }}
-                          >
-                            <EditNote fontSize="small" />{' '}
-                          </IconButton>
+                          <Tooltip title="Start Training">
+                            <IconButton
+                              onClick={async (e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().startTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    toast.success(
+                                      'Component started successfully.'
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to start component.'
+                                );
+                              }}
+                              sx={{ p: 0, m: 0 }}
+                            >
+                              <PlayCircleOutline fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Stop Training">
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().completeTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    toast.success(
+                                      'Component stopped successfully.'
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to stop component.'
+                                );
+                              }}
+                              sx={{ p: 0, m: 0 }}
+                            >
+                              <StopCircleOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Recap">
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/training/${training.id}/component/${component.id}/recap`
+                                );
+                              }}
+                              sx={{ p: 0, m: 0 }}
+                            >
+                              <EditNote fontSize="small" />{' '}
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Create Station">
+                            <IconButton
+                              sx={{ p: 0, m: 0 }}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().startTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    router.push(
+                                      `/training/${training.id}/component/${component.id}/station`
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to create station.'
+                                );
+                              }}
+                            >
+                              <Dock fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </>
                       ) : (
                         <>
-                          <PlayCircleOutline fontSize="small" />
-                          <EditOutlined fontSize="small" />
+                          <Tooltip title="Start Training">
+                            <IconButton
+                              onClick={async (e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().startTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    toast.success(
+                                      'Component started successfully.'
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to start component.'
+                                );
+                              }}
+                              sx={{ p: 0, m: 0 }}
+                            >
+                              <PlayCircleOutline fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Stop Training">
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().completeTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    toast.success(
+                                      'Component stopped successfully.'
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to stop component.'
+                                );
+                              }}
+                              sx={{ p: 0, m: 0 }}
+                            >
+                              <StopCircleOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Create Station">
+                            <IconButton
+                              sx={{ p: 0, m: 0 }}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+
+                                if (!training || !component) return;
+
+                                handleApiRequest(
+                                  router,
+                                  () =>
+                                    TrainingController.getInstance().startTrainingComponent(
+                                      training.id,
+                                      component.id
+                                    ),
+                                  () => {
+                                    router.push(
+                                      `/training/${training.id}/component/${component.id}/station`
+                                    );
+                                  },
+                                  undefined,
+                                  'Failed to create station.'
+                                );
+                              }}
+                            >
+                              <Dock fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </>
                       )}
                     </Box>
