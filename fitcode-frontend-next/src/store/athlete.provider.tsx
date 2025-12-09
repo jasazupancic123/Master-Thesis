@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import { Controller } from '@/core/controller';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
 import type { TrainingReport } from '@/core/training/type/training-report.type';

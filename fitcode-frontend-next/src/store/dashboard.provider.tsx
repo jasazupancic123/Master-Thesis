@@ -7,16 +7,15 @@ import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
 import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '@/components/dashboard/constant/dashboard.const';
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
-import { AuthController } from '@/core/auth/auth.controller';
-import type { AuthUser, UpdateUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
 import type {
+  InitInstitution,
   Institution,
   UpdateInstitution,
 } from '@/core/institution/type/institution.type';
-import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { DASHBOARD_VIEWS } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
@@ -25,10 +24,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 export interface IDashboardContext {
   filter: ILink;
   setFilter: SetState<ILink>;
-  institutions: Institution[];
-  setInstitutions: SetState<Institution[]>;
-  selectedInstitution: Institution | null;
-  setSelectedInstitution: SetState<Institution | null>;
   selectedGroups: Group[];
   setSelectedGroups: SetState<Group[]>;
   detectedChanges: boolean;
@@ -40,12 +35,8 @@ export interface IDashboardContext {
   updateGroup: (groupId: string, input: UpdateGroup) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
   addGroup: (data: Group) => Promise<Group | undefined>;
-  addGroupMember: (user: AuthUser, groupId: string) => Promise<void>;
+  addGroupMember: (user: User, groupId: string) => Promise<void>;
   removeGroupMember: (userId: string, groupId: string) => Promise<void>;
-  updateUser: (
-    userId: string,
-    input: UpdateUser & { role?: UserRole }
-  ) => Promise<void>;
 }
 
 const DashboardContext = createContext<IDashboardContext | null>(null);
@@ -54,67 +45,33 @@ export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: React.PropsWithChildren) {
   const { children } = props;
-  const { user, role } = useAuthenticatedAuth();
-  const {
-    users,
-    setUsers,
-    setProfiles,
-    groups,
-    setGroups,
-    institution: propsInstitution,
-    institutions: propsInstitutions,
-  } = useMain();
+  const { role } = useAuthenticatedAuth();
+  const { users, institution, setInstitution } = useMain();
 
+  const groups = institution.groups || [];
   const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
-  const [institutions, setInstitutions] = useState<Institution[]>(() =>
-    core.institution.mapUsers(propsInstitutions || [], users)
-  );
-
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<Institution | null>(() => {
-      const institution = propsInstitutions.find(
-        (i) => i.id === propsInstitution.id
-      );
-
-      if (!institution) return null;
-
-      institution.groups = groups.filter(
-        (g) => g.institutionId === institution.id
-      );
-
-      return institution;
-    });
 
   useEffect(() => {
-    if (!users.length) return;
+    if (!users.data.length) return;
 
     // map groups and instituton
-    // setInstitutions((prev) => core.institution.mapUsers(prev, users));
-
-    setSelectedInstitution((prev) => {
+    setInstitution((prev) => {
       if (!prev) return prev;
-
-      const institution = core.institution.mapUsers([prev], users)[0];
-      institution.groups = groups.filter(
-        (g) => g.institutionId === institution.id
-      );
-
-      for (const group of institution.groups)
-        core.group.mapMembers(group, users);
-
+      const institution = core.institution.mapUsers([prev], users.data)[0];
+      for (const group of groups) core.group.mapMembers(group, users.data);
       return institution;
     });
   }, [users]);
 
   const [selectedGroups, setSelectedGroups] = useState<Group[]>(
-    (selectedInstitution?.groups || []).filter((g) =>
+    (institution?.groups || []).filter((g) =>
       groups.some((sg) => sg.id === g.id)
     ) || []
   );
 
   useEffect(() => {
-    if (!selectedInstitution) return;
+    if (!institution) return;
 
     const setupSelectedGroup = async () => {
       const lastSelectedGroupId = await lib.common.indexedDb.items.get(
@@ -126,7 +83,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
         if (groupId === DASHBOARD_ALL_GROUPS_SELECTED_ID) return;
 
-        const group = selectedInstitution.groups?.find((g) => g.id === groupId);
+        const group = institution.groups?.find((g) => g.id === groupId);
 
         if (group) {
           setSelectedGroups([group]);
@@ -135,7 +92,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       }
 
       // Fallback to first group
-      const group = selectedInstitution.groups?.find((g) =>
+      const group = institution.groups?.find((g) =>
         groups.some((sg) => sg.id === g.id)
       );
 
@@ -148,21 +105,16 @@ export function DashboardProvider(props: React.PropsWithChildren) {
   const value: IDashboardContext = {
     filter,
     setFilter,
-    institutions,
-    setInstitutions,
-    selectedInstitution,
-    setSelectedInstitution,
     selectedGroups,
     setSelectedGroups,
     detectedChanges,
     setDetectedChanges,
     updateInstitution: async (institutionId, input) => {
       const prevState = {
-        institution: structuredClone(selectedInstitution),
-        institutions: structuredClone(institutions),
+        institution: structuredClone(institution),
       };
 
-      function mapper(inst: Institution): Institution {
+      function mapper(inst: InitInstitution): InitInstitution {
         if (inst.id !== institutionId) return inst;
         return {
           ...inst,
@@ -173,13 +125,11 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
       await lib.common.generic.optimisticUpdate(
         () => {
-          setInstitutions((prev) => prev.map(mapper));
-          if (institutionId === selectedInstitution?.id)
-            setSelectedInstitution((prev) => (prev ? mapper(prev) : prev));
+          if (institutionId === institution?.id)
+            setInstitution((prev) => (prev ? mapper(prev) : prev));
         },
         (snapshot) => {
-          setSelectedInstitution(snapshot.institution);
-          setInstitutions(snapshot.institutions);
+          setInstitution(snapshot.institution);
           toast.error('Failed to update institution name');
         },
         () => InstitutionController.getInstance().update(institutionId, input),
@@ -187,10 +137,10 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       );
     },
     updateGroup: async (groupId: string, input: UpdateGroup) => {
-      if (!selectedInstitution) return;
+      if (!institution) return;
 
       const prevState = {
-        institution: structuredClone(selectedInstitution),
+        institution: structuredClone(institution),
       };
 
       function mapper(group: Group): Group {
@@ -203,28 +153,27 @@ export function DashboardProvider(props: React.PropsWithChildren) {
           trainerIds: input.trainerIds ?? group.trainerIds,
         };
 
-        newGroup = core.group.mapMembers(newGroup, users || []);
+        newGroup = core.group.mapMembers(newGroup, users.data || []);
         return newGroup;
       }
 
       const apply = () => {
         // apply optimistic update
-        setSelectedInstitution((prev) =>
+        setInstitution((prev) =>
           prev ? { ...prev, groups: (prev.groups || []).map(mapper) } : prev
         );
         setSelectedGroups((prev) => prev.map(mapper));
-        setGroups((prev) => prev.map(mapper));
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         toast.error('Failed to update group name');
       };
 
       const action = () =>
         InstitutionController.getInstance().updateGroup(
-          propsInstitution.id,
+          institution.id,
           groupId,
           input
         );
@@ -236,84 +185,15 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         prevState
       );
     },
-    updateUser: async (userId, input) => {
-      if (!selectedInstitution || !users) return;
-      if (userId === user?.uid) {
-        toast.error('To update your profile, please use the profile page');
-        return;
-      }
-
-      const prevState = {
-        users: structuredClone(users),
-        institution: structuredClone(selectedInstitution),
-      };
-
-      function mapper(user: AuthUser): AuthUser {
-        if (user.uid !== userId) return user;
-        return {
-          ...user,
-          displayName: input.displayName ?? user.displayName,
-          photoURL: input.photoURL ?? user.photoURL,
-        };
-      }
-
-      const apply = () => {
-        setUsers((prev) => prev.map(mapper));
-        setSelectedInstitution((prev) =>
-          prev
-            ? {
-                ...prev,
-                athletes: prev.athletes.map(mapper),
-                trainers: prev.trainers.map(mapper),
-                owner: mapper(prev.owner),
-              }
-            : prev
-        );
-
-        setSelectedGroups((prev) =>
-          prev.map((group) => ({
-            ...group,
-            members: group.members?.map(mapper),
-            trainers: group.trainers?.map(mapper),
-          }))
-        );
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rollback = (snapshot: any, e: Error) => {
-        console.error(e);
-        setUsers(snapshot.users);
-        setSelectedInstitution(snapshot.institution);
-        toast.error('Failed to update user');
-      };
-
-      const action = async () => {
-        const controller = AuthController.getInstance();
-
-        if (input.displayName || input.photoURL) {
-          await controller.updateUser(userId, {
-            displayName: input.displayName,
-            photoURL: input.photoURL,
-          });
-        }
-      };
-
-      await lib.common.generic.optimisticUpdate(
-        apply,
-        rollback,
-        action,
-        prevState
-      );
-    },
     deleteGroup: async (groupId: string) => {
-      if (!selectedInstitution) return;
+      if (!institution) return;
 
       const prevState = {
-        institution: structuredClone(selectedInstitution),
+        institution: structuredClone(institution),
       };
 
       const apply = () => {
-        setSelectedInstitution((prev) =>
+        setInstitution((prev) =>
           prev
             ? {
                 ...prev,
@@ -327,13 +207,13 @@ export function DashboardProvider(props: React.PropsWithChildren) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         toast.error('Failed to delete group');
       };
 
       const action = () =>
         InstitutionController.getInstance().deleteGroup(
-          propsInstitution.id,
+          institution.id,
           groupId
         );
 
@@ -345,21 +225,21 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       );
     },
     addGroup: async (data: Group) => {
-      if (!selectedInstitution) return;
+      if (!institution) return;
 
       const prevState = {
-        institution: structuredClone(selectedInstitution),
+        institution: structuredClone(institution),
       };
 
       const apply = () => {
-        setSelectedInstitution((prev) =>
+        setInstitution((prev) =>
           prev ? { ...prev, groups: [...(prev.groups || []), data] } : prev
         );
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         toast.error('Failed to add group');
       };
 
@@ -373,11 +253,11 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         prevState
       );
     },
-    addGroupMember: async (user: AuthUser, groupId: string) => {
-      if (!selectedInstitution) return;
+    addGroupMember: async (user: User, groupId: string) => {
+      if (!institution) return;
 
       const prevState = {
-        institution: structuredClone(selectedInstitution),
+        institution: structuredClone(institution),
         selectedGroups: structuredClone(selectedGroups),
       };
 
@@ -396,8 +276,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
             : [user.uid],
         };
 
-        setProfiles((prev) => [...prev, core.profile.userToProfile(user)]);
-        setSelectedInstitution((prev) =>
+        setInstitution((prev) =>
           !prev
             ? prev
             : {
@@ -407,17 +286,15 @@ export function DashboardProvider(props: React.PropsWithChildren) {
                 ),
               }
         );
+
         setSelectedGroups((prev) =>
-          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
-        );
-        setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         toast.error('Failed to add member to group');
       };
 
@@ -436,10 +313,10 @@ export function DashboardProvider(props: React.PropsWithChildren) {
       );
     },
     removeGroupMember: async (userId: string, groupId: string) => {
-      if (!selectedInstitution) return;
+      if (!institution) return;
 
       const prevState = {
-        institution: structuredClone(selectedInstitution),
+        institution: structuredClone(institution),
         selectedGroups: structuredClone(selectedGroups),
       };
 
@@ -454,8 +331,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
           membersIds: selectedGroup.membersIds?.filter((id) => id !== userId),
         };
 
-        setProfiles((prev) => prev.filter((m) => m.uid !== userId));
-        setSelectedInstitution((prev) =>
+        setInstitution((prev) =>
           !prev
             ? prev
             : {
@@ -465,17 +341,15 @@ export function DashboardProvider(props: React.PropsWithChildren) {
                 ),
               }
         );
+
         setSelectedGroups((prev) =>
-          prev.map((g) => (g.id === newGroup.id ? newGroup : g))
-        );
-        setGroups((prev) =>
           prev.map((g) => (g.id === newGroup.id ? newGroup : g))
         );
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rollback = (snapshot: any) => {
-        setSelectedInstitution(snapshot.institution);
+        setInstitution(snapshot.institution);
         toast.error('Failed to remove member from group');
       };
 

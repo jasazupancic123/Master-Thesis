@@ -11,4 +11,4 @@ export type CustomClaims = {
  */
 export type DecodedUser = UserRecord & CustomClaims;
 
-export type User = UserRecord & { customClaims: CustomClaims };
+export type FirebaseUser = UserRecord & { customClaims: CustomClaims };

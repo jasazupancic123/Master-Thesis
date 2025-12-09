@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 
 import { FirebaseModule } from '@src/firebase/firebase.module';
 import { InstitutionMembersRepository } from '@src/institution/repository/institution-members.repository';
-import { ProfileRepository } from '@src/profile/repository/profile.repository';
 import { TrainingModule } from '@src/training/training.module';
+import { ProfileRepository } from '@src/user/repository/profile.repository';
 
 import { ExerciseTestRepository } from './service/exercise-test.repository';
 import { GroupTestRepository } from './service/group-test.repository';
@@ -13,6 +13,7 @@ import { ProtocolTestRepository } from './service/protocol-test.repository';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TrainingComponentUserStatusTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
+import { UserExerciseStatsTestRepository } from './service/user-exercise-stats-test.repository';
 import { WellnessTestRepository } from './service/wellness-test.repository';
 import { TestDbService } from './test-db.service';
 
@@ -31,6 +32,7 @@ import { TestDbService } from './test-db.service';
     ProfileTestRepository,
     WellnessTestRepository,
     TrainingTestRepository,
+    UserExerciseStatsTestRepository,
   ],
   exports: [TestDbService],
 })

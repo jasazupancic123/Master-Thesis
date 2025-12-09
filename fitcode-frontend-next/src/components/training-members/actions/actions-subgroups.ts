@@ -2,10 +2,10 @@ import toast from 'react-hot-toast';
 
 import { updateGlobalStates } from '@/components/supersets/actions/actions-drag-exercise';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import type { Training } from '@/core/training/type/training.type';
+import type { User } from '@/core/user/type/user.type';
 import type { SetState } from '@/lib/common/type/state.type';
 import type { IGroupCtx, useGroup } from '@/store/group.provider';
 import type { IMainContext } from '@/store/main.provider';
@@ -15,7 +15,7 @@ import type {
 } from '@/store/trainer-day-view.provider';
 
 export const handleAddMembersSubgroup = (
-  input: { member: AuthUser },
+  input: { member: User },
   context: {
     useGroup: ReturnType<typeof useGroup>;
     useTrainerDayViewContext: TrainerDayViewCtxExtended;
@@ -186,7 +186,7 @@ const handleAddSubgroup = (
 };
 
 export function updateSelectedAthleteSubgroup(
-  athlete: AuthUser,
+  athlete: User,
   subgroupId: string,
   trainerDayViewCtx: ITrainerDayViewContext
 ) {

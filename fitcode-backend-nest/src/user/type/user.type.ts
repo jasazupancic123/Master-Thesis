@@ -1,9 +1,9 @@
-import type { AuthUser } from '@src/auth/entity/user.entity';
+import type { AuthUser } from '@src/auth/entity/auth-user.entity';
 import type { UserRole } from '@src/auth/enum/user-role.enum';
 
 import type { Profile } from '../entity/profile.entity';
 
-export type AuthProfileMerged = Pick<
+export type UserType = Pick<
   AuthUser,
   'uid' | 'email' | 'displayName' | 'photoURL'
 > &

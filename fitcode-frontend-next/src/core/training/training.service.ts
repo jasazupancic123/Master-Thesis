@@ -1,7 +1,7 @@
-import type { AuthUser } from '../auth/type/user.type';
 import type { Exercise } from '../exercise/type/exercise.type';
 import type { Group } from '../institution/type/group.type';
 import type { Institution } from '../institution/type/institution.type';
+import type { User } from '../user/type/user.type';
 import type { Superset } from './type/superset.type';
 import type { ActiveTraining, Training } from './type/training.type';
 import type { TrainingReport } from './type/training-report.type';
@@ -9,7 +9,7 @@ import type { TrainingReport } from './type/training-report.type';
 export class TrainingService {
   static mapData<T extends Training>(
     item: T,
-    data: { exercises?: Exercise[]; users?: AuthUser[] }
+    data: { exercises?: Exercise[]; users?: User[] }
   ) {
     if (data.exercises) {
       for (const tc of item.components) {
@@ -81,7 +81,7 @@ export class TrainingService {
           e.exercise = data.exercises.find(({ id }) => id === e.id);
   }
 
-  static mapMembers(item: Training, users: AuthUser[]): Training {
+  static mapMembers(item: Training, users: User[]): Training {
     item.members = item.membersIds.map(
       (id) => users.find((u) => u.uid === id)!
     );

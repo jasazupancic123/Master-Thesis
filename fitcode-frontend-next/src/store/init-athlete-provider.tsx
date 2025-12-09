@@ -16,9 +16,8 @@ export default async function InitAthleteProvider({
 }: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
   if (!session) {
-    console.log('No session found, redirecting to sign-in page');
+    console.log('No session found for athlete, redirecting to sign-in page');
     redirect(LINK_SIGN_IN.href);
   }
 
@@ -38,7 +37,7 @@ export default async function InitAthleteProvider({
 
     const institution = await controller.institution.init(institutionId, opts);
     const data: MainProviderProps = {
-      profile,
+      user: profile,
       institutions,
       institution,
       activeTraining,

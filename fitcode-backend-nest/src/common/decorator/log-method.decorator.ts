@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import type { User } from '../type/firebase-auth.type';
+import type { FirebaseUser } from '../type/firebase-auth.type';
 
 function isPrimitive(val: any): boolean {
   return (
@@ -12,7 +12,7 @@ function isPrimitive(val: any): boolean {
   );
 }
 
-function isFirebaseUser(val: any): val is User {
+function isFirebaseUser(val: any): val is FirebaseUser {
   return val && typeof val === 'object' && typeof val.uid === 'string';
 }
 

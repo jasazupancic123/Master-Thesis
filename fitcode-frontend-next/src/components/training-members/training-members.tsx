@@ -20,11 +20,11 @@ import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
 import useTrainingMembersSubgroups from './hooks/use-subgroups.hook';
 import TrainingMembersSubgroup from './training-members-subgroup';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { User } from '@/core/user/type/user.type';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -48,7 +48,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { members, sortedMembers, item } = trainingMembersContext;
   const { subgroups } = trainingMembersSubgroupsContext;
 
-  const [activeMember, setActiveMember] = useState<AuthUser | null>(null);
+  const [activeMember, setActiveMember] = useState<User | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const sensors = useSensors(
@@ -70,7 +70,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       sensors={sensors}
       collisionDetection={pointerWithin}
       onDragStart={(e) => {
-        const user = users.find((m) => m.uid === e.active.id);
+        const user = users.data.find((m) => m.uid === e.active.id);
         if (user) setActiveMember(user);
       }}
       onDragEnd={(e: DragEndEvent) => {
@@ -167,7 +167,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           <Avatar
                             className="avatar-border"
                             src={
-                              users.find((m) => m.uid === member.uid)
+                              users.data.find((m) => m.uid === member.uid)
                                 ?.photoURL || USER_AVATAR_IMG_URL
                             }
                             sx={{

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { TrainingProtocolRef } from '@src/common/type/firestore.type';
 import { Components } from '@src/exercise/constant/components.constant';
 import { InstitutionService } from '@src/institution/service/institution.service';
@@ -26,7 +26,7 @@ export class TrainingProtocolService {
   ) {}
 
   async create(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     input: CreateTrainingProtocolDto,
   ): Promise<TrainingProtocol> {
@@ -73,7 +73,7 @@ export class TrainingProtocolService {
   }
 
   async update(
-    user: User,
+    user: FirebaseUser,
     ref: TrainingProtocolRef,
     input: Partial<TrainingProtocol>,
   ) {
@@ -109,7 +109,7 @@ export class TrainingProtocolService {
     });
   }
 
-  async delete(user: User, ref: TrainingProtocolRef) {
+  async delete(user: FirebaseUser, ref: TrainingProtocolRef) {
     const institution = await this.institutionService.findByIdOrFail(
       user,
       ref.institutionId,

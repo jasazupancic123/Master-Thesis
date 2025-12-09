@@ -16,9 +16,8 @@ import MyModal from '@/ui/modal';
 
 export default function EditGroupModal(props: ModalProps) {
   const router = useRouter();
-  const { users, setGroups } = useMain();
-  const { selectedGroups, setSelectedGroups, setSelectedInstitution } =
-    useDashboard();
+  const { users, setInstitution } = useMain();
+  const { selectedGroups, setSelectedGroups } = useDashboard();
 
   const { open, setOpen } = props;
 
@@ -65,9 +64,9 @@ export default function EditGroupModal(props: ModalProps) {
               input
             ),
           (group) => {
-            group = core.group.mapMembers(group, users);
+            group = core.group.mapMembers(group, users.data);
 
-            setSelectedInstitution((prev) =>
+            setInstitution((prev) =>
               !prev
                 ? prev
                 : {
@@ -76,10 +75,6 @@ export default function EditGroupModal(props: ModalProps) {
                       g.id === group.id ? group : g
                     ),
                   }
-            );
-
-            setGroups((prev) =>
-              prev.map((g) => (g.id === group.id ? group : g))
             );
 
             setSelectedGroups((prev) =>

@@ -32,7 +32,7 @@ import {
   UserIdsDto,
 } from '@src/common/dto/user-id.dto';
 import { CommonService } from '@src/common/service/common.service';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
   TrainingProtocolRef,
@@ -81,7 +81,7 @@ export class TrainingController {
   @Get()
   @Auth()
   async findAll(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query() filter: FilterTrainingQueryDto,
   ) {
     let { institutionId, ...rest } = filter;
@@ -104,7 +104,7 @@ export class TrainingController {
   @Get(':trainingId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async findById(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
   ): Promise<Training> {
     return await this.trainingService.findOneByIdOrFail(user, {
@@ -115,7 +115,7 @@ export class TrainingController {
   @Get(':trainingId/individual')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async findAllIndividual(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
   ): Promise<Record<string, Training>> {
     const training = await this.trainingService.findOneByIdOrFail(user, {
@@ -130,7 +130,7 @@ export class TrainingController {
 
   @Get('get/active')
   @Auth([UserRole.ATHLETE])
-  async getActiveTraining(@RequestUser() user: User): Promise<
+  async getActiveTraining(@RequestUser() user: FirebaseUser): Promise<
     | (Training & {
         statuses: TrainingComponentUserStatus[];
       })
@@ -145,7 +145,7 @@ export class TrainingController {
   @Post(':trainingId/component/:cId/generate-qr-code')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async generateQRCode(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
     @Body() { userId }: UserIdDto,
@@ -162,7 +162,7 @@ export class TrainingController {
   @Get('report/athlete')
   @Auth()
   async findReports(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query() filter: FilterTrainingQueryDto,
   ) {
     return await this.trainingReportService.findReportsByUser(
@@ -189,7 +189,7 @@ export class TrainingController {
     isArray: true,
   })
   async findAllByInstitutionToday(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
   ): Promise<SmartWallTraining[]> {
     const institution = await this.institutionService.findByOwnerId(user.uid);
     if (!institution)
@@ -239,7 +239,7 @@ export class TrainingController {
   @Post('institution/:institutionId/protocol')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async createProtocol(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Body()
     body: CreateTrainingProtocolDto,
@@ -250,7 +250,7 @@ export class TrainingController {
   @Patch('institution/:institutionId/protocol/:protocolId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async updateProtocol(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('protocolId') protocolId: string,
     @Body()
@@ -263,7 +263,7 @@ export class TrainingController {
   @Delete('institution/:institutionId/protocol/:protocolId')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async deleteProtocol(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
     @Param('protocolId') protocolId: string,
   ) {
@@ -275,7 +275,7 @@ export class TrainingController {
   @Post()
   @Auth()
   async create(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Body()
     body: CreateTrainingDto,
   ) {
@@ -286,7 +286,7 @@ export class TrainingController {
   @Patch('/:baseTrainingId/periodize/component/:componentId')
   @Auth()
   async periodize(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('baseTrainingId') baseTrainingId: string,
     @Param('componentId') componentId: string,
     @Body() body: PeriodizeTrainingsDto,
@@ -308,7 +308,7 @@ export class TrainingController {
   @Patch(':trainingId')
   @Auth()
   async update(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() body: UpdateTrainingDto,
   ) {
@@ -319,7 +319,7 @@ export class TrainingController {
   @Patch(':trainingId/component/:componentId/time')
   @Auth()
   async updateComponentTime(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
     @Body() body: DateRangeDto,
@@ -331,7 +331,7 @@ export class TrainingController {
   @Patch(':trainingId/move')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async move(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() body: DateRangeDto,
   ) {
@@ -341,7 +341,7 @@ export class TrainingController {
   @Delete(':trainingId')
   @Auth()
   async delete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
   ) {
     const ref = { trainingId };
@@ -381,7 +381,7 @@ export class TrainingController {
   @ApiNotFoundResponse({ description: 'Training or exercise not found' })
   @ApiOkResponse({ description: 'Set completed successfully' })
   async completeNextSet(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('exerciseId') exerciseId: string,
     @Body() body: CreateWorkload,
@@ -393,7 +393,7 @@ export class TrainingController {
   @Post(':trainingId/component/:cId/exercise/:eId/superset/:i/set/:s')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async upsertSet(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
     @Param('eId') exerciseId: string,
@@ -421,7 +421,7 @@ export class TrainingController {
   @Post('import-workloads')
   @Auth([UserRole.MANAGER])
   async importWorkloads(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Body() { workloads }: ImportWorkloadsDto,
   ) {
     return await this.trainingService.importWorkloads(user, workloads);
@@ -430,7 +430,7 @@ export class TrainingController {
   @Patch(':trainingId/workload/many')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async updateManyWorkloads(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() { updates, deletes }: UpdateManyWorkloadsDto,
   ) {
@@ -443,7 +443,7 @@ export class TrainingController {
   @Post(':trainingId/component/:cId/start')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async startTrainingComponent(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
     @Body() { userId }: OptionalUserIdDto,
@@ -462,7 +462,7 @@ export class TrainingController {
   @Post(':trainingId/component/:cId/complete')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async completeTrainingComponent(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
     @Body() { userId }: OptionalUserIdDto,
@@ -481,7 +481,7 @@ export class TrainingController {
   @Patch(':trainingId/component/:cId/pause')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async pauseTrainingComponent(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('cId') componentId: string,
   ) {
@@ -492,7 +492,7 @@ export class TrainingController {
   @Get('report/group')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async getGroupAttendanceReport(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query('institutionId') institutionId: string,
     @Query('groupId') groupId: string,
     @Query('componentId') componentId: string,
@@ -507,7 +507,7 @@ export class TrainingController {
   @Get('report/athlete/trainings-realization')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async getTrainingsRealizationReportByUser(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query('institutionId') institutionId: string,
     @Query('athleteId') athleteId: string,
     @Query('componentId') componentId?: string,
@@ -523,7 +523,7 @@ export class TrainingController {
   @Get('report/exercise/:exerciseId')
   @Auth([UserRole.ATHLETE])
   async getExerciseWorkloadsByUser(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('exerciseId') exerciseId: string,
     @Query('institutionId') institutionId: string,
   ) {
@@ -538,7 +538,7 @@ export class TrainingController {
   @Post('report/exercise/:exerciseId/many-users')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async getExerciseWorkloadsByManyUsers(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('exerciseId') exerciseId: string,
     @Query('institutionId') institutionId: string,
     @Body() { userIds }: UserIdsDto,
@@ -554,7 +554,7 @@ export class TrainingController {
   @Get(':trainingId/workload')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async getTrainingWorkloads(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
   ) {
     return await this.trainingReportService.getTrainingWorkloads(
@@ -570,7 +570,7 @@ export class TrainingController {
   @Post(':trainingId/modify')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async modifyTraining(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() { action, ref, payload }: TrainingActionPayloadDto,
   ) {
@@ -586,7 +586,7 @@ export class TrainingController {
   @Post(':trainingId/component')
   @Auth()
   async addComponents(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() { components }: AddTrainingComponentsDto,
   ) {
@@ -600,7 +600,7 @@ export class TrainingController {
   @Delete(':trainingId/component/:componentId')
   @Auth()
   async deleteComponent(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
   ) {
@@ -611,7 +611,7 @@ export class TrainingController {
   @Patch(':trainingId/member')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async addMember(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() { userId }: UserIdDto,
   ) {
@@ -625,7 +625,7 @@ export class TrainingController {
   @Delete(':trainingId/member')
   @Auth([UserRole.MANAGER, UserRole.TRAINER])
   async removeMember(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('trainingId') trainingId: string,
     @Body() { userId }: UserIdDto,
   ) {
@@ -639,7 +639,7 @@ export class TrainingController {
   @Get('report/recalculate')
   @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
   async recalculateReports(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query('institutionId') institutionId: string,
     @Query('userId') userId: string,
   ) {

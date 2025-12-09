@@ -29,11 +29,14 @@ export class Profile extends TimestampEntity {
   email: string;
 
   @IsNumber({}, { each: true })
-  @ApiProperty({ type: Number, isArray: true })
+  @ApiPropertyOptional({ type: Number, isArray: true })
+  @IsOptional()
   @Expose()
   faceEmbedding?: number[];
 
   @IsString()
+  @IsNotEmpty()
+  @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   photoURLBase64?: string;

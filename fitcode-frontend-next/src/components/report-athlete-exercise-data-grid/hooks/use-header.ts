@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import type { Training } from '@/core/training/type/training.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportDataGridHeader(
-  selectedAthlete: AuthUser | null,
+  selectedAthlete: User | null,
   setSelectedTraining: SetState<Training | null>
 ) {
   const { trainings } = useMain();
@@ -25,7 +25,7 @@ export default function useAthleteExerciseReportDataGridHeader(
   const trainingAnchorElRef = useRef<HTMLElement | null>(null);
   const percentageCalculationAnchorElRef = useRef<HTMLElement | null>(null);
 
-  const filteredAthletes = useMemo<AuthUser[]>(() => {
+  const filteredAthletes = useMemo<User[]>(() => {
     const allAthletes = lib.common.generic.getUnique(
       selectedGroups.flatMap((group) => group.members || []),
       'uid'

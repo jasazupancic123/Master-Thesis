@@ -4,8 +4,8 @@ import type { Subgroup } from '../type/subgroup.type';
 import type { Superset } from '../type/superset.type';
 import type { TrainingComponent } from '../type/training-component.type';
 import { DEFAULT_SUBGROUP_ID } from '@/components/trainer-group-day-view/constant/subgroups.constant';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
+import type { User } from '@/core/user/type/user.type';
 
 export class TrainingSubgroupUtil {
   stub(data?: Partial<Subgroup>): Subgroup {
@@ -39,7 +39,7 @@ export class TrainingSubgroupUtil {
   }
 
   createVirtual(
-    athlete: AuthUser,
+    athlete: User,
     subgroup: Subgroup | null,
     component: TrainingComponent
   ): Subgroup {

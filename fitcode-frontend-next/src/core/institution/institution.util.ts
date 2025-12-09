@@ -1,9 +1,9 @@
-import { UserRole } from '../profile/enum/user-role.enum';
+import { UserRole } from '../user/enum/user-role.enum';
+import type { User } from '../user/type/user.type';
 import type { Institution } from './type/institution.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
 
 export class InstitutionUtil {
-  mapUsers<T extends Institution>(items: T[], users: AuthUser[]): T[] {
+  mapUsers<T extends Institution>(items: T[], users: User[]): T[] {
     return items.map((item: T) => {
       item.owner = users.find((user) => user.uid === item.ownerId)!;
 

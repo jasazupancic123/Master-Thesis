@@ -30,12 +30,12 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import SelectInputHorizontal from '@/ui/select-input/select-input-horizontal';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardMenuMobile() {
   const { user, role, logout } = useAuthenticatedAuth();
   const screenSize = useScreenSize();
-  const { institutions, selectedInstitution, setSelectedInstitution } =
-    useDashboard();
+  const { institutions, institution, setInstitution } = useMain();
 
   const [open, setOpen] = useState(false);
 
@@ -55,26 +55,6 @@ export default function DashboardMenuMobile() {
       {/* Side drawer from the right */}
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
         <List sx={{ mt: 5 }}>
-          {lib.firebase.auth.isAdmin(role!) && (
-            <Box ml={screenSize.isMobile ? 2 : 0}>
-              <SelectInputHorizontal<Institution>
-                label={selectedInstitution?.name || 'Select institution'}
-                icon={<Groups />}
-                value={selectedInstitution?.id || ''}
-                items={institutions || []}
-                itemKey="id"
-                itemName="name"
-                setValue={(institutionId) => {
-                  const institution = institutions?.find(
-                    (i) => i.id === institutionId
-                  );
-
-                  if (institution) setSelectedInstitution(institution);
-                }}
-              />
-            </Box>
-          )}
-
           {role &&
             [
               ...Object.values(LINKS_SIDEBAR_DAHBOARD_VIEW[role]),

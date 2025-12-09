@@ -33,7 +33,6 @@ import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constan
 import { handleUpdateTraining } from './actions/actions-training';
 import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
-import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import {
   LINK_DASHBOARD,
@@ -50,6 +49,8 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import FilterButton from '@/ui/filter-button';
+import { useDashboard } from '@/store/dashboard.provider';
+import { InstitutionController } from '@/core/institution/institution.controller';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
@@ -68,11 +69,12 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const mainContext = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
+  useDashboard;
 
-  const { setGroups } = mainContext;
+  const { institution } = mainContext;
+  const { groups } = institution;
 
   const {
-    institution,
     setGroup,
     selectedGroup,
     setSelectedGroup,
@@ -94,6 +96,42 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
     anchorProfileEl,
     setAnchorProfileEl,
   } = useTrainerGroupHeaderUtils();
+
+  async function handleSaveGroup() {
+    for (const cycle of selectedGroup.cycles) {
+      if (cycle.from >= cycle.to) {
+        toast.error('Start date must be before end date.');
+        return;
+      }
+    }
+
+    try {
+      const group = await InstitutionController.getInstance().updateGroup(
+        selectedGroup.institutionId,
+        selectedGroup.id,
+        {
+          shortName: selectedGroup.shortName,
+          cycles: selectedGroup.cycles,
+        }
+      );
+
+      if (group.cycles.length === 1) setCycle(group.cycles[0]);
+      else if (cycle) {
+        group.cycles.forEach((groupCycle) => {
+          if (groupCycle.id === cycle.id) setCycle(groupCycle);
+        });
+      }
+
+      setGroup(group);
+      setSelectedGroup(group);
+      setDetectedChanges(false);
+
+      toast.success('Group successfully saved');
+    } catch (e) {
+      console.error(e);
+      toast.error((e as Error).message || 'Failed to save group');
+    }
+  }
 
   return (
     <Box
@@ -312,18 +350,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                     >
                       <IconButton
                         sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
-                        onClick={() =>
-                          handleSaveGroup(
-                            selectedGroup,
-                            setSelectedGroup,
-                            cycle,
-                            setCycle,
-                            setDetectedChanges,
-                            router,
-                            setGroup,
-                            setGroups
-                          )
-                        }
+                        onClick={handleSaveGroup}
                       >
                         <SaveOutlined />
                       </IconButton>
@@ -446,18 +473,7 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
 
           {filter === 'year' && (
             <IconButton
-              onClick={() =>
-                handleSaveGroup(
-                  selectedGroup,
-                  setSelectedGroup,
-                  cycle,
-                  setCycle,
-                  setDetectedChanges,
-                  router,
-                  setGroup,
-                  setGroups
-                )
-              }
+              onClick={handleSaveGroup}
               sx={{
                 p: 0,
                 ml: 2,

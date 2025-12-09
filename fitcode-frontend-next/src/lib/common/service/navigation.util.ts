@@ -1,4 +1,4 @@
-import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { UserRole } from '@/core/user/enum/user-role.enum';
 import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 

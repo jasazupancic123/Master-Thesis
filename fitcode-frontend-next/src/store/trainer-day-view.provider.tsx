@@ -11,12 +11,10 @@ import { useGroup } from './group.provider';
 import { useMain } from './main.provider';
 import { useScreenSize } from './screen-size.provider';
 import type { TrainerDayViewContextProps } from '@/app/(trainer)/groups/[group_id]/props';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { ExerciseService } from '@/core/exercise/exercise.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
-import type { Profile } from '@/core/profile/type/user.type';
 import { MainSet } from '@/core/training/enum/main-set.enum';
 import { TrainingController } from '@/core/training/training.controller';
 import { TrainingService } from '@/core/training/training.service';
@@ -30,6 +28,7 @@ import type {
   UserProgress,
   Workload,
 } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import type { Day } from '@/lib/common/service/date.util';
 import type { Pagination } from '@/lib/common/type/paginate.type';
@@ -91,12 +90,10 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
   const [supersets, setSupersets] = useState<Superset[]>([]);
   const [loading, setLoading] = useState(false);
   const [protocols, setProtocols] = useState<TrainingProtocol[]>([]);
-  const previousSelectedAthlete = useRef<AuthUser | undefined>(undefined);
+  const previousSelectedAthlete = useRef<User | undefined>(undefined);
 
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
-  const [selectedAthlete, setSelectedAthlete] = useState<
-    AuthUser | undefined
-  >();
+  const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
   const [selectedSubgroup, setSelectedSubgroup] = useState<Subgroup | null>(
     null
   );
@@ -214,15 +211,22 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     return () => unsub();
   }, [training?.id]);
 
-  async function handleAddMember(user: AuthUser) {
+  async function handleAddMember(user: User) {
     if (!training) return;
 
-    const member: Profile = {
+    const member: User = {
       uid: user.uid,
       email: user.email!,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       wellness: { userId: user.uid, date: new Date() },
+      displayName: user.displayName || 'Unnamed User',
+      photoURL: user.photoURL || '',
+      role: user.role,
+      birthDate: user.birthDate,
+      faceEmbedding: [],
+      gender: user.gender,
+      level: user.level,
+      photoURLBase64: user.photoURLBase64,
+      sport: user.sport,
     };
 
     const prevState = {
@@ -346,7 +350,7 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
     }));
   }, [window.innerWidth]);
 
-  async function handleRemoveMember(user: AuthUser) {
+  async function handleRemoveMember(user: User) {
     if (!training) return;
 
     const prevState = {
@@ -360,6 +364,16 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
         setTraining((prev) => ({
           ...prev!,
           membersIds: prev!.membersIds.filter((id) => id !== user.uid),
+          // also update subgroups
+          components: prev!.components.map((c) => ({
+            ...c,
+            subgroups: c.subgroups
+              .map((sg) => ({
+                ...sg,
+                membersIds: sg.membersIds.filter((id) => id !== user.uid),
+              }))
+              .filter((sg) => sg.membersIds.length > 0),
+          })),
         }));
 
         setTrainings((prev) => ({
@@ -369,6 +383,17 @@ export function TrainerDayViewProvider({ children }: React.PropsWithChildren) {
               ? {
                   ...t,
                   membersIds: t.membersIds.filter((id) => id !== user.uid),
+                  components: t.components.map((c) => ({
+                    ...c,
+                    subgroups: c.subgroups
+                      .map((sg) => ({
+                        ...sg,
+                        membersIds: sg.membersIds.filter(
+                          (id) => id !== user.uid
+                        ),
+                      }))
+                      .filter((sg) => sg.membersIds.length > 0),
+                  })),
                 }
               : t
           ),

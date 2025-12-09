@@ -18,14 +18,18 @@ import { useGroup } from '@/store/group.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import SelectInput from '@/ui/select-input/select-input';
+import { useMain } from '@/store/main.provider';
 
 const TEMP_PROTOCOL_ID = '__create_new__';
 
 export default function TrainingComponentHeaderMenu() {
   const screenSize = useScreenSize();
+
+  const { institution } = useMain();
+
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
-  const { setDetectedChanges, institution } = groupContext;
+  const { setDetectedChanges } = groupContext;
 
   const {
     training,

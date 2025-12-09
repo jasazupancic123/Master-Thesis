@@ -14,7 +14,7 @@ import { UserRole } from '@src/auth/enum/user-role.enum';
 
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
-import { User } from '../common/type/firebase-auth.type';
+import { FirebaseUser } from '../common/type/firebase-auth.type';
 import {
   CreateExerciseDto,
   UpsertManyExercisesDto,
@@ -31,7 +31,7 @@ export class ExerciseController {
   @Get('global')
   @Auth()
   async findAllGlobal(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Query() query?: Record<string, string>,
   ) {
     return await this.exerciseService.findAllGlobal(user, query);
@@ -40,7 +40,7 @@ export class ExerciseController {
   @Get('institution/:institutionId')
   @Auth()
   async findAll(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('institutionId') institutionId: string,
   ) {
     return await this.exerciseService.findAll(user, institutionId);
@@ -48,14 +48,17 @@ export class ExerciseController {
 
   @Post()
   @Auth([UserRole.ADMIN, UserRole.MANAGER])
-  async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
+  async create(
+    @RequestUser() user: FirebaseUser,
+    @Body() data: CreateExerciseDto,
+  ) {
     return await this.exerciseService.create(user, data);
   }
 
   @Post('many')
   @Auth()
   async upsertMany(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Body() data: UpsertManyExercisesDto,
   ) {
     return await this.exerciseService.upsertMany(
@@ -67,7 +70,7 @@ export class ExerciseController {
   @Patch('muscle-values/many')
   @Auth()
   async updateMuscleValues(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Body() data: UpsertManyExerciseMuscleValuesDto,
   ) {
     await this.exerciseService.updateMuscleValues(user, data.exercises);
@@ -76,7 +79,7 @@ export class ExerciseController {
   @Patch(':exerciseId')
   @Auth()
   async update(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('exerciseId') exerciseId: string,
     @Body() body: UpdateExerciseDto,
   ) {
@@ -86,7 +89,7 @@ export class ExerciseController {
   @Delete(':exerciseId')
   @Auth()
   async delete(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Param('exerciseId') exerciseId: string,
   ) {
     await this.exerciseService.delete(user, { exerciseId });

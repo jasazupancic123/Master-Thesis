@@ -1,5 +1,5 @@
 import type { TrainingExercise } from './training-exercise.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 
 export type TrainingStation = {
   id: string;
@@ -8,5 +8,5 @@ export type TrainingStation = {
   trainingId: string;
   componentId: string;
   exercises: TrainingExercise[];
-  users: AuthUser[];
+  users: User[];
 };

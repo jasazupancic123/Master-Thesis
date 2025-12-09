@@ -6,7 +6,7 @@ import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions
 import type { MetricConfig } from './types/wellness-metrics.type';
 import WellnessBarChart from './wellness-bar-chart';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
@@ -20,7 +20,7 @@ export default function WellnessReports() {
   const { wellness } = useMain();
   const { selectedGroups } = useDashboard();
 
-  const [members, setMembers] = useState<AuthUser[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
 
   useEffect(() => {
     setMembers(

@@ -34,10 +34,10 @@ export default function MagicAuthPage() {
         const idToken = await result.user.getIdToken();
         const user = await AuthController.getInstance().sessionLogin(idToken);
 
-        const { role } = handleUserChange(user);
-        if (role) {
+        handleUserChange(user);
+        if (user) {
           toast.success('Signed in successfully');
-          router.push(redirect || SIGN_IN_REDIRECT_MAPPER[role]?.href);
+          router.push(redirect || SIGN_IN_REDIRECT_MAPPER[user.role]?.href);
         }
       } catch (e) {
         toast.error((e as Error).message);

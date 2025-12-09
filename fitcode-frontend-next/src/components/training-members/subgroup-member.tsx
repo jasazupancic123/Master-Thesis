@@ -3,16 +3,16 @@ import { Avatar, Box, Tooltip } from '@mui/material';
 
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Subgroup } from '@/core/training/type/subgroup.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { User } from '@/core/user/type/user.type';
 
 interface Props {
-  member: AuthUser;
+  member: User;
   subgroup: Subgroup;
-  activeMember: AuthUser | null;
+  activeMember: User | null;
 }
 
 export default function SubgroupMember(props: Props) {
@@ -59,7 +59,7 @@ export default function SubgroupMember(props: Props) {
           <Avatar
             className="avatar-border"
             src={
-              users.find((m) => m.uid === member.uid)?.photoURL ||
+              users.data.find((m) => m.uid === member.uid)?.photoURL ||
               USER_AVATAR_IMG_URL
             }
             sx={{

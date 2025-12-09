@@ -5,9 +5,9 @@ import { useState } from 'react';
 import AthleteExerciseDataGridHeader from './athlete-exercise-data-grid-header';
 import useAthleteExerciseReportDataGridData from './hooks/use-rows';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { Workload } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 
 interface Props {
   cache: Map<string, Workload[]>;
@@ -16,7 +16,7 @@ interface Props {
 export default function AthleteExerciseDataGrid(props: Props) {
   const { cache } = props;
 
-  const [selectedAthlete, setSelectedAthlete] = useState<AuthUser | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<User | null>(null);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );

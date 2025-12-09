@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
+import type { User } from '@/core/user/type/user.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportExercises(
-  selectedAthlete: AuthUser | null,
+  selectedAthlete: User | null,
   passedExerciseId?: string
 ) {
   const { exercises, trainings } = useMain();

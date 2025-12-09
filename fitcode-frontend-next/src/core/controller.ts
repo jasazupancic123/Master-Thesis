@@ -3,7 +3,7 @@ import { AuthController } from './auth/auth.controller';
 import { ExerciseController } from './exercise/exercise.controller';
 import { ExerciseAiPrescriptionsController } from './exercise-ai-prescriptions/exercise-ai-prescriptions.controller';
 import { InstitutionController } from './institution/institution.controller';
-import { ProfileController } from './profile/profile.controller';
+import { UserController } from './user/user.controller';
 import { TrainingController } from './training/training.controller';
 
 export class Controller {
@@ -13,7 +13,7 @@ export class Controller {
   public exercise: ExerciseController;
   public institution: InstitutionController;
   public training: TrainingController;
-  public profile: ProfileController;
+  public profile: UserController;
   public exerciseAiPrescriptions: ExerciseAiPrescriptionsController;
   public app: AppController;
 
@@ -22,7 +22,7 @@ export class Controller {
     this.exercise = ExerciseController.getInstance();
     this.institution = InstitutionController.getInstance();
     this.training = TrainingController.getInstance();
-    this.profile = ProfileController.getInstance();
+    this.profile = UserController.getInstance();
     this.exerciseAiPrescriptions =
       ExerciseAiPrescriptionsController.getInstance();
     this.app = AppController.getInstance();

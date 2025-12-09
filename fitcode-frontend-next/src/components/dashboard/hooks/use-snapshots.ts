@@ -5,20 +5,21 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { useEffect } from 'react';
 
 import type { Institution } from '@/core/institution/type/institution.type';
-import { UserRole } from '@/core/profile/enum/user-role.enum';
+import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { Training } from '@/core/training/type/training.type';
 import { lib } from '@/lib';
 import type { FirestoreEntity } from '@/lib/firebase/type/firestore.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useDashboardScheduleSnapshots() {
   const { role } = useAuthenticatedAuth();
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
 
   useEffect(() => {
-    if (!selectedInstitution || role !== UserRole.MANAGER) return;
-    const institutionId = selectedInstitution.id;
+    if (role !== UserRole.MANAGER) return;
+    const institutionId = institution.id;
 
     const unsub = onSnapshot(
       query(
@@ -46,8 +47,8 @@ export default function useDashboardScheduleSnapshots() {
   }, []);
 
   useEffect(() => {
-    if (!selectedInstitution || role !== UserRole.MANAGER) return;
-    const institutionId = selectedInstitution.id;
+    if (role !== UserRole.MANAGER) return;
+    const institutionId = institution.id;
 
     const unsub = onSnapshot(
       query(

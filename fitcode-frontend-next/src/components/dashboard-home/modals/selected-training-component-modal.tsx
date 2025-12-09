@@ -47,7 +47,9 @@ export default function SelectedTrainingComponentModal(
     ? 1
     : 0;
 
-  const group = mainContext.groups.find((g) => g.id === training.groupId);
+  const group = mainContext.institution.groups?.find(
+    (g) => g.id === training.groupId
+  );
 
   const IconComponent = lib.common.component.getIcon(component.id);
 

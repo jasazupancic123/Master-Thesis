@@ -1,7 +1,7 @@
 import { TestApp } from '@test/common/utils/app.util';
 
-import type { SaveWellnessDto } from '@src/profile/dto/save-wellness.dto';
 import { TestDbService } from '@src/test-db/test-db.service';
+import type { SaveWellnessDto } from '@src/user/dto/save-wellness.dto';
 
 describe('Upsert Wellness (e2e)', () => {
   let testApp: TestApp;
@@ -18,7 +18,7 @@ describe('Upsert Wellness (e2e)', () => {
   });
 
   async function req(token: string, body: SaveWellnessDto) {
-    return testApp.http.post(`/profile`, token, body);
+    return testApp.http.post(`/user/wellness`, token, body);
   }
 
   it('should successfully insert wellness', async () => {

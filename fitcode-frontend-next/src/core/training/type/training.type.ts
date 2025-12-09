@@ -4,11 +4,11 @@ import type {
   UpdateTrainingComponent,
 } from './training-component.type';
 import type { TrainingComponentUserStatus } from './training-component-user-status.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { BaseEntity } from '@/core/entity.type';
 import type { Cycle } from '@/core/institution/type/cycle.type';
 import type { Group } from '@/core/institution/type/group.type';
 import type { Institution } from '@/core/institution/type/institution.type';
+import type { User } from '@/core/user/type/user.type';
 import type { DateRange } from '@/lib/common/type/date-range.type';
 
 export type Training = BaseEntity &
@@ -25,7 +25,7 @@ export type Training = BaseEntity &
     institution?: Institution;
     group?: Group;
     cycle?: Cycle;
-    members?: AuthUser[];
+    members?: User[];
   };
 
 export type CreateTraining = Pick<
