@@ -18,6 +18,7 @@ import type { Day } from '@/lib/common/service/date.util';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { Pagination } from '@/lib/common/type/paginate.type';
 import type { SetState, SetStateNullable } from '@/lib/common/type/state.type';
+import { TrainingProtocol } from '@/core/training/type/training-protocol.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -73,6 +74,8 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
+  protocols: TrainingProtocol[];
+  setProtocols: SetState<TrainingProtocol[]>;
   previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
   expandedExercisesView: boolean;
   setExpandedExercisesView: SetState<boolean>;

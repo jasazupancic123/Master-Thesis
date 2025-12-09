@@ -53,7 +53,6 @@ export interface IMainContext extends MainProviderProps {
   trainings: Fetch<Training[]>;
   setTrainings: SetState<Fetch<Training[]>>;
   protocols: Fetch<TrainingProtocol[]>;
-  setProtocols: SetState<Fetch<TrainingProtocol[]>>;
   reloadExercises: () => Promise<void>;
 }
 
@@ -249,7 +248,6 @@ export default function MainProvider(props: MainProviderProps) {
     trainings,
     setTrainings,
     protocols,
-    setProtocols,
     institutions: props.institutions,
     institution: props.institution,
     wellness: profiles.map((p) => p.wellness).flat(),
