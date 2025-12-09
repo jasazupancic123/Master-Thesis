@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import useInstitutionMembers from '../../dashboard/hooks/use-institution-members.hook';
 import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { User } from '@/core/user/type/user.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useCsvMembersUpload() {

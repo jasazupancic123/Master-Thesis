@@ -38,8 +38,6 @@ export default function TrainingStationExerciseSet(props: Props) {
     undefined
   );
 
-  console.log('workloads', workloads);
-
   useEffect(() => {
     if (
       setIndex === undefined ||

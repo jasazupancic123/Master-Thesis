@@ -1,12 +1,9 @@
 import { Avatar, Box, Typography } from '@mui/material';
-import { useMemo, useState } from 'react';
 
 import { theme } from '@/app/style';
-import type { User } from '@/core/user/type/user.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
-import { SearchBar } from '@/ui/search-bar/search-bar';
 
 export default function TrainingStationMembers() {
   const { users: allUsers } = useMain();

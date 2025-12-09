@@ -1,14 +1,5 @@
 import { KeyboardArrowDown } from '@mui/icons-material';
-import {
-  alpha,
-  Avatar,
-  Box,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { alpha, Box, Divider, IconButton, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 

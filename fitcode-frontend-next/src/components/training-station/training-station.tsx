@@ -1,6 +1,6 @@
 'use client';
 
-import { alpha, Avatar, Box, Grid, Typography } from '@mui/material';
+import { alpha, Box, Grid, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -19,10 +19,7 @@ import TrainingStationMembers from './training-station-members';
 import { theme } from '@/app/style';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
-import {
-  EXERCISE_DEFAULT_IMG_URL,
-  USER_AVATAR_IMG_URL,
-} from '@/lib/common/const/image.const';
+import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useCoachTraining } from '@/store/coach-training.provider';
 import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';

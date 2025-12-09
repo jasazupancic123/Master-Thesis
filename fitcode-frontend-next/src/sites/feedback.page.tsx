@@ -13,8 +13,8 @@ import AthleteAnthropometryForm from '@/components/athlete-anthropometry-form/at
 import { paintHeatmaps } from '@/components/training-component/actions/actions-color-heatmap';
 import { core } from '@/core/core.service';
 import { WellnessAnthropometry } from '@/core/user/enum/wellness-anthropometry.enum';
-import { UserController } from '@/core/user/user.controller';
 import type { CreateWellness, Wellness } from '@/core/user/type/wellness.type';
+import { UserController } from '@/core/user/user.controller';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 import { useWellness } from '@/store/wellness-provider';
