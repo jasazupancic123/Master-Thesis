@@ -90,7 +90,7 @@ export default function DashboardPlanningModal(props: ModalProps) {
                     justifyContent="flex-start"
                     alignItems="center"
                     sx={{
-                      borderRadius: '50%',
+                      borderRadius: 2,
                       border: `0.5px solid ${theme.palette.primary.main}`,
                       my: 'auto',
                     }}
