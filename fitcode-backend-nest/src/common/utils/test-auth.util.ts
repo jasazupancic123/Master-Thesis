@@ -38,7 +38,7 @@ export class TestAuth {
     );
 
     await this.firebase.firestore
-      .collection(FirestoreCollection.PROFILE)
+      .collection(FirestoreCollection.USER)
       .doc(user.uid)
       .set(createUserQuery);
 
@@ -76,7 +76,7 @@ export class TestAuth {
   async deleteUser(uid: string) {
     await this.firebase.auth.deleteUser(uid);
     await this.firebase.firestore
-      .collection(FirestoreCollection.PROFILE)
+      .collection(FirestoreCollection.USER)
       .doc(uid)
       .delete();
   }

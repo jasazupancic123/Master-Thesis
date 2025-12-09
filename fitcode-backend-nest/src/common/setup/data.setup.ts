@@ -110,7 +110,7 @@ export class DataSetup extends BaseSetup {
   private async clearData() {
     await this.firebase.deleteCollection(FirestoreCollection.GROUP);
     await this.firebase.deleteCollection(FirestoreCollection.EXERCISE);
-    await this.firebase.deleteCollection(FirestoreCollection.PROFILE);
+    await this.firebase.deleteCollection(FirestoreCollection.USER);
     await this.firebase.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebase.deleteCollection(FirestoreCollection.INSTITUTION);
   }

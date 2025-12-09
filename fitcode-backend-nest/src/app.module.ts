@@ -15,7 +15,7 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { InstitutionModule } from './institution/institution.module';
 import { TestDbModule } from './test-db/test-db.module';
 import { TrainingModule } from './training/training.module';
-import { ProfileModule } from './user/user.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -27,7 +27,7 @@ import { ProfileModule } from './user/user.module';
     CacheManagerModule,
     AuthModule,
     AttributeModule,
-    ProfileModule,
+    UserModule,
     ExerciseModule,
     TrainingModule,
     ExerciseAiPrescriptionsModule,

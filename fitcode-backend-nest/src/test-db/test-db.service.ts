@@ -12,6 +12,7 @@ import { ProtocolTestRepository } from './service/protocol-test.repository';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TrainingComponentUserStatusTestRepository } from './service/training-report.test.repository';
 import { TrainingTestRepository } from './service/training-test.repository';
+import { UserExerciseStatsTestRepository } from './service/user-exercise-stats-test.repository';
 import { WellnessTestRepository } from './service/wellness-test.repository';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class TestDbService {
     readonly groups: GroupTestRepository,
     readonly wellness: WellnessTestRepository,
     readonly profiles: ProfileTestRepository,
+    readonly userExerciseStats: UserExerciseStatsTestRepository,
   ) {}
 
   async clear() {
@@ -34,7 +36,7 @@ export class TestDbService {
       this.firebase.deleteCollection(FirestoreCollection.EXERCISE),
       this.firebase.deleteCollection(FirestoreCollection.INSTITUTION),
       this.firebase.deleteCollection(FirestoreCollection.GROUP),
-      this.firebase.deleteCollection(FirestoreCollection.PROFILE),
+      this.firebase.deleteCollection(FirestoreCollection.USER),
       this.firebase.deleteCollection(FirestoreCollection.TRAINING),
     ]);
 
@@ -46,7 +48,7 @@ export class TestDbService {
       [global.admin.uid, global.admin.email],
     ]) {
       await this.firebase.firestore
-        .collection(FirestoreCollection.PROFILE)
+        .collection(FirestoreCollection.USER)
         .doc(uid)
         .set(
           this.firebase.buildCreateQuery<Profile>(
