@@ -12,9 +12,6 @@ import type { Cycle } from '@src/institution/entity/cycle.entity';
 import type { Group } from '@src/institution/entity/group.entity';
 import { GroupService } from '@src/institution/service/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import { SportLevel } from '@src/profile/enum/sport-level.enum';
-import { ProfileRepository } from '@src/profile/repository/profile.repository';
-import { WellnessService } from '@src/profile/service/wellness.service';
 import type { Training } from '@src/training/entity/training.entity';
 import type { Workload } from '@src/training/entity/workload.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
@@ -27,12 +24,15 @@ import {
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
+import { SportLevel } from '@src/user/enum/sport-level.enum';
+import { ProfileRepository } from '@src/user/repository/profile.repository';
+import { WellnessService } from '@src/user/service/wellness.service';
 
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import { CommonService } from '../service/common.service';
 import { getTime } from '../service/util';
 import type { Update } from '../type/entity.type';
-import type { User } from '../type/firebase-auth.type';
+import type { FirebaseUser } from '../type/firebase-auth.type';
 import { generateRandomNumber } from '../utils/random.util';
 import { BaseSetup } from './base.setup';
 
@@ -44,9 +44,9 @@ export class DataSetup extends BaseSetup {
   private readonly trainingService: TrainingService;
   private readonly workloadService: WorkloadService;
 
-  private admin: User;
-  private manager: User;
-  private trainer: User;
+  private admin: FirebaseUser;
+  private manager: FirebaseUser;
+  private trainer: FirebaseUser;
 
   constructor(app: INestApplication) {
     super(app);
@@ -110,7 +110,7 @@ export class DataSetup extends BaseSetup {
   private async clearData() {
     await this.firebase.deleteCollection(FirestoreCollection.GROUP);
     await this.firebase.deleteCollection(FirestoreCollection.EXERCISE);
-    await this.firebase.deleteCollection(FirestoreCollection.PROFILE);
+    await this.firebase.deleteCollection(FirestoreCollection.USER);
     await this.firebase.deleteCollection(FirestoreCollection.TRAINING);
     await this.firebase.deleteCollection(FirestoreCollection.INSTITUTION);
   }
@@ -237,7 +237,7 @@ export class DataSetup extends BaseSetup {
       },
     ];
 
-    const createdUsers: User[] = [];
+    const createdUsers: FirebaseUser[] = [];
     for (const userData of data) {
       createdUsers.push(
         await this.authService.upsert({
@@ -277,7 +277,7 @@ export class DataSetup extends BaseSetup {
       }),
     );
 
-    const users = await this.authService.findAll(this.admin, {
+    const users = await this.firebase.authUsers({
       emails: data.map((u) => u.email),
     });
 
@@ -314,7 +314,7 @@ export class DataSetup extends BaseSetup {
     const groups = data.find((u) => u.email === this.trainer.email)?.groups;
 
     for (const { name, membersIds: emails } of groups) {
-      const members = await this.authService.findAll(this.admin, { emails });
+      const members = await this.firebase.authUsers({ emails });
       const membersIds = members.map((m) => m.uid);
       const group = await groupService.create(this.manager, {
         name,
@@ -347,7 +347,7 @@ export class DataSetup extends BaseSetup {
     return { users, groups: createdGroups };
   }
 
-  private async importWorkloads(users: User[], groups: Group[]) {
+  private async importWorkloads(users: FirebaseUser[], groups: Group[]) {
     // for each group, create 3 trainings, 1 in the past, 1 today, 1 in the future
     const trainings: Training[] = [];
     for (const group of groups) {

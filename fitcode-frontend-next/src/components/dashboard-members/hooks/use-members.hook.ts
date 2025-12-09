@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
+import type { User } from '@/core/user/type/user.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useDashboardMembers() {
-  const { selectedInstitution } = useDashboard();
+  const { institution } = useMain();
 
   const [openRegisterAthletesModal, setOpenRegisterAthletesModal] =
     useState(false);
@@ -18,13 +19,11 @@ export default function useDashboardMembers() {
   const [includeTrainers, setIncludeTrainers] = useState(true);
   const [includeAthletes, setIncludeAthletes] = useState(true);
 
-  const [allInstitutionMembers, setAllInstitutionMembers] = useState<
-    AuthUser[]
-  >(
-    (selectedInstitution?.trainers || [])
+  const [allInstitutionMembers, setAllInstitutionMembers] = useState<User[]>(
+    (institution?.trainers || [])
       .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
       .concat(
-        (selectedInstitution?.athletes || []).sort((a, b) =>
+        (institution?.athletes || []).sort((a, b) =>
           (a.displayName || '').localeCompare(b.displayName || '')
         )
       )
@@ -37,22 +36,19 @@ export default function useDashboardMembers() {
 
   useEffect(() => {
     setAllInstitutionMembers(
-      (selectedInstitution?.trainers || []).concat(
-        selectedInstitution?.athletes || []
-      )
+      (institution?.trainers || []).concat(institution?.athletes || [])
     );
-  }, [selectedInstitution]);
+  }, [institution]);
 
   const [filteredMembers, setFilteredMembers] = useState(allInstitutionMembers);
 
   useEffect(() => {
-    let members: AuthUser[] = [];
-
+    let members: User[] = [];
     if (includeTrainers) {
-      members = members.concat(selectedInstitution?.trainers || []);
+      members = members.concat(institution?.trainers || []);
     }
     if (includeAthletes) {
-      members = members.concat(selectedInstitution?.athletes || []);
+      members = members.concat(institution?.athletes || []);
     }
 
     setAllInstitutionMembers(members);

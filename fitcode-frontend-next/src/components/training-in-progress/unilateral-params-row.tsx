@@ -13,6 +13,8 @@ interface Props {
     | 'time'
     | 'reps'
     | 'eff'
+    | 'pace'
+    | 'watts'
     | 'tempoEcc'
     | 'recDist'
     | 'recTime'

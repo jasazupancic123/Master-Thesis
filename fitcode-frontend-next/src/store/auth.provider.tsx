@@ -4,9 +4,8 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { AuthController } from '@/core/auth/auth.controller';
-import type { CustomClaims } from '@/core/auth/type/custom-claims.type';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { UserRole } from '@/core/profile/enum/user-role.enum';
+import type { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
 import { LINK_SIGN_IN } from '@/lib/common/const/nav.const';
 import type {
   AuthStatus,
@@ -21,13 +20,11 @@ export const useAuth = () => useContext(AuthContext)!;
 
 export type AuthState = {
   status: AuthStatus;
-  user?: AuthUser;
+  user?: User;
   role?: UserRole;
-  customClaims?: CustomClaims;
 };
 
 export const AuthProvider = (props: React.PropsWithChildren) => {
-  console.log('AuthProvider rendered');
   const auth = getFirebaseAuth();
   const { children } = props;
   const router = useRouter();
@@ -37,17 +34,9 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     status: 'loading',
     user: undefined,
     role: undefined,
-    customClaims: undefined,
   });
 
-  function setCustomClaims(claims: CustomClaims) {
-    console.log('setCustomClaims called with claims:', claims);
-    if (state.status === 'authenticated')
-      setState((prevState) => ({ ...prevState, customClaims: claims }));
-  }
-
-  function setUser(data: Partial<Pick<AuthUser, 'displayName' | 'photoURL'>>) {
-    console.log('setUser called with data:', data);
+  function setUser(data: Partial<User>) {
     if (state.status !== 'authenticated') return;
     setState((prevState) => ({
       ...prevState,
@@ -55,71 +44,49 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     }));
   }
 
-  function handleUserChange(user: AuthUser | null): AuthState {
-    console.log('handleUserChange called with user');
+  function handleUserChange(user: User | null): AuthState {
     let newState: AuthState = { ...state, status: 'loading' };
 
     if (!user) {
-      console.log(
-        'no user found in handleUserChange, setting state to unauthenticated'
-      );
       // user is logged out
       newState = {
         status: 'unauthenticated',
         user: undefined,
         role: undefined,
-        customClaims: undefined,
       };
     } else {
-      console.log(
-        'user found in handleUserChange, setting state to authenticated'
-      );
       // user is logged in
-      const customClaims = user.customClaims;
-      const role = customClaims.role?.[0];
-
-      newState = {
-        status: 'authenticated',
-        user,
-        role,
-        customClaims,
-      };
+      const role = user.role;
+      newState = { status: 'authenticated', user, role };
     }
-
-    console.log('New auth state:', newState);
 
     setState(newState);
     return newState;
   }
 
   async function logout(redirect = true): Promise<void> {
-    console.log('LOGOUT called');
     handleUserChange(null);
     await auth.signOut();
     await controller.logout();
     if (redirect) {
-      console.log('Redirecting to sign-in page after logout');
       window.location.href = LINK_SIGN_IN.href;
     }
+
     router.refresh();
     router.refresh();
   }
 
   useEffect(() => {
-    console.log('Checking auth state readiness', auth);
     auth.authStateReady().then();
   }, [auth]);
 
   useEffect(() => {
     const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
-      console.log('Auth state changed, firebaseUser:', firebaseUser);
       if (firebaseUser) {
-        console.log('User is logged in, fetching ID token and user data');
         const idToken = await firebaseUser.getIdToken();
         const user = await controller.sessionLogin(idToken);
         handleUserChange(user);
       } else {
-        console.log('User is logged out, clearing auth state');
         await AuthController.getInstance().logout();
         handleUserChange(null);
       }
@@ -132,8 +99,7 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
     auth.currentUser &&
     state.status === 'authenticated' &&
     state.user &&
-    state.role &&
-    state.customClaims
+    state.role
   )
     return (
       <AuthContext.Provider
@@ -141,8 +107,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
           status: 'authenticated',
           user: state.user!,
           role: state.role!,
-          customClaims: state.customClaims!,
-          setCustomClaims,
           handleUserChange,
           setUser,
           logout,
@@ -158,8 +122,6 @@ export const AuthProvider = (props: React.PropsWithChildren) => {
         {children}
       </AuthContext.Provider>
     );
-
-  console.log('Rendering unauthenticated AuthProvider');
 
   return (
     <AuthContext.Provider
@@ -189,12 +151,10 @@ export function withAuth<P extends object>(
     const router = useRouter();
 
     if (auth.status !== 'authenticated') {
-      console.log('Loading in auth.provider.tsx');
       return <Alert type="loading" />;
     }
 
     if (allowedRoles && !allowedRoles.includes(auth.role)) {
-      console.log('Unauthorized access, redirecting to sign-in page');
       router.replace(LINK_SIGN_IN.href);
       router.refresh();
       router.refresh();

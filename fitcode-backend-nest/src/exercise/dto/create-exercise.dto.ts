@@ -10,6 +10,10 @@ export class CreateExerciseDto extends IntersectionType(
   PickType(Exercise, [
     'name',
     'components',
+    'coeffLoad',
+    'coeffRel',
+    'coeffBw',
+    'coeff1Rm',
     'isUnilateral',
     'disabled',
     'imageUrl',

@@ -22,7 +22,7 @@ export const Components: Component[] = [
   {
     field: 'endurance',
     name: 'Endurance',
-    params: ['time', 'dist', 'eff', 'recTime', 'recDist'],
+    params: ['time', 'dist', 'eff', 'pace', 'watts', 'recTime', 'recDist'],
     options: [
       { field: 'aerobic-capacity', name: 'Aerobic Capacity' },
       { field: 'aerobic-power', name: 'Aerobic Power' },
@@ -65,7 +65,7 @@ export const Components: Component[] = [
   {
     field: 'speed',
     name: 'Speed',
-    params: ['reps', 'time', 'dist', 'eff'],
+    params: ['reps', 'time', 'dist', 'eff', 'watts'],
     options: [
       {
         field: 'acceleration',
@@ -158,6 +158,7 @@ export const Components: Component[] = [
       'loadKg',
       'loadRm',
       'loadBw',
+      'vel',
       'tempoEcc',
       'tempoIso',
       'tempoCon',

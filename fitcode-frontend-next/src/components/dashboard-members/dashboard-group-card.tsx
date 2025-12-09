@@ -83,6 +83,7 @@ export default function DashboardGroupCard(props: Props) {
       >
         {group.name}
       </Typography>
+
       {listView ? (
         <>
           <DashboardGroupCardUsers
@@ -93,6 +94,7 @@ export default function DashboardGroupCard(props: Props) {
             setHoveredUser={setHoveredUser}
             setOpenEditAthleteModal={setOpenEditAthleteModal}
           />
+
           <DashboardGroupCardUsers
             title="Athletes"
             users={group.members || []}

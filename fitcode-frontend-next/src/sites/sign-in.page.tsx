@@ -36,16 +36,15 @@ export default function SignInPage() {
       const result = await lib.firebase.auth.login(email, password);
       const idToken = await result.user.getIdToken();
       const user = await AuthController.getInstance().sessionLogin(idToken);
+      if (!user) throw new Error('No user in session');
 
-      const { role } = handleUserChange(user);
-      if (role) {
-        if (!hasToastedRef.current) {
-          toast.success('Signed in successfully');
-          hasToastedRef.current = true;
-        }
-
-        router.push(SIGN_IN_REDIRECT_MAPPER[role]?.href);
+      handleUserChange(user);
+      if (!hasToastedRef.current) {
+        toast.success('Signed in successfully');
+        hasToastedRef.current = true;
       }
+
+      router.push(SIGN_IN_REDIRECT_MAPPER[user.role]?.href);
     } catch (e) {
       toast.error((e as Error).message);
     }

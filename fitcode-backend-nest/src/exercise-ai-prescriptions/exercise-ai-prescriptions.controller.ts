@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { UserRole } from '@src/auth/enum/user-role.enum';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
-import { User } from '../common/type/firebase-auth.type';
+import { FirebaseUser } from '../common/type/firebase-auth.type';
 import { ExerciseAiPrescription } from './entity/exercise-ai-prescriptions';
 import { ExerciseAiPrescriptionsService } from './exercise-ai-prescriptions.service';
 
@@ -21,9 +23,9 @@ export class ExerciseAiPrescriptionsController {
   }
 
   @Post('upsert-many')
-  @Auth()
+  @Auth([UserRole.ADMIN])
   async upsertMany(
-    @RequestUser() user: User,
+    @RequestUser() user: FirebaseUser,
     @Body() prescriptions: ExerciseAiPrescription[],
   ) {
     return await this.exerciseAiPrescriptionsService.upsertMany(

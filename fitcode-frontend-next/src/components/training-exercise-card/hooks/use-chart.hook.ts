@@ -12,6 +12,7 @@ import type { Dimensions } from '@/lib/common/type/dimensions.type';
 import { useGroup } from '@/store/group.provider';
 import { useSupersets } from '@/store/supersets.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   exercise: TrainingExercise;
@@ -22,6 +23,7 @@ export type TrainingExerciseChartCtx = ReturnType<
 >;
 
 export default function useTrainingExerciseCardChart({ exercise }: Props) {
+  const { institution } = useMain();
   const groupContext = useGroup();
   const trainerDayViewContext = useTrainerDayView();
   const supersetsContext = useSupersets();
@@ -59,7 +61,7 @@ export default function useTrainingExerciseCardChart({ exercise }: Props) {
       isSettingAthleteWorkloads.current = true;
       const workloads =
         await TrainingController.getInstance().getExerciseWorkloadsByManyUsers(
-          groupContext.institution.id,
+          institution.id,
           exercise.id,
           [selectedAthlete.uid]
         );

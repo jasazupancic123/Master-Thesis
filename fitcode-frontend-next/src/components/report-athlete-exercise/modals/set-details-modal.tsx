@@ -61,7 +61,7 @@ export default function SetDetailsModal(props: Props & ModalProps) {
   }, [activeSetNumber]);
 
   const exercise = exercises.find((ex) => ex.id === workload?.exerciseId);
-  const user = users.find((u) => u.uid === workload?.userId);
+  const user = users.data.find((u) => u.uid === workload?.userId);
 
   if (!exercise || !user || !workload) return null;
 

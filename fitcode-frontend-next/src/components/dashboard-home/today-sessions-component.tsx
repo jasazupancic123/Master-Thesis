@@ -41,7 +41,7 @@ export default function TodaySessionsComponent(props: Props) {
   const { user } = useAuthenticatedAuth();
   const mainContext = useMain();
 
-  const { activeTraining, groups } = mainContext;
+  const { activeTraining, institution } = mainContext;
   const trainingsContext = useTrainings();
 
   const { component, trainings, index } = props;
@@ -56,7 +56,7 @@ export default function TodaySessionsComponent(props: Props) {
 
   const IconComponent = lib.common.component.getIcon(component.id);
 
-  const group = groups.find((g) => g.id === component.groupId);
+  const group = institution.groups?.find((g) => g.id === component.groupId);
 
   const hasGotWarmup = component.supersets.some((s) => s.warmup);
 

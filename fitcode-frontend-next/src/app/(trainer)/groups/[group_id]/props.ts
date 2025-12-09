@@ -1,7 +1,6 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 import type { Dayjs } from 'dayjs';
 
-import type { AuthUser } from '@/core/auth/type/user.type';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import type { Method } from '@/core/exercise/type/method.type';
 import type { Cycle } from '@/core/institution/type/cycle.type';
@@ -14,6 +13,7 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import type { UserProgress } from '@/core/training/type/workload.type';
+import type { User } from '@/core/user/type/user.type';
 import type { Day } from '@/lib/common/service/date.util';
 import type { GroupDateFilter } from '@/lib/common/type/filter.type';
 import type { Pagination } from '@/lib/common/type/paginate.type';
@@ -23,7 +23,6 @@ export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
   group: Group;
-  institution: Institution;
   trainings: Training[];
 }
 
@@ -34,16 +33,14 @@ export type GroupContextProps = GroupIdPageProps & {
   setGroup: SetState<Group>;
   selectedGroup: Group;
   setSelectedGroup: SetState<Group>;
-  institution: Institution;
-  setInstitution: SetState<Institution>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
   dateFrom: Dayjs;
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
-  filteredUsers: AuthUser[];
-  setFilteredUsers: SetState<AuthUser[]>;
+  filteredUsers: User[];
+  setFilteredUsers: SetState<User[]>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
   handleMoveTraining: (e: DragEndEvent) => Promise<void>;
@@ -63,8 +60,8 @@ export type TrainerDayViewContextProps = {
   setSelectedExerciseIds: SetState<string[]>;
   supersets: Superset[]; // supersets of the selected component
   setSupersets: SetState<Superset[]>;
-  selectedAthlete: AuthUser | undefined;
-  setSelectedAthlete: SetStateNullable<AuthUser>;
+  selectedAthlete: User | undefined;
+  setSelectedAthlete: SetStateNullable<User>;
   selectedSubgroup: Subgroup | null;
   setSelectedSubgroup: SetState<Subgroup | null>;
   filteredExercises: Exercise[];
@@ -73,13 +70,13 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
-  previousSelectedAthlete: React.RefObject<AuthUser | undefined>;
+  previousSelectedAthlete: React.RefObject<User | undefined>;
   expandedExercisesView: boolean;
   setExpandedExercisesView: SetState<boolean>;
   loading: boolean;
   setLoading: SetState<boolean>;
-  handleAddMember: (user: AuthUser) => Promise<void>;
-  handleRemoveMember: (user: AuthUser) => Promise<void>;
+  handleAddMember: (user: User) => Promise<void>;
+  handleRemoveMember: (user: User) => Promise<void>;
   addTrainingExercises: (
     exercises: TrainingExercise[],
     mainSet: MainSet,

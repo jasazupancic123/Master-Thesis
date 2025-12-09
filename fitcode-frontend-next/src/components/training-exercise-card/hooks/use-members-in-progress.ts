@@ -29,7 +29,7 @@ export default function useExerciseMembersInProgress(
         p.exerciseId === exerciseId &&
         p.completedSets > 0
     )
-    .map((p) => users.find((u) => u.uid === p.userId))
+    .map((p) => users.data.find((u) => u.uid === p.userId))
     .filter((u) => u !== undefined);
 
   const value = (membersInProgress.length / trainingMembersLength) * 100;

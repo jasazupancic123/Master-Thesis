@@ -6,15 +6,15 @@ import { CreateUserDto } from '@src/auth/dto/create-user.dto';
 
 import { Profile } from '../entity/profile.entity';
 
-export class ImportProfileDto extends IntersectionType(
+export class ImportUserDto extends IntersectionType(
   CreateUserDto,
   PickType(Profile, ['sport', 'level', 'gender', 'birthDate'] as const),
 ) {}
 
-export class ImportProfilesDto {
+export class ImportUsersDto {
   @ValidateNested({ each: true })
-  @Type(() => ImportProfileDto)
-  @ApiProperty({ type: ImportProfileDto, isArray: true })
+  @Type(() => ImportUserDto)
+  @ApiProperty({ type: ImportUserDto, isArray: true })
   @Expose()
-  profiles: ImportProfileDto[];
+  users: ImportUserDto[];
 }

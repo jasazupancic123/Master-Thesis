@@ -34,7 +34,7 @@ export default async function () {
     firebase.deleteCollection(FirestoreCollection.WELLNESS),
     firebase.deleteCollection(FirestoreCollection.GROUP),
     firebase.deleteCollection(FirestoreCollection.TRAINING),
-    firebase.deleteCollection(FirestoreCollection.PROFILE),
+    firebase.deleteCollection(FirestoreCollection.USER),
   ]);
 
   const auth = new TestAuth(firebase);

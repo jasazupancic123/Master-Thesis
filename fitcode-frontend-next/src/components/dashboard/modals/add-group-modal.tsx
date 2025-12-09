@@ -12,10 +12,10 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
-import type { AuthUser } from '@/core/auth/type/user.type';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { CreateGroup } from '@/core/institution/type/group.type';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
@@ -26,21 +26,14 @@ import MyModal from '@/ui/modal';
 export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
 
-  const { users, setGroups } = useMain();
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    setDetectedChanges,
-    setSelectedGroups,
-  } = useDashboard();
+  const { users, institution, setInstitution } = useMain();
+  const { setDetectedChanges, setSelectedGroups } = useDashboard();
 
   const { open, setOpen } = props;
 
   const [groupName, setGroupName] = useState('');
   const [shortName, setShortName] = useState('');
-  const [owner, setOwner] = useState<AuthUser | null>(null);
-
-  if (!selectedInstitution) return null;
+  const [owner, setOwner] = useState<User | null>(null);
 
   return (
     <MyModal
@@ -60,25 +53,24 @@ export default function AddGroupModal(props: ModalProps) {
           shortName: shortName,
           membersIds: [],
           trainerIds: [owner.uid],
-          institutionId: selectedInstitution.id,
+          institutionId: institution.id,
         };
 
         handleApiRequest(
           router,
           () => InstitutionController.getInstance().createGroup(input),
           (group) => {
-            group = core.group.mapMembers(group, users);
+            group = core.group.mapMembers(group, users.data);
 
-            setSelectedInstitution({
-              ...selectedInstitution,
-              groups: [...(selectedInstitution.groups || []), group],
+            setInstitution({
+              ...institution,
+              groups: [...(institution.groups || []), group],
             });
-
-            setGroups((prev) => [...prev, group]);
 
             setSelectedGroups((prev) =>
               prev.length === 1 ? [group] : [...prev, group]
             );
+
             setOpen(false);
             setShortName('');
             setGroupName('');
@@ -126,14 +118,14 @@ export default function AddGroupModal(props: ModalProps) {
             value={owner?.uid || ''}
             onChange={(e) => {
               const trainerId = e.target.value;
-              const selectedTrainer = selectedInstitution.trainers.find(
+              const selectedTrainer = institution.trainers.find(
                 (trainer) => trainer.uid === trainerId
               );
               setOwner(selectedTrainer || null);
             }}
             sx={{ mb: 2, minWidth: 200 }}
           >
-            {(selectedInstitution?.trainers || []).map((trainer) => (
+            {(institution?.trainers || []).map((trainer) => (
               <MenuItem key={trainer.uid} value={trainer.uid}>
                 <Typography>{trainer.displayName}</Typography>
               </MenuItem>

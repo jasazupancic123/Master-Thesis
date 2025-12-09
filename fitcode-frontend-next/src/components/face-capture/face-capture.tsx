@@ -10,7 +10,7 @@ import useFaceCaptureProcessing from './hooks/use-processing';
 import useFaceCaptureUtils from './hooks/use-utils';
 import FaceCapturePreviewsModal from './modals/face-capture-previews-modal';
 import type { FaceCaptures, FacePreviews } from './types/face.type';
-import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import { FaceCaptureStep } from '@/core/user/enum/face-capture-step.enum';
 import type { SetState } from '@/lib/common/type/state.type';
 
 export const BASE_ASSET_URL =

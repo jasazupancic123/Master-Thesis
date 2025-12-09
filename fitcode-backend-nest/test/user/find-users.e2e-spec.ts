@@ -3,20 +3,20 @@ import { TestApp } from '@test/common/utils/app.util';
 import { UserRole } from '@src/auth/enum/user-role.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
-import { ProfileService } from '@src/profile/service/profile.service';
 import { TestDbService } from '@src/test-db/test-db.service';
+import { UserService } from '@src/user/service/user.service';
 
 describe('Find Profiles (e2e)', () => {
   let testApp: TestApp;
   let firebase: FirebaseService;
-  let profileService: ProfileService;
+  let userService: UserService;
   let db: TestDbService;
 
   beforeAll(async () => {
     testApp = await TestApp.init();
     db = testApp.module.get(TestDbService);
     firebase = testApp.module.get(FirebaseService);
-    profileService = testApp.module.get(ProfileService);
+    userService = testApp.module.get(UserService);
   });
 
   afterAll(async () => {
@@ -31,7 +31,7 @@ describe('Find Profiles (e2e)', () => {
       password: 'password',
     });
 
-    const profile = await profileService.findOneById(user.uid);
+    const profile = await userService.findOneById(user.uid);
     expect(profile).toBeDefined();
     expect(profile.uid).toBe(user.uid);
     expect(profile.email).toBe(user.email);
@@ -66,7 +66,7 @@ describe('Find Profiles (e2e)', () => {
     expect(profilesBefore).toHaveLength(5);
 
     // should return 10 profiles, since profiles should be created on the fly
-    const profiles = await profileService.findAllByInstitution(
+    const profiles = await userService.findAllByInstitution(
       generateInstitutionStub({
         ownerId: users[0].uid,
         members: [

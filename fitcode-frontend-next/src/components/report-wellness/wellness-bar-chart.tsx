@@ -5,8 +5,8 @@ import useWellnessChartUtils from './hooks/use-chart-utils';
 import useWellnessReportData from './hooks/use-data';
 import type { MetricConfig } from './types/wellness-metrics.type';
 import { theme } from '@/app/style';
-import type { AuthUser } from '@/core/auth/type/user.type';
-import type { WellnessZScore } from '@/core/profile/type/wellness.type';
+import type { User } from '@/core/user/type/user.type';
+import type { WellnessZScore } from '@/core/user/type/wellness.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import { useScreenSize } from '@/store/screen-size.provider';
 
@@ -15,7 +15,7 @@ interface Props {
   metricConfig: MetricConfig;
   width: number;
   height: number;
-  members: AuthUser[];
+  members: User[];
 }
 
 export default function WellnessBarChart(props: Props) {

@@ -21,7 +21,7 @@ import type { FaceCaptureProps } from '../face-capture';
 import { BASE_ASSET_URL, FACE_LANDMARKER_MODEL_URL } from '../face-capture';
 import type { UseFaceCaptureDisplayReturnType } from './use-display';
 import type { UseFaceCaptureUtilsReturnType } from './use-utils';
-import { FaceCaptureStep } from '@/core/profile/enum/face-capture-step.enum';
+import { FaceCaptureStep } from '@/core/user/enum/face-capture-step.enum';
 
 export type UseFaceCaptureProcessingReturnType = ReturnType<
   typeof useFaceCaptureProcessing

@@ -32,7 +32,7 @@ export class WellnessRepository extends FirestoreRepository<
   }
 
   collection(ref: UserRef) {
-    return this.parent.doc(ref.uid).collection(FirestoreCollection.WELLNESS);
+    return this.parent.doc(ref.uid).collection(this.collectionName);
   }
 
   collectionGroup() {

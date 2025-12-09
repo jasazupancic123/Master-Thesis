@@ -10,7 +10,7 @@ import { LogMethod } from '@src/common/decorator/log-method.decorator';
 import { Permission } from '@src/common/interface/permission.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Create } from '@src/common/type/entity.type';
-import { User } from '@src/common/type/firebase-auth.type';
+import { FirebaseUser } from '@src/common/type/firebase-auth.type';
 import { ExerciseRef } from '@src/common/type/firestore.type';
 import { BatchUpdateOperation } from '@src/common/type/orm.type';
 import {
@@ -44,14 +44,14 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   ) {}
 
   @LogMethod()
-  async findAll(user: User, institutionId: string) {
+  async findAll(user: FirebaseUser, institutionId: string) {
     return [
       ...(await this.findAllGlobal(user)),
       ...(await this.findAllByInstitution(user, institutionId)),
     ];
   }
 
-  async findAllGlobal(user: User, filter?: Record<string, string>) {
+  async findAllGlobal(user: FirebaseUser, filter?: Record<string, string>) {
     const cached =
       await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
 
@@ -67,7 +67,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   async findAllByInstitution(
-    user: User,
+    user: FirebaseUser,
     institutionId: string,
     filter?: Record<string, string>,
   ) {
@@ -93,7 +93,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   async findAllBy(
     key: 'ownerId' | 'institutionId',
     userOrInstitutionId: string, // either global or institution id
-    user: User,
+    user: FirebaseUser,
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
     let query = this.repository
@@ -120,7 +120,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return exercise;
   }
 
-  async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
+  async findOneById(
+    user: FirebaseUser,
+    ref: ExerciseRef,
+  ): Promise<Exercise | null> {
     // find exercise
     const exercise = await this.repository.findById(ref.exerciseId);
     if (!exercise) return null;
@@ -143,14 +146,17 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return exercise;
   }
 
-  async findOneByIdOrFail(user: User, ref: ExerciseRef): Promise<Exercise> {
+  async findOneByIdOrFail(
+    user: FirebaseUser,
+    ref: ExerciseRef,
+  ): Promise<Exercise> {
     const exercise = await this.findOneById(user, ref);
     if (!exercise) throw new NotFoundException('Exercise does not exist');
     return exercise;
   }
 
   @LogMethod()
-  async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
+  async create(user: FirebaseUser, data: CreateExerciseDto): Promise<Exercise> {
     const isAdmin = this.firebase.isAdmin(user);
     const isManager = this.firebase.isManager(user);
 
@@ -199,7 +205,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   /**
    * Creates / updates (if exercise with same name exists) exercises in batch.
    */
-  async upsertMany(user: User, exercises: CreateExerciseDto[]) {
+  async upsertMany(user: FirebaseUser, exercises: CreateExerciseDto[]) {
     // validate components
     const isAdmin = this.firebase.isAdmin(user);
     const isManager = this.firebase.isManager(user);
@@ -270,6 +276,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         components: e.components,
         isUnilateral: e.isUnilateral,
         disabled: e.disabled || false,
+        coeffRel: e.coeffRel || 1,
+        coeffLoad: e.coeffLoad || 0.5,
+        coeffBw: e.coeffBw || 0.5,
+        coeff1Rm: e.coeff1Rm || 1.5,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
         instruction: e.instruction || '',
@@ -307,7 +317,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   @LogMethod()
   async updateMuscleValues(
-    user: User,
+    user: FirebaseUser,
     exercises: CreateExerciseMuscleValueDto[],
   ) {
     const isManager = this.firebase.isManager(user);
@@ -337,7 +347,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   @LogMethod()
-  async update(user: User, ref: ExerciseRef, input: UpdateExerciseDto) {
+  async update(user: FirebaseUser, ref: ExerciseRef, input: UpdateExerciseDto) {
     const exercise = await this.findOneByIdOrFail(user, ref);
     if (!this.canEdit(user, exercise, exercise.institution))
       throw new UnauthorizedException(
@@ -362,7 +372,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
   }
 
   @LogMethod()
-  async delete(user: User, ref: ExerciseRef) {
+  async delete(user: FirebaseUser, ref: ExerciseRef) {
     const exercise = await this.findOneByIdOrFail(user, ref);
     if (!this.canEdit(user, exercise, exercise.institution))
       throw new UnauthorizedException(
@@ -374,7 +384,10 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
   }
 
-  private async incrementExerciseRevisions(user: User, institutionId?: string) {
+  private async incrementExerciseRevisions(
+    user: FirebaseUser,
+    institutionId?: string,
+  ) {
     let operations: BatchUpdateOperation<Institution>[] = [];
 
     if (this.firebase.isAdmin(user)) {
@@ -396,7 +409,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       await this.firebase.paginateBatches<Institution>(operations);
   }
 
-  canView(user: User, exercise: Exercise, institution?: Institution) {
+  canView(user: FirebaseUser, exercise: Exercise, institution?: Institution) {
     if (exercise.ownerId === GLOBAL_EXERCISE_OWNER) return true;
     if (exercise.ownerId === user.uid) return true;
 
@@ -409,7 +422,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return false;
   }
 
-  canEdit(user: User, _exercise: Exercise, institution?: Institution) {
+  canEdit(user: FirebaseUser, _exercise: Exercise, institution?: Institution) {
     if (this.firebase.isAdmin(user)) return true;
 
     if (institution)
@@ -420,7 +433,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return false;
   }
 
-  canAdd(user: User, institution?: Institution) {
+  canAdd(user: FirebaseUser, institution?: Institution) {
     if (this.firebase.isAdmin(user)) return true;
     if (this.firebase.isManager(user) && institution?.ownerId === user.uid)
       return true;
