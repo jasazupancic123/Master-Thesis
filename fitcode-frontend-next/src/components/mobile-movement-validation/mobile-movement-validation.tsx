@@ -144,7 +144,8 @@ export default function MobileMovementValidation(
       : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
-  const YOLOV11_MODEL_URL = '/models/yolov11/yolo11n-pose-web-model/model.json';
+  const YOLOV11_MODEL_URL =
+    '/models/yolov11/256/yolo11n-pose-web-model/model.json';
 
   const isSandbox = pathname.endsWith('pose-model');
 
