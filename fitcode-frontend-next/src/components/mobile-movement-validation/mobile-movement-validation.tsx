@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
+import * as tf from '@tensorflow/tfjs';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
@@ -143,6 +144,8 @@ export default function MobileMovementValidation(
       : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
+  const YOLOV11_MODEL_URL =
+    '/models/yolov11/256/yolo11n-pose-web-model/model.json';
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -200,10 +203,11 @@ export default function MobileMovementValidation(
   const stillnessCountdownRef = useRef<Date | null>(null); // countdown to recording start when stillness is detected
 
   // Model and PoseLandmarker
-  const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
-    null
-  );
+  //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
+  const [model] = useState<PoseModel>(PoseModel.YOLO11);
+  const [poseModel, setPoseModel] = useState<
+    PoseLandmarker | tf.GraphModel | null
+  >(null);
 
   // Rep State
   const repStateRefL = useRef<RepState>({
@@ -467,7 +471,6 @@ export default function MobileMovementValidation(
     if (statusRef.current === DetectionStatus.STOPPED) return;
 
     enableCam({
-      poseLandmarker,
       videoRef,
       setError,
       looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
@@ -481,7 +484,7 @@ export default function MobileMovementValidation(
           repStateRefL,
           repStateRefR,
           model,
-          poseLandmarker,
+          poseModel: poseModel,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
           constantKeypointHistory: constantKeypointHistoryRef.current,
@@ -516,7 +519,7 @@ export default function MobileMovementValidation(
           setStartedExitTimeout,
         }),
     });
-  }, [poseLandmarker]);
+  }, [poseModel]);
 
   const finishAiDetection = async () => {
     statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
@@ -906,8 +909,13 @@ export default function MobileMovementValidation(
       canvasCtxRef.current = canvasRef.current.getContext('2d');
 
     const loadModel = async () => {
-      const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
-      setPoseLandmarker(lm);
+      if (model === PoseModel.MEDIAPIPE) {
+        const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
+        setPoseModel(lm);
+      } else if (model === PoseModel.YOLO11) {
+        const model = await tf.loadGraphModel(YOLOV11_MODEL_URL);
+        setPoseModel(model);
+      }
     };
 
     loadModel();
@@ -1028,7 +1036,7 @@ export default function MobileMovementValidation(
         <LoadingOverlay title="Saving images..." topDownCircularProgress />
       )}
 
-      {!poseLandmarker && (
+      {!poseModel && (
         <Box
           width="100%"
           display="flex"
@@ -1064,7 +1072,7 @@ export default function MobileMovementValidation(
         </Box>
       )}
 
-      {poseLandmarker && (
+      {poseModel && (
         <>
           {statusRef.current === DetectionStatus.RECORDING &&
           (recordedRepsRef.current.left.length ||

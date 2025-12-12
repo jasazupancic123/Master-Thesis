@@ -1,3 +1,6 @@
+import type { PoseLandmarker } from '@mediapipe/tasks-vision';
+import type * as tf from '@tensorflow/tfjs';
+
 import { KeypointId } from '@/core/exercise-ai-prescriptions/enum/keypoint-id';
 import type { Keypoint } from '@/core/exercise-ai-prescriptions/type/keypoint.type';
 import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
@@ -71,5 +74,25 @@ export class TypeCheckerUtil {
 
   isTrainingWithStatuses(t: Training): t is TrainingWithStatuses {
     return (t as TrainingWithStatuses).statuses !== undefined;
+  }
+
+  isPoseLandmarker(obj: unknown): obj is PoseLandmarker {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'detectForVideo' in obj &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      typeof (obj as any).detectForVideo === 'function'
+    );
+  }
+
+  isTfGraphModel(obj: unknown): obj is tf.GraphModel {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'executeAsync' in obj &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      typeof (obj as any).executeAsync === 'function'
+    );
   }
 }
