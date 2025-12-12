@@ -2,7 +2,7 @@ import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import savitzkyGolay from 'ml-savitzky-golay';
 import toast from 'react-hot-toast';
 
-import { KeypointId } from '../enum/keypoint-id';
+import { KeypointId, KeypointIdYoloV11 } from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import { PoseModel } from '../enum/pose-model.enum';
@@ -10,6 +10,7 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
+import * as tf from '@tensorflow/tfjs';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;
@@ -21,17 +22,13 @@ export class KeypointUtil {
     return KeypointUtil._instance;
   }
 
-  getDesiredKeypointsByModel(
+  getKeypointsFromPoseLandmarker(
     // add different types to currentFrameKeypoints for different models
     currentFrameKeypoints: Landmark[] | undefined,
     currentFrameKeypointsPixel2D: NormalizedLandmark[] | undefined,
     model: PoseModel,
     capturedAt: Date,
-    frameNum: number,
-    videoWidth: number,
-    videoHeight: number,
-    centerHipsYToMiddleAnkleOrigin = false,
-    centerKneesXToMiddleAnklesOrigin = false // we need this for lateral squat
+    frameNum: number
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
@@ -63,61 +60,156 @@ export class KeypointUtil {
           });
         });
 
-        if (lib.common.env.convertToMetricScale()) {
-          keypoints = this.convertToMetricScale(
-            keypoints,
-            MetricConversionType.SHOULDER_WIDTH,
-            videoWidth,
-            videoHeight
-          );
-        }
-
-        if (centerHipsYToMiddleAnkleOrigin) {
-          // Center LEFT_HIP and RIGHT_HIP to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
-          const leftHip = keypoints.find((k) => k.id === KeypointId.LEFT_HIP);
-          const rightHip = keypoints.find((k) => k.id === KeypointId.RIGHT_HIP);
-
-          const leftAnkle = keypoints.find(
-            (k) => k.id === KeypointId.LEFT_ANKLE
-          );
-          const rightAnkle = keypoints.find(
-            (k) => k.id === KeypointId.RIGHT_ANKLE
-          );
-
-          if (!leftHip || !rightHip || !leftAnkle || !rightAnkle) break;
-
-          const y = (leftAnkle.position.y + rightAnkle.position.y) / 2;
-
-          leftHip.position.y -= y;
-          rightHip.position.y -= y;
-        }
-
-        if (centerKneesXToMiddleAnklesOrigin) {
-          // Center LEFT_KNEE and RIGHT_KNEE to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
-          const leftKnee = keypoints.find((k) => k.id === KeypointId.LEFT_KNEE);
-          const rightKnee = keypoints.find(
-            (k) => k.id === KeypointId.RIGHT_KNEE
-          );
-
-          const leftAnkle = keypoints.find(
-            (k) => k.id === KeypointId.LEFT_ANKLE
-          );
-          const rightAnkle = keypoints.find(
-            (k) => k.id === KeypointId.RIGHT_ANKLE
-          );
-
-          if (!leftKnee || !rightKnee || !leftAnkle || !rightAnkle) break;
-
-          const x = (leftAnkle.position.x + rightAnkle.position.x) / 2;
-
-          leftKnee.position.x -= x;
-          rightKnee.position.x -= x;
-        }
-
         break;
       }
       default: {
         return [];
+      }
+    }
+
+    return keypoints;
+  }
+
+  async getKeypointsFromYoloV11(
+    output: tf.Tensor,
+    inputSize: number,
+    videoWidth: number,
+    videoHeight: number,
+    capturedAt: Date,
+    frameNum: number
+  ): Promise<Keypoint[]> {
+    const data = (await output.data()) as Float32Array;
+    const shape = output.shape;
+
+    // Determine layout
+    // Expect something like [1,56,8400] or [1,8400,56]
+    const chanels = shape[1];
+    const numCandidates = shape[2];
+
+    if (chanels === undefined || numCandidates === undefined) {
+      console.error('Invalid output shape from YOLOv11 model');
+      return [];
+    }
+
+    // Helper to read value at (cand, channel)
+    const get = (cand: number, ch: number) => {
+      return data[ch * numCandidates + cand];
+    };
+
+    let bestI = -1;
+    let bestScore = -Infinity;
+    for (let i = 0; i < numCandidates; i++) {
+      const s = get(i, 4);
+      if (s > bestScore) {
+        bestScore = s;
+        bestI = i;
+      }
+    }
+
+    const SCORE_THRESH = 0.25;
+    if (bestI === -1 || bestScore < SCORE_THRESH) return [];
+
+    const i = bestI;
+
+    // Box assumed in model-input pixel space (0..640-ish). If you see weird values,
+    // log a few candidates and we’ll adapt (some exports use normalized coords).
+    const cx = get(i, 0);
+    const cy = get(i, 1);
+    const w = get(i, 2);
+    const h = get(i, 3);
+
+    // Convert from 640-space to original video space
+    const sx = videoWidth / inputSize;
+    const sy = videoHeight / inputSize;
+
+    // BOX COORDINATES:
+    const x1 = (cx - w / 2) * sx;
+    const y1 = (cy - h / 2) * sy;
+    const x2 = (cx + w / 2) * sx;
+    const y2 = (cy + h / 2) * sy;
+
+    // 51 values: 17*(x,y,conf) starting at channel 5
+    let base = 5;
+
+    let keypoints: Keypoint[] = [];
+
+    const keypointIds = Object.values(KeypointIdYoloV11);
+
+    for (let k = 0; k < 17; k++) {
+      const kx = get(i, base + k * 3 + 0) * sx;
+      const ky = get(i, base + k * 3 + 1) * sy;
+      const kc = get(i, base + k * 3 + 2);
+      // kpts.push({ x: kx, y: ky, c: kc });
+
+      const id = keypointIds[k] as unknown as KeypointId;
+
+      keypoints.push({
+        id,
+        position: {
+          x: kx / videoWidth,
+          y: ky / videoHeight,
+          z: 0,
+        },
+        pixelPosition: {
+          x: kx / videoWidth,
+          y: ky / videoHeight,
+        },
+        velocity: 0,
+        isValid: true,
+        frameNum,
+        capturedAt,
+        visibility: kc,
+      });
+    }
+
+    return keypoints;
+  }
+
+  processCapturedKeypoints(
+    keypoints: Keypoint[],
+    videoWidth: number,
+    videoHeight: number,
+    centerHipsYToMiddleAnkleOrigin = false,
+    centerKneesXToMiddleAnklesOrigin = false // we need this for lateral squat
+  ): Keypoint[] {
+    if (lib.common.env.convertToMetricScale()) {
+      keypoints = this.convertToMetricScale(
+        keypoints,
+        MetricConversionType.SHOULDER_WIDTH,
+        videoWidth,
+        videoHeight
+      );
+    }
+
+    if (centerHipsYToMiddleAnkleOrigin) {
+      // Center LEFT_HIP and RIGHT_HIP to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
+      const leftHip = keypoints.find((k) => k.id === KeypointId.LEFT_HIP);
+      const rightHip = keypoints.find((k) => k.id === KeypointId.RIGHT_HIP);
+
+      const leftAnkle = keypoints.find((k) => k.id === KeypointId.LEFT_ANKLE);
+      const rightAnkle = keypoints.find((k) => k.id === KeypointId.RIGHT_ANKLE);
+
+      if (leftHip && rightHip && leftAnkle && rightAnkle) {
+        const y = (leftAnkle.position.y + rightAnkle.position.y) / 2;
+
+        leftHip.position.y -= y;
+        rightHip.position.y -= y;
+      }
+    }
+
+    if (centerKneesXToMiddleAnklesOrigin) {
+      // Center LEFT_KNEE and RIGHT_KNEE to the origin of (LEFT_ANKLE + RIGHT_ANKLE)/2
+      const leftKnee = keypoints.find((k) => k.id === KeypointId.LEFT_KNEE);
+      const rightKnee = keypoints.find((k) => k.id === KeypointId.RIGHT_KNEE);
+
+      const leftAnkle = keypoints.find((k) => k.id === KeypointId.LEFT_ANKLE);
+      const rightAnkle = keypoints.find((k) => k.id === KeypointId.RIGHT_ANKLE);
+
+      if (leftKnee && rightKnee && leftAnkle && rightAnkle) {
+        const x = (leftAnkle.position.x + rightAnkle.position.x) / 2;
+
+        leftKnee.position.x -= x;
+        rightKnee.position.x -= x;
       }
     }
 

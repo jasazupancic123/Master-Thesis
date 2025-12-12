@@ -5,6 +5,8 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
+import { PoseLandmarker } from '@mediapipe/tasks-vision';
+import * as tf from '@tensorflow/tfjs';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {
@@ -71,5 +73,23 @@ export class TypeCheckerUtil {
 
   isTrainingWithStatuses(t: Training): t is TrainingWithStatuses {
     return (t as TrainingWithStatuses).statuses !== undefined;
+  }
+
+  isPoseLandmarker(obj: unknown): obj is PoseLandmarker {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'detectForVideo' in obj &&
+      typeof (obj as any).detectForVideo === 'function'
+    );
+  }
+
+  isTfGraphModel(obj: unknown): obj is tf.GraphModel {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'executeAsync' in obj &&
+      typeof (obj as any).executeAsync === 'function'
+    );
   }
 }

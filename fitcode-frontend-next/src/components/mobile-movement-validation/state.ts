@@ -1,7 +1,7 @@
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
 import dayjs from 'dayjs';
-import type { RefObject } from 'react';
+import type { Key, RefObject } from 'react';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
@@ -28,6 +28,7 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import * as tf from '@tensorflow/tfjs';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -59,21 +60,12 @@ export async function setupVideoAndContex(state: {
 }
 
 export async function enableCam(state: {
-  poseLandmarker: PoseLandmarker | null;
   videoRef: RefObject<HTMLVideoElement | null>;
   setError: SetState<string | null>;
   predictWebcam: () => Promise<void>;
   looserConstraints?: boolean;
 }) {
-  const {
-    poseLandmarker,
-    videoRef,
-    predictWebcam,
-    setError,
-    looserConstraints,
-  } = state;
-
-  if (!poseLandmarker) return;
+  const { videoRef, predictWebcam, setError, looserConstraints } = state;
 
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
@@ -109,7 +101,7 @@ export const predictWebcam = async (state: {
   repStateRefL: RefObject<RepState>;
   repStateRefR: RefObject<RepState>;
   model: PoseModel;
-  poseLandmarker: PoseLandmarker | null;
+  poseModel: PoseLandmarker | tf.GraphModel | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
   constantKeypointHistory: KeypointHistory;
@@ -152,7 +144,7 @@ export const predictWebcam = async (state: {
     repStateRefL,
     repStateRefR,
     model,
-    poseLandmarker,
+    poseModel,
     keypointHistory,
     keypointBuffer,
     constantKeypointHistory,
@@ -206,7 +198,7 @@ export const predictWebcam = async (state: {
     !video ||
     !canvas ||
     !ctx ||
-    !poseLandmarker ||
+    !poseModel ||
     !drawingUtils ||
     !exerciseDetectionDataRef.current
   )
@@ -328,171 +320,203 @@ export const predictWebcam = async (state: {
     lastVideoTimeRef.current = video.currentTime;
     prevFrameTimeRef.current = startTimeMs;
 
-    poseLandmarker.detectForVideo(video, startTimeMs, async (result) => {
-      frameCountRef.current += 1;
+    frameCountRef.current += 1;
 
-      frameBitmapBufferRef.current.insertFrame(
-        frameCountRef.current,
-        video,
-        document
-      );
+    frameBitmapBufferRef.current.insertFrame(
+      frameCountRef.current,
+      video,
+      document
+    );
 
-      const hasPose =
-        result.landmarks &&
-        result.landmarks.length > 0 &&
-        result.worldLandmarks &&
-        result.worldLandmarks.length > 0;
+    let keypoints: Keypoint[] = [];
 
-      if (!hasPose) {
-        return;
-      }
+    if (lib.common.typeChecker.isPoseLandmarker(poseModel)) {
+      poseModel.detectForVideo(video, startTimeMs, async (result) => {
+        const hasPose =
+          result.landmarks &&
+          result.landmarks.length > 0 &&
+          result.worldLandmarks &&
+          result.worldLandmarks.length > 0;
 
-      const keypoints = lib.ai.keypoint.getDesiredKeypointsByModel(
-        result.worldLandmarks[0], // unit: m, origin: center of hips
-        result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
-        model,
-        new Date(),
-        frameCountRef.current,
-        videoWidth,
-        videoHeight
-      );
+        if (!hasPose) {
+          return;
+        }
 
-      insertKeypointsIntoBuffers({
-        statusRef,
-        keypointHistory,
-        keypointBuffer,
-        constantKeypointHistory: constantKeypointHistory,
-        repStateRefL,
-        repStateRefR,
-        currentRepBufferL: currentRepRefL.current?.buffer,
-        currentRepBufferR: currentRepRefR.current?.buffer,
-        keypoints,
-        isMobile,
-        avgFps,
-        POSE_DETECTION_CONSTANTS,
+        keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
+          result.worldLandmarks[0], // unit: m, origin: center of hips
+          result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
+          model,
+          new Date(),
+          frameCountRef.current
+        );
+      });
+    } else if (lib.common.typeChecker.isTfGraphModel(poseModel)) {
+      // yolov11 model
+      const inputSize = 640;
+
+      const input = tf.tidy(() => {
+        const frame = tf.browser.fromPixels(video);
+        const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
+        return resized.toFloat().div(255).expandDims(0);
       });
 
-      await lib.ai.pose.checkStatus({
-        statusRef,
-        canProceedIntoReadyStateRef,
-        repStateRefL,
-        repStateRefR,
-        keypoints,
-        keypointBuffer,
-        keypointHistory,
-        exerciseDetectionData,
-        avgFps: avgFps.current,
-        recordingTimestampRef,
-        statusMessage,
-        stillnessCountdownRef,
-        videoHeight: video.videoHeight,
-        doItTimestamp,
-        reloadingModelRef,
-        POSE_DETECTION_CONSTANTS,
-      });
+      try {
+        const out = await poseModel.executeAsync(input);
 
-      if (statusRef.current === DetectionStatus.RECORDING) {
-        // this upper if must go into the function
-        lib.ai.rep.checkRepStatus({
-          currentFrameKeypoints: keypoints,
-          keypointHistory: keypointHistory,
-          constantKeypointHistory,
-          lastRecordedRepRef,
-          valueType: exerciseDetectionData.romValueType,
-          avgFps: avgFps.current,
-          initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
-          exerciseDetectionData,
-          currentSideMutexRef,
-          currentInvalidAnglesRef,
-          pxToCmRatioRef,
-          leftData: {
-            side: 'L',
-            repStateRef: repStateRefL,
-            currentRepRef: currentRepRefL,
-            recordedReps: recordedRepsRef.current.left,
-            keypointId: exerciseDetectionData.leftSide.romKeypointId,
-            direction: exerciseDetectionData.leftSide.conditions[0].direction,
-            exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
-            recordingStillnesses:
-              exerciseDetectionData.leftSide.recordingStillnesses,
-            requiredPoseConditions:
-              exerciseDetectionData.leftSide.requiredPoseConditions,
-            feedbackAngles: exerciseDetectionData.leftSide.feedbackAngles,
-            extremumAngles: exerciseDetectionData.leftSide.extremumAngles,
-          },
-          rightData:
-            recordedRepsRef.current.right && exerciseDetectionData.rightSide
-              ? {
-                  side: 'R',
-                  repStateRef: repStateRefR,
-                  currentRepRef: currentRepRefR,
-                  recordedReps: recordedRepsRef.current.right,
-                  keypointId: exerciseDetectionData.rightSide.romKeypointId,
-                  direction:
-                    exerciseDetectionData.rightSide.conditions[0].direction,
-                  exerciseStartConditions:
-                    exerciseDetectionData.rightSide.conditions,
-                  recordingStillnesses:
-                    exerciseDetectionData.rightSide.recordingStillnesses,
-                  requiredPoseConditions:
-                    exerciseDetectionData.rightSide.requiredPoseConditions,
-                  feedbackAngles:
-                    exerciseDetectionData.rightSide.feedbackAngles,
-                  extremumAngles:
-                    exerciseDetectionData.rightSide.extremumAngles,
-                }
-              : undefined,
-          setRepCount,
-          POSE_DETECTION_CONSTANTS,
-        });
+        keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11(
+          out as tf.Tensor,
+          inputSize,
+          videoWidth,
+          videoHeight,
+          new Date(),
+          frameCountRef.current
+        );
+
+        tf.dispose(out);
+      } finally {
+        input.dispose();
       }
+    }
 
-      // DRAWING
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    keypoints = lib.ai.keypoint.processCapturedKeypoints(
+      keypoints,
+      videoWidth,
+      videoHeight
+    );
 
-      // Flip horizontally to mirror webcam
-      ctx.save();
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
-      // Set center for the yellow person indicator
-      lib.ai.draw.setSmoothedCenter(result, centerPosRef);
-
-      // Draw lines between keypoints if provided
-      if (drawLines && drawLines.length)
-        lib.ai.draw.drawLines(
-          drawLines,
-          keypoints,
-          canvas,
-          ctx,
-          theme.palette.primary.main
-        );
-
-      // Invalid angles indicators
-      if (currentInvalidAnglesRef.current.length)
-        lib.ai.draw.drawInvalidAngles(
-          currentInvalidAnglesRef,
-          keypoints,
-          canvas,
-          ctx
-        );
-
-      // Draw radars
-      if (drawRadars && drawRadars.length)
-        lib.ai.draw.drawRadars({
-          currentRepRefL,
-          currentRepRefR,
-          repStateRefL,
-          repStateRefR,
-          keypoints,
-          canvas,
-          ctx,
-          drawRadars,
-        });
-
-      ctx.restore();
+    insertKeypointsIntoBuffers({
+      statusRef,
+      keypointHistory,
+      keypointBuffer,
+      constantKeypointHistory: constantKeypointHistory,
+      repStateRefL,
+      repStateRefR,
+      currentRepBufferL: currentRepRefL.current?.buffer,
+      currentRepBufferR: currentRepRefR.current?.buffer,
+      keypoints,
+      isMobile,
+      avgFps,
+      POSE_DETECTION_CONSTANTS,
     });
+
+    await lib.ai.pose.checkStatus({
+      statusRef,
+      canProceedIntoReadyStateRef,
+      repStateRefL,
+      repStateRefR,
+      keypoints,
+      keypointBuffer,
+      keypointHistory,
+      exerciseDetectionData,
+      avgFps: avgFps.current,
+      recordingTimestampRef,
+      statusMessage,
+      stillnessCountdownRef,
+      videoHeight: video.videoHeight,
+      doItTimestamp,
+      reloadingModelRef,
+      POSE_DETECTION_CONSTANTS,
+    });
+
+    if (statusRef.current === DetectionStatus.RECORDING) {
+      // this upper if must go into the function
+      lib.ai.rep.checkRepStatus({
+        currentFrameKeypoints: keypoints,
+        keypointHistory: keypointHistory,
+        constantKeypointHistory,
+        lastRecordedRepRef,
+        valueType: exerciseDetectionData.romValueType,
+        avgFps: avgFps.current,
+        initedFirstFrameInRecordingMode, // this is used to track if no rep was detected yet
+        exerciseDetectionData,
+        currentSideMutexRef,
+        currentInvalidAnglesRef,
+        pxToCmRatioRef,
+        leftData: {
+          side: 'L',
+          repStateRef: repStateRefL,
+          currentRepRef: currentRepRefL,
+          recordedReps: recordedRepsRef.current.left,
+          keypointId: exerciseDetectionData.leftSide.romKeypointId,
+          direction: exerciseDetectionData.leftSide.conditions[0].direction,
+          exerciseStartConditions: exerciseDetectionData.leftSide.conditions,
+          recordingStillnesses:
+            exerciseDetectionData.leftSide.recordingStillnesses,
+          requiredPoseConditions:
+            exerciseDetectionData.leftSide.requiredPoseConditions,
+          feedbackAngles: exerciseDetectionData.leftSide.feedbackAngles,
+          extremumAngles: exerciseDetectionData.leftSide.extremumAngles,
+        },
+        rightData:
+          recordedRepsRef.current.right && exerciseDetectionData.rightSide
+            ? {
+                side: 'R',
+                repStateRef: repStateRefR,
+                currentRepRef: currentRepRefR,
+                recordedReps: recordedRepsRef.current.right,
+                keypointId: exerciseDetectionData.rightSide.romKeypointId,
+                direction:
+                  exerciseDetectionData.rightSide.conditions[0].direction,
+                exerciseStartConditions:
+                  exerciseDetectionData.rightSide.conditions,
+                recordingStillnesses:
+                  exerciseDetectionData.rightSide.recordingStillnesses,
+                requiredPoseConditions:
+                  exerciseDetectionData.rightSide.requiredPoseConditions,
+                feedbackAngles: exerciseDetectionData.rightSide.feedbackAngles,
+                extremumAngles: exerciseDetectionData.rightSide.extremumAngles,
+              }
+            : undefined,
+        setRepCount,
+        POSE_DETECTION_CONSTANTS,
+      });
+    }
+
+    // DRAWING
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset to identity
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Flip horizontally to mirror webcam
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    // Set center for the yellow person indicator
+    lib.ai.draw.setSmoothedCenter(keypoints, centerPosRef);
+
+    // Draw lines between keypoints if provided
+    if (drawLines && drawLines.length)
+      lib.ai.draw.drawLines(
+        drawLines,
+        keypoints,
+        canvas,
+        ctx,
+        theme.palette.primary.main
+      );
+
+    // Invalid angles indicators
+    if (currentInvalidAnglesRef.current.length)
+      lib.ai.draw.drawInvalidAngles(
+        currentInvalidAnglesRef,
+        keypoints,
+        canvas,
+        ctx
+      );
+
+    // Draw radars
+    if (drawRadars && drawRadars.length)
+      lib.ai.draw.drawRadars({
+        currentRepRefL,
+        currentRepRefR,
+        repStateRefL,
+        repStateRefR,
+        keypoints,
+        canvas,
+        ctx,
+        drawRadars,
+      });
+
+    ctx.restore();
   }
 
   window.requestAnimationFrame(predictWebcam.bind(null, state));
