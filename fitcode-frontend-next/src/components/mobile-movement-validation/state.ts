@@ -352,7 +352,8 @@ export const predictWebcam = async (state: {
       });
     } else if (lib.common.typeChecker.isTfGraphModel(poseModel)) {
       // yolov11 model
-      const inputSize = 640;
+      //const inputSize = 640;
+      const inputSize = 256;
 
       const input = tf.tidy(() => {
         const frame = tf.browser.fromPixels(video);
@@ -361,7 +362,7 @@ export const predictWebcam = async (state: {
       });
 
       try {
-        const out = await poseModel.executeAsync(input);
+        const out = poseModel.execute(input);
 
         keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11(
           out as tf.Tensor,
