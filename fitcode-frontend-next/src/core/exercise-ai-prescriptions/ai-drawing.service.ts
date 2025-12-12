@@ -235,7 +235,7 @@ export class AIDrawingService {
   }
 
   setSmoothedCenter(
-    result: PoseLandmarkerResult,
+    normalizedKeypoints: Keypoint[],
     centerPosRef: RefObject<Point2D | null>
   ) {
     let smoothedCenter: {
@@ -245,38 +245,27 @@ export class AIDrawingService {
       visibility: number;
     } | null = null;
 
-    for (const landmark of result.landmarks) {
-      const keepKeypointsIndexes = [11, 12, 23, 24]; // shoulder & hip indices
+    const keepKeypointsIndexes = [11, 12, 23, 24]; // shoulder & hip indices
 
-      // pick only those 4
-      const kept = landmark.filter((_, i) => keepKeypointsIndexes.includes(i));
+    // pick only those 4
+    const kept = normalizedKeypoints.filter((_, i) =>
+      keepKeypointsIndexes.includes(i)
+    );
 
-      if (kept.length > 0) {
-        const cx = kept.reduce((s, k) => s + k.x, 0) / kept.length;
-        const cy = kept.reduce((s, k) => s + k.y, 0) / kept.length;
-        const cz = kept.reduce((s, k) => s + (k.z ?? 0), 0) / kept.length;
-        const cv =
-          kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
+    if (kept.length > 0) {
+      const cx = kept.reduce((s, k) => s + k.pixelPosition.x, 0) / kept.length;
+      const cy = kept.reduce((s, k) => s + k.pixelPosition.y, 0) / kept.length;
+      const cz =
+        kept.reduce((s, k) => s + (k.position.z ?? 0), 0) / kept.length;
+      const cv =
+        kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
 
-        const current = { x: cx, y: cy, z: cz, visibility: cv };
+      const current = { x: cx, y: cy, z: cz, visibility: cv };
 
-        // smoothing factor (0.2 = 20% new, 80% old)
-        const alpha = 10;
-        if (smoothedCenter) {
-          smoothedCenter = {
-            x: smoothedCenter.x * (1 - alpha) + current.x * alpha,
-            y: smoothedCenter.y * (1 - alpha) + current.y * alpha,
-            z: smoothedCenter.z * (1 - alpha) + current.z * alpha,
-            visibility:
-              smoothedCenter.visibility * (1 - alpha) +
-              current.visibility * alpha,
-          };
-        } else {
-          smoothedCenter = current;
-        }
 
-        centerPosRef.current = { x: smoothedCenter.x, y: smoothedCenter.y };
-      }
+      smoothedCenter = current;
+
+      centerPosRef.current = { x: smoothedCenter.x, y: smoothedCenter.y };
     }
   }
 }

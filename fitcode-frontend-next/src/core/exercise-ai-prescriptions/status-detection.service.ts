@@ -177,6 +177,8 @@ export class StatusDetectionService {
           POSE_DETECTION_CONSTANTS,
         });
 
+        console.log('isStill:', isStill);
+
         // const canStartRecording = hasNodded && isStill;
         const canStartRecording = isStill;
 
@@ -386,13 +388,14 @@ export class StatusDetectionService {
       return isKeypointStill;
     });
 
-    const isStillZ = this.isZAxisStill({
-      buffer: buffer,
-      videoHeight,
-      bufferCutOff,
-      tresholdPercentage:
-        POSE_DETECTION_CONSTANTS.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD,
-    });
+    // const isStillZ = this.isZAxisStill({
+    //   buffer: buffer,
+    //   videoHeight,
+    //   bufferCutOff,
+    //   tresholdPercentage:
+    //     POSE_DETECTION_CONSTANTS.STILLNESS_Z_AXIS_PERCENTAGE_THRESHOLD,
+    // });
+    const isStillZ = true;
 
     const isStill = isStillXY && isStillZ;
 
