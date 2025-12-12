@@ -177,8 +177,6 @@ export class StatusDetectionService {
           POSE_DETECTION_CONSTANTS,
         });
 
-        console.log('isStill:', isStill);
-
         // const canStartRecording = hasNodded && isStill;
         const canStartRecording = isStill;
 

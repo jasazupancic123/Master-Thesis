@@ -1,3 +1,6 @@
+import type { PoseLandmarker } from '@mediapipe/tasks-vision';
+import type * as tf from '@tensorflow/tfjs';
+
 import { KeypointId } from '@/core/exercise-ai-prescriptions/enum/keypoint-id';
 import type { Keypoint } from '@/core/exercise-ai-prescriptions/type/keypoint.type';
 import type { Point2D } from '@/core/exercise-ai-prescriptions/type/point.type';
@@ -5,8 +8,6 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
-import { PoseLandmarker } from '@mediapipe/tasks-vision';
-import * as tf from '@tensorflow/tfjs';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {
@@ -80,6 +81,7 @@ export class TypeCheckerUtil {
       typeof obj === 'object' &&
       obj !== null &&
       'detectForVideo' in obj &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).detectForVideo === 'function'
     );
   }
@@ -89,6 +91,7 @@ export class TypeCheckerUtil {
       typeof obj === 'object' &&
       obj !== null &&
       'executeAsync' in obj &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).executeAsync === 'function'
     );
   }

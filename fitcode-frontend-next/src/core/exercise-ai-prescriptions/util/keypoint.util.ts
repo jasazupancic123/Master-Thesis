@@ -1,4 +1,5 @@
 import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
+import type * as tf from '@tensorflow/tfjs';
 import savitzkyGolay from 'ml-savitzky-golay';
 import toast from 'react-hot-toast';
 
@@ -10,7 +11,6 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
-import * as tf from '@tensorflow/tfjs';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;
@@ -32,7 +32,7 @@ export class KeypointUtil {
   ): Keypoint[] {
     if (!currentFrameKeypoints) return [];
 
-    let keypoints: Keypoint[] = [];
+    const keypoints: Keypoint[] = [];
 
     switch (model) {
       case PoseModel.MEDIAPIPE: {
@@ -129,9 +129,9 @@ export class KeypointUtil {
     const y2 = (cy + h / 2) * sy;
 
     // 51 values: 17*(x,y,conf) starting at channel 5
-    let base = 5;
+    const base = 5;
 
-    let keypoints: Keypoint[] = [];
+    const keypoints: Keypoint[] = [];
 
     const keypointIds = Object.values(KeypointIdYoloV11);
 
