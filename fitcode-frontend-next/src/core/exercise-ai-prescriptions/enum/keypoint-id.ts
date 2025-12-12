@@ -53,4 +53,3 @@ export enum KeypointIdYoloV11 {
   LEFT_ANKLE = 'left_ankle',
   RIGHT_ANKLE = 'right_ankle',
 }
-

@@ -1,4 +1,3 @@
-import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
 import { lib } from '../../lib';
@@ -261,7 +260,6 @@ export class AIDrawingService {
         kept.reduce((s, k) => s + (k.visibility ?? 0), 0) / kept.length;
 
       const current = { x: cx, y: cy, z: cz, visibility: cv };
-
 
       smoothedCenter = current;
 
