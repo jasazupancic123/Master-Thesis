@@ -345,7 +345,6 @@ export class StatusDetectionService {
       keypoints,
       buffer,
       avgFps,
-      videoHeight,
       bufferCutOff,
       stillnessCountdownRef,
       stillnessEvaluationKeypoints,
