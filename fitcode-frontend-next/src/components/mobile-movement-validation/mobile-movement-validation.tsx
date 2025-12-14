@@ -72,6 +72,10 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import type { WebGPUBackend } from '@tensorflow/tfjs-backend-webgpu';
+import { CompiledModel } from '@litertjs/core';
+import { loadLiteRt, loadAndCompile, setWebGpuDevice } from '@litertjs/core';
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
 
 const DEBUG = false;
 
@@ -144,7 +148,6 @@ export default function MobileMovementValidation(
       : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
-  const YOLOV11_MODEL_URL = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -205,7 +208,7 @@ export default function MobileMovementValidation(
   //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [model] = useState<PoseModel>(lib.common.env.getPoseModel());
   const [poseModel, setPoseModel] = useState<
-    PoseLandmarker | tf.GraphModel | null
+    PoseLandmarker | tf.GraphModel | CompiledModel | null
   >(null);
 
   // Rep State
@@ -912,7 +915,24 @@ export default function MobileMovementValidation(
         const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
         setPoseModel(lm);
       } else if (model === PoseModel.YOLO11) {
-        const model = await tf.loadGraphModel(YOLOV11_MODEL_URL);
+        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
+        const model = await tf.loadGraphModel(modelUrl);
+        setPoseModel(model);
+      } else if (model === PoseModel.YOLO11_LITE) {
+        await import('@tensorflow/tfjs-backend-webgpu');
+        await tf.setBackend('webgpu');
+        await tf.ready();
+
+        await loadLiteRt('/litert-wasm/');
+
+        const backend = tf.backend() as unknown as WebGPUBackend;
+        setWebGpuDevice(backend.device);
+
+        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose_float32.tflite`;
+        const model: CompiledModel = await loadAndCompile(modelUrl, {
+          accelerator: 'webgpu', // or "wasm" :contentReference[oaicite:4]{index=4}
+        });
+
         setPoseModel(model);
       }
     };

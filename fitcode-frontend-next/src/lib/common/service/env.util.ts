@@ -51,7 +51,11 @@ export class EnvUtil {
       );
     }
 
-    if (model !== PoseModel.MEDIAPIPE && model !== PoseModel.YOLO11) {
+    if (
+      model !== PoseModel.MEDIAPIPE &&
+      model !== PoseModel.YOLO11 &&
+      model !== PoseModel.YOLO11_LITE
+    ) {
       toast.error(
         `Invalid pose model "${model}" defined in the environment variables.`
       );
