@@ -8,6 +8,7 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
+import { CompiledModel } from '@litertjs/core';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {
@@ -93,6 +94,16 @@ export class TypeCheckerUtil {
       'executeAsync' in obj &&
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).executeAsync === 'function'
+    );
+  }
+
+  isCompiledModel(obj: unknown): obj is CompiledModel {
+    if (obj === null || typeof obj !== 'object') return false;
+
+    const m = obj as Record<string, unknown>;
+    return (
+      typeof m.getInputDetails === 'function' &&
+      typeof m.getOutputDetails === 'function'
     );
   }
 }

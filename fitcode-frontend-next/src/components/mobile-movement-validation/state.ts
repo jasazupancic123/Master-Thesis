@@ -29,6 +29,9 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { CompiledModel } from '@litertjs/core';
+import toast from 'react-hot-toast';
+import { runWithTfjsTensors } from '@litertjs/tfjs-interop';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -101,7 +104,7 @@ export const predictWebcam = async (state: {
   repStateRefL: RefObject<RepState>;
   repStateRefR: RefObject<RepState>;
   model: PoseModel;
-  poseModel: PoseLandmarker | tf.GraphModel | null;
+  poseModel: PoseLandmarker | tf.GraphModel | CompiledModel | null;
   keypointHistory: KeypointHistory;
   keypointBuffer: KeypointHistory;
   constantKeypointHistory: KeypointHistory;
@@ -331,6 +334,7 @@ export const predictWebcam = async (state: {
     let keypoints: Keypoint[] = [];
 
     if (lib.common.typeChecker.isPoseLandmarker(poseModel)) {
+      // mediapipe pose landmarker
       poseModel.detectForVideo(video, startTimeMs, async (result) => {
         const hasPose =
           result.landmarks &&
@@ -351,7 +355,7 @@ export const predictWebcam = async (state: {
         );
       });
     } else if (lib.common.typeChecker.isTfGraphModel(poseModel)) {
-      // yolov11 model
+      // yolov11 tfjs model
       const inputSize = lib.common.env.getYoloSize();
 
       const input = tf.tidy(() => {
@@ -373,9 +377,53 @@ export const predictWebcam = async (state: {
         );
 
         tf.dispose(out);
+      } catch (e) {
+        toast.error('Error during inference with TF GraphModel');
+        console.error('Error during inference with TF GraphModel:', e);
       } finally {
         input.dispose();
       }
+    } else if (lib.common.typeChecker.isCompiledModel(poseModel)) {
+      // yolov11 tflite model
+      const inputSize = lib.common.env.getYoloSize();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = inputSize;
+      canvas.height = inputSize;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+      // draw current video frame (and resize/fit as you want)
+      ctx.drawImage(video, 0, 0, inputSize, inputSize);
+
+      const input = tf.tidy(() => {
+        const frame = tf.browser.fromPixels(canvas);
+        const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
+        return resized.toFloat().div(255).expandDims(0);
+      });
+
+      try {
+        const outAny = runWithTfjsTensors(poseModel, input);
+        const out = Array.isArray(outAny) ? outAny[0] : outAny;
+
+        keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11(
+          out as tf.Tensor,
+          inputSize,
+          videoWidth,
+          videoHeight,
+          new Date(),
+          frameCountRef.current
+        );
+
+        tf.dispose(out);
+      } catch (e) {
+        toast.error('Error during inference with TF GraphModel');
+        console.error('Error during inference with TF GraphModel:', e);
+      } finally {
+        input.dispose();
+      }
+    } else {
+      toast.error('Unsupported pose model type detected during prediction.');
+      throw new Error('Unsupported pose model type');
     }
 
     keypoints = lib.ai.keypoint.processCapturedKeypoints(
