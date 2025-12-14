@@ -144,8 +144,7 @@ export default function MobileMovementValidation(
       : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
-  const YOLOV11_MODEL_URL =
-    '/models/yolov11/256/yolo11n-pose-web-model/model.json';
+  const YOLOV11_MODEL_URL = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -204,7 +203,7 @@ export default function MobileMovementValidation(
 
   // Model and PoseLandmarker
   //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [model] = useState<PoseModel>(PoseModel.YOLO11);
+  const [model] = useState<PoseModel>(lib.common.env.getPoseModel());
   const [poseModel, setPoseModel] = useState<
     PoseLandmarker | tf.GraphModel | null
   >(null);

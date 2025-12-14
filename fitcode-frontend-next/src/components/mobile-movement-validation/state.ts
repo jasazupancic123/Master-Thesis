@@ -352,8 +352,7 @@ export const predictWebcam = async (state: {
       });
     } else if (lib.common.typeChecker.isTfGraphModel(poseModel)) {
       // yolov11 model
-      //const inputSize = 640;
-      const inputSize = 256;
+      const inputSize = lib.common.env.getYoloSize();
 
       const input = tf.tidy(() => {
         const frame = tf.browser.fromPixels(video);
