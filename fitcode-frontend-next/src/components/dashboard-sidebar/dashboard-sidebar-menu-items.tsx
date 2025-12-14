@@ -24,13 +24,12 @@ interface Props {
 export default function DashboardSidebarMenuItems(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { institutions, institution, setInstitution } = useMain();
+  const { institution } = useMain();
 
-  const { filter, setFilter, setSelectedGroups } = useDashboard();
+  const { filter, setFilter } = useDashboard();
 
   const { setDrawerOpen } = props;
 
-  const [openMenu, setOpenMenu] = useState(false);
   const [openPlanningModal, setOpenPlanningModal] = useState(false);
 
   const anchorElRef = useRef<HTMLDivElement | null>(null);
@@ -134,10 +133,6 @@ export default function DashboardSidebarMenuItems(props: Props) {
                 item.id === INSTITUTION_PAGE_ID && (
                   <IconButton
                     sx={{ p: 0, m: 0, position: 'absolute', right: 5 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenu(true);
-                    }}
                   >
                     <KeyboardArrowDown fontSize="small" />
                   </IconButton>
