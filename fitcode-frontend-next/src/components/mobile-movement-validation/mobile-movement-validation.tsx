@@ -1,5 +1,7 @@
 'use client';
 
+import type { CompiledModel } from '@litertjs/core';
+import { loadAndCompile, loadLiteRt, setWebGpuDevice } from '@litertjs/core';
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import {
   Box,
@@ -11,6 +13,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import * as tf from '@tensorflow/tfjs';
+import type { WebGPUBackend } from '@tensorflow/tfjs-backend-webgpu';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
@@ -144,8 +147,6 @@ export default function MobileMovementValidation(
       : (mainContext?.users || []).data?.find((u) => u.uid === userId) || null;
 
   const POSE_DETECTION_CONSTANTS = lib.common.env.getAiNumericConstants();
-  const YOLOV11_MODEL_URL =
-    '/models/yolov11/256/yolo11n-pose-web-model/model.json';
 
   const isSandbox = pathname.endsWith('pose-model');
 
@@ -204,9 +205,9 @@ export default function MobileMovementValidation(
 
   // Model and PoseLandmarker
   //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [model] = useState<PoseModel>(PoseModel.YOLO11);
+  const [model] = useState<PoseModel>(lib.common.env.getPoseModel());
   const [poseModel, setPoseModel] = useState<
-    PoseLandmarker | tf.GraphModel | null
+    PoseLandmarker | tf.GraphModel | CompiledModel | null
   >(null);
 
   // Rep State
@@ -913,7 +914,24 @@ export default function MobileMovementValidation(
         const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
         setPoseModel(lm);
       } else if (model === PoseModel.YOLO11) {
-        const model = await tf.loadGraphModel(YOLOV11_MODEL_URL);
+        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
+        const model = await tf.loadGraphModel(modelUrl);
+        setPoseModel(model);
+      } else if (model === PoseModel.YOLO11_LITE) {
+        await import('@tensorflow/tfjs-backend-webgpu');
+        await tf.setBackend('webgpu');
+        await tf.ready();
+
+        await loadLiteRt('/litert-wasm/');
+
+        const backend = tf.backend() as unknown as WebGPUBackend;
+        setWebGpuDevice(backend.device);
+
+        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose_float32.tflite`;
+        const model: CompiledModel = await loadAndCompile(modelUrl, {
+          accelerator: 'webgpu', // or "wasm" :contentReference[oaicite:4]{index=4}
+        });
+
         setPoseModel(model);
       }
     };

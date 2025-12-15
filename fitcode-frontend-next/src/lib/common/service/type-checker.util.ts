@@ -1,3 +1,4 @@
+import type { CompiledModel } from '@litertjs/core';
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import type * as tf from '@tensorflow/tfjs';
 
@@ -93,6 +94,16 @@ export class TypeCheckerUtil {
       'executeAsync' in obj &&
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (obj as any).executeAsync === 'function'
+    );
+  }
+
+  isCompiledModel(obj: unknown): obj is CompiledModel {
+    if (obj === null || typeof obj !== 'object') return false;
+
+    const m = obj as Record<string, unknown>;
+    return (
+      typeof m.getInputDetails === 'function' &&
+      typeof m.getOutputDetails === 'function'
     );
   }
 }

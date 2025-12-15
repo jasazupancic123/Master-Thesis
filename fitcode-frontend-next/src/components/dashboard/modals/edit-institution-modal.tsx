@@ -14,7 +14,6 @@ import {
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useDashboardUserEdit } from '../context/user-edit.context';
 import GroupsDataGrid from '../groups-data-grid';
 import type { Institution } from '@/core/institution/type/institution.type';
 import { lib } from '@/lib';
@@ -40,15 +39,8 @@ export default function EditInstitutionModal({
   const [tab, setTab] = useState(0);
 
   const { user } = useAuthenticatedAuth();
-  const { updateUser } = useDashboardUserEdit();
   const { updateGroup, updateInstitution, deleteGroup, addGroup } =
     useDashboard();
-
-  const users = [
-    institution.owner,
-    ...institution.trainers,
-    ...institution.athletes,
-  ];
 
   const handleChange = (field: keyof Institution, value: unknown) =>
     setLocalData((prev) => ({ ...prev, [field]: value }));

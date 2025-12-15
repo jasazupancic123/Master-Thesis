@@ -18,8 +18,6 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
       'half-squat-tb',
       'sa-squat-jump-db',
       'sissy-squat-belt',
-      'sl-acceleration-squat-fw',
-      'sl-squat-ks',
       'spooky-squat-di',
       'squat-rows-fw',
       'staggered-half-back-squat',
@@ -51,7 +49,6 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
       'hang-squat-landmine',
       'iso-half-squat-ks',
       'iso-quarter-squat-ks',
-      'iso-sl-squat-ib',
       'iso-split-squat-hold',
       'iso-split-squat-pallof-press-ks',
       'iso-split-squat-w-rotation-fw[v12]',
@@ -73,15 +70,6 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
       'quarter-back-squat-bb',
       'roll-squat',
       'rolling-squat-di',
-      'sl-acceleration-squat-fw[v12]',
-      'sl-pistol-squat-bw',
-      'sl-skater-squat-[assisted]-bw',
-      'sl-skater-squat-bw',
-      'sl-skater-squat-sm',
-      'sl-squat-ks',
-      'sl-squat-to-box-bw',
-      'sl-squat-to-box-w-plate-reach-di',
-      'sl-zercher-squat-landmine',
       'spanish-squat-belt',
       'split-squat-jumps',
       'split-squat-jumps-[alternating]',
@@ -109,6 +97,51 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
         conditions: [
           {
             keypointId: KeypointId.LEFT_HIP,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1500, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    id: 'squat-sl-general',
+    exerciseIds: [
+      'sl-acceleration-squat-fw',
+      'sl-squat-ks',
+      'iso-sl-squat-ib',
+      'sl-acceleration-squat-fw[v12]',
+      'sl-pistol-squat-bw',
+      'sl-skater-squat-[assisted]-bw',
+      'sl-skater-squat-bw',
+      'sl-skater-squat-sm',
+      'sl-squat-ks',
+      'sl-squat-to-box-bw',
+      'sl-squat-to-box-w-plate-reach-di',
+      'sl-zercher-squat-landmine',
+    ],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_HIP,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_HIP,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 1500, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_HIP,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_HIP,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 1500, // ms
@@ -864,16 +897,7 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
   },
   {
     id: 'rdl-general',
-    exerciseIds: [
-      'sl-rdl-bw',
-      'sl-rdl-db',
-      'rdl-bb',
-      'rdl-clean-to-box-bb',
-      'rdl-clean-to-box-step-up-bb',
-      'rdl-kb',
-      'rdl-landmine',
-      'rdl-tb',
-    ],
+    exerciseIds: ['rdl-bb', 'rdl-kb', 'rdl-landmine', 'rdl-tb'],
     data: {
       romValueType: KeypointValueType.POSITION_Y,
       leftSide: {
@@ -881,6 +905,43 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
         conditions: [
           {
             keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+    },
+  },
+  {
+    id: 'rdl-sl-general',
+    exerciseIds: [
+      'sl-rdl-bw',
+      'sl-rdl-db',
+      'rdl-clean-to-box-bb',
+      'rdl-clean-to-box-step-up-bb',
+    ],
+    data: {
+      romValueType: KeypointValueType.POSITION_Y,
+      cannotDoBothSidesSimultaneously: true,
+      leftSide: {
+        romKeypointId: KeypointId.LEFT_SHOULDER,
+        conditions: [
+          {
+            keypointId: KeypointId.LEFT_SHOULDER,
+            type: KeypointValueType.POSITION_Y,
+            direction: ConditionDirection.NEGATIVE,
+            duration: 750, // ms
+            distance: 0.04, // meters
+          },
+        ],
+      },
+      rightSide: {
+        romKeypointId: KeypointId.RIGHT_SHOULDER,
+        conditions: [
+          {
+            keypointId: KeypointId.RIGHT_SHOULDER,
             type: KeypointValueType.POSITION_Y,
             direction: ConditionDirection.NEGATIVE,
             duration: 750, // ms

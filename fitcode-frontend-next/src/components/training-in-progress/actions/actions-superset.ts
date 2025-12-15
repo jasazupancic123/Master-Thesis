@@ -34,12 +34,8 @@ export const handleFinishSuperset = async (context: {
   useTrainingInProgress: ITrainingInProgressContext;
   useTrainingInProgressUtils: ITrainingInProgressUtilsCtx;
 }) => {
-  const {
-    useMain,
-    useTraining,
-    useTrainingInProgress,
-    useTrainingInProgressUtils,
-  } = context;
+  const { useTraining, useTrainingInProgress, useTrainingInProgressUtils } =
+    context;
 
   const { trainingInProgress } = useTraining;
   const { supersetIndex, workloads } = useTrainingInProgress;
@@ -108,12 +104,8 @@ export const handleAdvanceInSuperset = (
   },
   skipCurrentWorkload?: boolean
 ) => {
-  const {
-    useMain,
-    useTraining,
-    useTrainingInProgress,
-    useTrainingInProgressUtils,
-  } = context;
+  const { useTraining, useTrainingInProgress, useTrainingInProgressUtils } =
+    context;
 
   const { trainingInProgress, setTrainingInProgress } = useTraining;
 

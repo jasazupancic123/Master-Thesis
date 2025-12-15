@@ -9,16 +9,11 @@ interface Props {
 }
 
 export default function TrainingStationHeader(props: Props) {
-  const { station, individualTrainings, component, workloads } =
-    useCoachTrainingStation();
+  const { station } = useCoachTrainingStation();
 
   const { setOpenNewStationModal } = props;
 
   if (!station) return null;
-
-  const currentIndividualTrainings = individualTrainings.filter((t) =>
-    station.users.some((u) => u.uid === t.userId)
-  );
 
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start" gap={2}>
