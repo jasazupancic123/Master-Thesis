@@ -1,3 +1,4 @@
+import type { CompiledModel } from '@litertjs/core';
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import type * as tf from '@tensorflow/tfjs';
 
@@ -8,7 +9,6 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
-import { CompiledModel } from '@litertjs/core';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {

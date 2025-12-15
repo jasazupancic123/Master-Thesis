@@ -17,6 +17,7 @@ import TrainingStationHeader from './training-station-header';
 import TrainingStationInit from './training-station-init';
 import TrainingStationMembers from './training-station-members';
 import { theme } from '@/app/style';
+import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
 import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
@@ -25,7 +26,6 @@ import { useCoachTraining } from '@/store/coach-training.provider';
 import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
-import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 
 export default function TrainingStation() {
   const router = useRouter();

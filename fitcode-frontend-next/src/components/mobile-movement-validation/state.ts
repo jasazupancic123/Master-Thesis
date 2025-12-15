@@ -1,8 +1,11 @@
+import type { CompiledModel } from '@litertjs/core';
+import { runWithTfjsTensors } from '@litertjs/tfjs-interop';
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
 import * as tf from '@tensorflow/tfjs';
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
+import toast from 'react-hot-toast';
 
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
@@ -29,9 +32,6 @@ import type {
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { CompiledModel } from '@litertjs/core';
-import toast from 'react-hot-toast';
-import { runWithTfjsTensors } from '@litertjs/tfjs-interop';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;

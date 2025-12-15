@@ -5,15 +5,19 @@ import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { useMain } from './main.provider';
 import { useTrainings } from './trainings.provider';
 import { core } from '@/core/core.service';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import type { Exercise } from '@/core/exercise/type/exercise.type';
 import { TrainingController } from '@/core/training/training.controller';
+import type { ActiveTraining } from '@/core/training/type/training.type';
 import { TrainingAction } from '@/core/training/type/training-action.type';
 import type {
   TrainingExercise,
   TrainingExerciseRecordedSet,
 } from '@/core/training/type/training-exercise.type';
+import type { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
 import type {
   CreateWorkload,
   Workload,
@@ -21,10 +25,6 @@ import type {
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
-import { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
-import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
-import { useMain } from './main.provider';
-import { ActiveTraining } from '@/core/training/type/training.type';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExercise | undefined;
