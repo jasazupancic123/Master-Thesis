@@ -14,7 +14,6 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
 import Logo from '@/ui/logo';
 import ProfileCard from '@/ui/profile-card';
 
@@ -25,7 +24,6 @@ interface Props {
 export default function DashboardSidebar(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { institution } = useMain();
   const { selectedGroups } = useDashboard();
 
   const { setDrawerOpen } = props;

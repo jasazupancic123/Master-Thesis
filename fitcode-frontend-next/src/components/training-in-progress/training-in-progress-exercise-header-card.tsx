@@ -1,5 +1,7 @@
+import { Delete } from '@mui/icons-material';
 import {
   Box,
+  IconButton,
   LinearProgress,
   linearProgressClasses,
   Typography,
@@ -8,6 +10,7 @@ import Image from 'next/image';
 import type { RefCallback } from 'react';
 import { useState } from 'react';
 
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import useRecoveryTime from './hooks/use-recovery-time';
 import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
@@ -41,7 +44,10 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
     setSelectedExercise,
     setSetIndex,
     workloads,
+    removeExerciseFromSuperset,
   } = useTrainingInProgress();
+
+  const { edit } = useTrainingInProgressUtils();
 
   const { exercise, superset, supersetIndex, getExerciseRef } = props;
 
@@ -221,6 +227,26 @@ export default function TrainingInProgressExerciseHeaderCard(props: Props) {
           },
         }}
       />
+
+      {edit && (
+        <IconButton
+          sx={{
+            m: 0,
+            position: 'absolute',
+            top: 0,
+            right: 4,
+            backgroundColor: theme.palette.background.default,
+            p: 0.2,
+            zIndex: 10,
+          }}
+          onClick={async (e) => {
+            e.stopPropagation();
+            await removeExerciseFromSuperset(exercise.id);
+          }}
+        >
+          <Delete fontSize="small" />
+        </IconButton>
+      )}
     </Box>
   );
 }

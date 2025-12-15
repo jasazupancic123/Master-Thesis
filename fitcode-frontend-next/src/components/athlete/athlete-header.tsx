@@ -1,6 +1,6 @@
 'use client';
 
-import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
+import { Done, Edit, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Drawer,
@@ -15,7 +15,6 @@ import {
   useTheme,
 } from '@mui/material';
 import Box from '@mui/material/Box';
-import dayjs from 'dayjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -23,10 +22,8 @@ import { useState } from 'react';
 
 import type { ITrainingInProgressUtilsCtx } from '../training-in-progress/context/training-in.progress-utils.provider';
 import BottomNavigation from './bottom-navigation';
-import CreateTrainingModal from './create-training-modal';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
-import { TrainingService } from '@/core/training/training.service';
 import { UserRole } from '@/core/user/enum/user-role.enum';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -34,7 +31,6 @@ import { LINKS_SIDEBAR_GROUP_VIEW } from '@/lib/common/const/nav.const';
 import { useAthlete } from '@/store/athlete.provider';
 import { useAthleteHeader } from '@/store/athlete-header.provider';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import type { ITrainingInProgressContext } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
@@ -51,7 +47,6 @@ export default function AthleteHeader(props: Props) {
   const pathname = usePathname();
 
   const { user, role, logout } = useAuthenticatedAuth();
-  const { exercises, setTrainings } = useMain();
   const { filter, setFilter } = useAthlete() || {};
   const { selectedTrackingMethod } = useAthleteHeader() || {};
   const trainingContext = useTrainings();
@@ -73,7 +68,6 @@ export default function AthleteHeader(props: Props) {
   const isInTrainingInProgress = pathname.includes('/components');
 
   const [open, setOpen] = useState(false);
-  const [openCreateTrainingModal, setOpenCreateTrainingModal] = useState(false);
 
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
@@ -108,17 +102,6 @@ export default function AthleteHeader(props: Props) {
             </Link>
           </ListItem>
         ))}
-
-        {/* <ListItem disablePadding>
-          <ListItemButton
-            sx={{ width: '100%' }}
-            onClick={() => {
-              setOpenCreateTrainingModal(true);
-            }}
-          >
-            <ListItemText primary="Add training" />
-          </ListItemButton>
-        </ListItem> */}
 
         {trainingInProgress &&
           trainingInProgressUtilsContext &&
@@ -261,7 +244,7 @@ export default function AthleteHeader(props: Props) {
                       <Pause sx={{ marginRight: 1 }} />
                       Pause Training
                     </MenuItem>
-                    {/* <MenuItem
+                    <MenuItem
                       onClick={handleEdit}
                       sx={{
                         cursor: 'pointer',
@@ -269,7 +252,7 @@ export default function AthleteHeader(props: Props) {
                     >
                       <Edit sx={{ marginRight: 1 }} />
                       {edit ? 'Disable' : 'Enable'} Editing
-                    </MenuItem> */}
+                    </MenuItem>
                   </Menu>
                 </>
               )}
@@ -292,20 +275,6 @@ export default function AthleteHeader(props: Props) {
           </Box>
         )}
       </Box>
-
-      <CreateTrainingModal
-        open={openCreateTrainingModal}
-        setOpen={setOpenCreateTrainingModal}
-        onCreateTraining={(training) => {
-          training = TrainingService.mapTraining(training, { exercises });
-          setTrainings((prev) => ({
-            ...prev,
-            data: [...prev.data, training].sort((a, b) =>
-              dayjs(a.from).diff(dayjs(b.from))
-            ),
-          }));
-        }}
-      />
     </>
   );
 }

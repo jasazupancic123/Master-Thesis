@@ -137,6 +137,8 @@ export default defineConfig([
       'src/components/mediapipe-react-app/**',
       'src/controller/pose-detection/rep-graph.service.ts',
       'public/wasm/**',
+      'public/litert-wasm/**',
+      'public/tfjs-wasm/**',
     ],
   },
 ]);
