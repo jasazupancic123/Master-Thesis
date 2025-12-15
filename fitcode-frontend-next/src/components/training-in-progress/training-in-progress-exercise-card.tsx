@@ -1,4 +1,4 @@
-import { Add, VideoLibrary } from '@mui/icons-material';
+import { Add, DeleteOutline, VideoLibrary } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
@@ -18,7 +18,7 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
+import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 
 export default function TrainingInProgressExerciseCard() {
   const { user } = useAuthenticatedAuth();
@@ -36,6 +36,7 @@ export default function TrainingInProgressExerciseCard() {
     setIndex,
     setSetIndex,
     workloads,
+    removeSetFromExercise,
   } = trainingInProgressContext;
   const { trainingInProgress } = trainingContext;
 
@@ -144,21 +145,23 @@ export default function TrainingInProgressExerciseCard() {
           >
             {selectedExercise.exercise?.name || 'Unnamed Exercise'}
           </Typography>
-          <IconButton
-            onClick={() => {
-              setOpenVideoModal(true);
-            }}
-            sx={{
-              p: 0,
-              m: 0,
-              position: 'absolute',
-              right: 16,
-              top: '48%',
-              transform: 'translateY(-50%)',
-            }}
-          >
-            <VideoLibrary fontSize="small" />
-          </IconButton>
+          {selectedExercise.exercise?.videoUrl && (
+            <IconButton
+              onClick={() => {
+                setOpenVideoModal(true);
+              }}
+              sx={{
+                p: 0,
+                m: 0,
+                position: 'absolute',
+                right: 16,
+                top: '48%',
+                transform: 'translateY(-50%)',
+              }}
+            >
+              <VideoLibrary fontSize="small" />
+            </IconButton>
+          )}
         </Box>
       </Box>
 
@@ -204,14 +207,33 @@ export default function TrainingInProgressExerciseCard() {
             const isSetSelected = setIndex === i;
 
             return (
-              <TrainingExerciseSetBox
+              <Box
                 key={i}
-                selectedExercise={selectedExercise}
-                setSetIndex={setSetIndex}
-                setIndex={i}
-                isSetSelected={isSetSelected}
-                isSetDone={isSetDone}
-              />
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+                gap={0.5}
+              >
+                {edit && (
+                  <IconButton
+                    sx={{ p: 0, m: 0 }}
+                    onClick={async () => {
+                      await removeSetFromExercise(i);
+                    }}
+                  >
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                )}
+
+                <TrainingExerciseSetBox
+                  selectedExercise={selectedExercise}
+                  setSetIndex={setSetIndex}
+                  setIndex={i}
+                  isSetSelected={isSetSelected}
+                  isSetDone={isSetDone}
+                />
+              </Box>
             );
           })}
 
@@ -239,18 +261,10 @@ export default function TrainingInProgressExerciseCard() {
         {setIndex !== undefined &&
           setIndex !== null &&
           selectedExercise.sets[setIndex] && (
-            <Box
-              width="100%"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              sx={{ px: 1.2, py: 0.5, position: 'relative' }}
-            >
-              <TrainingInProgressExerciseSet
-                exercise={selectedExercise}
-                setIndex={setIndex}
-              />
-            </Box>
+            <TrainingInProgressExerciseSet
+              exercise={selectedExercise}
+              setIndex={setIndex}
+            />
           )}
 
         <TrainingInProgressExerciseControls />

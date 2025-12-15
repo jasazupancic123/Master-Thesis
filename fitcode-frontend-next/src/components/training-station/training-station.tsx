@@ -25,7 +25,7 @@ import { useCoachTraining } from '@/store/coach-training.provider';
 import { useCoachTrainingHeader } from '@/store/coach-training-header.provider';
 import { useMain } from '@/store/main.provider';
 import { useCoachTrainingStation } from '@/store/training-station.provider';
-import TrainingExerciseSetBox from '@/ui/training-exercise-set-box';
+import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 
 export default function TrainingStation() {
   const router = useRouter();
