@@ -1,3 +1,4 @@
+import { Delete } from '@mui/icons-material';
 import {
   Box,
   IconButton,
@@ -9,6 +10,7 @@ import Image from 'next/image';
 import type { RefCallback } from 'react';
 import { useState } from 'react';
 
+import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 import useRecoveryTime from './hooks/use-recovery-time';
 import { theme } from '@/app/style';
 import { core } from '@/core/core.service';
@@ -21,8 +23,6 @@ import { EXERCISE_DEFAULT_IMG_URL } from '@/lib/common/const/image.const';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import { Delete, DeleteOutline } from '@mui/icons-material';
-import { useTrainingInProgressUtils } from './context/training-in.progress-utils.provider';
 
 interface Props {
   exercise: TrainingExercise;

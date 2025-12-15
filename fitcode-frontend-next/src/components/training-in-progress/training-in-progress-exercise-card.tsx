@@ -9,6 +9,7 @@ import TrainingInProgressExerciseControls from './exercise-controls';
 import ExerciseVideoModal from './modals/exercise-video-modal';
 import TrainingInProgressExerciseSet from './training-in-progress-exercise-set';
 import MobileMovementValidation from '@/components/mobile-movement-validation/mobile-movement-validation';
+import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import { lib } from '@/lib';
@@ -18,7 +19,6 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
-import TrainingExerciseSetBox from '@/components/training-in-progress/training-exercise-set-box';
 
 export default function TrainingInProgressExerciseCard() {
   const { user } = useAuthenticatedAuth();

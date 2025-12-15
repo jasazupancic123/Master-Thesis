@@ -164,7 +164,6 @@ export class WorkloadUtil {
       userId,
     } = id;
 
-
     const component = training.components.find((c) => c.id === componentId);
     if (!component) return null;
 
@@ -174,11 +173,7 @@ export class WorkloadUtil {
     const exercise = superset.exercises.find((e) => e.id === exerciseId);
     if (!exercise) return null;
 
-    console.log('exercise.sets', exercise.sets);
-    console.log('setNumber', setNumber);
-
     const set = exercise.sets.find((s) => s.setNumber === setNumber);
-    console.log('set', set);
     if (!set) return null;
 
     const workload: PartialWorkload = existingWorkload

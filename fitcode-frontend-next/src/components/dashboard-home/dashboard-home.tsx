@@ -4,6 +4,7 @@ import { Box, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
+import CreateTrainingModal from '../athlete/create-training-modal';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
@@ -12,6 +13,7 @@ import useDashboardHomeComponents from './hooks/use-components.hook';
 import TodaySessions from './today-sessions';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
+import { TrainingService } from '@/core/training/training.service';
 import { UserRole } from '@/core/user/enum/user-role.enum';
 import { DASHBOARD_ICONS_FOLDER } from '@/lib/common/const/nav.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
@@ -21,8 +23,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
-import CreateTrainingModal from '../athlete/create-training-modal';
-import { TrainingService } from '@/core/training/training.service';
 
 export default function DashboardHome() {
   const screenSize = useScreenSize();

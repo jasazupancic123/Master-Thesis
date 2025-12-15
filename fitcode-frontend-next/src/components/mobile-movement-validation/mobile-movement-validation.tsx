@@ -1,5 +1,7 @@
 'use client';
 
+import type { CompiledModel } from '@litertjs/core';
+import { loadAndCompile, loadLiteRt, setWebGpuDevice } from '@litertjs/core';
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import {
   Box,
@@ -11,6 +13,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import * as tf from '@tensorflow/tfjs';
+import type { WebGPUBackend } from '@tensorflow/tfjs-backend-webgpu';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
@@ -72,10 +75,6 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
-import type { WebGPUBackend } from '@tensorflow/tfjs-backend-webgpu';
-import { CompiledModel } from '@litertjs/core';
-import { loadLiteRt, loadAndCompile, setWebGpuDevice } from '@litertjs/core';
-import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
 
 const DEBUG = false;
 

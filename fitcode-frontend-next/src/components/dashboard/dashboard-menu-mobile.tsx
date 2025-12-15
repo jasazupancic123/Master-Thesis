@@ -20,11 +20,9 @@ import {
   LINKS_SIDEBAR_DAHBOARD_VIEW,
 } from '@/lib/common/const/nav.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function DashboardMenuMobile() {
   const { user, role, logout } = useAuthenticatedAuth();
-  const screenSize = useScreenSize();
 
   const [open, setOpen] = useState(false);
 
