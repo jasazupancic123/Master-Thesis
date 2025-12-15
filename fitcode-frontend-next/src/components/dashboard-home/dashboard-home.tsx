@@ -20,6 +20,9 @@ import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import AddButton from '@/ui/add-button';
+import CreateTrainingModal from '../athlete/create-training-modal';
+import { TrainingService } from '@/core/training/training.service';
 
 export default function DashboardHome() {
   const screenSize = useScreenSize();
@@ -29,7 +32,7 @@ export default function DashboardHome() {
   const dashboardContext = useDashboard();
   const athleteContext = useAthlete();
 
-  const { activeTraining, trainings } = mainContext;
+  const { activeTraining, trainings, setTrainings, exercises } = mainContext;
   const selectedGroups = dashboardContext
     ? dashboardContext.selectedGroups
     : mainContext.institution.groups || [];
@@ -40,6 +43,7 @@ export default function DashboardHome() {
   );
 
   const [mounted, setMounted] = useState(false);
+  const [openCreateTrainingModal, setOpenCreateTrainingModal] = useState(false);
 
   useEffect(() => {
     // small timeout is optional, just to ensure it's after first paint
@@ -257,9 +261,23 @@ export default function DashboardHome() {
             flexDirection="column"
             gap={1}
           >
-            <Typography variant="h6" lineHeight={1}>
-              Today&apos;s sessions
-            </Typography>
+            <Box
+              width="100%"
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="h6" lineHeight={1}>
+                Today&apos;s sessions
+              </Typography>
+              {athleteContext && (
+                <AddButton
+                  onClick={() => {
+                    setOpenCreateTrainingModal(true);
+                  }}
+                />
+              )}
+            </Box>
 
             <TodaySessions
               trainings={trainings.data.filter((t) =>
@@ -330,6 +348,19 @@ export default function DashboardHome() {
           </Grid>
         </Grid>
       </Box>
+      <CreateTrainingModal
+        open={openCreateTrainingModal}
+        setOpen={setOpenCreateTrainingModal}
+        onCreateTraining={(training) => {
+          training = TrainingService.mapTraining(training, { exercises });
+          setTrainings((prev) => ({
+            ...prev,
+            data: [...prev.data, training].sort((a, b) =>
+              dayjs(a.from).diff(dayjs(b.from))
+            ),
+          }));
+        }}
+      />
     </DashboardPageContainer>
   );
 }

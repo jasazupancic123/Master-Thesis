@@ -21,6 +21,10 @@ import type {
 import { lib } from '@/lib';
 import { INDEXED_DB_FIELDS } from '@/lib/common/const/indexed-db-fields.const';
 import { handleApiRequest, type SetState } from '@/lib/common/type/state.type';
+import { TrainingInProgress } from '@/core/training/type/training-in-progress.type';
+import { ExerciseSetService } from '@/core/exercise/exercise-set.service';
+import { useMain } from './main.provider';
+import { ActiveTraining } from '@/core/training/type/training.type';
 
 export interface ITrainingInProgressContext {
   selectedExercise: TrainingExercise | undefined;
@@ -49,10 +53,7 @@ export interface ITrainingInProgressContext {
   addExerciseToSuperset: (exercise: Exercise) => Promise<void>;
   removeExerciseFromSuperset: (exerciseId: string) => Promise<void>;
   addSetToExercise: () => Promise<void>;
-  removeSetFromExercise: (
-    exerciseId: string,
-    setIndex: number
-  ) => Promise<void>;
+  removeSetFromExercise: (setIndex: number) => Promise<void>;
   updateWorkloadValue: (
     id: {
       userId: string;
@@ -76,6 +77,7 @@ export const useTrainingInProgress = () =>
 export const TrainingInProgressProvider = ({
   children,
 }: React.PropsWithChildren) => {
+  const { activeTraining, setActiveTraining } = useMain();
   const { trainingInProgress, setTrainingInProgress } = useTrainings();
 
   const router = useRouter();
@@ -311,6 +313,32 @@ export const TrainingInProgressProvider = ({
       };
 
       setTrainingInProgress(updatedTrainingInProgress);
+
+      if (activeTraining) {
+        const updatedActiveTraining: ActiveTraining = {
+          ...activeTraining,
+          components: activeTraining.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: [
+                            ...superset.exercises,
+                            newTrainingExercise,
+                          ],
+                        }
+                      : superset
+                  ),
+                }
+              : component
+          ),
+        };
+
+        setActiveTraining(updatedActiveTraining);
+      }
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to add exercise');
@@ -359,6 +387,37 @@ export const TrainingInProgressProvider = ({
       };
 
       setTrainingInProgress(updatedTrainingInProgress);
+
+      const firstExercise = updatedTrainingInProgress.training.components
+        .find((c) => c.id === trainingInProgress.componentId)
+        ?.supersets.flatMap((s) => s.exercises)[0];
+
+      setSelectedExercise(firstExercise);
+
+      if (activeTraining) {
+        const updatedActiveTraining: ActiveTraining = {
+          ...activeTraining,
+          components: activeTraining.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.filter(
+                            (e) => e.id !== exerciseId
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
+          ),
+        };
+
+        setActiveTraining(updatedActiveTraining);
+      }
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to remove exercise');
@@ -366,11 +425,12 @@ export const TrainingInProgressProvider = ({
   }
 
   async function addSetToExercise() {
-    if (!trainingInProgress || !selectedExercise) return;
+    if (!trainingInProgress || !selectedExercise || !selectedExercise.exercise)
+      return;
 
     const set = core.training.set.stub(
       selectedExercise.sets.length + 1,
-      selectedExercise.exercise!
+      selectedExercise.exercise
     );
 
     try {
@@ -391,18 +451,12 @@ export const TrainingInProgressProvider = ({
 
       const newExercise = {
         ...selectedExercise,
-        sets: [
-          ...selectedExercise.sets,
-          core.training.set.stub(
-            selectedExercise.sets.length + 1,
-            selectedExercise.exercise!
-          ),
-        ],
+        sets: [...selectedExercise.sets, set],
       };
 
       setSelectedExercise(newExercise);
 
-      const updatedTrainingInProgress = {
+      const updatedTrainingInProgress: TrainingInProgress = {
         ...trainingInProgress,
         training: {
           ...trainingInProgress.training,
@@ -430,14 +484,56 @@ export const TrainingInProgressProvider = ({
 
       // update local state
       setTrainingInProgress(updatedTrainingInProgress);
+
+      if (activeTraining) {
+        const updatedActiveTraining: ActiveTraining = {
+          ...activeTraining,
+          components: activeTraining.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, index) =>
+                    index === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.map((exercise) =>
+                            exercise.id === selectedExercise.id
+                              ? newExercise
+                              : exercise
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
+          ),
+        };
+        setActiveTraining(updatedActiveTraining);
+      }
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to add set');
     }
   }
 
-  async function removeSetFromExercise(exerciseId: string, setIndex: number) {
-    if (!trainingInProgress) return;
+  async function removeSetFromExercise(setIndex: number) {
+    if (!trainingInProgress || !selectedExercise) return;
+
+    const isSetCompleted = ExerciseSetService.isSetCompleted(
+      {
+        trainingId: trainingInProgress.training.id,
+        componentId: trainingInProgress.componentId,
+        exerciseId: selectedExercise.id,
+        supersetIndex: supersetIndex!,
+        setIndex: setIndex,
+      },
+      workloads
+    );
+
+    if (isSetCompleted) {
+      toast.error('Cannot remove a completed set');
+      return;
+    }
 
     try {
       await TrainingController.getInstance().modifyTraining(
@@ -447,21 +543,22 @@ export const TrainingInProgressProvider = ({
           ref: {
             componentId: trainingInProgress.componentId,
             supersetIndex: supersetIndex!,
-            exerciseId,
+            exerciseId: selectedExercise.id,
+            setNumber: setIndex + 1,
           },
           payload: {},
         }
       );
 
-      const updatedSelectedExercise =
-        selectedExercise?.id === exerciseId
-          ? {
-              ...selectedExercise,
-              sets: selectedExercise.sets.filter(
-                (_, index) => index !== setIndex
-              ),
-            }
-          : selectedExercise;
+      const updatedSelectedExercise = {
+        ...selectedExercise,
+        sets: selectedExercise.sets
+          .filter((_, index) => index !== setIndex)
+          .map((s, setIndex) => ({
+            ...s,
+            setNumber: setIndex + 1,
+          })),
+      };
 
       setSelectedExercise(updatedSelectedExercise);
 
@@ -478,13 +575,8 @@ export const TrainingInProgressProvider = ({
                       ? {
                           ...superset,
                           exercises: superset.exercises.map((exercise) =>
-                            exercise.id === exerciseId
-                              ? {
-                                  ...exercise,
-                                  sets: exercise.sets.filter(
-                                    (_, index) => index !== setIndex
-                                  ),
-                                }
+                            exercise.id === updatedSelectedExercise.id
+                              ? updatedSelectedExercise
                               : exercise
                           ),
                         }
@@ -497,6 +589,32 @@ export const TrainingInProgressProvider = ({
       };
 
       setTrainingInProgress(updatedTrainingInProgress);
+
+      if (activeTraining) {
+        const updatedActiveTraining: ActiveTraining = {
+          ...activeTraining,
+          components: activeTraining.components.map((component) =>
+            component.id === trainingInProgress.componentId
+              ? {
+                  ...component,
+                  supersets: component.supersets.map((superset, sIndex) =>
+                    sIndex === supersetIndex
+                      ? {
+                          ...superset,
+                          exercises: superset.exercises.map((exercise) =>
+                            exercise.id === updatedSelectedExercise.id
+                              ? updatedSelectedExercise
+                              : exercise
+                          ),
+                        }
+                      : superset
+                  ),
+                }
+              : component
+          ),
+        };
+        setActiveTraining(updatedActiveTraining);
+      }
     } catch (e) {
       console.error(e);
       toast.error((e as Error).message || 'Failed to remove set');

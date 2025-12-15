@@ -1,6 +1,6 @@
 'use client';
 
-import { Done, Menu as MenuIcon, Pause } from '@mui/icons-material';
+import { Done, Edit, Menu as MenuIcon, Pause } from '@mui/icons-material';
 import {
   Avatar,
   Drawer,
@@ -73,7 +73,6 @@ export default function AthleteHeader(props: Props) {
   const isInTrainingInProgress = pathname.includes('/components');
 
   const [open, setOpen] = useState(false);
-  const [openCreateTrainingModal, setOpenCreateTrainingModal] = useState(false);
 
   const toggle = (newOpen: boolean) => () => setOpen(newOpen);
 
@@ -108,17 +107,6 @@ export default function AthleteHeader(props: Props) {
             </Link>
           </ListItem>
         ))}
-
-        {/* <ListItem disablePadding>
-          <ListItemButton
-            sx={{ width: '100%' }}
-            onClick={() => {
-              setOpenCreateTrainingModal(true);
-            }}
-          >
-            <ListItemText primary="Add training" />
-          </ListItemButton>
-        </ListItem> */}
 
         {trainingInProgress &&
           trainingInProgressUtilsContext &&
@@ -261,7 +249,7 @@ export default function AthleteHeader(props: Props) {
                       <Pause sx={{ marginRight: 1 }} />
                       Pause Training
                     </MenuItem>
-                    {/* <MenuItem
+                    <MenuItem
                       onClick={handleEdit}
                       sx={{
                         cursor: 'pointer',
@@ -269,7 +257,7 @@ export default function AthleteHeader(props: Props) {
                     >
                       <Edit sx={{ marginRight: 1 }} />
                       {edit ? 'Disable' : 'Enable'} Editing
-                    </MenuItem> */}
+                    </MenuItem>
                   </Menu>
                 </>
               )}
@@ -292,20 +280,6 @@ export default function AthleteHeader(props: Props) {
           </Box>
         )}
       </Box>
-
-      <CreateTrainingModal
-        open={openCreateTrainingModal}
-        setOpen={setOpenCreateTrainingModal}
-        onCreateTraining={(training) => {
-          training = TrainingService.mapTraining(training, { exercises });
-          setTrainings((prev) => ({
-            ...prev,
-            data: [...prev.data, training].sort((a, b) =>
-              dayjs(a.from).diff(dayjs(b.from))
-            ),
-          }));
-        }}
-      />
     </>
   );
 }
