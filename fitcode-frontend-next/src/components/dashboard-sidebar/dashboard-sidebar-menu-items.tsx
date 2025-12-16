@@ -1,5 +1,6 @@
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { alpha, Box, IconButton, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 
 import { theme } from '@/app/style';
@@ -15,7 +16,6 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
-import { useRouter } from 'next/navigation';
 
 interface Props {
   setDrawerOpen?: SetState<boolean>;

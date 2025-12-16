@@ -14,29 +14,28 @@ import {
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
+import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
+import AddGroupModal from '../dashboard/modals/add-group-modal';
 import EditAthleteModal from '../dashboard/modals/edit-athlete-modal';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import DashboardGroupCard from './dashboard-group-card';
+import { FilterMembersBy } from './enum/filter-members-by.enum';
 import useCsvMembersUpload from './hooks/use-csv-members-upload.hook';
 import useDashboardMembers from './hooks/use-members.hook';
 import RegisterUsersDashboardModal from './modals/dashboard-register-users.modal';
 import { theme } from '@/app/style';
 import { UserRole } from '@/core/user/enum/user-role.enum';
+import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import AddGroupModal from '../dashboard/modals/add-group-modal';
-import { FilterMembersBy } from './enum/filter-members-by.enum';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
-import { User } from '@/core/user/type/user.type';
-import { useMain } from '@/store/main.provider';
 
 export default function DashboardMembers() {
   const screenSize = useScreenSize();
@@ -69,7 +68,6 @@ export default function DashboardMembers() {
   );
 
   const updateFilteredMembers = (filter: FilterMembersBy) => {
-    console.log('Updating filtered members by', filter);
     switch (filter) {
       case FilterMembersBy.INSTITUTION: {
         setFilteredMembers(

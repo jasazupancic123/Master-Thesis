@@ -1,11 +1,3 @@
-import { theme } from '@/app/style';
-import { Group } from '@/core/institution/type/group.type';
-import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
-import MyModal from '@/ui/modal';
 import {
   Avatar,
   Box,
@@ -15,6 +7,15 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+
+import { theme } from '@/app/style';
+import type { Group } from '@/core/institution/type/group.type';
+import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
+import MyModal from '@/ui/modal';
 
 interface Props {
   group: Group;
@@ -114,7 +115,7 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
                 (group.trainerIds || []).includes(user.uid);
 
               return (
-                <Grid width="100%" container spacing={1}>
+                <Grid key={user.uid} width="100%" container spacing={1}>
                   <Grid size={1} display="flex" alignItems="center">
                     <Avatar
                       alt={user.displayName || ''}
