@@ -112,7 +112,7 @@ export default function AddGroupModal(props: ModalProps) {
         />
 
         <FormControl size="small">
-          <InputLabel id="owner-select-label">Owner</InputLabel>
+          <InputLabel id="owner-select-label">Coach</InputLabel>
           <Select
             labelId="owner-select-label"
             value={owner?.uid || ''}
