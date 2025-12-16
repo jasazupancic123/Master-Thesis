@@ -7,17 +7,16 @@ import { Avatar, Box, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import AddUserToGroupModal from './modals/dashboard-add-user-to-group.modal';
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
-import { lib } from '@/lib';
-import { roRO } from '@mui/x-date-pickers/locales';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
-import AddUserToGroupModal from './modals/dashboard-add-user-to-group.modal';
 
 interface Props {
   group: Group;

@@ -4,24 +4,19 @@ import {
   Box,
   Button,
   CircularProgress,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
 
 import useInstitutionMembers from '../../dashboard/hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../../dashboard/hooks/use-register-member-form.hook';
 import type { UserRole } from '@/core/user/enum/user-role.enum';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import MyModal from '@/ui/modal';
-import FileUpload from '@/ui/file-upload';
 import { InputType } from '@/lib/common/const/input-type.const';
-import { useState } from 'react';
-import { CameraCapture } from '@/ui/camera-capture';
-import { CameraAlt } from '@mui/icons-material';
-import { theme } from '@/app/style';
-import toast from 'react-hot-toast';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import FileUpload from '@/ui/file-upload';
+import MyModal from '@/ui/modal';
 
 interface Props {
   registerRole: UserRole;

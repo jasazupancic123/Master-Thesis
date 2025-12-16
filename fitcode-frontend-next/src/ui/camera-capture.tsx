@@ -1,7 +1,8 @@
-import { theme } from '@/app/style';
 import { CameraAlt } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
 import { useRef } from 'react';
+
+import { theme } from '@/app/style';
 
 type Props = {
   onCapture: (file: File) => void;
@@ -21,7 +22,6 @@ export function CameraCapture({
         type="button"
         sx={{ p: 0.5, m: 0, backgroundColor: theme.palette.primary.main }}
         onClick={(e) => {
-          console.log('on click fired');
           e.preventDefault();
           e.stopPropagation();
 

@@ -7,12 +7,12 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
+import toast from 'react-hot-toast';
 
+import { CameraCapture } from './camera-capture';
+import { theme } from '@/app/style';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
-import { theme } from '@/app/style';
-import toast from 'react-hot-toast';
-import { CameraCapture } from './camera-capture';
 
 interface Props extends Partial<React.PropsWithChildren> {
   label: string;
