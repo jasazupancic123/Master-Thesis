@@ -36,6 +36,8 @@ export interface IDashboardContext {
   addGroup: (data: Group) => Promise<Group | undefined>;
   addGroupMember: (user: User, groupId: string) => Promise<void>;
   removeGroupMember: (userId: string, groupId: string) => Promise<void>;
+  openEditGroupModal: boolean;
+  setOpenEditGroupModal: SetState<boolean>;
 }
 
 const DashboardContext = createContext<IDashboardContext | null>(null);
@@ -50,6 +52,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
   const groups = institution.groups || [];
   const [filter, setFilter] = useState<ILink>(DASHBOARD_VIEWS(role)[0]);
   const [detectedChanges, setDetectedChanges] = useState(false);
+  const [openEditGroupModal, setOpenEditGroupModal] = useState(false);
 
   useEffect(() => {
     if (!users.data.length) return;
@@ -108,6 +111,8 @@ export function DashboardProvider(props: React.PropsWithChildren) {
     setSelectedGroups,
     detectedChanges,
     setDetectedChanges,
+    openEditGroupModal,
+    setOpenEditGroupModal,
     updateInstitution: async (institutionId, input) => {
       const prevState = {
         institution: structuredClone(institution),
@@ -260,7 +265,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         selectedGroups: structuredClone(selectedGroups),
       };
 
-      const selectedGroup = selectedGroups.find((g) => g.id === groupId);
+      const selectedGroup = institution.groups.find((g) => g.id === groupId);
 
       if (!selectedGroup) return;
 
@@ -319,7 +324,7 @@ export function DashboardProvider(props: React.PropsWithChildren) {
         selectedGroups: structuredClone(selectedGroups),
       };
 
-      const selectedGroup = selectedGroups.find((g) => g.id === groupId);
+      const selectedGroup = institution.groups.find((g) => g.id === groupId);
 
       if (!selectedGroup) return;
 

@@ -51,6 +51,7 @@ export const findFilledGroup = (
     el = el.parentElement;
     i--;
   }
+
   return null;
 };
 
