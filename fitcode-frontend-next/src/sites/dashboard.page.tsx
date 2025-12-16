@@ -20,7 +20,7 @@ import {
   LINK_DASHBOARD_ADD_INSTITUTION,
   LINK_DASHBOARD_EXERCISES,
   LINK_DASHBOARD_HOME,
-  LINK_DASHBOARD_MEMBERS,
+  LINK_DASHBOARD_ROASTER,
   LINK_DASHBOARD_PLANNING,
   LINK_DASHBOARD_REPORTS,
   LINK_DASHBOARD_SCHEDULE,
@@ -52,7 +52,7 @@ export default function DashboardPage() {
       case LINK_DASHBOARD_REPORTS.id: {
         return <DashboardReports />;
       }
-      case LINK_DASHBOARD_MEMBERS.id: {
+      case LINK_DASHBOARD_ROASTER.id: {
         return <DashboardMembers />;
       }
       case LINK_DASHBOARD_SETTINGS.id: {

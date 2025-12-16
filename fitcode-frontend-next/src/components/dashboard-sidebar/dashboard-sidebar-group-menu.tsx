@@ -33,12 +33,16 @@ interface Props {
 export default function DashboardSidebarGroupMenu(props: Props) {
   const { role } = useAuthenticatedAuth();
   const { institution } = useMain();
-  const { selectedGroups, setSelectedGroups } = useDashboard();
+  const {
+    selectedGroups,
+    setSelectedGroups,
+    openEditGroupModal,
+    setOpenEditGroupModal,
+  } = useDashboard();
 
   const { achorElRef, openGroupsMenu, setOpenGroupsMenu } = props;
 
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
-  const [openEditGroupModal, setOpenEditGroupModal] = useState(false);
   const [openDeleteGroupModal, setOpenDeleteGroupModal] = useState(false);
 
   const [institutionAndTrainerGroups, setInstitutionAndTrainerGroups] =
@@ -67,6 +71,8 @@ export default function DashboardSidebarGroupMenu(props: Props) {
       title: 'Edit group',
       icon: <Edit fontSize="small" />,
       onClick: () => {
+        if (selectedGroups.length !== 1) return;
+
         setOpenEditGroupModal(true);
         setOpenGroupsMenu(false);
       },

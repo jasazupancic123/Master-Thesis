@@ -1,4 +1,4 @@
-import { Clear } from '@mui/icons-material';
+import { Clear, Photo } from '@mui/icons-material';
 import { IconButton, type SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -10,6 +10,9 @@ import { useDropzone } from 'react-dropzone';
 
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
+import { theme } from '@/app/style';
+import toast from 'react-hot-toast';
+import { CameraCapture } from './camera-capture';
 
 interface Props extends Partial<React.PropsWithChildren> {
   label: string;
@@ -22,6 +25,8 @@ interface Props extends Partial<React.PropsWithChildren> {
   width?: number;
   height?: number;
   onRemoveFile?: () => void;
+  iconDisplay?: boolean;
+  enableCameraCapture?: boolean;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -37,7 +42,10 @@ export default function FileUpload(props: Props) {
     sx,
     children,
     onRemoveFile,
+    iconDisplay,
+    enableCameraCapture,
   } = props;
+
   const [preview, setPreview] = useState(() => ({
     url: initialFileUrl || '',
     error: '',
@@ -49,8 +57,20 @@ export default function FileUpload(props: Props) {
       // For CSV files, no preview is needed
       setPreview((prev) => ({ ...prev, url: '', error: '' }));
     else {
-      const url = URL.createObjectURL(file);
-      setPreview((prev) => ({ ...prev, url }));
+      try {
+        const url = URL.createObjectURL(file);
+        setPreview((prev) => ({ ...prev, url }));
+      } catch (error) {
+        if (
+          typeof error === 'string' &&
+          error.includes('Overload resolution failed')
+        ) {
+          toast.error('File too large. Please select a smaller file.');
+        } else {
+          toast.error('Failed to load file. Please try again.');
+        }
+        console.log('File Upload Error:', error);
+      }
     }
   }, []);
 
@@ -111,7 +131,10 @@ export default function FileUpload(props: Props) {
   }, [acceptedFiles]);
 
   return (
-    <div {...getRootProps()} style={{ width: '100%', height: 150 }}>
+    <div
+      {...getRootProps()}
+      style={{ width: '100%', height: iconDisplay ? undefined : 150 }}
+    >
       {onRemoveFile && (
         <IconButton
           sx={{
@@ -144,27 +167,6 @@ export default function FileUpload(props: Props) {
         }}
         dissableBorder={props.disableBorder}
       >
-        <Box
-          width="100%"
-          sx={{
-            height: !preview.error && preview.url ? undefined : '100%',
-            mx: 'auto',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          {preview.error ? (
-            <Typography color="error">{preview.error}</Typography>
-          ) : preview.url ? null : isDragActive ? (
-            <Typography width="100%">Drop</Typography>
-          ) : (
-            <Typography width="100%" textAlign="center" my={'auto'} px={1}>
-              {`Drop ${label} here or click to select`}
-            </Typography>
-          )}
-        </Box>
-
         {!preview.error &&
           preview.url &&
           ![InputType.CSV, InputType.JSON].includes(input) && (
@@ -206,6 +208,66 @@ export default function FileUpload(props: Props) {
               )}
             </Box>
           )}
+
+        {iconDisplay ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            gap={1}
+          >
+            <Box display="flex" justifyContent="center" alignItems="center">
+              <IconButton
+                sx={{
+                  p: 0.5,
+                  m: 0,
+                  backgroundColor: theme.palette.primary.main,
+                }}
+              >
+                <Photo
+                  sx={{
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Box>
+            {enableCameraCapture && (
+              <CameraCapture
+                onCapture={async (file: File) => {
+                  if (file) {
+                    onFileUpload(file).catch((e) => {
+                      setPreview((prev) => ({
+                        ...prev,
+                        error: e.message || 'An error occurred',
+                      }));
+                    });
+                  }
+                }}
+              />
+            )}
+          </Box>
+        ) : (
+          <Box
+            width="100%"
+            sx={{
+              height: !preview.error && preview.url ? undefined : '100%',
+              mx: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {preview.error ? (
+              <Typography color="error">{preview.error}</Typography>
+            ) : preview.url ? null : isDragActive ? (
+              <Typography width="100%">Drop</Typography>
+            ) : (
+              <Typography width="100%" textAlign="center" my={'auto'} px={1}>
+                {`Drop ${label} here or click to select`}
+              </Typography>
+            )}
+          </Box>
+        )}
 
         {[InputType.CSV, InputType.JSON].includes(input) &&
           acceptedFiles.length > 0 && (
