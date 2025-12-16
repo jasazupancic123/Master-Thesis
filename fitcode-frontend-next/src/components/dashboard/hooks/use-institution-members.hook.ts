@@ -137,56 +137,94 @@ export default function useInstitutionMembers() {
     );
   }
 
-  async function registerUser(registerRole: UserRole, formData: IFormData) {
+  async function registerUser(
+    registerRole: UserRole,
+    formData: IFormData,
+    file?: File
+  ): Promise<boolean> {
     setFormData(formData);
 
     const { displayName, email, password, confirmPassword } = formData;
 
-    if (password !== confirmPassword)
-      return toast.error('Passwords do not match');
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return false;
+    }
 
     const exists =
       registerRole === UserRole.ATHLETE
         ? institution?.athletes?.some((athlete) => athlete.email === email)
         : institution?.trainers?.some((trainer) => trainer.email === email);
 
-    if (exists)
-      return toast.error(
+    if (exists) {
+      toast.error(
         `User with email ${email} is already registered as a ${registerRole}.`
       );
+      return false;
+    }
 
     const existingUser = users?.data?.find((user) => user.email === email);
     if (existingUser) {
       setExistingUser(existingUser);
       setIsUploadingMembers(true);
-      return;
+      return true;
     }
 
     setIsUploadingMembers(true);
 
     try {
-      const user = await UserController.getInstance().register({
+      const uploadedUser = await UserController.getInstance().register({
         displayName,
         email,
         password,
         role: registerRole,
       });
 
+      let photoUrl = uploadedUser.photoURL || null;
+      let photoURLBase64 = uploadedUser.photoURLBase64 || undefined;
+
+      if (file) {
+        const path = `user/${uploadedUser.uid}/${file.name}`;
+        const { url: uploadedUrl, base64: uploadedBase64 } =
+          await lib.firebase.storage.uploadFileWithBase64(file, path, {
+            maxDimensionCrop: 300,
+          });
+
+        await UserController.getInstance().update(uploadedUser.uid, {
+          photoURL: uploadedUrl,
+          photoURLBase64: uploadedBase64,
+        });
+        photoUrl = uploadedUrl;
+        photoURLBase64 = uploadedBase64;
+      }
+
+      const newUser: User = {
+        ...uploadedUser,
+        photoURL: photoUrl,
+        photoURLBase64: photoURLBase64,
+      };
+
       if (registerRole === UserRole.ATHLETE) {
         setInstitution((prev) => ({
           ...prev!,
-          athletes: prev!.athletes ? [...prev!.athletes, user] : [user],
-          members: [...prev!.members, { id: user.uid, role: UserRole.ATHLETE }],
+          athletes: prev!.athletes ? [...prev!.athletes, newUser] : [newUser],
+          members: [
+            ...prev!.members,
+            { id: newUser.uid, role: UserRole.ATHLETE },
+          ],
         }));
       } else if (registerRole === UserRole.TRAINER) {
         setInstitution((prev) => ({
           ...prev!,
-          trainers: prev!.trainers ? [...prev!.trainers, user] : [user],
-          members: [...prev!.members, { id: user.uid, role: UserRole.TRAINER }],
+          trainers: prev!.trainers ? [...prev!.trainers, newUser] : [newUser],
+          members: [
+            ...prev!.members,
+            { id: newUser.uid, role: UserRole.TRAINER },
+          ],
         }));
       }
 
-      setUsers((prev) => ({ ...prev, data: [...prev.data, user] }));
+      setUsers((prev) => ({ ...prev, data: [...prev.data, newUser] }));
       toast.success('Successfully registered user');
     } catch (e) {
       console.error(e);
@@ -194,6 +232,8 @@ export default function useInstitutionMembers() {
     } finally {
       setIsUploadingMembers(false);
     }
+
+    return true;
   }
 
   async function uploadUsers(file: File) {

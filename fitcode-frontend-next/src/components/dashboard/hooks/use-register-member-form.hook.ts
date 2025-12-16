@@ -32,9 +32,23 @@ export default function useRegisterMemberForm() {
     );
   }
 
-  function setFormField(field: keyof IFormData, value: string) {
+  function setFormField(field: keyof IFormData, value: string | undefined) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
-  return { formData, setFormData, setFormField, resetForm, isFormEmpty };
+  const clearFormData = () => {
+    setFormField('displayName', '');
+    setFormField('email', '');
+    setFormField('password', '');
+    setFormField('confirmPassword', '');
+  };
+
+  return {
+    formData,
+    setFormData,
+    setFormField,
+    resetForm,
+    isFormEmpty,
+    clearFormData,
+  };
 }

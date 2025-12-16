@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   Stack,
   TextField,
   Typography,
@@ -14,16 +15,19 @@ import useRegisterMemberForm from '../../dashboard/hooks/use-register-member-for
 import type { UserRole } from '@/core/user/enum/user-role.enum';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import MyModal from '@/ui/modal';
+import FileUpload from '@/ui/file-upload';
+import { InputType } from '@/lib/common/const/input-type.const';
+import { useState } from 'react';
+import { CameraCapture } from '@/ui/camera-capture';
+import { CameraAlt } from '@mui/icons-material';
+import { theme } from '@/app/style';
+import toast from 'react-hot-toast';
 
 interface Props {
   registerRole: UserRole;
 }
 
 export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
-  const { formData, setFormField } = useRegisterMemberForm();
-
-  const { open, setOpen, registerRole } = props;
-
   const {
     openUserAlreadyExistsModal,
     setOpenUserAlreadyExistsModal,
@@ -34,20 +38,27 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
     addUser,
   } = useInstitutionMembers();
 
-  const clearFormData = () => {
-    setFormField('displayName', '');
-    setFormField('email', '');
-    setFormField('password', '');
-    setFormField('confirmPassword', '');
-  };
+  const { formData, setFormField, clearFormData } = useRegisterMemberForm();
+
+  const { open, setOpen, registerRole } = props;
+
+  const [file, setFile] = useState<File | undefined>(undefined);
+  const [tempPhotoURL, setTempPhotoURL] = useState<string | undefined>(
+    undefined
+  );
 
   return (
     <>
       <MyModal
         isOpen={open}
         setIsOpen={(open) => setOpen(open)}
-        onConfirm={undefined}
+        onConfirm={() => {
+          setFile(undefined);
+          setTempPhotoURL(undefined);
+        }}
         onCancel={() => {
+          setFile(undefined);
+          setTempPhotoURL(undefined);
           clearFormData();
           setOpen(false);
         }}
@@ -71,7 +82,11 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
               ? Math.min(window.innerWidth * 0.8, 300)
               : 300
           }
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
           mx="auto"
+          gap={2}
         >
           <Typography
             variant="h5"
@@ -80,16 +95,36 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
             textAlign="center"
             width="100%"
           >
-            Register {registerRole[0].toUpperCase() + registerRole.slice(1)}
+            Register New {registerRole[0].toUpperCase() + registerRole.slice(1)}
           </Typography>
+
+          <FileUpload
+            label={'Image'}
+            input={InputType.IMAGE}
+            initialFileUrl={tempPhotoURL}
+            disableBorder
+            iconDisplay
+            enableCameraCapture
+            onFileUpload={async (file: File) => {
+              if (file) {
+                setFile(file);
+                const url = URL.createObjectURL(file);
+                setTempPhotoURL(url);
+              }
+            }}
+          />
 
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              await registerUser(registerRole, formData);
+              const success = await registerUser(registerRole, formData, file);
 
-              clearFormData();
-              setOpen(false);
+              if (success) {
+                clearFormData();
+                setFile(undefined);
+                setTempPhotoURL(undefined);
+                setOpen(false);
+              }
             }}
           >
             <Stack spacing={2}>
