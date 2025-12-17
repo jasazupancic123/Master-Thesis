@@ -27,7 +27,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
   const { institution } = useMain();
 
-  const { selectedGroups, filter, setFilter } = useDashboard();
+  const { filter, setFilter } = useDashboard();
 
   const { setDrawerOpen } = props;
 
@@ -42,10 +42,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
       flexDirection="column"
       alignItems="flex-start"
       gap={1}
-      mt={4}
-      sx={{
-        cursor: 'pointer',
-      }}
+      mt={3.3}
     >
       {dashboardItems.map((item) => {
         if (!item) return null;
@@ -53,79 +50,75 @@ export default function DashboardSidebarMenuItems(props: Props) {
         const isSelected = item.id === filter?.id;
 
         return (
-          <Box key={item.id} width="100%" display="flex" flexDirection="column">
-            <Box
-              ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
-              width="100%"
-              display="flex"
-              justifyContent="flex-start"
-              alignItems="center"
-              onClick={() => {
-                if (item.id === LINK_DASHBOARD_PLANNING.id) {
-                  const group =
-                    selectedGroups.length === 1
-                      ? selectedGroups[0]
-                      : institution.groups.sort((a, b) =>
-                          a.name.localeCompare(b.name)
-                        )[0];
+          <Box
+            ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
+            width="100%"
+            display="flex"
+            justifyContent={
+              item.id === LINK_DASHBOARD_PLANNING.id ? 'center' : 'flex-start'
+            }
+            alignItems="center"
+            onClick={() => {
+              if (item.id === LINK_DASHBOARD_PLANNING.id) {
+                const group = institution.groups.sort((a, b) =>
+                  a.name.localeCompare(b.name)
+                )[0];
 
-                  if (!group) return;
+                if (!group) return;
 
-                  router.push(
-                    LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(group.id).home.href
-                  );
-                  return;
-                }
+                router.push(
+                  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(group.id).home.href
+                );
+                return;
+              }
 
-                setFilter(item);
-                if (setDrawerOpen) setDrawerOpen(false);
-              }}
-              gap={1}
-              sx={{
-                p: 0.75,
-                borderRadius: 2,
+              setFilter(item);
+              if (setDrawerOpen) setDrawerOpen(false);
+            }}
+            gap={1}
+            sx={{
+              borderRadius: 2,
+              cursor: 'pointer',
+              p: 0.75,
+              py: item.id === LINK_DASHBOARD_PLANNING.id ? 1.5 : undefined,
+              mb: item.id === LINK_DASHBOARD_PLANNING.id ? 2 : 0,
+              backgroundColor:
+                item.id === LINK_DASHBOARD_PLANNING.id
+                  ? theme.palette.primary.main
+                  : isSelected
+                    ? theme.palette.background.selectedBackground
+                    : 'transparent',
+              '&:hover': {
                 backgroundColor:
                   item.id === LINK_DASHBOARD_PLANNING.id
-                    ? theme.palette.primary.main
-                    : isSelected
-                      ? theme.palette.background.selectedBackground
-                      : 'transparent',
-                '&:hover': {
-                  backgroundColor:
-                    item.id === LINK_DASHBOARD_PLANNING.id
-                      ? undefined
-                      : alpha(theme.palette.background.selectedBackground, 0.5),
-                },
-                position: 'relative',
+                    ? undefined
+                    : alpha(theme.palette.background.selectedBackground, 0.5),
+              },
+              position: 'relative',
+            }}
+          >
+            {item.icon}
+            <Typography
+              fontSize={14}
+              fontWeight={600}
+              sx={{
+                textTransform:
+                  item.id === LINK_DASHBOARD_PLANNING.id ? 'uppercase' : 'none',
+                color:
+                  item.id === LINK_DASHBOARD_PLANNING.id
+                    ? theme.palette.text.secondary
+                    : undefined,
               }}
             >
-              {item.icon}
-              <Typography
-                fontSize={14}
-                fontWeight={600}
-                sx={{
-                  textTransform:
-                    item.id === LINK_DASHBOARD_PLANNING.id
-                      ? 'uppercase'
-                      : 'none',
-                  color:
-                    item.id === LINK_DASHBOARD_PLANNING.id
-                      ? theme.palette.text.secondary
-                      : undefined,
-                }}
-              >
-                {item.label}
-              </Typography>
+              {item.label}
+            </Typography>
 
-              {lib.firebase.auth.isAdmin(role) &&
-                item.id === INSTITUTION_PAGE_ID && (
-                  <IconButton
-                    sx={{ p: 0, m: 0, position: 'absolute', right: 5 }}
-                  >
-                    <KeyboardArrowDown fontSize="small" />
-                  </IconButton>
-                )}
-            </Box>
+            {lib.firebase.auth.isAdmin(role) &&
+              item.id === INSTITUTION_PAGE_ID && (
+                <IconButton sx={{ p: 0, m: 0, position: 'absolute', right: 5 }}>
+                  <KeyboardArrowDown fontSize="small" />
+                </IconButton>
+              )}
           </Box>
         );
       })}

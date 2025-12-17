@@ -1,4 +1,6 @@
 import {
+  DeleteOutline,
+  DeleteOutlined,
   EditOutlined,
   VisibilityOffOutlined,
   VisibilityOutlined,
@@ -17,6 +19,7 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 
 interface Props {
   group: Group;
@@ -27,7 +30,13 @@ interface Props {
 export default function DashboardGroupCard(props: Props) {
   const { role } = useAuthenticatedAuth();
 
-  const { setSelectedGroups, setOpenEditGroupModal } = useDashboard();
+  const {
+    setOpenDeleteGroupModal,
+    setGroupToDelete,
+    setOpenEditGroupModal,
+    setGroupToEdit,
+  } = useDashboardGroupActions();
+
   const { toggleUser } = useDashboardUserEdit();
 
   const { group, search, setOpenEditAthleteModal } = props;
@@ -68,15 +77,26 @@ export default function DashboardGroupCard(props: Props) {
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           {lib.firebase.auth.isManager(role) && (
-            <IconButton
-              sx={{ p: 0, m: 0 }}
-              onClick={() => {
-                setSelectedGroups([group]);
-                setOpenEditGroupModal(true);
-              }}
-            >
-              <EditOutlined fontSize="small" />
-            </IconButton>
+            <>
+              <IconButton
+                sx={{ p: 0, m: 0 }}
+                onClick={() => {
+                  setOpenEditGroupModal(true);
+                  setGroupToEdit(group);
+                }}
+              >
+                <EditOutlined fontSize="small" />
+              </IconButton>
+              <IconButton
+                sx={{ p: 0, m: 0 }}
+                onClick={() => {
+                  setOpenDeleteGroupModal(true);
+                  setGroupToDelete(group);
+                }}
+              >
+                <DeleteOutlined fontSize="small" />
+              </IconButton>
+            </>
           )}
           <IconButton
             sx={{ p: 0, m: 0 }}

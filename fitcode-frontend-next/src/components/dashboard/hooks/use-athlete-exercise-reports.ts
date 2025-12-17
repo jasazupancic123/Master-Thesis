@@ -5,10 +5,10 @@ import { INDEX_DB_ATHLETE_EXERCISE_REPORTS_ID } from '@/components/report-athlet
 import type { AthleteExerciseReportType } from '@/components/report-athlete-exercise/types/athlete-exercise-report-type';
 import type { IndexDbAthleteExerciseReport } from '@/components/report-athlete-exercise/types/index-db-athlete-exercise-report';
 import { lib } from '@/lib';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReports() {
-  const { selectedGroups } = useDashboard();
+  const { institution } = useMain();
 
   const [athleteExerciseReports, setAthleteExercisesReports] = useState<
     AthleteExerciseReportType[]
@@ -22,9 +22,9 @@ export default function useAthleteExerciseReports() {
 
       const data: IndexDbAthleteExerciseReport[] = items?.payload;
 
-      const filteredData = (data || []).filter((item) => {
-        return selectedGroups.some((group) => group.id === item.groupId);
-      });
+      const filteredData = data.filter(
+        (d) => d.institutionId === institution.id
+      );
 
       if (filteredData && filteredData.length) {
         setAthleteExercisesReports(
@@ -53,7 +53,7 @@ export default function useAthleteExerciseReports() {
     };
 
     setupReports();
-  }, [selectedGroups]);
+  }, []);
 
   return {
     athleteExerciseReports,

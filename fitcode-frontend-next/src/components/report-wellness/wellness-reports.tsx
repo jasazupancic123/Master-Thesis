@@ -17,19 +17,7 @@ import { useScreenSize } from '@/store/screen-size.provider';
 export default function WellnessReports() {
   const screenSize = useScreenSize();
 
-  const { wellness } = useMain();
-  const { selectedGroups } = useDashboard();
-
-  const [members, setMembers] = useState<User[]>([]);
-
-  useEffect(() => {
-    setMembers(
-      lib.common.generic.getUnique(
-        selectedGroups.flatMap((g) => g.members || []),
-        'uid'
-      )
-    );
-  }, [selectedGroups]);
+  const { institution, wellness } = useMain();
 
   const todaysWellness = wellness.filter((w) => {
     return dayjs(w.date).isSame(dayjs(), 'day');
@@ -121,7 +109,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[0]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -130,7 +118,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[1]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
 
@@ -140,7 +128,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[2]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
 
@@ -200,7 +188,9 @@ export default function WellnessReports() {
                 <Typography textAlign="center">No comments</Typography>
               ) : (
                 comments.map((c) => {
-                  const user = members.find((m) => m.uid === c.userId);
+                  const user = institution.athletes.find(
+                    (m) => m.uid === c.userId
+                  );
 
                   if (!user) return null;
 

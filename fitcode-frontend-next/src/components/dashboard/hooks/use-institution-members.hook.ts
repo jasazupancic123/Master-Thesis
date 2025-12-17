@@ -20,7 +20,6 @@ export default function useInstitutionMembers() {
   const { users, setUsers, institution, setInstitution } = useMain();
   const { setFormData } = useRegisterMemberForm();
 
-  const { selectedGroups, setSelectedGroups } = useDashboard();
   const [existingUser, setExistingUser] = useState<User | null>(null);
   const [isUploadingMembers, setIsUploadingMembers] = useState(false);
   const [openUserAlreadyExistsModal, setOpenUserAlreadyExistsModal] =
@@ -73,7 +72,6 @@ export default function useInstitutionMembers() {
 
     const prevState = {
       institution: structuredClone(institution),
-      selectedGroups: selectedGroups ? structuredClone(selectedGroups) : [],
       users: structuredClone(users || []),
     };
 
@@ -108,23 +106,9 @@ export default function useInstitutionMembers() {
             ),
             members: prev!.members.filter((member) => member.id !== userId),
           }));
-
-        setSelectedGroups((prev) =>
-          prev.map((group) => {
-            if (!group.membersIds.includes(userId)) return group;
-            return {
-              ...group,
-              membersIds: group.membersIds.filter((id) => id !== userId),
-              members: (group.members || []).filter(
-                (member) => member.uid !== userId
-              ),
-            };
-          })
-        );
       },
       (snapshot) => {
         setInstitution(snapshot.institution);
-        setSelectedGroups(snapshot.selectedGroups);
         setUsers(snapshot.users);
       },
       async () => {

@@ -28,6 +28,7 @@ import type { SetState } from '@/lib/common/type/state.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { SearchBar } from '@/ui/search-bar/search-bar';
 import UserSelect from '@/ui/user-select';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   id: string;
@@ -43,7 +44,7 @@ interface Props {
 }
 
 export default function AthleteExerciseReportHeader(props: Props) {
-  const { selectedGroups } = useDashboard();
+  const { institution } = useMain();
 
   const {
     id,
@@ -210,35 +211,27 @@ export default function AthleteExerciseReportHeader(props: Props) {
                             return;
                           } else newAthletes.push(athlete);
 
-                          if (selectedGroups.length === 1) {
-                            const selectedGroup = selectedGroups[0];
+                          const item: IndexDbAthleteExerciseReport = {
+                            id,
+                            exerciseId: selectedExercise?.id,
+                            institutionId: institution.id,
+                            userIds: newAthletes.map((a) => a.uid),
+                            type: 'comparison',
+                          };
 
-                            const item: IndexDbAthleteExerciseReport = {
-                              id,
-                              exerciseId: selectedExercise?.id,
-                              groupId: selectedGroup.id,
-                              userIds: newAthletes.map((a) => a.uid),
-                              type: 'comparison',
-                            };
-
-                            await updateReportInIndexDb(item);
-                          }
+                          await updateReportInIndexDb(item);
 
                           setSelectedAthletes(newAthletes);
                         } else {
-                          if (selectedGroups.length === 1) {
-                            const selectedGroup = selectedGroups[0];
+                          const item: IndexDbAthleteExerciseReport = {
+                            id,
+                            exerciseId: selectedExercise?.id,
+                            institutionId: institution.id,
+                            userId: athlete.uid,
+                            type: 'single',
+                          };
 
-                            const item: IndexDbAthleteExerciseReport = {
-                              id,
-                              exerciseId: selectedExercise?.id,
-                              groupId: selectedGroup.id,
-                              userId: athlete.uid,
-                              type: 'single',
-                            };
-
-                            await updateReportInIndexDb(item);
-                          }
+                          await updateReportInIndexDb(item);
 
                           setSelectedAthlete(athlete);
                           setOpenSelectAthleteMenu(false);

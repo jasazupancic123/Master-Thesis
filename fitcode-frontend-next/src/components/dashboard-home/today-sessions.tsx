@@ -6,6 +6,7 @@ import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   trainings: Training[];
@@ -13,11 +14,10 @@ interface Props {
 }
 
 export default function TodaySessions(props: Props) {
+  const { institution } = useMain();
   const dashboardContext = useDashboard();
 
-  const selectedGroups: Group[] | null = dashboardContext
-    ? dashboardContext.selectedGroups
-    : null;
+  const groups: Group[] | null = dashboardContext ? institution.groups : null;
 
   const { trainings, activeComponent } = props;
 
@@ -25,10 +25,10 @@ export default function TodaySessions(props: Props) {
     groupId: string | undefined;
     trainingId: string;
   })[] = (
-    selectedGroups === null // for athlete view, show all trainings
+    groups === null // for athlete view, show all trainings
       ? trainings
       : trainings.filter((training) =>
-          selectedGroups.some((group) => group.id === training.groupId)
+          groups.some((group) => group.id === training.groupId)
         )
   )
     .filter((t) => dayjs(t.from).isSame(dayjs(), 'day'))
