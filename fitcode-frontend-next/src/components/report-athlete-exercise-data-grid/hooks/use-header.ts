@@ -12,8 +12,7 @@ export default function useAthleteExerciseReportDataGridHeader(
   selectedAthlete: User | null,
   setSelectedTraining: SetState<Training | null>
 ) {
-  const { trainings } = useMain();
-  const { selectedGroups } = useDashboard();
+  const { trainings, institution } = useMain();
 
   const [searchAthlete, setSearchAthlete] = useState('');
   const [openSelectAthleteMenu, setOpenAthleteMenu] = useState(false);
@@ -26,19 +25,14 @@ export default function useAthleteExerciseReportDataGridHeader(
   const percentageCalculationAnchorElRef = useRef<HTMLElement | null>(null);
 
   const filteredAthletes = useMemo<User[]>(() => {
-    const allAthletes = lib.common.generic.getUnique(
-      selectedGroups.flatMap((group) => group.members || []),
-      'uid'
-    );
-
-    if (searchAthlete.trim() === '') return allAthletes;
+    if (searchAthlete.trim() === '') return institution.athletes;
 
     const lowerSearch = searchAthlete.toLowerCase();
 
-    return allAthletes.filter((athlete) =>
+    return institution.athletes.filter((athlete) =>
       athlete.displayName?.toLowerCase().includes(lowerSearch)
     );
-  }, [selectedGroups, searchAthlete]);
+  }, [institution, searchAthlete]);
 
   useEffect(() => {
     if (!selectedAthlete) return;

@@ -3,19 +3,15 @@ import dayjs from 'dayjs';
 
 import useDashboardCycles from './hooks/use-cycles.hook';
 import { theme } from '@/app/style';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 
 export default function CycleProgress() {
   const mainContext = useMain();
-  const dashboardContext = useDashboard();
 
-  const selectedGroups = dashboardContext
-    ? dashboardContext.selectedGroups
-    : mainContext.institution.groups || [];
+  const groups = mainContext.institution.groups || [];
 
-  const { cyclesWithProgress } = useDashboardCycles(selectedGroups);
+  const { cyclesWithProgress } = useDashboardCycles(groups);
 
   return (
     <Box
@@ -26,7 +22,7 @@ export default function CycleProgress() {
       gap={2}
     >
       {cyclesWithProgress.map((cycle) => {
-        const group = selectedGroups.find((g) => g.id === cycle.groupId);
+        const group = groups.find((g) => g.id === cycle.groupId);
 
         return (
           <Box

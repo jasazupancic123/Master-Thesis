@@ -36,8 +36,11 @@ import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
+import { Group } from '@/core/institution/type/group.type';
+import EditGroupModal from '../dashboard/modals/edit-group-modal';
 
-export default function DashboardMembers() {
+export default function DashboardRoaster() {
   const screenSize = useScreenSize();
   const { institution, users } = useMain();
   const { role } = useAuthenticatedAuth();
@@ -57,6 +60,7 @@ export default function DashboardMembers() {
   } = useDashboardMembers();
 
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
+  const [openDeleteGroupModal, setOpenDeleteGroupModal] = useState(false);
   const [openFilterMenu, setOpenFilterMenu] = useState<boolean>(false);
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
@@ -512,6 +516,10 @@ export default function DashboardMembers() {
       />
 
       <AddGroupModal open={openAddGroupModal} setOpen={setOpenAddGroupModal} />
+
+      <EditGroupModal />
+
+      <DeleteGroupModal />
 
       <MyModal
         isOpen={openAddMemberViaCsvModal}

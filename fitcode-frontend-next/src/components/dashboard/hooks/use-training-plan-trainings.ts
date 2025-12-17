@@ -7,7 +7,6 @@ import { useMain } from '@/store/main.provider';
 
 export default function useTrainingPlan() {
   const { trainings } = useMain();
-  const { selectedGroups } = useDashboard();
 
   const [completedTrainings, setCompletedTrainings] = useState<Training[]>([]);
   const [upcomingTrainings, setUpcomingTrainings] = useState<Training[]>([]);
@@ -16,18 +15,16 @@ export default function useTrainingPlan() {
     const completed: Training[] = [];
     const upcoming: Training[] = [];
 
-    trainings.data
-      .filter((t) => selectedGroups.some((g) => g.id === t.groupId))
-      .forEach((t) => {
-        const isUpcoming = dayjs(t.from).isAfter(dayjs());
+    trainings.data.forEach((t) => {
+      const isUpcoming = dayjs(t.from).isAfter(dayjs());
 
-        if (isUpcoming) upcoming.push(t);
-        else completed.push(t);
-      });
+      if (isUpcoming) upcoming.push(t);
+      else completed.push(t);
+    });
 
     setCompletedTrainings(completed);
     setUpcomingTrainings(upcoming);
-  }, [selectedGroups, trainings]);
+  }, [trainings]);
 
   return {
     completedTrainings,

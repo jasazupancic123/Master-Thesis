@@ -16,6 +16,7 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import MyModal from '@/ui/modal';
+import { lib } from '@/lib';
 
 interface Props {
   group: Group;
@@ -26,7 +27,12 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
 
   const { institution } = useMain();
 
-  const { addGroupMember, removeGroupMember } = useDashboard();
+  const {
+    addGroupMember,
+    removeGroupMember,
+    addGroupTrainer,
+    removeGroupTrainer,
+  } = useDashboard();
 
   const { open, setOpen, group } = props;
 
@@ -151,9 +157,15 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
                       size="small"
                       variant="contained"
                       onClick={async () => {
-                        if (isIncluded)
-                          await removeGroupMember(user.uid, group.id);
-                        else await addGroupMember(user, group.id);
+                        if (lib.firebase.auth.isAthlete(user.role)) {
+                          if (isIncluded)
+                            await removeGroupMember(user.uid, group.id);
+                          else await addGroupMember(user, group.id);
+                        } else if (lib.firebase.auth.isTrainer(user.role)) {
+                          if (isIncluded)
+                            await removeGroupTrainer(user.uid, group.id);
+                          else await addGroupTrainer(user, group.id);
+                        }
                       }}
                       sx={{
                         backgroundColor: isIncluded

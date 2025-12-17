@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Cycle } from '@/core/institution/type/cycle.type';
 import type { Group } from '@/core/institution/type/group.type';
 
-export default function useDashboardCycles(selectedGroups: Group[]) {
+export default function useDashboardCycles(groups: Group[]) {
   const [cycles, setCycles] = useState<(Cycle & { groupId: string })[]>([]);
 
   useEffect(() => {
     const currentCycles: (Cycle & { groupId: string })[] = [];
 
-    selectedGroups.forEach((group) => {
+    groups.forEach((group) => {
       const cycle = group.cycles.find(
         (c) => dayjs(c.from).isBefore(dayjs()) && dayjs(c.to).isAfter(dayjs())
       );
@@ -21,7 +21,7 @@ export default function useDashboardCycles(selectedGroups: Group[]) {
     });
 
     setCycles(currentCycles);
-  }, [selectedGroups]);
+  }, [groups]);
 
   const cyclesWithProgress = useMemo(
     () =>

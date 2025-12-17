@@ -33,12 +33,10 @@ export default function DashboardHome() {
   const athleteContext = useAthlete();
 
   const { activeTraining, trainings, setTrainings, exercises } = mainContext;
-  const selectedGroups = dashboardContext
-    ? dashboardContext.selectedGroups
-    : mainContext.institution.groups || [];
+  const groups = mainContext.institution.groups || [];
 
   const { componentItems, activeComponent } = useDashboardHomeComponents(
-    selectedGroups,
+    groups,
     trainings.data
   );
 
@@ -74,7 +72,7 @@ export default function DashboardHome() {
   const endOfWeek = dayjs().endOf('week');
 
   const thisWeekSessions = trainings.data
-    .filter((t) => selectedGroups.some((group) => group.id === t.groupId))
+    .filter((t) => groups.some((group) => group.id === t.groupId))
     .filter((training) => {
       const trainingDate = dayjs(training.from);
 
