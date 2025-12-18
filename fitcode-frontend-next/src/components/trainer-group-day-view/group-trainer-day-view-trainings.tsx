@@ -1,14 +1,14 @@
+import { Event } from '@mui/icons-material';
 import type { SxProps } from '@mui/material';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import React from 'react';
 
+import { theme } from '@/app/style';
 import TrainingCard from '@/components/training-card/training-card';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import AlertFrame from '@/ui/alert-frame';
-import { Event } from '@mui/icons-material';
-import { theme } from '@/app/style';
 
 const sx: SxProps = {
   borderBottomRightRadius: 10,

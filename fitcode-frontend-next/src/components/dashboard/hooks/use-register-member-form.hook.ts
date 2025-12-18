@@ -1,5 +1,6 @@
-import { Gender } from '@/core/user/enum/gender.enum';
 import { useState } from 'react';
+
+import type { Gender } from '@/core/user/enum/gender.enum';
 
 export type IRegisterMemberFormHook = ReturnType<typeof useRegisterMemberForm>;
 

@@ -14,8 +14,8 @@ import type { Component } from '@/core/exercise/type/component.type';
 import type { Workload } from '@/core/training/type/workload.type';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useScreenSize } from '@/store/screen-size.provider';
 import { useMain } from '@/store/main.provider';
+import { useScreenSize } from '@/store/screen-size.provider';
 
 enum ReportTab {
   Wellness = 'Wellness',

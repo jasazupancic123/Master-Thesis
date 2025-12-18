@@ -1,5 +1,4 @@
 import {
-  DeleteOutline,
   DeleteOutlined,
   EditOutlined,
   VisibilityOffOutlined,
@@ -18,7 +17,6 @@ import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 
 interface Props {

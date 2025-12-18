@@ -7,7 +7,6 @@ import { core } from '@/core/core.service';
 import type { User } from '@/core/user/type/user.type';
 import { UserController } from '@/core/user/user.controller';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 interface IDashboardUserEditCtx {
@@ -120,7 +119,6 @@ export function DashboardUserEditProvider({
   }
 
   function onUserChange<K extends keyof User>(key: K, value: User[K]) {
-    console.log('onUserChange', key, value);
     if (!userToEdit) return;
     const newUser: User = { ...userToEdit, [key]: value };
     setUserToEdit(newUser);

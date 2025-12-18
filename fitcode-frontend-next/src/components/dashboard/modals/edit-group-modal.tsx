@@ -8,12 +8,10 @@ import toast from 'react-hot-toast';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { UpdateGroup } from '@/core/institution/type/group.type';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 
 export default function EditGroupModal() {
   const router = useRouter();

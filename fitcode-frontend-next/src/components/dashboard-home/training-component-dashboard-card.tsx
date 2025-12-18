@@ -1,18 +1,19 @@
-import { theme } from '@/app/style';
-import { TrainingController } from '@/core/training/training.controller';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useMain } from '@/store/main.provider';
 import {
+  Dock,
+  EditNote,
   PlayCircleOutline,
   StopCircleOutlined,
-  EditNote,
-  Dock,
 } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+
+import { theme } from '@/app/style';
+import { TrainingController } from '@/core/training/training.controller';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
+import { handleApiRequest } from '@/lib/common/type/state.type';
+import { useMain } from '@/store/main.provider';
 
 interface Props {
   component: TrainingComponent & {
@@ -23,7 +24,7 @@ interface Props {
 
 export default function TrainingComponentDashboardCard(props: Props) {
   const router = useRouter();
-  
+
   const { institution, trainings } = useMain();
 
   const { component } = props;

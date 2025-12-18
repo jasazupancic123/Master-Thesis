@@ -5,12 +5,15 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import CreateTrainingModal from '../athlete/create-training-modal';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from '../dashboard/constant/dashboard.const';
+import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
 import FlaggedAthletes from './flagged-athletes';
 import useDashboardHomeComponents from './hooks/use-components.hook';
 import TodaySessionsAthlete from './today-sessions-athlete';
+import TodaySessionsCoach from './today-sessions-coach';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
 import { TrainingService } from '@/core/training/training.service';
@@ -23,9 +26,6 @@ import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import AddButton from '@/ui/add-button';
-import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
-import TodaySessionsCoach from './today-sessions-coach';
-import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from '../dashboard/constant/dashboard.const';
 
 export default function DashboardHome() {
   const screenSize = useScreenSize();

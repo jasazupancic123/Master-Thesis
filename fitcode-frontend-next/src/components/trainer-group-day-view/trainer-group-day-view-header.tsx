@@ -3,18 +3,12 @@ import {
   QrCode,
   SettingsBackupRestoreOutlined,
 } from '@mui/icons-material';
-import {
-  Button,
-  IconButton,
-  Menu,
-  MenuItem,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import toast from 'react-hot-toast';
 
@@ -25,15 +19,14 @@ import SelectedMemberWelness from '@/components/selected-member/selected-member-
 import TrainingMembers from '@/components/training-members/training-members';
 import { core } from '@/core/core.service';
 import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import HorizontalItemsList from '@/ui/horizontal-items-list';
 import MyModal from '@/ui/modal';
-import { useMain } from '@/store/main.provider';
-import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
-import { useRouter } from 'next/navigation';
 
 dayjs.extend(weekOfYear);
 

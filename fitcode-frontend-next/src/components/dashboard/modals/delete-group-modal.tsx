@@ -4,9 +4,9 @@ import toast from 'react-hot-toast';
 
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { handleApiRequest } from '@/lib/common/type/state.type';
+import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
-import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 
 export default function DeleteGroupModal() {
   const router = useRouter();

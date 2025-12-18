@@ -1,8 +1,9 @@
-import { Training } from '@/core/training/type/training.type';
-import useTodaysComponents from './hooks/use-todays-components';
-import { useDashboard } from '@/store/dashboard.provider';
 import { Box } from '@mui/material';
+
+import useTodaysComponents from './hooks/use-todays-components';
 import TrainingComponentDashboardCard from './training-component-dashboard-card';
+import type { Training } from '@/core/training/type/training.type';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   trainings: Training[];

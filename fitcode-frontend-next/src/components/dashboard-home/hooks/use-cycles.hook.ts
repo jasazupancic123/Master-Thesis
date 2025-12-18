@@ -19,7 +19,6 @@ export default function useDashboardCycles(groups: Group[]) {
   }, [groups]);
 
   const cyclesWithProgress = useMemo(() => {
-    console.log('cycles', cycles);
     return cycles.map((cycle) => {
       const total = dayjs(cycle.to).diff(dayjs(cycle.from), 'day');
       const elapsed = dayjs().diff(dayjs(cycle.from), 'day');

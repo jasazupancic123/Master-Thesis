@@ -3,8 +3,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useAuth, useAuthenticatedAuth } from './auth.provider';
+import { useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
+import {
+  DASHBOARD_ALL_GROUPS_SELECTED_ID,
+  DASHBOARD_MY_GROUPS_SELECTED_ID,
+} from '@/components/dashboard/constant/dashboard.const';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
@@ -17,10 +21,6 @@ import { lib } from '@/lib';
 import { LINK_DASHBOARD_HOME } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
-import {
-  DASHBOARD_ALL_GROUPS_SELECTED_ID,
-  DASHBOARD_MY_GROUPS_SELECTED_ID,
-} from '@/components/dashboard/constant/dashboard.const';
 
 export interface IDashboardContext {
   filter: ILink;
