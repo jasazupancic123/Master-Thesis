@@ -51,10 +51,10 @@ export default function TrainingExerciseCardExpandedSets({
       {exercise.sets.map((set, setIndex) => {
         return (
           <Grid
+            key={setIndex}
             container
             spacing={1}
             columns={11}
-            key={setIndex}
             px={screenSize.isSmallerThanLaptop ? 1 : 0}
           >
             <Grid size={1}>
@@ -63,7 +63,7 @@ export default function TrainingExerciseCardExpandedSets({
                 flexDirection="column"
                 alignItems="center"
                 gap={0.9}
-                mt={setIndex === 0 ? 0.9 : 0.5}
+                mt={0.4}
               >
                 {setIndex === 0 && (
                   <IconButton
@@ -92,12 +92,7 @@ export default function TrainingExerciseCardExpandedSets({
                   </IconButton>
                 )}
 
-                <Box
-                  key="exercise-title"
-                  display="flex"
-                  flexDirection="column"
-                  gap={0.8}
-                >
+                <Box display="flex" flexDirection="column" gap={0.5}>
                   {uni ? (
                     <>
                       <LeftRightExerciseText title="L" />

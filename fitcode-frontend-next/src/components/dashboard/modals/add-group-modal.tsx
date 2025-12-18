@@ -27,7 +27,7 @@ export default function AddGroupModal(props: ModalProps) {
   const router = useRouter();
 
   const { users, institution, setInstitution } = useMain();
-  const { setDetectedChanges, setSelectedGroups } = useDashboard();
+  const { setDetectedChanges } = useDashboard();
 
   const { open, setOpen } = props;
 
@@ -40,6 +40,7 @@ export default function AddGroupModal(props: ModalProps) {
       isOpen={open}
       setIsOpen={(open) => setOpen(open)}
       onCancel={() => {
+        setOwner(null);
         setOpen(false);
         setShortName('');
         setGroupName('');
@@ -66,10 +67,6 @@ export default function AddGroupModal(props: ModalProps) {
               ...institution,
               groups: [...(institution.groups || []), group],
             });
-
-            setSelectedGroups((prev) =>
-              prev.length === 1 ? [group] : [...prev, group]
-            );
 
             setOpen(false);
             setShortName('');
@@ -111,7 +108,7 @@ export default function AddGroupModal(props: ModalProps) {
           onChange={(e) => setShortName(e.target.value)}
         />
 
-        <FormControl size="small">
+        <FormControl size="small" sx={{ width: '100%' }}>
           <InputLabel id="owner-select-label">Coach</InputLabel>
           <Select
             labelId="owner-select-label"

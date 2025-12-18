@@ -25,6 +25,8 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import { Add } from '@mui/icons-material';
+import AddMemberModal from '../trainer-group-header/add-member-modal';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -49,6 +51,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { subgroups } = trainingMembersSubgroupsContext;
 
   const [activeMember, setActiveMember] = useState<User | null>(null);
+  const [addMemberModal, setAddMemberModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const sensors = useSensors(
@@ -125,18 +128,18 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
             {/* Training/component is not selected yet, display the members normally */}
             {!component && (
-              <Box display="flex" flexDirection="column" alignItems="center">
-                <Card
-                  sx={{
-                    m: 0.1,
-                    ml: 0,
-                    backgroundColor: 'transparent',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                  }}
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                gap={1}
+              >
+                <Box
+                  display="flex"
+                  flexWrap="wrap"
+                  justifyContent="center"
+                  alignItems="center"
+                  gap={1}
                 >
                   {item.membersIds.map((memberId) => {
                     const member = members.find(
@@ -173,7 +176,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             sx={{
                               width: 50,
                               height: 50,
-                              m: selectedAthlete === member ? 0.25 : 0.5,
                               cursor: 'pointer',
                               filter: 'grayscale(100%)',
                             }}
@@ -182,7 +184,23 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       </Tooltip>
                     );
                   })}
-                </Card>
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    onClick={() => setAddMemberModal(true)}
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      cursor: 'pointer',
+                      borderRadius: '50%',
+                      border: `1px solid ${theme.palette.primary.main}`,
+                      backgroundColor: theme.palette.background.dark,
+                    }}
+                  >
+                    <Add sx={{ color: theme.palette.primary.main }} />
+                  </Box>
+                </Box>
 
                 <Typography
                   fontSize={12}
@@ -230,6 +248,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           />
         ) : null}
       </DragOverlay>
+      <AddMemberModal open={addMemberModal} setOpen={setAddMemberModal} />
     </DndContext>
   );
 }
