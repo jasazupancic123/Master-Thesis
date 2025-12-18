@@ -7,7 +7,7 @@ import type { Training } from '@/core/training/type/training.type';
 import { useMain } from '@/store/main.provider';
 
 export default function useDashboardHomeComponents(
-  selectedGroups: Group[],
+  groups: Group[],
   trainings: Training[]
 ) {
   const { activeTraining } = useMain();
@@ -43,7 +43,7 @@ export default function useDashboardHomeComponents(
     trainings
       .filter(
         (training) =>
-          selectedGroups.some((group) => group.id === training.groupId) &&
+          groups.some((group) => group.id === training.groupId) &&
           dayjs(training.to).isAfter(startOfWeek) &&
           dayjs(training.from).isBefore(endOfWeek)
       )
@@ -74,7 +74,7 @@ export default function useDashboardHomeComponents(
       .sort((a, b) => b.value - a.value);
 
     setComponentItems(componentItems);
-  }, [selectedGroups, trainings]);
+  }, [groups, trainings]);
 
   return {
     componentItems,

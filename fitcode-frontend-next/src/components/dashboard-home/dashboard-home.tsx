@@ -5,12 +5,15 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 import CreateTrainingModal from '../athlete/create-training-modal';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from '../dashboard/constant/dashboard.const';
+import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import AthleteReports from './athlete-reports';
 import CycleProgress from './cycle-progress';
 import FlaggedAthletes from './flagged-athletes';
 import useDashboardHomeComponents from './hooks/use-components.hook';
-import TodaySessions from './today-sessions';
+import TodaySessionsAthlete from './today-sessions-athlete';
+import TodaySessionsCoach from './today-sessions-coach';
 import TodaySessionsComponent from './today-sessions-component';
 import { theme } from '@/app/style';
 import { TrainingService } from '@/core/training/training.service';
@@ -33,12 +36,12 @@ export default function DashboardHome() {
   const athleteContext = useAthlete();
 
   const { activeTraining, trainings, setTrainings, exercises } = mainContext;
-  const selectedGroups = dashboardContext
-    ? dashboardContext.selectedGroups
+  const groups = dashboardContext
+    ? dashboardContext.filteredGroups || []
     : mainContext.institution.groups || [];
 
   const { componentItems, activeComponent } = useDashboardHomeComponents(
-    selectedGroups,
+    groups,
     trainings.data
   );
 
@@ -74,7 +77,7 @@ export default function DashboardHome() {
   const endOfWeek = dayjs().endOf('week');
 
   const thisWeekSessions = trainings.data
-    .filter((t) => selectedGroups.some((group) => group.id === t.groupId))
+    .filter((t) => groups.some((group) => group.id === t.groupId))
     .filter((training) => {
       const trainingDate = dayjs(training.from);
 
@@ -97,11 +100,21 @@ export default function DashboardHome() {
         flexDirection="column"
         alignItems="flex-start"
         gap={2}
-        mt={dashboardContext ? 4 : 0}
       >
-        <Typography variant="h4">
-          Welcome back, <strong>{user.displayName?.split(' ')[0]}</strong>
-        </Typography>
+        <Box
+          width="100%"
+          height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-end"
+          flexWrap="wrap"
+          gap={1}
+        >
+          <Typography variant="h4">
+            Welcome back, <strong>{user.displayName?.split(' ')[0]}</strong>
+          </Typography>
+          {dashboardContext && <DashboardGroupFilter />}
+        </Box>
         <Box
           width="100%"
           display="flex"
@@ -279,16 +292,27 @@ export default function DashboardHome() {
               )}
             </Box>
 
-            <TodaySessions
-              trainings={trainings.data.filter((t) =>
-                dayjs(t.from).isSame(dayjs(), 'day')
-              )}
-              activeComponent={
-                activeComponent
-                  ? { ...activeComponent, trainingId: activeTraining?.id || '' }
-                  : null
-              }
-            />
+            {athleteContext ? (
+              <TodaySessionsAthlete
+                trainings={trainings.data.filter((t) =>
+                  dayjs(t.from).isSame(dayjs(), 'day')
+                )}
+                activeComponent={
+                  activeComponent
+                    ? {
+                        ...activeComponent,
+                        trainingId: activeTraining?.id || '',
+                      }
+                    : null
+                }
+              />
+            ) : (
+              <TodaySessionsCoach
+                trainings={trainings.data.filter((t) =>
+                  dayjs(t.from).isSame(dayjs(), 'day')
+                )}
+              />
+            )}
           </Grid>
           <Grid
             size={{ xs: 12, sm: 12, md: 4 }}

@@ -1,9 +1,14 @@
-import { QrCode, SettingsBackupRestoreOutlined } from '@mui/icons-material';
-import { IconButton, Tooltip, Typography } from '@mui/material';
+import {
+  KeyboardArrowDown,
+  QrCode,
+  SettingsBackupRestoreOutlined,
+} from '@mui/icons-material';
+import { IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import toast from 'react-hot-toast';
 
@@ -14,7 +19,10 @@ import SelectedMemberWelness from '@/components/selected-member/selected-member-
 import TrainingMembers from '@/components/training-members/training-members';
 import { core } from '@/core/core.service';
 import { lib } from '@/lib';
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/lib/common/const/nav.const';
+import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useGroup } from '@/store/group.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
 import HorizontalItemsList from '@/ui/horizontal-items-list';
@@ -30,7 +38,15 @@ interface Props {
 
 export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
   const theme = useTheme();
+  const router = useRouter();
   const screenSize = useScreenSize();
+
+  const { user, role } = useAuthenticatedAuth();
+  const { institution } = useMain();
+
+  const myGroups = lib.firebase.auth.isManager(role)
+    ? institution.groups
+    : institution.groups.filter((g) => g.trainerIds.includes(user.uid));
 
   const {
     group,
@@ -62,6 +78,12 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
   // const { isSticky } = useTrainerDayViewHeaderSticky();
   const isSticky = false;
 
+  const groupAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = React.useState(false);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   interface SmallDisplayProps {
     smallDisplay?: boolean;
   }
@@ -75,11 +97,7 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
         alignItems={smallDisplay ? 'center' : 'flex-start'}
         ml={smallDisplay ? 0 : 2}
         py={smallDisplay ? 1 : 0}
-        gap={1}
       >
-        <Typography variant="h6" fontSize={16}>
-          {group.name}
-        </Typography>
         <Box
           display="flex"
           flexDirection={smallDisplay ? 'row' : 'column'}
@@ -182,6 +200,41 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
     );
   };
 
+  const GroupSelection = ({ smallDisplay }: { smallDisplay?: boolean }) => {
+    return (
+      <Box
+        width={160}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        onClick={handleOpen}
+        sx={{
+          cursor: 'pointer',
+          border: `1px solid ${theme.palette.primary.main}`,
+          borderRadius: 2,
+          backgroundColor: theme.palette.background.dark,
+          p: 0.5,
+          px: 1,
+          my: smallDisplay ? 1 : 0,
+        }}
+      >
+        <Typography
+          fontSize={14}
+          fontWeight={600}
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            minWidth: 0,
+          }}
+        >
+          {group.name}
+        </Typography>
+        <KeyboardArrowDown />
+      </Box>
+    );
+  };
+
   return (
     <Box
       id="trainer-day-view-header"
@@ -257,6 +310,9 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
               }}
             >
               <HorizontalItems />
+              <Box ref={groupAnchorRef}>
+                <GroupSelection smallDisplay />
+              </Box>
               <PeriodSelect smallDisplay />
               <TrainingMembers isSticky={isSticky} />
             </Box>
@@ -355,8 +411,14 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
                 </>
               )}
             </Box>
-            <Box width="25%">
-              <SelectedMemberWelness />
+            <Box width="25%" display="flex" justifyContent="flex-end" p={1}>
+              {selectedAthlete ? (
+                <SelectedMemberWelness />
+              ) : (
+                <Box ref={groupAnchorRef}>
+                  <GroupSelection />
+                </Box>
+              )}
             </Box>
           </Box>
           {!selectedAthlete && (
@@ -375,6 +437,28 @@ export default function GroupTrainerDayViewHeader({ days, setDays }: Props) {
           )}
         </Box>
       )}
+
+      <Menu
+        anchorEl={groupAnchorRef.current}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        {myGroups.map((g) => (
+          <MenuItem
+            key={g.id}
+            onClick={() => {
+              handleClose();
+              router.push(
+                LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(g.id).home.href
+              );
+            }}
+          >
+            {g.name}
+          </MenuItem>
+        ))}
+      </Menu>
       <MyModal
         isOpen={qrOpen}
         onCancel={() => setQrOpen(false)}

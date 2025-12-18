@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
-import dayjs from 'dayjs';
 
+import useTodaysComponents from './hooks/use-todays-components';
 import TodaySessionsComponent from './today-sessions-component';
 import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
@@ -12,33 +12,16 @@ interface Props {
   activeComponent?: (TrainingComponent & { trainingId?: string }) | null;
 }
 
-export default function TodaySessions(props: Props) {
+export default function TodaySessionsAthlete(props: Props) {
   const dashboardContext = useDashboard();
 
-  const selectedGroups: Group[] | null = dashboardContext
-    ? dashboardContext.selectedGroups
+  const groups: Group[] | null = dashboardContext
+    ? dashboardContext.filteredGroups
     : null;
 
   const { trainings, activeComponent } = props;
 
-  const todayComponents: (TrainingComponent & {
-    groupId: string | undefined;
-    trainingId: string;
-  })[] = (
-    selectedGroups === null // for athlete view, show all trainings
-      ? trainings
-      : trainings.filter((training) =>
-          selectedGroups.some((group) => group.id === training.groupId)
-        )
-  )
-    .filter((t) => dayjs(t.from).isSame(dayjs(), 'day'))
-    .flatMap((training) =>
-      training.components.map((component) => ({
-        ...component,
-        groupId: training.groupId,
-        trainingId: training.id,
-      }))
-    );
+  const { todayComponents } = useTodaysComponents(groups, trainings);
 
   return (
     <Box width="100%" display="flex" flexDirection="column" gap={2}>

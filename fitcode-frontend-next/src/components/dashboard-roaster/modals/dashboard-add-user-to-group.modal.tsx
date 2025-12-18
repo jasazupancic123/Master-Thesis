@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useDashboard } from '@/store/dashboard.provider';
@@ -26,7 +27,12 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
 
   const { institution } = useMain();
 
-  const { addGroupMember, removeGroupMember } = useDashboard();
+  const {
+    addGroupMember,
+    removeGroupMember,
+    addGroupTrainer,
+    removeGroupTrainer,
+  } = useDashboard();
 
   const { open, setOpen, group } = props;
 
@@ -151,9 +157,15 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
                       size="small"
                       variant="contained"
                       onClick={async () => {
-                        if (isIncluded)
-                          await removeGroupMember(user.uid, group.id);
-                        else await addGroupMember(user, group.id);
+                        if (lib.firebase.auth.isAthlete(user.role)) {
+                          if (isIncluded)
+                            await removeGroupMember(user.uid, group.id);
+                          else await addGroupMember(user, group.id);
+                        } else if (lib.firebase.auth.isTrainer(user.role)) {
+                          if (isIncluded)
+                            await removeGroupTrainer(user.uid, group.id);
+                          else await addGroupTrainer(user, group.id);
+                        }
                       }}
                       sx={{
                         backgroundColor: isIncluded
@@ -164,7 +176,7 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
                           : undefined,
                       }}
                     >
-                      {isIncluded ? 'Added' : 'Add'}
+                      {isIncluded ? 'Remove' : 'Add'}
                     </Button>
                   </Grid>
                 </Grid>

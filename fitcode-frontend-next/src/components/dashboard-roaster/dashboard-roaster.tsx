@@ -15,10 +15,13 @@ import {
 import { useEffect, useRef, useState } from 'react';
 
 import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
 import AddGroupModal from '../dashboard/modals/add-group-modal';
+import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
 import EditAthleteModal from '../dashboard/modals/edit-athlete-modal';
+import EditGroupModal from '../dashboard/modals/edit-group-modal';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import DashboardGroupCard from './dashboard-group-card';
 import { FilterMembersBy } from './enum/filter-members-by.enum';
@@ -32,15 +35,20 @@ import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 
-export default function DashboardMembers() {
+export default function DashboardRoaster() {
   const screenSize = useScreenSize();
+
   const { institution, users } = useMain();
   const { role } = useAuthenticatedAuth();
+
+  const { filteredGroups } = useDashboard();
+
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers, removeUser } =
     useInstitutionMembers();
   const { hoveredUser, toggleUser, onHoverUser } = useDashboardUserEdit();
@@ -56,16 +64,25 @@ export default function DashboardMembers() {
     setOpenAddMemberViaCsvModal,
   } = useDashboardMembers();
 
+  const { setCsvUserEmails } = useCsvMembersUpload();
+
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
   const [openFilterMenu, setOpenFilterMenu] = useState<boolean>(false);
+
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
   const [filterBy, setFilterBy] = useState<FilterMembersBy>(
-    FilterMembersBy.INSTITUTION
+    FilterMembersBy.GROUP
   );
+
   const [filteredMembers, setFilteredMembers] = useState<User[]>(
     (institution.trainers || []).concat(institution.athletes || [])
   );
+
+  const [removeUserFromInstitution, setRemoveUserFromInstitution] =
+    useState<User | null>(null);
+
+  const anchorElRef = useRef<HTMLDivElement | null>(null);
 
   const updateFilteredMembers = (filter: FilterMembersBy) => {
     switch (filter) {
@@ -100,13 +117,6 @@ export default function DashboardMembers() {
     updateFilteredMembers(filterBy);
   }, [institution, users]);
 
-  const [removeUserFromInstitution, setRemoveUserFromInstitution] =
-    useState<User | null>(null);
-
-  const anchorElRef = useRef<HTMLDivElement | null>(null);
-
-  const { setCsvUserEmails } = useCsvMembersUpload();
-
   return (
     <DashboardPageContainer>
       <Box
@@ -116,7 +126,7 @@ export default function DashboardMembers() {
         flexDirection="column"
         alignItems="flex-start"
         sx={{
-          py: 1,
+          py: 3.35,
           borderRadius: 2,
           overflowX: 'hidden',
         }}
@@ -125,175 +135,200 @@ export default function DashboardMembers() {
         <Box
           width="100%"
           display="flex"
-          flexWrap="wrap"
-          justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+          justifyContent="space-between"
           alignItems="center"
-          gap={2}
+          gap={1}
         >
-          <TextField
-            size="small"
-            label="Search User"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{
-              '& .MuiInputBase-root': {
-                borderRadius: 10,
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.text.primary,
-              },
-            }}
-          />
-          {lib.firebase.auth.isManager(role) && (
-            <>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenRegisterAthletesModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  py: 1,
-                  px: 2,
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+            alignItems="center"
+            gap={2}
+          >
+            <TextField
+              size="small"
+              label="Search User"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{
+                '& .MuiInputBase-root': {
                   borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Athlete
-              </Typography>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenRegisterTrainersModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  py: 1,
-                  px: 2,
-                  borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Coach
-              </Typography>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenAddGroupModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.secondary.main,
-                  py: 1,
-                  px: 6,
-                  borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Group
-              </Typography>
-              <Tooltip title="Upload Members via CSV">
-                <Box
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.text.primary,
+                },
+              }}
+            />
+            {lib.firebase.auth.isManager(role) && (
+              <>
+                <Typography
                   display="flex"
-                  flexDirection="column"
+                  justifyContent="center"
                   alignItems="center"
-                  onClick={() => setOpenAddMemberViaCsvModal(true)}
+                  onClick={() => setOpenRegisterAthletesModal(true)}
                   sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    py: 1,
+                    px: 2,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
-                  <IconButton
+                  + New Athlete
+                </Typography>
+                <Typography
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  onClick={() => setOpenRegisterTrainersModal(true)}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    py: 1,
+                    px: 2,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  + New Coach
+                </Typography>
+                <Typography
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  onClick={() => setOpenAddGroupModal(true)}
+                  sx={{
+                    backgroundColor: theme.palette.secondary.main,
+                    py: 1,
+                    px: 6,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  + New Group
+                </Typography>
+                <Tooltip title="Upload Members via CSV">
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    onClick={() => setOpenAddMemberViaCsvModal(true)}
                     sx={{
-                      m: 0,
-                      p: 0.5,
-                      backgroundColor: theme.palette.background.light,
-                      borderRadius: 1,
+                      cursor: 'pointer',
                     }}
                   >
-                    <FileUploadOutlined fontSize="small" />
-                  </IconButton>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      textTransform: 'uppercase',
-                      lineHeight: 1,
-                    }}
-                  >
-                    Import
-                  </Typography>
-                </Box>
-              </Tooltip>
-            </>
+                    <IconButton
+                      sx={{
+                        m: 0,
+                        p: 0.5,
+                        backgroundColor: theme.palette.background.light,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <FileUploadOutlined fontSize="small" />
+                    </IconButton>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Import
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              </>
+            )}
+          </Box>
+          {filterBy === FilterMembersBy.GROUP && (
+            <DashboardGroupFilter
+              sx={{
+                alignSelf: screenSize.isMobile ? 'center' : 'flex-start',
+                mt: 0.3,
+              }}
+            />
           )}
         </Box>
+
         <Box
-          ref={anchorElRef}
-          width={200}
+          width="100%"
           display="flex"
-          justifyContent="center"
-          alignItems="center"
-          onClick={() => {
-            setOpenFilterMenu(true);
-          }}
-          sx={{
-            backgroundColor: theme.palette.text.primary,
-            py: 1,
-            borderRadius: 10,
-            cursor: 'pointer',
-            position: 'relative',
-          }}
+          justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+          gap={2}
+          flexWrap="wrap"
         >
-          <Typography
+          <Box
+            ref={anchorElRef}
+            width={200}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            onClick={() => {
+              setOpenFilterMenu(true);
+            }}
             sx={{
-              color: theme.palette.text.secondary,
-              fontSize: 12,
-              fontWeight: 600,
-              userSelect: 'none',
+              backgroundColor: theme.palette.text.primary,
+              py: 1,
+              borderRadius: 10,
+              cursor: 'pointer',
+              position: 'relative',
             }}
           >
-            View by {filterBy}
-          </Typography>
-          <ArrowDropDown
-            fontSize="small"
-            sx={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: theme.palette.text.secondary,
-            }}
-          />
+            <Typography
+              sx={{
+                color: theme.palette.text.secondary,
+                fontSize: 12,
+                fontWeight: 600,
+                userSelect: 'none',
+              }}
+            >
+              View by {filterBy}
+            </Typography>
+            <ArrowDropDown
+              fontSize="small"
+              sx={{
+                position: 'absolute',
+                right: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: theme.palette.text.secondary,
+              }}
+            />
+          </Box>
         </Box>
       </Box>
 
       {filterBy === FilterMembersBy.GROUP ? (
-        !institution.groups.length ? (
+        !filteredGroups.length ? (
           <Typography>No groups</Typography>
         ) : (
           <Grid
             container
             spacing={2}
             justifyContent={
-              institution.groups.length === 1 ? 'center' : 'flex-start'
+              filteredGroups.length === 1 ? 'center' : 'flex-start'
             }
             alignItems="flex-start"
             width="100%"
           >
-            {institution.groups
+            {filteredGroups
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((g) => (
                 <Grid
                   key={g.id}
                   size={
-                    institution.groups.length === 1
+                    filteredGroups.length === 1
                       ? {
                           xs: 12,
                           sm: 12,
@@ -512,6 +547,10 @@ export default function DashboardMembers() {
       />
 
       <AddGroupModal open={openAddGroupModal} setOpen={setOpenAddGroupModal} />
+
+      <EditGroupModal />
+
+      <DeleteGroupModal />
 
       <MyModal
         isOpen={openAddMemberViaCsvModal}

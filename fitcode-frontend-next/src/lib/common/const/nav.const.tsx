@@ -158,7 +158,7 @@ export const LINK_METHODOLOGIES = link(
 );
 
 export const LINK_DASHBOARD_HOME = linkPngIcon(
-  'Dashboard',
+  'Home',
   '/dashboard',
   'dashboard-home',
   `${DASHBOARD_ICONS_FOLDER}/home.png`,
@@ -229,6 +229,7 @@ export const INSTITUTION_PAGE_ID = 'institution-page';
 
 export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
   const links = [
+    LINK_DASHBOARD_PLANNING,
     LINK_DASHBOARD_HOME,
     LINK_DASHBOARD_SCHEDULE,
     LINK_DASHBOARD_REPORTS,
@@ -236,7 +237,6 @@ export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
     LINK_DASHBOARD_EXERCISES,
     LINK_METHODOLOGIES,
     LINK_DASHBOARD_SETTINGS,
-    LINK_DASHBOARD_PLANNING,
   ];
 
   const mapper: Record<UserRole, ILink[]> = {
