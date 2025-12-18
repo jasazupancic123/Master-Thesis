@@ -1,124 +1,139 @@
 'use client';
 
-import { Circle } from '@mui/icons-material';
-import { Typography, useTheme } from '@mui/material';
+import { Grid, IconButton, Typography } from '@mui/material';
 import { Box } from '@mui/material';
-import dayjs from 'dayjs';
-import { useState } from 'react';
 
-import AthleteOptionsContainer from '../athlete/athlete-options-container';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
-import DashboardTrainingsList from './dashboard-trainings-list';
-import { DashboardTrainingPlanFilter } from './enum/dashboard-training-plan-filter.enum';
-import useDashboardScheduleSnapshots from './hooks/use-snapshots';
-import useTrainingPlan from './hooks/use-training-plan-trainings';
 import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { useMain } from '@/store/main.provider';
+import useTodaysComponents from '../dashboard-home/hooks/use-todays-components';
+import { useDashboard } from '@/store/dashboard.provider';
+import TrainingComponentDashboardCard from '../dashboard-home/training-component-dashboard-card';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import DashboardGroupFilter from './dashboad-group-filter';
+import { theme } from '@/app/style';
+import { ArrowLeft, ArrowRight, EventOutlined } from '@mui/icons-material';
+import { useState } from 'react';
+import dayjs, { Dayjs } from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 export default function DashboardSchedule() {
-  const theme = useTheme();
+  const { institution, trainings } = useMain();
 
-  const { institution } = useMain();
+  const { filteredGroups } = useDashboard();
 
-  const { completedTrainings, upcomingTrainings } = useTrainingPlan();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  useDashboardScheduleSnapshots(); // IMPORTANT!
-
-  const [filter, setFilter] = useState<DashboardTrainingPlanFilter>(
-    DashboardTrainingPlanFilter.TRAININGS
+  const { todayComponents } = useTodaysComponents(
+    filteredGroups || [],
+    trainings.data,
+    selectedDate
   );
 
   if (!institution) return null;
 
   return (
     <DashboardPageContainer>
-      {/* Dashboard Middle Header */}
-      <Box
-        width="100%"
-        height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
-        display="flex"
-        flexDirection="column"
-        justifyContent="space-around"
-        alignItems="center"
-        maxWidth={MAX_WIDTH}
-      >
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box
+          width="100%"
+          height={DASHBOARD_MIDDLE_HEADER_HEIGHT}
           display="flex"
-          alignItems="center"
-          gap={1.5}
+          justifyContent="space-between"
+          alignItems="flex-end"
           maxWidth={MAX_WIDTH}
-          sx={{
-            overflowX: 'auto',
-          }}
         >
-          {Object.values(DashboardTrainingPlanFilter).map((f) => {
-            const isSelected = filter === f;
-
-            return (
-              <Box
-                key={f}
-                display="flex"
-                alignItems="center"
-                sx={{
-                  cursor: 'pointer',
-                }}
-                onClick={() => setFilter(f)}
-                gap={0.5}
-              >
-                {isSelected && (
-                  <Circle
-                    sx={{ color: theme.palette.primary.main, fontSize: 12 }}
-                  />
-                )}
-                <Typography
-                  fontSize={14}
-                  fontWeight={600}
-                  sx={{
-                    textTransform: 'uppercase',
-                    color: isSelected
-                      ? theme.palette.primary.main
-                      : theme.palette.text.primary,
-                  }}
-                >
-                  {f.charAt(0)?.toUpperCase() + f.slice(1)?.toLowerCase()}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
-      </Box>
-
-      <AthleteOptionsContainer
-        items={['Completed', 'Upcoming']}
-        selectedItem={''}
-        onClick={(_) => {}}
-        title="Sessions"
-        disabled
-      />
-
-      <Box width="100%" display="flex" justifyContent="space-between">
-        <Box width="50%" display="flex" justifyContent="center">
-          <Box width="70%">
-            <DashboardTrainingsList
-              trainings={completedTrainings.sort((a, b) =>
-                dayjs(b.from).isAfter(dayjs(a.from)) ? 1 : -1
-              )}
-              filter={filter}
+          <Box display="flex" alignItems="center">
+            <IconButton
+              sx={{ p: 0, m: 0 }}
+              onClick={() => {
+                setSelectedDate((prev) =>
+                  dayjs(prev).subtract(1, 'day').toDate()
+                );
+              }}
+            >
+              <ArrowLeft />
+            </IconButton>
+            <Typography
+              width={90}
+              variant="h5"
+              fontWeight={600}
+              sx={{
+                color: theme.palette.primary.main,
+              }}
+            >
+              {dayjs(selectedDate).isSame(new Date(), 'day')
+                ? 'Today'
+                : dayjs(selectedDate).format('DD MMM')}
+            </Typography>
+            <DatePicker
+              value={dayjs(selectedDate)}
+              onChange={(newValue) => {
+                if (!newValue) return;
+                setSelectedDate(newValue.toDate());
+              }}
+              slots={{
+                openPickerIcon: EventOutlined,
+              }}
+              slotProps={{
+                textField: {
+                  variant: 'standard',
+                  sx: {
+                    width: 40,
+                    '& .MuiInputBase-root': { p: 0 },
+                    '& .MuiInputBase-input': {
+                      width: 0,
+                      p: 0,
+                    },
+                    '& .MuiPickersSectionList-sectionContent': {
+                      color: 'transparent',
+                    },
+                  },
+                  InputProps: { disableUnderline: true },
+                },
+                day: {
+                  sx: {
+                    '&.MuiPickersDay-today': {
+                      borderRadius: 2, // rounded corners
+                      border: '2px solid', // uses currentColor unless you set a color
+                    },
+                  },
+                },
+                // this is the actual IconButton that opens the picker
+                openPickerButton: {
+                  sx: { p: 0, m: 0 },
+                },
+                popper: {
+                  placement: 'bottom-start',
+                },
+              }}
             />
+
+            <IconButton
+              sx={{ p: 0, m: 0 }}
+              onClick={() => {
+                setSelectedDate((prev) => dayjs(prev).add(1, 'day').toDate());
+              }}
+            >
+              <ArrowRight />
+            </IconButton>
           </Box>
+          <DashboardGroupFilter />
         </Box>
 
-        <Box width="50%" display="flex" justifyContent="center">
-          <Box width="70%">
-            <DashboardTrainingsList
-              trainings={upcomingTrainings}
-              filter={filter}
-              upcoming
-            />
-          </Box>
-        </Box>
-      </Box>
+        {!todayComponents.length ? (
+          <Typography>No sessions on this date</Typography>
+        ) : (
+          <Grid width={'100%'} container spacing={2} maxWidth={MAX_WIDTH}>
+            {todayComponents.map((component, i) => (
+              <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+                <TrainingComponentDashboardCard component={component} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </LocalizationProvider>
     </DashboardPageContainer>
   );
 }

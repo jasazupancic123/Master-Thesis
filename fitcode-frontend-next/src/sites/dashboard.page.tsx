@@ -11,7 +11,7 @@ import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
 import DashboardRoaster from '@/components/dashboard-roaster/dashboard-roaster';
-import MethodsDataGrid from '@/components/methodology/methods-data-grid';
+import MethodsDataGrid from '@/components/dashboard/dashboard-methodology';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
 import { lib } from '@/lib';

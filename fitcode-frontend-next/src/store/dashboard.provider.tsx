@@ -3,10 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useAuthenticatedAuth } from './auth.provider';
+import { useAuth, useAuthenticatedAuth } from './auth.provider';
 import { useMain } from './main.provider';
-import { DASHBOARD_ALL_GROUPS_SELECTED_ID } from '@/components/dashboard/constant/dashboard.const';
-import { INDEX_DB_LAST_SELECTED_DASHBOARD_GROUP_ID } from '@/components/report-athlete-exercise/const/index-db-id.const';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { Group, UpdateGroup } from '@/core/institution/type/group.type';
@@ -16,16 +14,22 @@ import type {
 } from '@/core/institution/type/institution.type';
 import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
-import {
-  DASHBOARD_VIEWS,
-  LINK_DASHBOARD_HOME,
-} from '@/lib/common/const/nav.const';
+import { LINK_DASHBOARD_HOME } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
 import type { SetState } from '@/lib/common/type/state.type';
+import {
+  DASHBOARD_ALL_GROUPS_SELECTED_ID,
+  DASHBOARD_MY_GROUPS_SELECTED_ID,
+} from '@/components/dashboard/constant/dashboard.const';
 
 export interface IDashboardContext {
   filter: ILink;
   setFilter: SetState<ILink>;
+  filteredGroups: Group[];
+  setFilteredGroups: SetState<Group[]>;
+  filterGroups: { id: string; label: string };
+  setFilterGroups: SetState<{ id: string; label: string }>;
+  groupFilterItems: { id: string; label: string }[];
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
   updateInstitution: (
@@ -46,13 +50,57 @@ const DashboardContext = createContext<IDashboardContext | null>(null);
 export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: React.PropsWithChildren) {
-  const { children } = props;
-  const { role } = useAuthenticatedAuth();
+  const { user } = useAuthenticatedAuth();
   const { users, institution, setInstitution } = useMain();
+
+  const { children } = props;
 
   const groups = institution.groups || [];
   const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_HOME);
   const [detectedChanges, setDetectedChanges] = useState(false);
+
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups);
+
+  const [filterGroups, setFilterGroups] = useState<{
+    id: string;
+    label: string;
+  }>({ id: DASHBOARD_ALL_GROUPS_SELECTED_ID, label: 'All Groups' });
+
+  const groupFilterItems: { id: string; label: string }[] = [
+    {
+      id: DASHBOARD_ALL_GROUPS_SELECTED_ID,
+      label: 'All Groups',
+    },
+    {
+      id: DASHBOARD_MY_GROUPS_SELECTED_ID,
+      label: 'My Groups',
+    },
+
+    institution.groups.map((g: Group) => ({
+      id: g.id,
+      label: g.name,
+    })),
+  ].flat();
+
+  useEffect(() => {
+    if (filterGroups.id === DASHBOARD_ALL_GROUPS_SELECTED_ID) {
+      setFilteredGroups(institution.groups);
+      return;
+    }
+
+    if (filterGroups.id === DASHBOARD_MY_GROUPS_SELECTED_ID) {
+      const myGroups = institution.groups.filter((group) =>
+        group.trainerIds.some((id) => id === user.uid)
+      );
+      setFilteredGroups(myGroups);
+      return;
+    }
+
+    const specificGroup = institution.groups.filter(
+      (group) => group.id === filterGroups.id
+    );
+    if (specificGroup) setFilteredGroups(specificGroup);
+  }, [filterGroups, institution.groups]);
 
   useEffect(() => {
     if (!users.data.length) return;
@@ -69,6 +117,11 @@ export function DashboardProvider(props: React.PropsWithChildren) {
   const value: IDashboardContext = {
     filter,
     setFilter,
+    filteredGroups,
+    setFilteredGroups,
+    filterGroups,
+    setFilterGroups,
+    groupFilterItems,
     detectedChanges,
     setDetectedChanges,
     updateInstitution: async (institutionId, input) => {

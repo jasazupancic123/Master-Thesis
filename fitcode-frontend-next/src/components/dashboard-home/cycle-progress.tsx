@@ -5,11 +5,12 @@ import useDashboardCycles from './hooks/use-cycles.hook';
 import { theme } from '@/app/style';
 import { useMain } from '@/store/main.provider';
 import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
+import { useDashboard } from '@/store/dashboard.provider';
 
 export default function CycleProgress() {
-  const mainContext = useMain();
+  const dashboardContext = useDashboard();
 
-  const groups = mainContext.institution.groups || [];
+  const groups = dashboardContext ? dashboardContext.filteredGroups : [];
 
   const { cyclesWithProgress } = useDashboardCycles(groups);
 

@@ -10,6 +10,7 @@ import { useMain } from '@/store/main.provider';
 
 export default function FlaggedAthletes() {
   const { institution, users, wellness } = useMain();
+  const dashboardContext = useDashboard();
 
   const LIMIT = 7; // max number of flagged athletes to show
   const LOWER_BOUNDARY = 5; // it it's the same or lower than this, flag the athlete
@@ -25,7 +26,9 @@ export default function FlaggedAthletes() {
       value: number;
     }[] = [];
 
-    const userIds = institution.groups
+    const userIds = (
+      dashboardContext ? dashboardContext.filteredGroups : institution.groups
+    )
       .flatMap((g) => g.membersIds)
       .filter((v, i, a) => a.indexOf(v) === i); // unique
 
@@ -59,7 +62,7 @@ export default function FlaggedAthletes() {
     setFlaggedWellness(
       newFlaggedWellness.sort((a, b) => a.value - b.value).slice(0, LIMIT)
     );
-  }, [wellness, institution]);
+  }, [wellness, institution, dashboardContext.filteredGroups]);
 
   return (
     <Box
