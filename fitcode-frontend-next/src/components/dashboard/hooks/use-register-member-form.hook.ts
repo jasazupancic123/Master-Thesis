@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import type { Gender } from '@/core/user/enum/gender.enum';
+
 export type IRegisterMemberFormHook = ReturnType<typeof useRegisterMemberForm>;
 
 export interface IFormData {
@@ -7,6 +9,8 @@ export interface IFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  gender: Gender | undefined;
+  birthDate: Date | undefined;
 }
 
 export const DEFAULT_FORM_DATA: IFormData = {
@@ -14,6 +18,8 @@ export const DEFAULT_FORM_DATA: IFormData = {
   email: '',
   password: '',
   confirmPassword: '',
+  gender: undefined,
+  birthDate: undefined,
 };
 
 export default function useRegisterMemberForm() {
@@ -25,14 +31,19 @@ export default function useRegisterMemberForm() {
 
   function isFormEmpty() {
     return (
-      formData.displayName.trim() === '' &&
-      formData.email.trim() === '' &&
-      formData.password.trim() === '' &&
-      formData.confirmPassword.trim() === ''
+      formData.displayName.trim() === '' ||
+      formData.email.trim() === '' ||
+      formData.password.trim() === '' ||
+      formData.confirmPassword.trim() === '' ||
+      formData.gender === undefined ||
+      formData.birthDate === undefined
     );
   }
 
-  function setFormField(field: keyof IFormData, value: string | undefined) {
+  function setFormField(
+    field: keyof IFormData,
+    value: string | Date | undefined
+  ) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -41,6 +52,8 @@ export default function useRegisterMemberForm() {
     setFormField('email', '');
     setFormField('password', '');
     setFormField('confirmPassword', '');
+    setFormField('gender', '');
+    setFormField('birthDate', undefined);
   };
 
   return {

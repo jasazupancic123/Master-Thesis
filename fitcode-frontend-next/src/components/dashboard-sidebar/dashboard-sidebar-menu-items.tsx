@@ -1,5 +1,5 @@
 import { KeyboardArrowDown } from '@mui/icons-material';
-import { alpha, Box, IconButton, Typography } from '@mui/material';
+import { alpha, Box, Divider, IconButton, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 
@@ -9,6 +9,7 @@ import {
   DASHBOARD_VIEWS,
   INSTITUTION_PAGE_ID,
   LINK_DASHBOARD_PLANNING,
+  LINK_DASHBOARD_SETTINGS,
   LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
 } from '@/lib/common/const/nav.const';
 import type { ILink } from '@/lib/common/type/link.type';
@@ -27,7 +28,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
   const { institution } = useMain();
 
-  const { selectedGroups, filter, setFilter } = useDashboard();
+  const { filter, setFilter, filteredGroups } = useDashboard();
 
   const { setDrawerOpen } = props;
 
@@ -42,10 +43,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
       flexDirection="column"
       alignItems="flex-start"
       gap={1}
-      mt={4}
-      sx={{
-        cursor: 'pointer',
-      }}
+      mt={3.3}
     >
       {dashboardItems.map((item) => {
         if (!item) return null;
@@ -54,17 +52,22 @@ export default function DashboardSidebarMenuItems(props: Props) {
 
         return (
           <Box key={item.id} width="100%" display="flex" flexDirection="column">
+            {item.id === LINK_DASHBOARD_SETTINGS.id && (
+              <Divider sx={{ width: '100%', my: 2 }} />
+            )}
             <Box
               ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
-              width="100%"
+              width={item.id === LINK_DASHBOARD_PLANNING.id ? '75%' : '100%'}
               display="flex"
-              justifyContent="flex-start"
+              justifyContent={
+                item.id === LINK_DASHBOARD_PLANNING.id ? 'center' : 'flex-start'
+              }
               alignItems="center"
               onClick={() => {
                 if (item.id === LINK_DASHBOARD_PLANNING.id) {
                   const group =
-                    selectedGroups.length === 1
-                      ? selectedGroups[0]
+                    filteredGroups.length === 1
+                      ? filteredGroups[0]
                       : institution.groups.sort((a, b) =>
                           a.name.localeCompare(b.name)
                         )[0];
@@ -82,8 +85,11 @@ export default function DashboardSidebarMenuItems(props: Props) {
               }}
               gap={1}
               sx={{
-                p: 0.75,
                 borderRadius: 2,
+                cursor: 'pointer',
+                p: 0.75,
+                py: item.id === LINK_DASHBOARD_PLANNING.id ? 2 : undefined,
+                mb: item.id === LINK_DASHBOARD_PLANNING.id ? 2 : 0,
                 backgroundColor:
                   item.id === LINK_DASHBOARD_PLANNING.id
                     ? theme.palette.primary.main

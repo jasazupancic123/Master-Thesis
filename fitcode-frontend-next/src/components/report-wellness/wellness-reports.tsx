@@ -1,35 +1,19 @@
 import { Avatar, Box, Grid, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
 
 import { MAX_WIDTH_NUMERIC } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { MetricConfig } from './types/wellness-metrics.type';
 import WellnessBarChart from './wellness-bar-chart';
 import { theme } from '@/app/style';
-import type { User } from '@/core/user/type/user.type';
-import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 export default function WellnessReports() {
   const screenSize = useScreenSize();
 
-  const { wellness } = useMain();
-  const { selectedGroups } = useDashboard();
-
-  const [members, setMembers] = useState<User[]>([]);
-
-  useEffect(() => {
-    setMembers(
-      lib.common.generic.getUnique(
-        selectedGroups.flatMap((g) => g.members || []),
-        'uid'
-      )
-    );
-  }, [selectedGroups]);
+  const { institution, wellness } = useMain();
 
   const todaysWellness = wellness.filter((w) => {
     return dayjs(w.date).isSame(dayjs(), 'day');
@@ -65,7 +49,7 @@ export default function WellnessReports() {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      gap={2}
+      gap={0.5}
     >
       <Box
         width="100%"
@@ -121,7 +105,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[0]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -130,7 +114,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[1]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
 
@@ -140,7 +124,7 @@ export default function WellnessReports() {
             metricConfig={metricConfigs[2]}
             width={barChartWidth}
             height={barChartHeight}
-            members={members}
+            members={institution.athletes}
           />
         </Grid>
 
@@ -200,7 +184,9 @@ export default function WellnessReports() {
                 <Typography textAlign="center">No comments</Typography>
               ) : (
                 comments.map((c) => {
-                  const user = members.find((m) => m.uid === c.userId);
+                  const user = institution.athletes.find(
+                    (m) => m.uid === c.userId
+                  );
 
                   if (!user) return null;
 

@@ -26,7 +26,7 @@ import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import AddButton from '@/ui/add-button';
 import TutorialTooltip from '@/ui/tutorial-tooltip';
 
@@ -37,7 +37,7 @@ interface Props {
 }
 
 export default function AthleteExerciseReports(props: Props) {
-  const { selectedGroups } = useDashboard();
+  const { institution } = useMain();
 
   const { reports, setReports, cache } = props;
 
@@ -134,23 +134,18 @@ export default function AthleteExerciseReports(props: Props) {
                     type: 'single',
                   };
 
-              if (selectedGroups.length === 1) {
-                const selectedGroup = selectedGroups[0];
+              const item: IndexDbAthleteExerciseReport | undefined = prevReport
+                ? {
+                    id,
+                    exerciseId: prevReport.exerciseId,
+                    institutionId: institution.id,
+                    userId: prevReport.userId,
+                    userIds: prevReport.userIds,
+                    type: prevReport.type,
+                  }
+                : undefined;
 
-                const item: IndexDbAthleteExerciseReport | undefined =
-                  prevReport
-                    ? {
-                        id,
-                        exerciseId: prevReport.exerciseId,
-                        groupId: selectedGroup.id,
-                        userId: prevReport.userId,
-                        userIds: prevReport.userIds,
-                        type: prevReport.type,
-                      }
-                    : undefined;
-
-                if (item) await updateReportInIndexDb(item);
-              }
+              if (item) await updateReportInIndexDb(item);
 
               setReports((prev) => [...prev, newReport]);
             }}

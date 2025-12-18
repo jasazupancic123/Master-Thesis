@@ -11,11 +11,11 @@ export default function CycleProgress() {
   const mainContext = useMain();
   const dashboardContext = useDashboard();
 
-  const selectedGroups = dashboardContext
-    ? dashboardContext.selectedGroups
+  const groups = dashboardContext
+    ? dashboardContext.filteredGroups
     : mainContext.institution.groups || [];
 
-  const { cyclesWithProgress } = useDashboardCycles(selectedGroups);
+  const { cyclesWithProgress } = useDashboardCycles(groups);
 
   return (
     <Box
@@ -26,7 +26,7 @@ export default function CycleProgress() {
       gap={2}
     >
       {cyclesWithProgress.map((cycle) => {
-        const group = selectedGroups.find((g) => g.id === cycle.groupId);
+        const group = groups.find((g) => g.id === cycle.groupId);
 
         return (
           <Box

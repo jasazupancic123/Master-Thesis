@@ -3,29 +3,31 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import { InstitutionController } from '@/core/institution/institution.controller';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
 
-export default function DeleteGroupModal(props: ModalProps) {
+export default function DeleteGroupModal() {
   const router = useRouter();
   const { setInstitution } = useMain();
-  const { selectedGroups, setSelectedGroups } = useDashboard();
 
-  const { open, setOpen } = props;
+  const {
+    openDeleteGroupModal,
+    setOpenDeleteGroupModal,
+    groupToDelete,
+    setGroupToDelete,
+  } = useDashboardGroupActions();
 
-  if (selectedGroups.length !== 1) return null;
-
-  const selectedGroup = selectedGroups[0];
+  if (!groupToDelete) return null;
 
   return (
     <MyModal
-      isOpen={open}
-      setIsOpen={(open) => setOpen(open)}
+      isOpen={openDeleteGroupModal}
+      setIsOpen={(open) => setOpenDeleteGroupModal(open)}
       onCancel={() => {
-        setOpen(false);
+        setOpenDeleteGroupModal(false);
+        setGroupToDelete(null);
       }}
       cancelText="Close"
       onConfirm={async () => {
@@ -33,8 +35,8 @@ export default function DeleteGroupModal(props: ModalProps) {
           router,
           () =>
             InstitutionController.getInstance().deleteGroup(
-              selectedGroup.institutionId,
-              selectedGroup.id
+              groupToDelete.institutionId,
+              groupToDelete.id
             ),
           () => {
             setInstitution((prev) =>
@@ -43,15 +45,13 @@ export default function DeleteGroupModal(props: ModalProps) {
                 : {
                     ...prev,
                     groups: (prev.groups || []).filter(
-                      (g) => g.id !== selectedGroup.id
+                      (g) => g.id !== groupToDelete.id
                     ),
                   }
             );
 
-            setSelectedGroups((prev) =>
-              prev.filter((g) => g.id !== selectedGroup.id)
-            );
-            setOpen(false);
+            setOpenDeleteGroupModal(false);
+            setGroupToDelete(null);
             toast.success('Group deleted successfully.');
           },
           undefined,
@@ -61,7 +61,7 @@ export default function DeleteGroupModal(props: ModalProps) {
     >
       <Box display="flex" justifyContent="center" alignItems="center">
         <Typography variant="h6" textAlign="center">
-          Delete <b>{selectedGroup.name}</b>?
+          Delete <b>{groupToDelete.name}</b>?
         </Typography>
       </Box>
     </MyModal>

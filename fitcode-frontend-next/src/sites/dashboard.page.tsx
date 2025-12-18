@@ -7,11 +7,11 @@ import { Box } from '@mui/material';
 import ExercisesPage from './exercises.page';
 import DashboardAddInstitution from '@/components/dashboard/dashboard-add-institution-view';
 import DashboardInstitution from '@/components/dashboard/dashboard-institution';
+import MethodsDataGrid from '@/components/dashboard/dashboard-methodology';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
-import DashboardMembers from '@/components/dashboard-members/dashboard-members';
-import MethodsDataGrid from '@/components/methodology/methods-data-grid';
+import DashboardRoaster from '@/components/dashboard-roaster/dashboard-roaster';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
 import { lib } from '@/lib';
@@ -53,7 +53,7 @@ export default function DashboardPage() {
         return <DashboardReports />;
       }
       case LINK_DASHBOARD_ROASTER.id: {
-        return <DashboardMembers />;
+        return <DashboardRoaster />;
       }
       case LINK_DASHBOARD_SETTINGS.id: {
         return (

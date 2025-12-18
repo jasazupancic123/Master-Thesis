@@ -8,45 +8,39 @@ import toast from 'react-hot-toast';
 import { core } from '@/core/core.service';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import type { UpdateGroup } from '@/core/institution/type/group.type';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 import { useMain } from '@/store/main.provider';
 import MyModal from '@/ui/modal';
 
-export default function EditGroupModal(props: ModalProps) {
+export default function EditGroupModal() {
   const router = useRouter();
   const { users, setInstitution } = useMain();
-  const { selectedGroups, setSelectedGroups } = useDashboard();
-
-  const { open, setOpen } = props;
+  const { groupToEdit, openEditGroupModal, setOpenEditGroupModal } =
+    useDashboardGroupActions();
 
   const [groupName, setGroupName] = useState<string>(
-    selectedGroups.length === 1 ? selectedGroups[0].name : ''
+    groupToEdit ? groupToEdit.name : ''
   );
   const [shortName, setShortName] = useState<string>(
-    selectedGroups.length === 1 ? selectedGroups[0].shortName : ''
+    groupToEdit ? groupToEdit.shortName : ''
   );
 
   useEffect(() => {
-    if (selectedGroups.length !== 1) return;
+    if (!groupToEdit) return;
 
-    const selectedGroup = selectedGroups[0];
+    setGroupName(groupToEdit?.name || '');
+    setShortName(groupToEdit?.shortName || '');
+  }, [groupToEdit]);
 
-    setGroupName(selectedGroup?.name || '');
-    setShortName(selectedGroup?.shortName || '');
-  }, [selectedGroups]);
-
-  if (selectedGroups.length !== 1) return null;
-
-  const selectedGroup = selectedGroups[0];
+  if (!groupToEdit) return null;
 
   return (
     <MyModal
-      isOpen={open}
-      setIsOpen={(open) => setOpen(open)}
+      isOpen={openEditGroupModal}
+      setIsOpen={(open) => setOpenEditGroupModal(open)}
       onCancel={() => {
-        setOpen(false);
+        setOpenEditGroupModal(false);
       }}
       cancelText="Close"
       onConfirm={async () => {
@@ -59,8 +53,8 @@ export default function EditGroupModal(props: ModalProps) {
           router,
           () =>
             InstitutionController.getInstance().updateGroup(
-              selectedGroup.institutionId,
-              selectedGroup.id,
+              groupToEdit.institutionId,
+              groupToEdit.id,
               input
             ),
           (group) => {
@@ -77,10 +71,7 @@ export default function EditGroupModal(props: ModalProps) {
                   }
             );
 
-            setSelectedGroups((prev) =>
-              prev.map((g) => (g.id === group.id ? group : g))
-            );
-            setOpen(false);
+            setOpenEditGroupModal(false);
             toast.success('Group updated successfully.');
           },
           undefined,

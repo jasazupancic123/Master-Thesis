@@ -7,7 +7,6 @@ import { core } from '@/core/core.service';
 import type { User } from '@/core/user/type/user.type';
 import { UserController } from '@/core/user/user.controller';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 interface IDashboardUserEditCtx {
@@ -39,7 +38,6 @@ export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
   const { users, setUsers, setInstitution } = useMain();
-  const { setSelectedGroups } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
@@ -101,10 +99,6 @@ export function DashboardUserEditProvider({
       setUsers((prev) => ({ ...prev, data: mappedUsers }));
       setFilteredUsers(mapUsers);
       setCurrentUsers(mapUsers);
-
-      setSelectedGroups((prev) =>
-        prev.map((g) => core.group.mapMembers(g, mappedUsers))
-      );
 
       setInstitution((prev) => ({
         ...prev,

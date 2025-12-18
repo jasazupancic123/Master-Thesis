@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  CopyAllOutlined,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
   Logout,
@@ -9,7 +8,6 @@ import {
   SaveOutlined,
   Settings,
 } from '@mui/icons-material';
-import AddIcon from '@mui/icons-material/Add';
 import {
   Avatar,
   Box,
@@ -31,7 +29,6 @@ import Logo from '../../ui/logo';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { MAX_WIDTH } from '../trainer-group-day-view/constant/dimensions.constant';
 import { handleUpdateTraining } from './actions/actions-training';
-import AddMemberModal from './add-member-modal';
 import useTrainerGroupHeaderUtils from './hooks/use-utils';
 import { InstitutionController } from '@/core/institution/institution.controller';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
@@ -88,8 +85,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
     setOpenDrawer,
     openProfileMenu,
     setOpenProfileMenu,
-    addMemberModal,
-    setAddMemberModal,
     anchorProfileEl,
     setAnchorProfileEl,
   } = useTrainerGroupHeaderUtils();
@@ -312,14 +307,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                         <SaveOutlined sx={{ fontSize: 22 }} />
                       </IconButton>
                     </Tooltip>
-
-                    <IconButton>
-                      <CopyAllOutlined sx={{ fontSize: 22 }} />
-                    </IconButton>
-
-                    <IconButton onClick={() => setAddMemberModal(true)}>
-                      <AddIcon fontSize="medium" />
-                    </IconButton>
                   </Box>
                 )}
               </>
@@ -436,12 +423,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
                   zIndex: 1000,
                 }}
               >
-                <Tooltip title="Add member">
-                  <IconButton onClick={() => setAddMemberModal(true)}>
-                    <AddIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
                 <IconButton
                   sx={{ p: 0, m: 0 }}
                   onClick={async () => {
@@ -549,8 +530,6 @@ export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
       {isUpdatingTraining && (
         <LoadingOverlay title="Updating training plan..." showLogos />
       )}
-
-      <AddMemberModal open={addMemberModal} setOpen={setAddMemberModal} />
     </Box>
   );
 }

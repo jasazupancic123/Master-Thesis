@@ -6,17 +6,15 @@ import { useState } from 'react';
 import ExerciseChips from '../exercise-chips/exercise-chips';
 import AthleteExerciseReports from '../report-athlete-exercise/athlete-exercise-reports';
 import WellnessReports from '../report-wellness/wellness-reports';
-import GroupTrainingReportChart from '../reports/group-training-report-chart';
 import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
 import DashboardPageContainer from './dashboard-page-container';
 import useAthleteExerciseReports from './hooks/use-athlete-exercise-reports';
 import { theme } from '@/app/style';
 import type { Component } from '@/core/exercise/type/component.type';
 import type { Workload } from '@/core/training/type/workload.type';
-import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 
 enum ReportTab {
@@ -30,7 +28,8 @@ const cache = new Map<string, Workload[]>(); // LATER PUT THIS EVEN ONE HIGHER, 
 export default function DashboardReports() {
   const screenSize = useScreenSize();
 
-  const { selectedGroups } = useDashboard();
+  const { institution } = useMain();
+
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
   );
@@ -87,40 +86,35 @@ export default function DashboardReports() {
               gap={1}
               alignItems="center"
             >
-              {lib.common.generic
-                .getUnique(
-                  selectedGroups.flatMap((g) => g.members || []),
-                  'uid'
-                )
-                .map((user) => {
-                  if (!user || !user.displayName) return;
+              {institution.athletes.map((user) => {
+                if (!user || !user.displayName) return;
 
-                  return (
-                    <Box
-                      key={user.uid}
-                      display="flex"
-                      flexDirection="column"
-                      gap={1}
-                      sx={{
-                        position: 'relative',
-                        borderRadius: '50%',
-                        padding: '1px',
-                      }}
-                    >
-                      <Tooltip title={user.displayName}>
-                        <Avatar
-                          className="avatar-border"
-                          src={user.photoURL || USER_AVATAR_IMG_URL}
-                          sx={{
-                            width: screenSize.isMobile ? 20 : 35,
-                            height: screenSize.isMobile ? 20 : 35,
-                            cursor: 'pointer',
-                          }}
-                        />
-                      </Tooltip>
-                    </Box>
-                  );
-                })}
+                return (
+                  <Box
+                    key={user.uid}
+                    display="flex"
+                    flexDirection="column"
+                    gap={1}
+                    sx={{
+                      position: 'relative',
+                      borderRadius: '50%',
+                      padding: '1px',
+                    }}
+                  >
+                    <Tooltip title={user.displayName}>
+                      <Avatar
+                        className="avatar-border"
+                        src={user.photoURL || USER_AVATAR_IMG_URL}
+                        sx={{
+                          width: screenSize.isMobile ? 20 : 35,
+                          height: screenSize.isMobile ? 20 : 35,
+                          cursor: 'pointer',
+                        }}
+                      />
+                    </Tooltip>
+                  </Box>
+                );
+              })}
             </Box>
 
             <ExerciseChips
@@ -141,10 +135,6 @@ export default function DashboardReports() {
 
           {tab === ReportTab.Realization && (
             <Box>
-              <GroupTrainingReportChart
-                selectedComponentId={selectedComponent?.field}
-              />
-
               {/* <AthleteTrainingsRealizationChart
                 institutionId={institution!.id}
                 athleteId={selectedUser.uid}

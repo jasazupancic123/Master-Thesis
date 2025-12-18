@@ -31,7 +31,12 @@ export function CameraCapture({
           inputRef.current?.click();
         }}
       >
-        <CameraAlt sx={{ color: theme.palette.text.secondary }} />
+        <CameraAlt
+          sx={{
+            color: theme.palette.text.secondary,
+            '&:hover': { color: theme.palette.text.primary },
+          }}
+        />
       </IconButton>
       <input
         ref={inputRef}
