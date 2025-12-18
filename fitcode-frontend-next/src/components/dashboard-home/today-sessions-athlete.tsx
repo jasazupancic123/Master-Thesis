@@ -7,38 +7,24 @@ import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import useTodaysComponents from './hooks/use-todays-components';
 
 interface Props {
   trainings: Training[];
   activeComponent?: (TrainingComponent & { trainingId?: string }) | null;
 }
 
-export default function TodaySessions(props: Props) {
+export default function TodaySessionsAthlete(props: Props) {
   const { institution } = useMain();
   const dashboardContext = useDashboard();
 
-  const groups: Group[] | null = dashboardContext ? institution.groups : null;
+  const groups: Group[] | null = dashboardContext
+    ? dashboardContext.filteredGroups
+    : null;
 
   const { trainings, activeComponent } = props;
 
-  const todayComponents: (TrainingComponent & {
-    groupId: string | undefined;
-    trainingId: string;
-  })[] = (
-    groups === null // for athlete view, show all trainings
-      ? trainings
-      : trainings.filter((training) =>
-          groups.some((group) => group.id === training.groupId)
-        )
-  )
-    .filter((t) => dayjs(t.from).isSame(dayjs(), 'day'))
-    .flatMap((training) =>
-      training.components.map((component) => ({
-        ...component,
-        groupId: training.groupId,
-        trainingId: training.id,
-      }))
-    );
+  const { todayComponents } = useTodaysComponents(groups, trainings);
 
   return (
     <Box width="100%" display="flex" flexDirection="column" gap={2}>

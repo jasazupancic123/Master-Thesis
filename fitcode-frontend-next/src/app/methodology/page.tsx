@@ -1,4 +1,4 @@
-import MethodsDataGrid from '@/components/methodology/methods-data-grid';
+import MethodsDataGrid from '@/components/dashboard/dashboard-methodology';
 import { Methods } from '@/core/exercise/constant/method.constant';
 
 export default function Page() {

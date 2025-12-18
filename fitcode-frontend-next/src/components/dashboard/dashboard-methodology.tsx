@@ -11,10 +11,12 @@ import React, { useEffect, useState } from 'react';
 
 import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
 import type { Method } from '@/core/exercise/type/method.type';
+import ExerciseChips from '../exercise-chips/exercise-chips';
+import { useScreenSize } from '@/store/screen-size.provider';
+import { Component } from '@/core/exercise/type/component.type';
 
 interface Props {
   items: Method[];
-  filter?: (user: Method) => boolean;
   displayColumns?: (keyof Method)[];
   onRowClick?: (method: Method) => void;
   selectMode?: boolean;
@@ -24,26 +26,35 @@ interface Props {
 
 export default function MethodsDataGrid({
   items,
-  filter,
   displayColumns,
   onRowClick,
   selectMode,
   initialSelection,
 }: Props) {
   const theme = useTheme();
+  const screenSize = useScreenSize();
+
   const [model, setModel] = useState<GridRowModesModel>({});
-  const [rows, setRows] = useState(() =>
-    items.filter((u) => (filter ? filter(u) : true))
-  );
-
-  useEffect(
-    () => setRows(items.filter((u) => (filter ? filter(u) : true))),
-    [items, filter]
-  );
-
+  const [rows, setRows] = useState(() => items);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(initialSelection || [])
   );
+
+  const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
+
+  useEffect(() => {
+    if (!selectedComponents.length) {
+      setRows(items);
+      return;
+    }
+
+    const filtered = items.filter((method) =>
+      selectedComponents.some(
+        (component) => component.field === method.componentId
+      )
+    );
+    setRows(filtered);
+  }, [selectedComponents]);
 
   useEffect(() => {
     if (initialSelection) setSelectedIds(new Set(initialSelection));
@@ -142,7 +153,26 @@ export default function MethodsDataGrid({
   ];
 
   return (
-    <Box maxWidth={MAX_WIDTH_DASHBOARD_ITEM} sx={{ width: '100%', py: 2 }}>
+    <Box
+      maxWidth={MAX_WIDTH_DASHBOARD_ITEM}
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      sx={{ width: '100%', py: 2 }}
+      gap={2}
+    >
+      <ExerciseChips
+        selected={selectedComponents}
+        bgColor={theme.palette.background.default}
+        primaryColor={theme.palette.primary.main}
+        setSelected={(component) =>
+          setSelectedComponents(component as Component[])
+        }
+        cycleView
+        gap={screenSize.isReallySmall ? 1.5 : 3.5}
+        disabledComponents={['other', 'competition']}
+      />
+
       <DataGrid
         style={{
           backgroundColor: theme.palette.background.paper,

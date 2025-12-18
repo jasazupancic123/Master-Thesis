@@ -37,13 +37,18 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 import DeleteGroupModal from '../dashboard/modals/delete-group-modal';
-import { Group } from '@/core/institution/type/group.type';
 import EditGroupModal from '../dashboard/modals/edit-group-modal';
+import { useDashboard } from '@/store/dashboard.provider';
+import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
 
 export default function DashboardRoaster() {
   const screenSize = useScreenSize();
+
   const { institution, users } = useMain();
   const { role } = useAuthenticatedAuth();
+
+  const { filteredGroups } = useDashboard();
+
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers, removeUser } =
     useInstitutionMembers();
   const { hoveredUser, toggleUser, onHoverUser } = useDashboardUserEdit();
@@ -59,17 +64,26 @@ export default function DashboardRoaster() {
     setOpenAddMemberViaCsvModal,
   } = useDashboardMembers();
 
+  const { setCsvUserEmails } = useCsvMembersUpload();
+
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
   const [openDeleteGroupModal, setOpenDeleteGroupModal] = useState(false);
   const [openFilterMenu, setOpenFilterMenu] = useState<boolean>(false);
+
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
   const [filterBy, setFilterBy] = useState<FilterMembersBy>(
-    FilterMembersBy.INSTITUTION
+    FilterMembersBy.GROUP
   );
+
   const [filteredMembers, setFilteredMembers] = useState<User[]>(
     (institution.trainers || []).concat(institution.athletes || [])
   );
+
+  const [removeUserFromInstitution, setRemoveUserFromInstitution] =
+    useState<User | null>(null);
+
+  const anchorElRef = useRef<HTMLDivElement | null>(null);
 
   const updateFilteredMembers = (filter: FilterMembersBy) => {
     switch (filter) {
@@ -104,13 +118,6 @@ export default function DashboardRoaster() {
     updateFilteredMembers(filterBy);
   }, [institution, users]);
 
-  const [removeUserFromInstitution, setRemoveUserFromInstitution] =
-    useState<User | null>(null);
-
-  const anchorElRef = useRef<HTMLDivElement | null>(null);
-
-  const { setCsvUserEmails } = useCsvMembersUpload();
-
   return (
     <DashboardPageContainer>
       <Box
@@ -120,7 +127,7 @@ export default function DashboardRoaster() {
         flexDirection="column"
         alignItems="flex-start"
         sx={{
-          py: 1,
+          py: 3.35,
           borderRadius: 2,
           overflowX: 'hidden',
         }}
@@ -239,65 +246,73 @@ export default function DashboardRoaster() {
           )}
         </Box>
         <Box
-          ref={anchorElRef}
-          width={200}
           display="flex"
-          justifyContent="center"
-          alignItems="center"
-          onClick={() => {
-            setOpenFilterMenu(true);
-          }}
-          sx={{
-            backgroundColor: theme.palette.text.primary,
-            py: 1,
-            borderRadius: 10,
-            cursor: 'pointer',
-            position: 'relative',
-          }}
+          justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+          gap={2}
+          flexWrap="wrap"
         >
-          <Typography
+          <Box
+            ref={anchorElRef}
+            width={200}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            onClick={() => {
+              setOpenFilterMenu(true);
+            }}
             sx={{
-              color: theme.palette.text.secondary,
-              fontSize: 12,
-              fontWeight: 600,
-              userSelect: 'none',
+              backgroundColor: theme.palette.text.primary,
+              py: 1,
+              borderRadius: 10,
+              cursor: 'pointer',
+              position: 'relative',
             }}
           >
-            View by {filterBy}
-          </Typography>
-          <ArrowDropDown
-            fontSize="small"
-            sx={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: theme.palette.text.secondary,
-            }}
-          />
+            <Typography
+              sx={{
+                color: theme.palette.text.secondary,
+                fontSize: 12,
+                fontWeight: 600,
+                userSelect: 'none',
+              }}
+            >
+              View by {filterBy}
+            </Typography>
+            <ArrowDropDown
+              fontSize="small"
+              sx={{
+                position: 'absolute',
+                right: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: theme.palette.text.secondary,
+              }}
+            />
+          </Box>
+          {filterBy === FilterMembersBy.GROUP && <DashboardGroupFilter />}
         </Box>
       </Box>
 
       {filterBy === FilterMembersBy.GROUP ? (
-        !institution.groups.length ? (
+        !filteredGroups.length ? (
           <Typography>No groups</Typography>
         ) : (
           <Grid
             container
             spacing={2}
             justifyContent={
-              institution.groups.length === 1 ? 'center' : 'flex-start'
+              filteredGroups.length === 1 ? 'center' : 'flex-start'
             }
             alignItems="flex-start"
             width="100%"
           >
-            {institution.groups
+            {filteredGroups
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((g) => (
                 <Grid
                   key={g.id}
                   size={
-                    institution.groups.length === 1
+                    filteredGroups.length === 1
                       ? {
                           xs: 12,
                           sm: 12,
