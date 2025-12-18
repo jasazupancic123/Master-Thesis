@@ -176,7 +176,7 @@ export default function AddUserToGroupModal(props: ModalProps & Props) {
                           : undefined,
                       }}
                     >
-                      {isIncluded ? 'Added' : 'Add'}
+                      {isIncluded ? 'Remove' : 'Add'}
                     </Button>
                   </Grid>
                 </Grid>

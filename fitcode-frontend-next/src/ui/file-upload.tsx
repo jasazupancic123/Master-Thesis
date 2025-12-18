@@ -3,7 +3,7 @@ import { IconButton, type SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Image from 'next/image';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { Accept } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
@@ -27,6 +27,7 @@ interface Props extends Partial<React.PropsWithChildren> {
   onRemoveFile?: () => void;
   iconDisplay?: boolean;
   enableCameraCapture?: boolean;
+  containerSx?: CSSProperties;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -44,6 +45,7 @@ export default function FileUpload(props: Props) {
     onRemoveFile,
     iconDisplay,
     enableCameraCapture,
+    containerSx,
   } = props;
 
   const [preview, setPreview] = useState(() => ({
@@ -133,7 +135,11 @@ export default function FileUpload(props: Props) {
   return (
     <div
       {...getRootProps()}
-      style={{ width: '100%', height: iconDisplay ? undefined : 150 }}
+      style={{
+        width: '100%',
+        height: iconDisplay ? undefined : 150,
+        ...containerSx,
+      }}
     >
       {onRemoveFile && (
         <IconButton
@@ -171,6 +177,7 @@ export default function FileUpload(props: Props) {
           preview.url &&
           ![InputType.CSV, InputType.JSON].includes(input) && (
             <Box
+              id="preview-container"
               height={150}
               position="relative"
               display="flex"
@@ -227,6 +234,7 @@ export default function FileUpload(props: Props) {
                 <Photo
                   sx={{
                     color: theme.palette.text.secondary,
+                    '&:hover': { color: theme.palette.text.primary },
                   }}
                 />
               </IconButton>
