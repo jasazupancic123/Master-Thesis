@@ -6,6 +6,9 @@ import React from 'react';
 import TrainingCard from '@/components/training-card/training-card';
 import { useGroup } from '@/store/group.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
+import AlertFrame from '@/ui/alert-frame';
+import { Event } from '@mui/icons-material';
+import { theme } from '@/app/style';
 
 const sx: SxProps = {
   borderBottomRightRadius: 10,
@@ -34,11 +37,14 @@ export default function GroupTrainerDayViewTrainings() {
     >
       {/* Training set groups with set exercises */}
       {!loading && !training ? (
-        <Box display="flex" width="100%" p={2} justifyContent="center" sx={sx}>
-          <Typography variant="h6" mb={2}>
-            No session for current date
-          </Typography>
-        </Box>
+        <AlertFrame
+          icon={
+            <Event sx={{ color: theme.palette.primary.main, fontSize: 40 }} />
+          }
+          title="Your scheduled Phase is empty"
+          subtitle='Add a training on the "PHASE" page'
+          sx={{ mt: 4 }}
+        />
       ) : (
         <Box width="100%">{training && <TrainingCard key={training.id} />}</Box>
       )}

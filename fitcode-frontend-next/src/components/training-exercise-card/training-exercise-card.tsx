@@ -81,7 +81,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           <Typography
             variant="body1"
             fontWeight={700}
-            fontSize={12}
+            fontSize={13}
             textTransform="uppercase"
             color={theme.palette.text.primary}
             onClick={handleSelect}

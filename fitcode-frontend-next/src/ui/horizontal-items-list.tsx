@@ -178,9 +178,7 @@ export default function HorizontalItemsList(props: Props) {
           onArrowClick?.('left');
         }}
       >
-        <ArrowLeft
-          sx={{ fontSize: 30, color: theme.palette.background.paper }}
-        />
+        <ArrowLeft sx={{ fontSize: 30 }} />
       </IconButton>
 
       {/* Scrollable Days */}
@@ -502,9 +500,7 @@ export default function HorizontalItemsList(props: Props) {
           onArrowClick?.('right');
         }}
       >
-        <ArrowRight
-          sx={{ fontSize: 30, color: theme.palette.background.paper }}
-        />
+        <ArrowRight sx={{ fontSize: 30 }} />
       </IconButton>
     </Box>
   );

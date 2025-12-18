@@ -158,7 +158,7 @@ export const LINK_METHODOLOGIES = link(
 );
 
 export const LINK_DASHBOARD_HOME = linkPngIcon(
-  'Dashboard',
+  'Home',
   '/dashboard',
   'dashboard-home',
   `${DASHBOARD_ICONS_FOLDER}/home.png`,
