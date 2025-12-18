@@ -919,6 +919,7 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
     exerciseIds: [
       'sl-rdl-bw',
       'sl-rdl-db',
+      'sl-rdl-bb',
       'rdl-clean-to-box-bb',
       'rdl-clean-to-box-step-up-bb',
     ],
@@ -936,6 +937,14 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
             distance: 0.04, // meters
           },
         ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.RIGHT_ANKLE,
+            keypointId2: KeypointId.LEFT_ANKLE,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
+          },
+        ],
       },
       rightSide: {
         romKeypointId: KeypointId.RIGHT_SHOULDER,
@@ -946,6 +955,14 @@ export const EXERCISE_POSES: ExerciseAiPrescription[] = [
             direction: ConditionDirection.NEGATIVE,
             duration: 750, // ms
             distance: 0.04, // meters
+          },
+        ],
+        requiredPoseConditions: [
+          {
+            keypointId1: KeypointId.LEFT_ANKLE,
+            keypointId2: KeypointId.RIGHT_ANKLE,
+            valueType: KeypointValueType.POSITION_Y,
+            minDiffM: 0.05,
           },
         ],
       },

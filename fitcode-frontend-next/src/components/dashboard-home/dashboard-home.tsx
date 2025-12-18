@@ -113,7 +113,7 @@ export default function DashboardHome() {
           <Typography variant="h4">
             Welcome back, <strong>{user.displayName?.split(' ')[0]}</strong>
           </Typography>
-          <DashboardGroupFilter />
+          {dashboardContext && <DashboardGroupFilter />}
         </Box>
         <Box
           width="100%"

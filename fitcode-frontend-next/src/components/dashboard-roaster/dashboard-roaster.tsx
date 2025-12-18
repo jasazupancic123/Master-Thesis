@@ -136,116 +136,134 @@ export default function DashboardRoaster() {
         <Box
           width="100%"
           display="flex"
-          flexWrap="wrap"
-          justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+          justifyContent="space-between"
           alignItems="center"
-          gap={2}
+          gap={1}
         >
-          <TextField
-            size="small"
-            label="Search User"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{
-              '& .MuiInputBase-root': {
-                borderRadius: 10,
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.text.primary,
-              },
-            }}
-          />
-          {lib.firebase.auth.isManager(role) && (
-            <>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenRegisterAthletesModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  py: 1,
-                  px: 2,
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
+            alignItems="center"
+            gap={2}
+          >
+            <TextField
+              size="small"
+              label="Search User"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{
+                '& .MuiInputBase-root': {
                   borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Athlete
-              </Typography>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenRegisterTrainersModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  py: 1,
-                  px: 2,
-                  borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Coach
-              </Typography>
-              <Typography
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                onClick={() => setOpenAddGroupModal(true)}
-                sx={{
-                  backgroundColor: theme.palette.secondary.main,
-                  py: 1,
-                  px: 6,
-                  borderRadius: 10,
-                  color: theme.palette.text.secondary,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + New Group
-              </Typography>
-              <Tooltip title="Upload Members via CSV">
-                <Box
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.text.primary,
+                },
+              }}
+            />
+            {lib.firebase.auth.isManager(role) && (
+              <>
+                <Typography
                   display="flex"
-                  flexDirection="column"
+                  justifyContent="center"
                   alignItems="center"
-                  onClick={() => setOpenAddMemberViaCsvModal(true)}
+                  onClick={() => setOpenRegisterAthletesModal(true)}
                   sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    py: 1,
+                    px: 2,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
-                  <IconButton
+                  + New Athlete
+                </Typography>
+                <Typography
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  onClick={() => setOpenRegisterTrainersModal(true)}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    py: 1,
+                    px: 2,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  + New Coach
+                </Typography>
+                <Typography
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  onClick={() => setOpenAddGroupModal(true)}
+                  sx={{
+                    backgroundColor: theme.palette.secondary.main,
+                    py: 1,
+                    px: 6,
+                    borderRadius: 10,
+                    color: theme.palette.text.secondary,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  + New Group
+                </Typography>
+                <Tooltip title="Upload Members via CSV">
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    onClick={() => setOpenAddMemberViaCsvModal(true)}
                     sx={{
-                      m: 0,
-                      p: 0.5,
-                      backgroundColor: theme.palette.background.light,
-                      borderRadius: 1,
+                      cursor: 'pointer',
                     }}
                   >
-                    <FileUploadOutlined fontSize="small" />
-                  </IconButton>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      textTransform: 'uppercase',
-                      lineHeight: 1,
-                    }}
-                  >
-                    Import
-                  </Typography>
-                </Box>
-              </Tooltip>
-            </>
+                    <IconButton
+                      sx={{
+                        m: 0,
+                        p: 0.5,
+                        backgroundColor: theme.palette.background.light,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <FileUploadOutlined fontSize="small" />
+                    </IconButton>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Import
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              </>
+            )}
+          </Box>
+          {filterBy === FilterMembersBy.GROUP && (
+            <DashboardGroupFilter
+              sx={{
+                alignSelf: screenSize.isMobile ? 'center' : 'flex-start',
+                mt: 0.3,
+              }}
+            />
           )}
         </Box>
+
         <Box
+          width="100%"
           display="flex"
           justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
           gap={2}
@@ -289,7 +307,6 @@ export default function DashboardRoaster() {
               }}
             />
           </Box>
-          {filterBy === FilterMembersBy.GROUP && <DashboardGroupFilter />}
         </Box>
       </Box>
 

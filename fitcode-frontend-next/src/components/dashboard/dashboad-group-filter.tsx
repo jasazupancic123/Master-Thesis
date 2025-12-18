@@ -1,11 +1,17 @@
 import { theme } from '@/app/style';
 import { useDashboard } from '@/store/dashboard.provider';
 import { ArrowDropDown } from '@mui/icons-material';
-import { Box, Typography, Menu } from '@mui/material';
+import { Box, Typography, Menu, SxProps } from '@mui/material';
 import { useRef, useState } from 'react';
 
-export default function DashboardGroupFilter() {
+interface Props {
+  sx?: SxProps;
+}
+
+export default function DashboardGroupFilter(props: Props) {
   const { filterGroups, setFilterGroups, groupFilterItems } = useDashboard();
+
+  const { sx } = props;
 
   const [openFilterGroupsMenu, setOpenFilterGroupsMenu] =
     useState<boolean>(false);
@@ -28,6 +34,7 @@ export default function DashboardGroupFilter() {
           borderRadius: 10,
           cursor: 'pointer',
           position: 'relative',
+          ...sx,
         }}
       >
         <Typography

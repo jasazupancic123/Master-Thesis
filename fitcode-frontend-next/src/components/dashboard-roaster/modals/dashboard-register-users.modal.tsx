@@ -4,11 +4,13 @@ import {
   Box,
   Button,
   CircularProgress,
-  Stack,
+  Grid,
+  Menu,
+  MenuItem,
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { JSX, useRef, useState } from 'react';
 
 import useInstitutionMembers from '../../dashboard/hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../../dashboard/hooks/use-register-member-form.hook';
@@ -17,6 +19,15 @@ import { InputType } from '@/lib/common/const/input-type.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import { theme } from '@/app/style';
+import { Gender } from '@/core/user/enum/gender.enum';
+import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { FormItem } from '@/lib/common/type/form-item.type';
+import FormItemsContainer from '@/ui/form-items-container';
+import FormItemDropdownMenu from '@/ui/form-item-dropdown-menu';
 
 interface Props {
   registerRole: UserRole;
@@ -41,16 +52,99 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
   const [tempPhotoURL, setTempPhotoURL] = useState<string | undefined>(
     undefined
   );
+  const [openGenderMenu, setOpenGenderMenu] = useState(false);
+
+  const formItems: FormItem[] = [
+    {
+      label: 'Full Name',
+      value: formData.displayName,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('displayName', e.target.value),
+    },
+    {
+      label: 'Email',
+      value: formData.email,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('email', e.target.value),
+    },
+    {
+      label: 'Password',
+      value: formData.password,
+      type: 'password',
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('password', e.target.value),
+    },
+    {
+      label: 'Confirm Password',
+      value: formData.confirmPassword,
+      type: 'password',
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('confirmPassword', e.target.value),
+    },
+    {
+      label: 'Gender',
+      value: formData.gender,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('gender', e.target.value),
+      customElement: () => (
+        <FormItemDropdownMenu<Gender>
+          value={formData.gender}
+          values={Object.values(Gender)}
+          onItemSelect={(item: Gender) => {
+            setFormField('gender', item);
+          }}
+          open={openGenderMenu}
+          setOpen={setOpenGenderMenu}
+        />
+      ),
+    },
+    {
+      label: 'Date of Birth',
+      value: formData.birthDate,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFormField('birthDate', e.target.value),
+      customElement: () => {
+        return (
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              value={formData.birthDate ? dayjs(formData.birthDate) : null}
+              onChange={(newValue) => {
+                try {
+                  if (newValue) setFormField('birthDate', newValue.toDate());
+                  else setFormField('birthDate', undefined);
+                } catch (_e) {}
+              }}
+              sx={{
+                height: 40,
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  sx: {
+                    borderRadius: 10,
+                    '& .MuiPickersOutlinedInput-notchedOutline': {
+                      borderRadius: 10,
+                      color: theme.palette.text.secondary,
+                    },
+                  },
+                },
+                openPickerIcon: {
+                  fontSize: 'small',
+                },
+              }}
+            />
+          </LocalizationProvider>
+        );
+      },
+    },
+  ];
 
   return (
     <>
       <MyModal
         isOpen={open}
         setIsOpen={(open) => setOpen(open)}
-        onConfirm={() => {
-          setFile(undefined);
-          setTempPhotoURL(undefined);
-        }}
         onCancel={() => {
           setFile(undefined);
           setTempPhotoURL(undefined);
@@ -59,24 +153,13 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
         }}
         cancelText="Close"
         sx={{
-          minWidth:
-            typeof window !== 'undefined'
-              ? Math.min(window.innerWidth * 0.8, 400)
-              : 400,
+          minWidth: 400,
         }}
         dialogueContentSx={{
-          minWidth:
-            typeof window !== 'undefined'
-              ? Math.min(window.innerWidth * 0.8, 400)
-              : 400,
+          minWidth: 400,
         }}
       >
         <Box
-          width={
-            typeof window !== 'undefined'
-              ? Math.min(window.innerWidth * 0.8, 300)
-              : 300
-          }
           display="flex"
           flexDirection="column"
           justifyContent="center"
@@ -85,9 +168,8 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
         >
           <Typography
             variant="h5"
-            gutterBottom
-            mb={2}
             textAlign="center"
+            lineHeight={1}
             width="100%"
           >
             Register New {registerRole[0].toUpperCase() + registerRole.slice(1)}
@@ -107,6 +189,10 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
                 setTempPhotoURL(url);
               }
             }}
+            containerSx={{
+              width: 'fit-content',
+              margin: '0 auto',
+            }}
           />
 
           <form
@@ -121,55 +207,22 @@ export default function RegisterUsersDashboardModal(props: ModalProps & Props) {
                 setOpen(false);
               }
             }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
           >
-            <Stack spacing={2}>
-              <TextField
-                label="Display Name"
-                name="displayName"
-                value={formData.displayName}
-                onChange={(e) => setFormField('displayName', e.target.value)}
-                fullWidth
-                required
-              />
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormField('email', e.target.value)}
-                fullWidth
-                required
-              />
-              <TextField
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormField('password', e.target.value)}
-                fullWidth
-                required
-              />
-              <TextField
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  setFormField('confirmPassword', e.target.value)
-                }
-                fullWidth
-                required
-              />
-
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-              >
-                Register
-              </Button>
-            </Stack>
+            <FormItemsContainer formItems={formItems} />
+            <Button
+              size="small"
+              type="submit"
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2, justifySelf: 'center' }}
+            >
+              Register
+            </Button>
           </form>
         </Box>
       </MyModal>

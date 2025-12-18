@@ -57,7 +57,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
             )}
             <Box
               ref={item.id === INSTITUTION_PAGE_ID ? anchorElRef : null}
-              width="100%"
+              width={item.id === LINK_DASHBOARD_PLANNING.id ? '75%' : '100%'}
               display="flex"
               justifyContent={
                 item.id === LINK_DASHBOARD_PLANNING.id ? 'center' : 'flex-start'
@@ -88,7 +88,7 @@ export default function DashboardSidebarMenuItems(props: Props) {
                 borderRadius: 2,
                 cursor: 'pointer',
                 p: 0.75,
-                py: item.id === LINK_DASHBOARD_PLANNING.id ? 1.5 : undefined,
+                py: item.id === LINK_DASHBOARD_PLANNING.id ? 2 : undefined,
                 mb: item.id === LINK_DASHBOARD_PLANNING.id ? 2 : 0,
                 backgroundColor:
                   item.id === LINK_DASHBOARD_PLANNING.id

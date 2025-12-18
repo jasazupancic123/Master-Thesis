@@ -162,6 +162,8 @@ export default function useInstitutionMembers() {
         email,
         password,
         role: registerRole,
+        birthDate: formData.birthDate,
+        gender: formData.gender,
       });
 
       let photoUrl = uploadedUser.photoURL || null;

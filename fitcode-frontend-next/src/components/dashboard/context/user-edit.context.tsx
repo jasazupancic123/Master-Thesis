@@ -39,7 +39,6 @@ export function DashboardUserEditProvider({
   children,
 }: React.PropsWithChildren) {
   const { users, setUsers, setInstitution } = useMain();
-  const { setSelectedGroups } = useDashboard();
 
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
@@ -102,10 +101,6 @@ export function DashboardUserEditProvider({
       setFilteredUsers(mapUsers);
       setCurrentUsers(mapUsers);
 
-      setSelectedGroups((prev) =>
-        prev.map((g) => core.group.mapMembers(g, mappedUsers))
-      );
-
       setInstitution((prev) => ({
         ...prev,
         athletes: mapUsers(prev.athletes),
@@ -125,6 +120,7 @@ export function DashboardUserEditProvider({
   }
 
   function onUserChange<K extends keyof User>(key: K, value: User[K]) {
+    console.log('onUserChange', key, value);
     if (!userToEdit) return;
     const newUser: User = { ...userToEdit, [key]: value };
     setUserToEdit(newUser);
