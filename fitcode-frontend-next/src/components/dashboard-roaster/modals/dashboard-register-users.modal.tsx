@@ -1,33 +1,23 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Grid,
-  Menu,
-  MenuItem,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { JSX, useRef, useState } from 'react';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import { useState } from 'react';
 
 import useInstitutionMembers from '../../dashboard/hooks/use-institution-members.hook';
 import useRegisterMemberForm from '../../dashboard/hooks/use-register-member-form.hook';
-import type { UserRole } from '@/core/user/enum/user-role.enum';
-import { InputType } from '@/lib/common/const/input-type.const';
-import type { ModalProps } from '@/lib/common/type/modal-props.type';
-import FileUpload from '@/ui/file-upload';
-import MyModal from '@/ui/modal';
 import { theme } from '@/app/style';
 import { Gender } from '@/core/user/enum/gender.enum';
-import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import dayjs from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { FormItem } from '@/lib/common/type/form-item.type';
-import FormItemsContainer from '@/ui/form-items-container';
+import type { UserRole } from '@/core/user/enum/user-role.enum';
+import { InputType } from '@/lib/common/const/input-type.const';
+import type { FormItem } from '@/lib/common/type/form-item.type';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
+import FileUpload from '@/ui/file-upload';
 import FormItemDropdownMenu from '@/ui/form-item-dropdown-menu';
+import FormItemsContainer from '@/ui/form-items-container';
+import MyModal from '@/ui/modal';
 
 interface Props {
   registerRole: UserRole;

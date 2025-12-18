@@ -1,7 +1,8 @@
-import { Group } from '@/core/institution/type/group.type';
-import { TrainingComponent } from '@/core/training/type/training-component.type';
-import { Training } from '@/core/training/type/training.type';
 import dayjs from 'dayjs';
+
+import type { Group } from '@/core/institution/type/group.type';
+import type { Training } from '@/core/training/type/training.type';
+import type { TrainingComponent } from '@/core/training/type/training-component.type';
 
 export default function useTodaysComponents(
   groups: Group[] | null,

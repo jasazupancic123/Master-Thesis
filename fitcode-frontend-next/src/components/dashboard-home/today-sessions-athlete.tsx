@@ -1,13 +1,11 @@
 import { Box } from '@mui/material';
-import dayjs from 'dayjs';
 
+import useTodaysComponents from './hooks/use-todays-components';
 import TodaySessionsComponent from './today-sessions-component';
 import type { Group } from '@/core/institution/type/group.type';
 import type { Training } from '@/core/training/type/training.type';
 import type { TrainingComponent } from '@/core/training/type/training-component.type';
 import { useDashboard } from '@/store/dashboard.provider';
-import { useMain } from '@/store/main.provider';
-import useTodaysComponents from './hooks/use-todays-components';
 
 interface Props {
   trainings: Training[];
@@ -15,7 +13,6 @@ interface Props {
 }
 
 export default function TodaySessionsAthlete(props: Props) {
-  const { institution } = useMain();
   const dashboardContext = useDashboard();
 
   const groups: Group[] | null = dashboardContext

@@ -1,22 +1,22 @@
 'use client';
 
+import { ArrowLeft, ArrowRight, EventOutlined } from '@mui/icons-material';
 import { Grid, IconButton, Typography } from '@mui/material';
 import { Box } from '@mui/material';
-
-import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
-import DashboardPageContainer from './dashboard-page-container';
-import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
-import { useMain } from '@/store/main.provider';
-import useTodaysComponents from '../dashboard-home/hooks/use-todays-components';
-import { useDashboard } from '@/store/dashboard.provider';
-import TrainingComponentDashboardCard from '../dashboard-home/training-component-dashboard-card';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import DashboardGroupFilter from './dashboad-group-filter';
-import { theme } from '@/app/style';
-import { ArrowLeft, ArrowRight, EventOutlined } from '@mui/icons-material';
-import { useState } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+
+import useTodaysComponents from '../dashboard-home/hooks/use-todays-components';
+import TrainingComponentDashboardCard from '../dashboard-home/training-component-dashboard-card';
+import { DASHBOARD_MIDDLE_HEADER_HEIGHT } from './constant/dashboard.const';
+import DashboardGroupFilter from './dashboad-group-filter';
+import DashboardPageContainer from './dashboard-page-container';
+import { theme } from '@/app/style';
+import { MAX_WIDTH } from '@/components/trainer-group-day-view/constant/dimensions.constant';
+import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 
 export default function DashboardSchedule() {
   const { institution, trainings } = useMain();

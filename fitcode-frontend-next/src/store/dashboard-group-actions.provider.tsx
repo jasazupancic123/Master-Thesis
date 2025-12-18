@@ -1,8 +1,9 @@
 'use client';
 
-import { Group } from '@/core/institution/type/group.type';
-import { SetState } from '@/lib/common/type/state.type';
 import { createContext, useContext, useState } from 'react';
+
+import type { Group } from '@/core/institution/type/group.type';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface IDashboardGroupActionsContext {
   openEditGroupModal: boolean;

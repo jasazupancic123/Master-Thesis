@@ -1,6 +1,8 @@
+import type { SxProps } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
+
 import { theme } from '@/app/style';
-import { Box, SxProps, Typography } from '@mui/material';
-import { ReactNode } from 'react';
 
 interface Props {
   title: string;

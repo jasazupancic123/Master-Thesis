@@ -3,9 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { core } from '@/core/core.service';
 import type { Training } from '@/core/training/type/training.type';
 import type { User } from '@/core/user/type/user.type';
-import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export default function useAthleteExerciseReportDataGridHeader(

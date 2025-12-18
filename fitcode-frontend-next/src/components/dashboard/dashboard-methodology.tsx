@@ -9,11 +9,11 @@ import type {
 import { DataGrid, GridRowEditStopReasons } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 
-import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
-import type { Method } from '@/core/exercise/type/method.type';
 import ExerciseChips from '../exercise-chips/exercise-chips';
+import { MAX_WIDTH_DASHBOARD_ITEM } from '../trainer-group-day-view/constant/dimensions.constant';
+import type { Component } from '@/core/exercise/type/component.type';
+import type { Method } from '@/core/exercise/type/method.type';
 import { useScreenSize } from '@/store/screen-size.provider';
-import { Component } from '@/core/exercise/type/component.type';
 
 interface Props {
   items: Method[];

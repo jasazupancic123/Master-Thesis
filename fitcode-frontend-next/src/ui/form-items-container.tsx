@@ -1,5 +1,6 @@
-import { FormItem } from '@/lib/common/type/form-item.type';
 import { Box, Grid, TextField, Typography } from '@mui/material';
+
+import type { FormItem } from '@/lib/common/type/form-item.type';
 
 interface Props {
   formItems: FormItem[];
@@ -19,7 +20,7 @@ export default function FormItemsContainer(props: Props) {
       }}
       gap={1}
     >
-      {formItems.map((item, i) => (
+      {formItems.map((item) => (
         <Grid
           key={item.label}
           container

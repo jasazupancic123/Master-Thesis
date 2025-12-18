@@ -1,8 +1,10 @@
+import { ArrowDropDown } from '@mui/icons-material';
+import type { SxProps } from '@mui/material';
+import { Box, Menu, Typography } from '@mui/material';
+import { useRef, useState } from 'react';
+
 import { theme } from '@/app/style';
 import { useDashboard } from '@/store/dashboard.provider';
-import { ArrowDropDown } from '@mui/icons-material';
-import { Box, Typography, Menu, SxProps } from '@mui/material';
-import { useRef, useState } from 'react';
 
 interface Props {
   sx?: SxProps;

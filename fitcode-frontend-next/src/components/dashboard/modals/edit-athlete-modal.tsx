@@ -1,21 +1,13 @@
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  Menu,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useDashboardUserEdit } from '../context/user-edit.context';
+import { theme } from '@/app/style';
 import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
 import { Gender } from '@/core/user/enum/gender.enum';
 import { SportLevel } from '@/core/user/enum/sport-level.enum';
@@ -23,18 +15,15 @@ import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { SPORTS } from '@/lib/common/const/sport.const';
+import type { FormItem } from '@/lib/common/type/form-item.type';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { handleApiRequest } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
+import FormItemDropdownMenu from '@/ui/form-item-dropdown-menu';
+import FormItemsContainer from '@/ui/form-items-container';
 import LoadingOverlay from '@/ui/loading-overlay';
 import MyModal from '@/ui/modal';
-import { theme } from '@/app/style';
-import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
-import { FormItem } from '@/lib/common/type/form-item.type';
-import FormItemsContainer from '@/ui/form-items-container';
-import FormItemDropdownMenu from '@/ui/form-item-dropdown-menu';
 
 export const DASHBOARD_MEMBERS_AVATAR_SIZE = 50;
 
@@ -69,7 +58,7 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
       value: userToEdit.email,
       disabled: true,
       optional: true,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {},
+      onChange: (_e: React.ChangeEvent<HTMLInputElement>) => {},
     },
     {
       label: 'Gender',

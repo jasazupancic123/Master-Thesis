@@ -3,9 +3,9 @@ import dayjs from 'dayjs';
 
 import useDashboardCycles from './hooks/use-cycles.hook';
 import { theme } from '@/app/style';
-import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import { AnimatedLinearProgress } from '@/ui/animated-linear-progress';
 
 export default function CycleProgress() {
   const mainContext = useMain();

@@ -10,11 +10,13 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Avatar, Box, Card, Stack, Tooltip, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { useState } from 'react';
 
 import { DEFAULT_SUBGROUP_ID } from '../trainer-group-day-view/constant/subgroups.constant';
+import AddMemberModal from '../trainer-group-header/add-member-modal';
 import { handleOnDragEnd } from './actions/actions-dnd';
 import { updateSelectedAthleteSubgroup } from './actions/actions-subgroups';
 import useTrainingMembers from './hooks/use-members.hook';
@@ -25,8 +27,6 @@ import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { useGroup } from '@/store/group.provider';
 import { useMain } from '@/store/main.provider';
 import { useTrainerDayView } from '@/store/trainer-day-view.provider';
-import { Add } from '@mui/icons-material';
-import AddMemberModal from '../trainer-group-header/add-member-modal';
 
 interface TrainingMembersProps {
   isSticky: boolean;

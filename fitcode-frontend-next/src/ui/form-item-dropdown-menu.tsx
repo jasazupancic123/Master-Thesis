@@ -1,8 +1,9 @@
-import { theme } from '@/app/style';
-import { ModalProps } from '@/lib/common/type/modal-props.type';
-import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
-import { Box, Typography, Menu, MenuItem } from '@mui/material';
+import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
+import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import { useRef } from 'react';
+
+import { theme } from '@/app/style';
+import type { ModalProps } from '@/lib/common/type/modal-props.type';
 
 interface Props<K> {
   value: K | undefined;

@@ -26,10 +26,9 @@ import { theme } from '@/app/style';
 import type { Workload } from '@/core/training/type/workload.type';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
-import { useDashboard } from '@/store/dashboard.provider';
+import { useMain } from '@/store/main.provider';
 import AddButton from '@/ui/add-button';
 import TutorialTooltip from '@/ui/tutorial-tooltip';
-import { useMain } from '@/store/main.provider';
 
 interface Props {
   reports: AthleteExerciseReportType[];

@@ -11,7 +11,6 @@ import { UserRole } from '@/core/user/enum/user-role.enum';
 import type { ImportUser, User } from '@/core/user/type/user.type';
 import { UserController } from '@/core/user/user.controller';
 import { lib } from '@/lib';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 
 export type IInstitutionMembersHook = ReturnType<typeof useInstitutionMembers>;

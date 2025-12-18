@@ -10,13 +10,13 @@ import { useEffect, useState } from 'react';
 
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
+import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import type { ModalProps } from '@/lib/common/type/modal-props.type';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import MyModal from '@/ui/modal';
-import { lib } from '@/lib';
 
 interface Props {
   group: Group;
