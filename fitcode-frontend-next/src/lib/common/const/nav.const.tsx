@@ -181,10 +181,10 @@ export const LINK_DASHBOARD_REPORTS = linkPngIcon(
   DASHBOARD_ICONS_DIMENSION
 );
 
-export const LINK_DASHBOARD_ROASTER = linkPngIcon(
-  'Roaster',
-  '/dashboard/roaster',
-  'dashboard-roaster',
+export const LINK_DASHBOARD_ROSTER = linkPngIcon(
+  'Roster',
+  '/dashboard/roster',
+  'dashboard-roster',
   `${DASHBOARD_ICONS_FOLDER}/members.png`,
   DASHBOARD_ICONS_DIMENSION
 );
@@ -233,7 +233,7 @@ export const DASHBOARD_VIEWS = (role: UserRole): ILink[] => {
     LINK_DASHBOARD_HOME,
     LINK_DASHBOARD_SCHEDULE,
     LINK_DASHBOARD_REPORTS,
-    LINK_DASHBOARD_ROASTER,
+    LINK_DASHBOARD_ROSTER,
     LINK_DASHBOARD_EXERCISES,
     LINK_METHODOLOGIES,
     LINK_DASHBOARD_SETTINGS,

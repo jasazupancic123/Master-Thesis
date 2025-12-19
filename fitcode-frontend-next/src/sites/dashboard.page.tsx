@@ -22,7 +22,7 @@ import {
   LINK_DASHBOARD_HOME,
   LINK_DASHBOARD_PLANNING,
   LINK_DASHBOARD_REPORTS,
-  LINK_DASHBOARD_ROASTER,
+  LINK_DASHBOARD_ROSTER,
   LINK_DASHBOARD_SCHEDULE,
   LINK_DASHBOARD_SETTINGS,
   LINK_METHODOLOGIES,
@@ -52,7 +52,7 @@ export default function DashboardPage() {
       case LINK_DASHBOARD_REPORTS.id: {
         return <DashboardReports />;
       }
-      case LINK_DASHBOARD_ROASTER.id: {
+      case LINK_DASHBOARD_ROSTER.id: {
         return <DashboardRoaster />;
       }
       case LINK_DASHBOARD_SETTINGS.id: {
