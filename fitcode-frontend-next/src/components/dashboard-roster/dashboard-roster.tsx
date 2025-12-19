@@ -41,7 +41,7 @@ import ActionsMenu from '@/ui/actions-menu';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
 
-export default function DashboardRoaster() {
+export default function DashboardRoster() {
   const screenSize = useScreenSize();
 
   const { institution, users } = useMain();
