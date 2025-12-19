@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useDashboardUserEdit } from '../context/user-edit.context';
+import { useDashboardUserActions } from '../context/user-actions.context';
 import { theme } from '@/app/style';
 import { FaceEncoderController } from '@/core/face-encoder/face-encoder.controller';
 import { Gender } from '@/core/user/enum/gender.enum';
@@ -31,8 +31,12 @@ export default function EditAthleteModal({ open, setOpen }: ModalProps) {
   const router = useRouter();
   const { user } = useAuthenticatedAuth();
 
-  const { userToEdit, toggleUser, onUserChange, updateUser } =
-    useDashboardUserEdit();
+  const {
+    activeUser: userToEdit,
+    toggleUser,
+    onUserChange,
+    updateUser,
+  } = useDashboardUserActions();
 
   const [base64Preview, setBase64Preview] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);

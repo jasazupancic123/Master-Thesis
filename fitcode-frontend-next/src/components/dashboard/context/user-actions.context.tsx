@@ -9,14 +9,14 @@ import { UserController } from '@/core/user/user.controller';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useMain } from '@/store/main.provider';
 
-interface IDashboardUserEditCtx {
+interface IDashboardUserActionsCtx {
   // getters
   hoveredUser: User | null;
-  userToEdit: User | null;
+  activeUser: User | null;
   filteredUsers: User[];
   currentUsers: User[];
   // setters
-  setUserToEdit: SetState<User | null>;
+  setActiveUser: SetState<User | null>;
   setFilteredUsers: SetState<User[]>;
   setCurrentUsers: SetState<User[]>;
   onHoverUser: (user: User | null) => void;
@@ -28,28 +28,28 @@ interface IDashboardUserEditCtx {
   }) => Promise<void>;
 }
 
-const DashboardUserEditContext = createContext<IDashboardUserEditCtx | null>(
-  null
-);
+const DashboardUserActionsContext =
+  createContext<IDashboardUserActionsCtx | null>(null);
 
-export const useDashboardUserEdit = () => useContext(DashboardUserEditContext)!;
+export const useDashboardUserActions = () =>
+  useContext(DashboardUserActionsContext)!;
 
-export function DashboardUserEditProvider({
+export function DashboardUserActionsProvider({
   children,
 }: React.PropsWithChildren) {
   const { users, setUsers, setInstitution } = useMain();
 
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [activeUser, setActiveUser] = useState<User | null>(null);
   const [isEditedUser, setIsEditedUser] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [currentUsers, setCurrentUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    if (!userToEdit) return;
+    if (!activeUser) return;
 
     const newUserToEdit =
-      users.data.find((u) => u.uid === userToEdit.uid) || null;
+      users.data.find((u) => u.uid === activeUser.uid) || null;
 
     toggleUser(newUserToEdit);
   }, [users]);
@@ -61,9 +61,9 @@ export function DashboardUserEditProvider({
   function toggleUser(user: User | null) {
     if (!user) {
       setIsEditedUser(false);
-      setUserToEdit(null);
+      setActiveUser(null);
     } else {
-      setUserToEdit(structuredClone({ ...user }));
+      setActiveUser(structuredClone({ ...user }));
     }
   }
 
@@ -72,7 +72,7 @@ export function DashboardUserEditProvider({
     passedUser?: User | null;
   }) {
     const { force, passedUser } = options || {};
-    const finalUserToEdit = passedUser || userToEdit;
+    const finalUserToEdit = passedUser || activeUser;
     if (!force && (!finalUserToEdit || !isEditedUser)) return;
 
     try {
@@ -114,23 +114,23 @@ export function DashboardUserEditProvider({
       console.error('Error updating user profile:', e);
       toast.error('Failed to update user profile');
     } finally {
-      setUserToEdit(null);
+      setActiveUser(null);
     }
   }
 
   function onUserChange<K extends keyof User>(key: K, value: User[K]) {
-    if (!userToEdit) return;
-    const newUser: User = { ...userToEdit, [key]: value };
-    setUserToEdit(newUser);
+    if (!activeUser) return;
+    const newUser: User = { ...activeUser, [key]: value };
+    setActiveUser(newUser);
     setIsEditedUser(true);
   }
 
-  const value: IDashboardUserEditCtx = {
+  const value: IDashboardUserActionsCtx = {
     hoveredUser,
-    userToEdit,
+    activeUser,
     filteredUsers,
     currentUsers,
-    setUserToEdit,
+    setActiveUser,
     setFilteredUsers,
     setCurrentUsers,
     onHoverUser,
@@ -140,8 +140,8 @@ export function DashboardUserEditProvider({
   };
 
   return (
-    <DashboardUserEditContext.Provider value={value}>
+    <DashboardUserActionsContext.Provider value={value}>
       {children}
-    </DashboardUserEditContext.Provider>
+    </DashboardUserActionsContext.Provider>
   );
 }

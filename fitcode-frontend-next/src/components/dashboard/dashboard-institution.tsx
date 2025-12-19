@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import ImportWorkloadsModal from '../workloads/import-workloads-modal';
 import EditInstitutionModal from './modals/edit-institution-modal';
 import { theme } from '@/app/style';
-import { useDashboardUserEdit } from '@/components/dashboard/context/user-edit.context';
+import { useDashboardUserActions } from '@/components/dashboard/context/user-actions.context';
 import useInstitutionMembers from '@/components/dashboard/hooks/use-institution-members.hook';
 import EditAthleteModal from '@/components/dashboard/modals/edit-athlete-modal';
 import { MAX_WIDTH_DASHBOARD } from '@/components/trainer-group-day-view/constant/dimensions.constant';
@@ -35,7 +35,7 @@ export default function DashboardInstitution() {
     setCurrentUsers,
     toggleUser,
     onHoverUser,
-  } = useDashboardUserEdit();
+  } = useDashboardUserActions();
 
   const { institution } = useMain();
   const { removeUser } = useInstitutionMembers();
