@@ -265,6 +265,7 @@ export default function MobileMovementValidation(
 
   // Helper Refs
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
@@ -473,6 +474,7 @@ export default function MobileMovementValidation(
 
     enableCam({
       videoRef,
+      streamRef,
       setError,
       looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
       predictWebcam: async () =>
@@ -547,6 +549,10 @@ export default function MobileMovementValidation(
     //   recordedRepsRef,
     //   selectedExercise,
     // });
+
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
 
     // Coach training station view - handle set finish differently
     if (stationViewProps) {
@@ -653,7 +659,6 @@ export default function MobileMovementValidation(
       // });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-
       return;
     }
 
@@ -891,13 +896,6 @@ export default function MobileMovementValidation(
       // });
 
       setSelectedTrackingMethod(TrackingMethod.MANUAL);
-    }
-
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
     }
   };
 

@@ -14,8 +14,7 @@ import {
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
-import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
-import DashboardGroupFilter from '../dashboard/dashboad-group-filter';
+import { useDashboardUserActions } from '../dashboard/context/user-actions.context';
 import DashboardPageContainer from '../dashboard/dashboard-page-container';
 import useInstitutionMembers from '../dashboard/hooks/use-institution-members.hook';
 import AddGroupModal from '../dashboard/modals/add-group-modal';
@@ -35,23 +34,22 @@ import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { InputType } from '@/lib/common/const/input-type.const';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
-import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
+import ActionsMenu from '@/ui/actions-menu';
+import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
 
 export default function DashboardRoaster() {
   const screenSize = useScreenSize();
 
   const { institution, users } = useMain();
-  const { role } = useAuthenticatedAuth();
-
-  const { filteredGroups } = useDashboard();
+  const { user, role } = useAuthenticatedAuth();
 
   const { uploadUsers, setIsUploadingMembers, isUploadingMembers, removeUser } =
     useInstitutionMembers();
-  const { hoveredUser, toggleUser, onHoverUser } = useDashboardUserEdit();
+  const { activeUser, toggleUser, onHoverUser } = useDashboardUserActions();
 
   const {
     search,
@@ -71,6 +69,9 @@ export default function DashboardRoaster() {
 
   const [openEditAthleteModal, setOpenEditAthleteModal] = useState(false);
 
+  const [filteredGroups, setFilteredGroups] = useState(
+    institution.groups || []
+  );
   const [filterBy, setFilterBy] = useState<FilterMembersBy>(
     FilterMembersBy.GROUP
   );
@@ -83,6 +84,25 @@ export default function DashboardRoaster() {
     useState<User | null>(null);
 
   const anchorElRef = useRef<HTMLDivElement | null>(null);
+
+  const [actionsMenuAnchorEl, setActionsMenuAnchorEl] =
+    useState<HTMLElement | null>(null);
+
+  // Update filtered groups when filterBy or institution.groups changes
+  useEffect(() => {
+    if (filterBy === FilterMembersBy.GROUP)
+      setFilteredGroups(institution.groups || []);
+    else if (filterBy === FilterMembersBy.MY_GROUPS) {
+      const myGroups = institution.groups.filter((group) =>
+        group.trainerIds.includes(user.uid)
+      );
+      setFilteredGroups(myGroups);
+    }
+  }, [filterBy, institution.groups]);
+
+  useEffect(() => {
+    updateFilteredMembers(filterBy);
+  }, [institution, users]);
 
   const updateFilteredMembers = (filter: FilterMembersBy) => {
     switch (filter) {
@@ -104,6 +124,10 @@ export default function DashboardRoaster() {
         // Handled by the main render
         break;
       }
+      case FilterMembersBy.MY_GROUPS: {
+        // Handled by the main render
+        break;
+      }
       default: {
         setFilteredMembers(
           (institution.trainers || []).concat(institution.athletes || [])
@@ -112,11 +136,6 @@ export default function DashboardRoaster() {
       }
     }
   };
-
-  useEffect(() => {
-    updateFilteredMembers(filterBy);
-  }, [institution, users]);
-
   return (
     <DashboardPageContainer>
       <Box
@@ -251,26 +270,10 @@ export default function DashboardRoaster() {
               </>
             )}
           </Box>
-          {filterBy === FilterMembersBy.GROUP && (
-            <DashboardGroupFilter
-              sx={{
-                alignSelf: screenSize.isMobile ? 'center' : 'flex-start',
-                mt: 0.3,
-              }}
-            />
-          )}
-        </Box>
-
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent={screenSize.isMobile ? 'center' : 'flex-start'}
-          gap={2}
-          flexWrap="wrap"
-        >
           <Box
             ref={anchorElRef}
             width={200}
+            minWidth={200}
             display="flex"
             justifyContent="center"
             alignItems="center"
@@ -280,9 +283,11 @@ export default function DashboardRoaster() {
             sx={{
               backgroundColor: theme.palette.text.primary,
               py: 1,
+              mt: 0.3,
               borderRadius: 10,
               cursor: 'pointer',
               position: 'relative',
+              alignSelf: screenSize.isMobile ? undefined : 'flex-start',
             }}
           >
             <Typography
@@ -309,7 +314,7 @@ export default function DashboardRoaster() {
         </Box>
       </Box>
 
-      {filterBy === FilterMembersBy.GROUP ? (
+      {[FilterMembersBy.GROUP, FilterMembersBy.MY_GROUPS].includes(filterBy) ? (
         !filteredGroups.length ? (
           <Typography>No groups</Typography>
         ) : (
@@ -392,27 +397,6 @@ export default function DashboardRoaster() {
                   onMouseEnter={() => onHoverUser(user)}
                   onMouseLeave={() => onHoverUser(null)}
                 >
-                  {lib.firebase.auth.isManager(role) &&
-                    user.uid === hoveredUser?.uid && (
-                      <IconButton
-                        className="remove-icon"
-                        size="small"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setRemoveUserFromInstitution(user);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          top: -8,
-                          right: -8,
-                          backgroundColor: theme.palette.error.main,
-                          zIndex: 1,
-                        }}
-                      >
-                        <Remove sx={{ fontSize: 10 }} />
-                      </IconButton>
-                    )}
-
                   <Box sx={{ position: 'relative' }}>
                     <Avatar
                       className="avatar-border"
@@ -422,9 +406,9 @@ export default function DashboardRoaster() {
                         height: screenSize.isMobile ? 70 : 80,
                         cursor: 'pointer',
                       }}
-                      onClick={() => {
+                      onClick={(e) => {
                         toggleUser(user);
-                        setOpenEditAthleteModal(true);
+                        setActionsMenuAnchorEl(e.currentTarget);
                       }}
                     />
 
@@ -528,6 +512,23 @@ export default function DashboardRoaster() {
           </Box>
         ))}
       </Menu>
+
+      <ActionsMenu
+        enabledActions={[MenuAction.EDIT].concat(
+          lib.firebase.auth.isManager(role) ? [MenuAction.DELETE] : []
+        )}
+        anchorEl={actionsMenuAnchorEl}
+        setAnchorEl={setActionsMenuAnchorEl}
+        onEdit={() => {
+          setOpenEditAthleteModal(true);
+        }}
+        onDelete={() => {
+          if (!activeUser) return;
+
+          setRemoveUserFromInstitution(activeUser);
+          toggleUser(null);
+        }}
+      />
 
       <EditAthleteModal
         open={openEditAthleteModal}

@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import { useDashboardUserActions } from '../dashboard/context/user-actions.context';
 import { DASHBOARD_MEMBERS_AVATAR_SIZE } from '../dashboard/modals/edit-athlete-modal';
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
@@ -29,7 +29,7 @@ interface Props {
 export default function DashboardGroupCardUsers(props: Props) {
   const { removeGroupMember, updateGroup } = useDashboard();
 
-  const { toggleUser } = useDashboardUserEdit();
+  const { toggleUser } = useDashboardUserActions();
 
   const {
     title,

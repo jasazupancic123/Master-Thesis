@@ -7,7 +7,7 @@ import {
 import { Avatar, Box, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 
-import { useDashboardUserEdit } from '../dashboard/context/user-edit.context';
+import { useDashboardUserActions } from '../dashboard/context/user-actions.context';
 import AddUserToGroupModal from './modals/dashboard-add-user-to-group.modal';
 import { theme } from '@/app/style';
 import type { Group } from '@/core/institution/type/group.type';
@@ -18,6 +18,9 @@ import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
+import ActionsMenu from '@/ui/actions-menu';
+import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
+import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   group: Group;
@@ -28,6 +31,8 @@ interface Props {
 export default function DashboardGroupCard(props: Props) {
   const { role } = useAuthenticatedAuth();
 
+  const { removeGroupMember, removeGroupTrainer } = useDashboard();
+
   const {
     setOpenDeleteGroupModal,
     setGroupToDelete,
@@ -35,12 +40,14 @@ export default function DashboardGroupCard(props: Props) {
     setGroupToEdit,
   } = useDashboardGroupActions();
 
-  const { toggleUser } = useDashboardUserEdit();
+  const { activeUser, toggleUser } = useDashboardUserActions();
 
   const { group, search, setOpenEditAthleteModal } = props;
 
   const [expand, setExpand] = useState(false);
   const [openAddUserToGroupModal, setOpenAddUserToGroupModal] = useState(false);
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const containerId = group.id;
 
@@ -169,9 +176,9 @@ export default function DashboardGroupCard(props: Props) {
                     height: 50,
                     cursor: 'pointer',
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
                     toggleUser(user);
-                    setOpenEditAthleteModal(true);
+                    setAnchorEl(e.currentTarget);
                   }}
                 />
                 {group.trainers?.some(
@@ -226,6 +233,23 @@ export default function DashboardGroupCard(props: Props) {
           );
         })}
       </Box>
+
+      <ActionsMenu
+        enabledActions={[MenuAction.EDIT, MenuAction.DELETE]}
+        anchorEl={anchorEl}
+        setAnchorEl={setAnchorEl}
+        onEdit={() => {
+          setOpenEditAthleteModal(true);
+        }}
+        onDelete={() => {
+          if (!activeUser) return;
+
+          if (lib.firebase.auth.isTrainer(activeUser.role))
+            removeGroupTrainer(activeUser.uid, group.id);
+          else removeGroupMember(activeUser.uid, group.id);
+          toggleUser(null);
+        }}
+      />
 
       <AddUserToGroupModal
         open={openAddUserToGroupModal}
