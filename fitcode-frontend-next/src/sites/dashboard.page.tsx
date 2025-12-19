@@ -11,7 +11,6 @@ import MethodsDataGrid from '@/components/dashboard/dashboard-methodology';
 import DashboardReports from '@/components/dashboard/dashboard-reports';
 import DashboardSchedule from '@/components/dashboard/dashboard-schedule';
 import DashboardHome from '@/components/dashboard-home/dashboard-home';
-import DashboardRoaster from '@/components/dashboard-roaster/dashboard-roaster';
 import { MAX_WIDTH_DASHBOARD_ITEM } from '@/components/trainer-group-day-view/constant/dimensions.constant';
 import { Methods } from '@/core/exercise/constant/method.constant';
 import { lib } from '@/lib';
@@ -22,7 +21,7 @@ import {
   LINK_DASHBOARD_HOME,
   LINK_DASHBOARD_PLANNING,
   LINK_DASHBOARD_REPORTS,
-  LINK_DASHBOARD_ROASTER,
+  LINK_DASHBOARD_ROSTER,
   LINK_DASHBOARD_SCHEDULE,
   LINK_DASHBOARD_SETTINGS,
   LINK_METHODOLOGIES,
@@ -30,6 +29,7 @@ import {
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useDashboard } from '@/store/dashboard.provider';
 import { useMain } from '@/store/main.provider';
+import DashboardRoster from '@/components/dashboard-roster/dashboard-roster';
 
 export default function DashboardPage() {
   const { role } = useAuthenticatedAuth();
@@ -52,8 +52,8 @@ export default function DashboardPage() {
       case LINK_DASHBOARD_REPORTS.id: {
         return <DashboardReports />;
       }
-      case LINK_DASHBOARD_ROASTER.id: {
-        return <DashboardRoaster />;
+      case LINK_DASHBOARD_ROSTER.id: {
+        return <DashboardRoster />;
       }
       case LINK_DASHBOARD_SETTINGS.id: {
         return (

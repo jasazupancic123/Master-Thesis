@@ -225,6 +225,7 @@ export default function FileUpload(props: Props) {
           >
             <Box display="flex" justifyContent="center" alignItems="center">
               <IconButton
+                onClick={() => {}}
                 sx={{
                   p: 0.5,
                   m: 0,

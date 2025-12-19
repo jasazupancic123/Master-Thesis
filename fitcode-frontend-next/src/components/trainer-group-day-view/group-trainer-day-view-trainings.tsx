@@ -37,14 +37,11 @@ export default function GroupTrainerDayViewTrainings() {
     >
       {/* Training set groups with set exercises */}
       {!loading && !training ? (
-        <AlertFrame
-          icon={
-            <Event sx={{ color: theme.palette.primary.main, fontSize: 40 }} />
-          }
-          title="Your scheduled Phase is empty"
-          subtitle='Add a training on the "PHASE" page'
-          sx={{ mt: 4 }}
-        />
+        <Box display="flex" width="100%" p={2} justifyContent="center" sx={sx}>
+          <Typography variant="h6" mb={2}>
+            No session for current date
+          </Typography>
+        </Box>
       ) : (
         <Box width="100%">{training && <TrainingCard key={training.id} />}</Box>
       )}

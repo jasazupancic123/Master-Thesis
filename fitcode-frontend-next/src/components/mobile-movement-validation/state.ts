@@ -64,11 +64,13 @@ export async function setupVideoAndContex(state: {
 
 export async function enableCam(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
+  streamRef: RefObject<MediaStream | null>;
   setError: SetState<string | null>;
   predictWebcam: () => Promise<void>;
   looserConstraints?: boolean;
 }) {
-  const { videoRef, predictWebcam, setError, looserConstraints } = state;
+  const { videoRef, streamRef, predictWebcam, setError, looserConstraints } =
+    state;
 
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
@@ -88,6 +90,7 @@ export async function enableCam(state: {
       .then((stream) => {
         videoRef.current!.srcObject = stream;
         videoRef.current!.addEventListener('loadeddata', predictWebcam);
+        streamRef.current = stream;
       })
       .catch((err) => {
         setError(err || 'Error accessing webcam');
