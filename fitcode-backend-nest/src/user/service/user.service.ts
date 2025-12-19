@@ -194,7 +194,6 @@ export class UserService implements Permission<Profile, Institution> {
     input: CreateUserDto,
   ): Promise<User | null> {
     // admin can register managers, and managers can register trainers and athletes
-    console.log('input', input);
     let institution: Institution | null = null;
     if (this.firebase.isAdmin(user)) {
       if (input.role !== UserRole.MANAGER)

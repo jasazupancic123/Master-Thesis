@@ -1,8 +1,9 @@
-import { theme } from '@/app/style';
-import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
-import { SetState } from '@/lib/common/type/state.type';
 import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material';
 import { Box, IconButton, Menu } from '@mui/material';
+
+import { theme } from '@/app/style';
+import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
+import type { SetState } from '@/lib/common/type/state.type';
 
 interface Props {
   enabledActions: MenuAction[];
