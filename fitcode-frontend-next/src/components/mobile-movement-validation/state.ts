@@ -74,7 +74,7 @@ export async function enableCam(state: {
 
   // Activate the webcam stream.
   if (videoRef !== null && videoRef.current !== null) {
-    const stream = await navigator.mediaDevices
+    await navigator.mediaDevices
       .getUserMedia({
         video: looserConstraints
           ? { facingMode: 'user', frameRate: { ideal: 30, max: 60 } }

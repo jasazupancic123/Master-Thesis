@@ -1,7 +1,8 @@
-import { useScreenSize } from '@/store/screen-size.provider';
 import { CameraAlt } from '@mui/icons-material';
-import { Box, IconButton, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
+
+import { useScreenSize } from '@/store/screen-size.provider';
 
 type Props = {
   onCapture: (file: File) => void;
@@ -67,6 +68,7 @@ export function CameraCapture({
       });
 
       await video.play();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setErr(e?.message ?? 'Could not access camera.');
     }
@@ -118,7 +120,6 @@ export function CameraCapture({
     // cleanup when closing / unmounting
     return () => stop();
     // re-init if facingMode changes while open
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, facingMode]);
 
   return (

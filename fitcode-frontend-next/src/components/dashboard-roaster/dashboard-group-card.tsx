@@ -14,13 +14,13 @@ import type { Group } from '@/core/institution/type/group.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { LINEAR_GRADIENT_BG } from '@/lib/common/const/ui.const';
+import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
 import { styledScrollbarSx } from '@/lib/common/style/scrollbar';
 import type { SetState } from '@/lib/common/type/state.type';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
+import { useDashboard } from '@/store/dashboard.provider';
 import { useDashboardGroupActions } from '@/store/dashboard-group-actions.provider';
 import ActionsMenu from '@/ui/actions-menu';
-import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
-import { useDashboard } from '@/store/dashboard.provider';
 
 interface Props {
   group: Group;

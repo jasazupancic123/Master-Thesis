@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDropDown, FileUploadOutlined, Remove } from '@mui/icons-material';
+import { ArrowDropDown, FileUploadOutlined } from '@mui/icons-material';
 import {
   Avatar,
   Box,
@@ -33,13 +33,13 @@ import type { User } from '@/core/user/type/user.type';
 import { lib } from '@/lib';
 import { USER_AVATAR_IMG_URL } from '@/lib/common/const/image.const';
 import { InputType } from '@/lib/common/const/input-type.const';
+import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
 import { useAuthenticatedAuth } from '@/store/auth.provider';
 import { useMain } from '@/store/main.provider';
 import { useScreenSize } from '@/store/screen-size.provider';
+import ActionsMenu from '@/ui/actions-menu';
 import FileUpload from '@/ui/file-upload';
 import MyModal from '@/ui/modal';
-import ActionsMenu from '@/ui/actions-menu';
-import { MenuAction } from '@/lib/common/enum/menu-actions.enum';
 
 export default function DashboardRoaster() {
   const screenSize = useScreenSize();
