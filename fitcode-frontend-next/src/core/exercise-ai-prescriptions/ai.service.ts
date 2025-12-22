@@ -5,9 +5,11 @@ import { RepDetectionService } from './rep-detection.service';
 import { RepsGraphService } from './rep-graph.service';
 import { StatusDetectionService } from './status-detection.service';
 import { KeypointUtil } from './util/keypoint.util';
+import { ModelUtil } from './util/model-util';
 import { RepPostProcessingUtil } from './util/rep-post-processing.util';
 
 export class AIService {
+  readonly model: ModelUtil;
   readonly keypoint: KeypointUtil;
   readonly graph: RepsGraphService;
   readonly status: StatusDetectionService;
@@ -18,6 +20,7 @@ export class AIService {
   readonly draw: AIDrawingService;
 
   constructor() {
+    this.model = ModelUtil.instance;
     this.keypoint = KeypointUtil.instance;
     this.graph = RepsGraphService.instance;
     this.status = StatusDetectionService.instance;
