@@ -11,6 +11,7 @@ import type { Keypoint } from '../type/keypoint.type';
 import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
+import { Pose } from '@tensorflow-models/pose-detection/dist/types';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;
@@ -70,16 +71,40 @@ export class KeypointUtil {
     return keypoints;
   }
 
-  async getKeypointsFromYoloV11(
-    output: tf.Tensor,
-    inputSize: number,
-    videoWidth: number,
-    videoHeight: number,
-    capturedAt: Date,
-    frameNum: number
-  ): Promise<Keypoint[]> {
-    const data = (await output.data()) as Float32Array;
-    const shape = output.shape;
+  async getKeypointsFromYoloV11(state: {
+    output: tf.Tensor | Float32Array;
+    inputSize: number;
+    videoWidth: number;
+    videoHeight: number;
+    capturedAt: Date;
+    frameNum: number;
+    shape?: readonly number[];
+  }): Promise<Keypoint[]> {
+    const {
+      output,
+      inputSize,
+      videoWidth,
+      videoHeight,
+      capturedAt,
+      frameNum,
+      shape: propsShape,
+    } = state;
+
+    const data = lib.common.typeChecker.isTfTensor(output)
+      ? ((await output.data()) as Float32Array)
+      : (output as Float32Array);
+
+    const shape =
+      propsShape !== undefined
+        ? propsShape
+        : lib.common.typeChecker.isTfTensor(output)
+          ? output.shape
+          : null;
+
+    if (shape === null) {
+      toast.error('Invalid output shape from YOLOv11 model');
+      return [];
+    }
 
     // Determine layout
     // Expect something like [1,56,8400] or [1,8400,56]
@@ -107,7 +132,7 @@ export class KeypointUtil {
     }
 
     const SCORE_THRESH = 0.25;
-    if (bestI === -1 || bestScore < SCORE_THRESH) return [];
+    // if (bestI === -1 || bestScore < SCORE_THRESH) return [];
 
     const i = bestI;
 
@@ -159,6 +184,47 @@ export class KeypointUtil {
         frameNum,
         capturedAt,
         visibility: kc,
+      });
+    }
+
+    return keypoints;
+  }
+
+  getKeypointsFromPoseNet(
+    poses: Pose,
+    videoWidth: number,
+    videoHeight: number,
+    capturedAt: Date,
+    frameNum: number
+  ): Keypoint[] {
+    const keypoints: Keypoint[] = [];
+    const keypointIds = Object.values(KeypointIdYoloV11);
+
+    for (let k = 0; k < 17; k++) {
+      const keypoint = poses.keypoints[k];
+
+      const id = keypointIds[k] as unknown as KeypointId;
+
+      const x = keypoint.x;
+      const y = keypoint.y;
+      const score = keypoint.score;
+
+      keypoints.push({
+        id,
+        position: {
+          x: x / videoWidth,
+          y: y / videoHeight,
+          z: 0,
+        },
+        pixelPosition: {
+          x: x / videoWidth,
+          y: y / videoHeight,
+        },
+        velocity: 0,
+        isValid: true,
+        frameNum,
+        capturedAt,
+        visibility: score || 0,
       });
     }
 

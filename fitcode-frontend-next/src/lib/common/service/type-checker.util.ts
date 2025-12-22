@@ -9,6 +9,8 @@ import type {
   Training,
   TrainingWithStatuses,
 } from '@/core/training/type/training.type';
+import { InferenceSession } from 'onnxruntime-web';
+import { PoseDetector } from '@tensorflow-models/pose-detection';
 
 export class TypeCheckerUtil {
   isNumberArray(array: unknown): array is number[] {
@@ -87,7 +89,7 @@ export class TypeCheckerUtil {
     );
   }
 
-  isTfGraphModel(obj: unknown): obj is tf.GraphModel {
+  isTfjs(obj: unknown): obj is tf.GraphModel {
     return (
       typeof obj === 'object' &&
       obj !== null &&
@@ -97,13 +99,31 @@ export class TypeCheckerUtil {
     );
   }
 
-  isCompiledModel(obj: unknown): obj is CompiledModel {
+  isTflite(obj: unknown): obj is CompiledModel {
     if (obj === null || typeof obj !== 'object') return false;
 
     const m = obj as Record<string, unknown>;
     return (
       typeof m.getInputDetails === 'function' &&
       typeof m.getOutputDetails === 'function'
+    );
+  }
+
+  isOnnx(obj: unknown): obj is InferenceSession {
+    return (
+      !!obj && typeof obj === 'object' && typeof (obj as any).run === 'function'
+    );
+  }
+
+  isTfTensor(obj: unknown): obj is tf.Tensor {
+    return !!obj && typeof obj === 'object' && 'shape' in obj && 'data' in obj;
+  }
+
+  isPoseDetector(obj: unknown): obj is PoseDetector {
+    return (
+      !!obj &&
+      typeof obj === 'object' &&
+      typeof (obj as any).estimatePoses === 'function'
     );
   }
 }

@@ -17,7 +17,7 @@ export function getCorsConfig(app: INestApplication): CorsOptions {
       ?.map((url: string) => url.trim()) || [];
 
   if (commonService.env.isDev())
-    whitelist.push('http://localhost:3000', 'http://localhost:8080');
+    whitelist.push('http://localhost:3000', 'http://localhost:8080', 'https://49b91bdf4a51.ngrok-free.app');
 
   return {
     origin: (requestOrigin, callback) => {

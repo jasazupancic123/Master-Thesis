@@ -2,4 +2,6 @@ export enum PoseModel {
   MEDIAPIPE = 'MEDIAPIPE',
   YOLO11 = 'YOLO11',
   YOLO11_LITE = 'YOLO11_LITE',
+  YOLO11_ONNX =  'YOLO11_ONNX',
+  POSE_NET = 'POSE_NET',
 }
