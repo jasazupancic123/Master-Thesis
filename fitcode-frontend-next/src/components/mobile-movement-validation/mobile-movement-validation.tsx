@@ -976,11 +976,12 @@ export default function MobileMovementValidation(
         setPoseModel(session);
       } else if (model === PoseModel.POSE_NET) {
         console.log('LOADING POSE NET MODEL');
+
         await import('@tensorflow/tfjs-backend-webgl');
         await tf.setBackend('webgl');
         await tf.ready();
 
-        const detectorConfig = {
+        const detectorConfig: poseDetection.PosenetModelConfig = {
           /* Can be either MobileNetV1 or ResNet50, ResNet50 is larger and more accurate but slower */
           architecture: lib.common.env.getPoseNetArchitecture(),
           /*
@@ -1019,6 +1020,42 @@ export default function MobileMovementValidation(
 
         const detector = await poseDetection.createDetector(
           SupportedModels.PoseNet,
+          detectorConfig
+        );
+
+        setPoseModel(detector);
+      } else if (model === PoseModel.MOVENET) {
+        console.log('LOADING MOVENET MODEL');
+
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        const detectorConfig: poseDetection.MoveNetModelConfig = {
+          modelType: lib.common.env.getMoveNetModelType(),
+        };
+
+        const detector = await poseDetection.createDetector(
+          SupportedModels.MoveNet,
+          detectorConfig
+        );
+
+        setPoseModel(detector);
+      } else if (model === PoseModel.BLAZEPOSE) {
+        console.log('LOADING BLAZEPOSE MODEL');
+
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
+          runtime: 'tfjs',
+          enableSmoothing: true,
+          modelType: lib.common.env.getBlazePoseModelType(),
+        };
+
+        const detector = await poseDetection.createDetector(
+          SupportedModels.BlazePose,
           detectorConfig
         );
 
