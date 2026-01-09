@@ -75,6 +75,15 @@ import { useScreenSize } from '@/store/screen-size.provider';
 import { useTrainingInProgress } from '@/store/training-in-progress.provider';
 import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
+import { InferenceSession } from 'onnxruntime-web';
+import { OrtScratch } from '@/core/exercise-ai-prescriptions/type/ort-scratch.type';
+import { MobileNetMultiplier } from '@tensorflow-models/pose-detection/dist/posenet/types';
+import {
+  PoseDetector,
+  QuantBytes,
+  SupportedModels,
+} from '@tensorflow-models/pose-detection';
+import * as poseDetection from '@tensorflow-models/pose-detection';
 
 const DEBUG = false;
 
@@ -207,7 +216,12 @@ export default function MobileMovementValidation(
   //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
   const [model] = useState<PoseModel>(lib.common.env.getPoseModel());
   const [poseModel, setPoseModel] = useState<
-    PoseLandmarker | tf.GraphModel | CompiledModel | null
+    | PoseLandmarker
+    | tf.GraphModel
+    | CompiledModel
+    | InferenceSession
+    | PoseDetector
+    | null
   >(null);
 
   // Rep State
@@ -270,6 +284,8 @@ export default function MobileMovementValidation(
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawingUtilsRef = useRef<DrawingUtils>(null);
   const prevFrameTimeRef = useRef<number | null>(null);
+  const ortScratchRef = useRef<OrtScratch | null>(null);
+  const recycledCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const lastVideoTimeRef = useRef(-1);
   const frameCountRef = useRef(0);
   const initedFirstFrameInRecordingMode = useRef(false);
@@ -487,7 +503,7 @@ export default function MobileMovementValidation(
           repStateRefL,
           repStateRefR,
           model,
-          poseModel: poseModel,
+          poseModel,
           keypointHistory: keypointHistoryRef.current,
           keypointBuffer,
           constantKeypointHistory: constantKeypointHistoryRef.current,
@@ -501,6 +517,8 @@ export default function MobileMovementValidation(
           videoRef,
           canvasRef,
           canvasCtxRef,
+          ortScratchRef,
+          recycledCanvasRef,
           drawingUtilsRef,
           prevFrameTimeRef,
           lastVideoTimeRef,
@@ -913,24 +931,135 @@ export default function MobileMovementValidation(
         setPoseModel(lm);
       } else if (model === PoseModel.YOLO11) {
         const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
         const model = await tf.loadGraphModel(modelUrl);
         setPoseModel(model);
       } else if (model === PoseModel.YOLO11_LITE) {
-        await import('@tensorflow/tfjs-backend-webgpu');
-        await tf.setBackend('webgpu');
+        await import('@tensorflow/tfjs-backend-wasm');
+        await tf.setBackend('wasm');
         await tf.ready();
 
         await loadLiteRt('/litert-wasm/');
 
         const backend = tf.backend() as unknown as WebGPUBackend;
-        setWebGpuDevice(backend.device);
+        // setWebGpuDevice(backend.device);
 
         const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose_float32.tflite`;
         const model: CompiledModel = await loadAndCompile(modelUrl, {
-          accelerator: 'webgpu', // or "wasm" :contentReference[oaicite:4]{index=4}
+          accelerator: 'wasm', // or "wasm" :contentReference[oaicite:4]{index=4}
         });
 
         setPoseModel(model);
+      } else if (model === PoseModel.YOLO11_ONNX) {
+        console.log('LOADING YOLOv11 ONNX MODEL');
+        if (typeof window === 'undefined') return;
+
+        const ort = await import('onnxruntime-web/webgl'); // registers multiple EPs (webgl/wasm/webgpu depending build)
+
+        // Tell ORT where the wasm binaries live (in /public/ort/)
+        ort.env.wasm.wasmPaths = '/onnx-wasm/'; // :contentReference[oaicite:3]{index=3}
+
+        // Pick execution provider:
+        // - "wasm" is the most reliable everywhere.
+        // - "webgl" can be faster, but is sometimes finicky depending on build/bundler.
+        const session = await ort.InferenceSession.create(
+          `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose.onnx`,
+          {
+            executionProviders: ['webgl'], // or ["webgl"] if you want to try GPU :contentReference[oaicite:4]{index=4}
+            graphOptimizationLevel: 'all',
+          }
+        );
+
+        setPoseModel(session);
+      } else if (model === PoseModel.POSE_NET) {
+        console.log('LOADING POSE NET MODEL');
+
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        const detectorConfig: poseDetection.PosenetModelConfig = {
+          /* Can be either MobileNetV1 or ResNet50, ResNet50 is larger and more accurate but slower */
+          architecture: lib.common.env.getPoseNetArchitecture(),
+          /*
+            outputStride:
+            Downsampling factor between your input image and PoseNet’s main output heatmaps.
+            outputStride: 16 means the heatmap grid is about 1/16th the input resolution in each dimension.
+            With 640x480 input, heatmaps are roughly 40x30 (because 640/16=40, 480/16=30).
+            Smaller stride (8) → larger heatmaps → more precise keypoints, but slower.
+          */
+          outputStride: lib.common.env.getPoseNetOutputStride(),
+          /*
+            inputResolution:
+            Important detail: PoseNet works best when width/height are compatible with the stride 
+            (multiples of 16 if stride is 16). 640 and 480 are perfect for stride 16.
+          */
+          inputResolution: lib.common.env.getPoseNetInputResolution(),
+          /*
+            multiplier:
+            It is the float multiplier for the depth (number of channels) for all convolution ops.
+            Options: 1.0, 0.75, 0.50 for MobileNetV1,
+            Options: 1.0 for ResNet50.
+          */
+          multiplier:
+            lib.common.env.getPoseNetArchitecture() === 'ResNet50'
+              ? 1.0
+              : (lib.common.env.getPoseNetMultiplier() as MobileNetMultiplier),
+          /*
+            quantBytes:
+            This argument controls the bytes used for weight quantization. The available options are:
+            4: 4 bytes per float (no quantization). Leads to highest accuracy and original model size (~90MB).
+            2: 2 bytes per float. Leads to slightly lower accuracy and 2x model size reduction (~45MB).
+            1: 1 byte per float. Leads to lower accuracy and 4x model size reduction (~22MB).
+          */
+          quantBytes: 4 as QuantBytes, // 1, 2, or 4
+        };
+
+        const detector = await poseDetection.createDetector(
+          SupportedModels.PoseNet,
+          detectorConfig
+        );
+
+        setPoseModel(detector);
+      } else if (model === PoseModel.MOVENET) {
+        console.log('LOADING MOVENET MODEL');
+
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        const detectorConfig: poseDetection.MoveNetModelConfig = {
+          modelType: lib.common.env.getMoveNetModelType(),
+        };
+
+        const detector = await poseDetection.createDetector(
+          SupportedModels.MoveNet,
+          detectorConfig
+        );
+
+        setPoseModel(detector);
+      } else if (model === PoseModel.BLAZEPOSE) {
+        console.log('LOADING BLAZEPOSE MODEL');
+
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
+          runtime: 'tfjs',
+          enableSmoothing: true,
+          modelType: lib.common.env.getBlazePoseModelType(),
+        };
+
+        const detector = await poseDetection.createDetector(
+          SupportedModels.BlazePose,
+          detectorConfig
+        );
+
+        setPoseModel(detector);
       }
     };
 
