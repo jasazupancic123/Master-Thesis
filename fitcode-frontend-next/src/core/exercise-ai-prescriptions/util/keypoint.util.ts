@@ -3,7 +3,11 @@ import type * as tf from '@tensorflow/tfjs';
 import savitzkyGolay from 'ml-savitzky-golay';
 import toast from 'react-hot-toast';
 
-import { KeypointId, KeypointIdYoloV11 } from '../enum/keypoint-id';
+import {
+  KeypointId,
+  KeypointIdBlazePose,
+  KeypointIdYoloV11,
+} from '../enum/keypoint-id';
 import { KeypointValueType } from '../enum/keypoint-value-type';
 import { MetricConversionType } from '../enum/metric-conversion-type.enum';
 import { PoseModel } from '../enum/pose-model.enum';
@@ -201,6 +205,47 @@ export class KeypointUtil {
     const keypointIds = Object.values(KeypointIdYoloV11);
 
     for (let k = 0; k < 17; k++) {
+      const keypoint = poses.keypoints[k];
+
+      const id = keypointIds[k] as unknown as KeypointId;
+
+      const x = keypoint.x;
+      const y = keypoint.y;
+      const score = keypoint.score;
+
+      keypoints.push({
+        id,
+        position: {
+          x: x / videoWidth,
+          y: y / videoHeight,
+          z: 0,
+        },
+        pixelPosition: {
+          x: x / videoWidth,
+          y: y / videoHeight,
+        },
+        velocity: 0,
+        isValid: true,
+        frameNum,
+        capturedAt,
+        visibility: score || 0,
+      });
+    }
+
+    return keypoints;
+  }
+
+  getKeypointsFromBlazePose(
+    poses: Pose,
+    videoWidth: number,
+    videoHeight: number,
+    capturedAt: Date,
+    frameNum: number
+  ): Keypoint[] {
+    const keypoints: Keypoint[] = [];
+    const keypointIds = Object.values(KeypointIdBlazePose);
+
+    for (let k = 0; k < keypointIds.length; k++) {
       const keypoint = poses.keypoints[k];
 
       const id = keypointIds[k] as unknown as KeypointId;

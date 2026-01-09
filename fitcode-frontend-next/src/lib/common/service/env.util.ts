@@ -12,6 +12,7 @@ import {
   PoseNetArchitecture,
   PoseNetOutputStride,
 } from '@tensorflow-models/pose-detection/dist/posenet/types';
+import * as poseDetection from '@tensorflow-models/pose-detection';
 
 export class EnvUtil {
   isProd(): boolean {
@@ -63,6 +64,8 @@ export class EnvUtil {
         PoseModel.YOLO11_LITE,
         PoseModel.YOLO11_ONNX,
         PoseModel.POSE_NET,
+        PoseModel.MOVENET,
+        PoseModel.BLAZEPOSE,
       ].includes(model as PoseModel)
     ) {
       toast.error(
@@ -230,5 +233,48 @@ export class EnvUtil {
     }
 
     return multiplier as MobileNetMultiplier;
+  }
+
+  getMoveNetModelType(): string {
+    const modelType = process.env.NEXT_PUBLIC_MOVE_NET_MODEL_TYPE;
+    if (!modelType) {
+      toast.error(
+        'MoveNet model type is not defined in the environment variables.'
+      );
+      throw new Error(
+        'MoveNet model type is not defined in the environment variables.'
+      );
+    }
+
+    if (modelType === 'SINGLEPOSE_LIGHTNING')
+      return poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
+    else if (modelType === 'SINGLEPOSE_THUNDER')
+      return poseDetection.movenet.modelType.SINGLEPOSE_THUNDER;
+    else if (modelType === 'MULTIPOSE_LIGHTNING')
+      return poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING;
+
+    throw new Error(
+      `Invalid MoveNet model type "${modelType}" defined in the environment variables.`
+    );
+  }
+
+  getBlazePoseModelType(): poseDetection.BlazePoseModelType {
+    const modelType = process.env.NEXT_PUBLIC_BLAZEPOSE_MODEL_TYPE;
+    if (!modelType) {
+      toast.error(
+        'BlazePose model type is not defined in the environment variables.'
+      );
+      throw new Error(
+        'BlazePose model type is not defined in the environment variables.'
+      );
+    }
+
+    if (modelType === 'LIGHT') return 'lite';
+    else if (modelType === 'FULL') return 'full';
+    else if (modelType === 'HEAVY') return 'heavy';
+
+    throw new Error(
+      `Invalid BlazePose model type "${modelType}" defined in the environment variables.`
+    );
   }
 }

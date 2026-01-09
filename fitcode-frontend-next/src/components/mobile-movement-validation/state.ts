@@ -14,7 +14,7 @@ import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/key
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
 import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
-import type { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
+import { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
 import { RepStatus } from '@/core/exercise-ai-prescriptions/enum/rep-state';
 import type { AvgFps } from '@/core/exercise-ai-prescriptions/type/avg-fps.type';
 import type { CurrentSideMutex } from '@/core/exercise-ai-prescriptions/type/current-side-mutex.type';
@@ -493,6 +493,7 @@ export const predictWebcam = async (state: {
         console.error('Error during inference with ONNXRuntime:', e);
       }
     } else if (lib.common.typeChecker.isPoseDetector(poseModel)) {
+      // POSE_NET, MOVE_NET, BLAZEPOSE
       const estimationConfig = {
         maxPoses: 1,
       } as PoseNetEstimationConfig;
@@ -516,13 +517,28 @@ export const predictWebcam = async (state: {
         estimationConfig
       );
 
-      keypoints = lib.ai.keypoint.getKeypointsFromPoseNet(
-        poses[0],
-        videoWidth,
-        videoHeight,
-        new Date(),
-        frameCountRef.current
-      );
+      if (model === PoseModel.BLAZEPOSE) {
+        keypoints = !poses.length
+          ? []
+          : lib.ai.keypoint.getKeypointsFromBlazePose(
+              poses[0],
+              videoWidth,
+              videoHeight,
+              new Date(),
+              frameCountRef.current
+            );
+      } else {
+        // POSE_NET, MOVE_NET
+        keypoints = !poses.length
+          ? []
+          : lib.ai.keypoint.getKeypointsFromPoseNet(
+              poses[0],
+              videoWidth,
+              videoHeight,
+              new Date(),
+              frameCountRef.current
+            );
+      }
     } else {
       toast.error('Unsupported pose model type detected during prediction.');
       throw new Error('Unsupported pose model type');
