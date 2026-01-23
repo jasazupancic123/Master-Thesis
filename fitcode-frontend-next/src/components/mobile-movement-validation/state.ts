@@ -39,6 +39,7 @@ import {
   PoseDetector,
   PoseNetEstimationConfig,
 } from '@tensorflow-models/pose-detection';
+import { MemSample } from '@/lib/common/service/memory.util';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -103,6 +104,20 @@ export async function enableCam(state: {
         setError(err || 'Error accessing webcam');
       });
   }
+}
+
+export async function enableRecordedVideo(state: {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  src: string;
+  predictWebcam: () => Promise<void>;
+}) {
+  const { videoRef, src, predictWebcam } = state;
+
+  if (!videoRef.current) return;
+
+  videoRef.current.src = src;
+  videoRef.current.addEventListener('loadeddata', predictWebcam);
+  videoRef.current.load();
 }
 
 export const predictWebcam = async (state: {
@@ -273,26 +288,26 @@ export const predictWebcam = async (state: {
     const instFps = Math.round(1000 / delta);
 
     if (
-      ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
-        statusRef.current
-      ) ||
-      (statusRef.current === DetectionStatus.RECORDING &&
-        dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
+      true
+      // ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
+      //   statusRef.current
+      // ) ||
+      // (statusRef.current === DetectionStatus.RECORDING &&
+      //   dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
     ) {
       // to re-render ui every frame when not in ready or recording state, or in the first second of recording
       setFps(instFps);
     } else {
       // only update fps every 0.5 seconds when in ready or recording state to save performance
-      if (!lib.common.env.disableErudaAI() && avgFps.current) {
-        const frameCount = lib.ai.keypoint.getFramesCountFromSeconds(
-          0.5,
-          avgFps.current.value
-        ); // smooth over 0.5s
-        const shouldPublish =
-          !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
-
-        if (shouldPublish) setFps(instFps);
-      }
+      // if (!lib.common.env.disableErudaAI() && avgFps.current) {
+      //   const frameCount = lib.ai.keypoint.getFramesCountFromSeconds(
+      //     0.5,
+      //     avgFps.current.value
+      //   ); // smooth over 0.5s
+      //   const shouldPublish =
+      //     !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
+      //   if (shouldPublish) setFps(instFps);
+      // }
     }
 
     if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
@@ -554,7 +569,7 @@ export const predictWebcam = async (state: {
       statusRef,
       keypointHistory,
       keypointBuffer,
-      constantKeypointHistory: constantKeypointHistory,
+      constantKeypointHistory,
       repStateRefL,
       repStateRefR,
       currentRepBufferL: currentRepRefL.current?.buffer,
@@ -586,7 +601,7 @@ export const predictWebcam = async (state: {
 
     if (statusRef.current === DetectionStatus.RECORDING) {
       // this upper if must go into the function
-      lib.ai.rep.checkRepStatus({
+      await lib.ai.rep.checkRepStatus({
         currentFrameKeypoints: keypoints,
         keypointHistory: keypointHistory,
         constantKeypointHistory,
