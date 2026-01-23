@@ -25,6 +25,7 @@ import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
+  enableRecordedVideo,
   getAvgTotalRomCm,
   getStatusMessage,
   getTempoObject,
@@ -84,6 +85,7 @@ import {
   SupportedModels,
 } from '@tensorflow-models/pose-detection';
 import * as poseDetection from '@tensorflow-models/pose-detection';
+import { MemSample } from '@/lib/common/service/memory.util';
 
 const DEBUG = false;
 
@@ -180,7 +182,7 @@ export default function MobileMovementValidation(
   );
   const [sandboxExerciseId, setSandboxExercise] = useState<string | undefined>(
     sandboxExercisesIds && sandboxExercisesIds.length
-      ? sandboxExercisesIds[0]
+      ? 'biceps-curl-db'
       : undefined
   );
 
@@ -488,62 +490,116 @@ export default function MobileMovementValidation(
 
     if (statusRef.current === DetectionStatus.STOPPED) return;
 
-    enableCam({
-      videoRef,
-      streamRef,
-      setError,
-      looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
-      predictWebcam: async () =>
-        await predictWebcam({
-          statusRef,
-          statusMessage,
-          doItTimestamp,
-          stillnessCountdownRef,
-          canProceedIntoReadyStateRef,
-          repStateRefL,
-          repStateRefR,
-          model,
-          poseModel,
-          keypointHistory: keypointHistoryRef.current,
-          keypointBuffer,
-          constantKeypointHistory: constantKeypointHistoryRef.current,
-          frameBitmapBufferRef,
-          currentRepRefL,
-          currentRepRefR,
-          recordedRepsRef,
-          lastRecordedRepRef,
-          currentInvalidAnglesRef,
-          pxToCmRatioRef,
-          videoRef,
-          canvasRef,
-          canvasCtxRef,
-          ortScratchRef,
-          recycledCanvasRef,
-          drawingUtilsRef,
-          prevFrameTimeRef,
-          lastVideoTimeRef,
-          frameCountRef,
-          isMobile: screenSize.isMobile,
-          avgFps,
-          exerciseDetectionDataRef,
-          currentSideMutexRef,
-          initedFirstFrameInRecordingMode,
-          centerPosRef,
-          recordingTimestampRef,
-          isCurrentlySavingImageRef,
-          canExitWhenImageIsDoneSavingRef,
-          reloadingModelRef,
-          POSE_DETECTION_CONSTANTS,
-          setFps,
-          finishAiDetection,
-          setRepCount,
-          setStartedExitTimeout,
-        }),
-    });
+    if (lib.common.env.getUseRecordedVideoMode()) {
+      enableRecordedVideo({
+        videoRef,
+        src: '/exercise-videos/db-biceps-curl.mp4',
+        predictWebcam: async () =>
+          await predictWebcam({
+            statusRef,
+            statusMessage,
+            doItTimestamp,
+            stillnessCountdownRef,
+            canProceedIntoReadyStateRef,
+            repStateRefL,
+            repStateRefR,
+            model,
+            poseModel,
+            keypointHistory: keypointHistoryRef.current,
+            keypointBuffer,
+            constantKeypointHistory: constantKeypointHistoryRef.current,
+            frameBitmapBufferRef,
+            currentRepRefL,
+            currentRepRefR,
+            recordedRepsRef,
+            lastRecordedRepRef,
+            currentInvalidAnglesRef,
+            pxToCmRatioRef,
+            videoRef,
+            canvasRef,
+            canvasCtxRef,
+            ortScratchRef,
+            recycledCanvasRef,
+            drawingUtilsRef,
+            prevFrameTimeRef,
+            lastVideoTimeRef,
+            frameCountRef,
+            isMobile: screenSize.isMobile,
+            avgFps,
+            exerciseDetectionDataRef,
+            currentSideMutexRef,
+            initedFirstFrameInRecordingMode,
+            centerPosRef,
+            recordingTimestampRef,
+            isCurrentlySavingImageRef,
+            canExitWhenImageIsDoneSavingRef,
+            reloadingModelRef,
+            POSE_DETECTION_CONSTANTS,
+            setFps,
+            finishAiDetection,
+            setRepCount,
+            setStartedExitTimeout,
+          }),
+      });
+    } else {
+      enableCam({
+        videoRef,
+        streamRef,
+        setError,
+        looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
+        predictWebcam: async () =>
+          await predictWebcam({
+            statusRef,
+            statusMessage,
+            doItTimestamp,
+            stillnessCountdownRef,
+            canProceedIntoReadyStateRef,
+            repStateRefL,
+            repStateRefR,
+            model,
+            poseModel,
+            keypointHistory: keypointHistoryRef.current,
+            keypointBuffer,
+            constantKeypointHistory: constantKeypointHistoryRef.current,
+            frameBitmapBufferRef,
+            currentRepRefL,
+            currentRepRefR,
+            recordedRepsRef,
+            lastRecordedRepRef,
+            currentInvalidAnglesRef,
+            pxToCmRatioRef,
+            videoRef,
+            canvasRef,
+            canvasCtxRef,
+            ortScratchRef,
+            recycledCanvasRef,
+            drawingUtilsRef,
+            prevFrameTimeRef,
+            lastVideoTimeRef,
+            frameCountRef,
+            isMobile: screenSize.isMobile,
+            avgFps,
+            exerciseDetectionDataRef,
+            currentSideMutexRef,
+            initedFirstFrameInRecordingMode,
+            centerPosRef,
+            recordingTimestampRef,
+            isCurrentlySavingImageRef,
+            canExitWhenImageIsDoneSavingRef,
+            reloadingModelRef,
+            POSE_DETECTION_CONSTANTS,
+            setFps,
+            finishAiDetection,
+            setRepCount,
+            setStartedExitTimeout,
+          }),
+      });
+    }
   }, [poseModel]);
 
   const finishAiDetection = async () => {
-    statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+    // statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+    statusMessage.current = `Model: ${model}, avgFps: ${avgFps.current?.value.toFixed(2)}`;
 
     // await RepsGraphService.downloadReps(
     //   {
@@ -944,7 +1000,7 @@ export default function MobileMovementValidation(
 
         await loadLiteRt('/litert-wasm/');
 
-        const backend = tf.backend() as unknown as WebGPUBackend;
+        // const backend = tf.backend() as unknown as WebGPUBackend;
         // setWebGpuDevice(backend.device);
 
         const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose_float32.tflite`;

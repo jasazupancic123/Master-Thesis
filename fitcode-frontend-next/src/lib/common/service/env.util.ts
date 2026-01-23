@@ -48,6 +48,10 @@ export class EnvUtil {
     return process.env.NEXT_PUBLIC_UNOPTIMIZE_IMAGES === '1';
   }
 
+  getUseRecordedVideoMode(): boolean {
+    return process.env.NEXT_PUBLIC_USE_RECORDED_VIDEO_MODE === '1';
+  }
+
   getPoseModel(): PoseModel {
     const model = process.env.NEXT_PUBLIC_POSE_MODEL;
     if (!model) {

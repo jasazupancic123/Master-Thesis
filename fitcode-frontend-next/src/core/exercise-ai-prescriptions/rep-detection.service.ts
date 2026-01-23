@@ -31,6 +31,7 @@ import { EXERCISE_TIMES_ROUNDING_STEP_S } from '@/components/mobile-movement-val
 import type { TrainingExercise } from '@/core/training/type/training-exercise.type';
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
+import { MemSample } from '@/lib/common/service/memory.util';
 
 export class RepDetectionService {
   private static _instance: RepDetectionService;
@@ -73,7 +74,7 @@ export class RepDetectionService {
     When we detect end of a new rep, also update avgStartValue and avgExtremeValue in RepState
   */
 
-  checkRepStatus(state: {
+  async checkRepStatus(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     constantKeypointHistory: KeypointHistory;
@@ -344,7 +345,7 @@ export class RepDetectionService {
             startValue,
             startValueFrameNum,
             startValueCapturedAt,
-          } = this.checkHasRepStarted({
+          } = await this.checkHasRepStarted({
             currentFrameKeypoints,
             keypointHistory,
             keypointId,
@@ -574,7 +575,7 @@ export class RepDetectionService {
     return { isRepDone: true, endKeypoint };
   }
 
-  private checkHasRepStarted(state: {
+  private async checkHasRepStarted(state: {
     currentFrameKeypoints: Keypoint[];
     keypointHistory: KeypointHistory;
     keypointId: KeypointId;
@@ -588,12 +589,12 @@ export class RepDetectionService {
     recordedReps: Rep[];
     side: 'L' | 'R';
     POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
-  }): {
+  }): Promise<{
     hasRepStarted: boolean;
     startValue?: number;
     startValueFrameNum?: number;
     startValueCapturedAt?: Date;
-  } {
+  }> {
     const {
       currentFrameKeypoints,
       keypointHistory,
@@ -665,7 +666,10 @@ export class RepDetectionService {
     if (startValue === undefined || startValueFrameNum === undefined)
       return { hasRepStarted: false };
 
-    initedFirstFrameInRecordingMode.current = true;
+    if (!initedFirstFrameInRecordingMode.current) {
+      initedFirstFrameInRecordingMode.current = true;
+      // lib.common.memory.logHeap('First DO IT frame');
+    }
 
     // Clamp start to be after previous rep's end
     let startValueCapturedAt = startKeypoint.capturedAt;
