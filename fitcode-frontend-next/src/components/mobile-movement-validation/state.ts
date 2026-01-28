@@ -2,7 +2,6 @@ import type { CompiledModel } from '@litertjs/core';
 import { runWithTfjsTensors } from '@litertjs/tfjs-interop';
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { DrawingUtils } from '@mediapipe/tasks-vision';
-import * as tf from '@tensorflow/tfjs';
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
@@ -10,7 +9,7 @@ import toast from 'react-hot-toast';
 import { EXERCISE_TIMES_ROUNDING_STEP_S } from './mobile-movement-validation';
 import { theme } from '@/app/style';
 import type { FrameBitmapBuffer } from '@/core/exercise-ai-prescriptions/class/frame-bitmap-buffer';
-import type { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import * as tf from '@tensorflow/tfjs';
 import { STATUS_MESSAGES } from '@/core/exercise-ai-prescriptions/const/status-messages';
 import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 import { DetectionStatus } from '@/core/exercise-ai-prescriptions/enum/detection-status';
@@ -33,12 +32,14 @@ import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.t
 import { lib } from '@/lib';
 import type { SetState } from '@/lib/common/type/state.type';
 import { InferenceSession } from 'onnxruntime-web';
-import * as ort from 'onnxruntime-web';
 import { OrtScratch } from '@/core/exercise-ai-prescriptions/type/ort-scratch.type';
 import {
   PoseDetector,
   PoseNetEstimationConfig,
 } from '@tensorflow-models/pose-detection';
+import { MemSample } from '@/lib/common/service/memory.util';
+import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
+import { gridColumnVisibilityModelSelector } from '@mui/x-data-grid';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -105,6 +106,24 @@ export async function enableCam(state: {
   }
 }
 
+export async function enableRecordedVideo(state: {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  src: string;
+  predictWebcam: () => Promise<void>;
+  onVideoEnd: () => void;
+}) {
+  const { videoRef, src, predictWebcam, onVideoEnd } = state;
+
+  if (!videoRef.current) return;
+
+  videoRef.current.src = src;
+  videoRef.current.addEventListener('loadeddata', predictWebcam);
+  videoRef.current.onended = () => {
+    onVideoEnd();
+  };
+  videoRef.current.load();
+}
+
 export const predictWebcam = async (state: {
   statusRef: RefObject<DetectionStatus>;
   statusMessage: RefObject<string>;
@@ -150,6 +169,7 @@ export const predictWebcam = async (state: {
   isCurrentlySavingImageRef: RefObject<boolean>;
   canExitWhenImageIsDoneSavingRef: RefObject<boolean>;
   reloadingModelRef: RefObject<boolean>;
+  directToRecording: boolean;
   POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   setFps: SetState<number | null>;
   finishAiDetection: () => Promise<void>;
@@ -195,6 +215,7 @@ export const predictWebcam = async (state: {
     isCurrentlySavingImageRef,
     canExitWhenImageIsDoneSavingRef,
     reloadingModelRef,
+    directToRecording,
     POSE_DETECTION_CONSTANTS,
     setFps,
     finishAiDetection,
@@ -272,28 +293,31 @@ export const predictWebcam = async (state: {
     const delta = startTimeMs - prevFrameTimeRef.current;
     const instFps = Math.round(1000 / delta);
 
-    if (
-      ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
-        statusRef.current
-      ) ||
-      (statusRef.current === DetectionStatus.RECORDING &&
-        dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
-    ) {
-      // to re-render ui every frame when not in ready or recording state, or in the first second of recording
-      setFps(instFps);
-    } else {
-      // only update fps every 0.5 seconds when in ready or recording state to save performance
-      if (!lib.common.env.disableErudaAI() && avgFps.current) {
-        const frameCount = lib.ai.keypoint.getFramesCountFromSeconds(
-          0.5,
-          avgFps.current.value
-        ); // smooth over 0.5s
-        const shouldPublish =
-          !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
+    // Update FPS every frame
+    setFps(instFps);
 
-        if (shouldPublish) setFps(instFps);
-      }
-    }
+    // Update FPS before RECORDING only
+    // if (
+    //   ![DetectionStatus.READY, DetectionStatus.RECORDING].includes(
+    //     statusRef.current
+    //   ) ||
+    //   (statusRef.current === DetectionStatus.RECORDING &&
+    //     dayjs(dayjs()).diff(doItTimestamp.current, 'second') < 1)
+    // ) {
+    //   // to re-render ui every frame when not in ready or recording state, or in the first second of recording
+    //   setFps(instFps);
+    // } else {
+    //   // only update fps every 0.5 seconds when in ready or recording state to save performance
+    //   if (!lib.common.env.disableErudaAI() && avgFps.current) {
+    //     const frameCount = lib.ai.keypoint.getFramesCountFromSeconds(
+    //       0.5,
+    //       avgFps.current.value
+    //     ); // smooth over 0.5s
+    //     const shouldPublish =
+    //       !avgFps.current || avgFps.current.count % frameCount === 0; // publish every 0.5 secodns
+    //     if (shouldPublish) setFps(instFps);
+    //   }
+    // }
 
     if (!avgFps.current) avgFps.current = { value: instFps, count: 1 };
     else {
@@ -351,210 +375,26 @@ export const predictWebcam = async (state: {
       document
     );
 
-    let keypoints: Keypoint[] = [];
-
-    if (lib.common.typeChecker.isPoseLandmarker(poseModel)) {
-      // mediapipe pose landmarker
-      poseModel.detectForVideo(video, startTimeMs, async (result) => {
-        const hasPose =
-          result.landmarks &&
-          result.landmarks.length > 0 &&
-          result.worldLandmarks &&
-          result.worldLandmarks.length > 0;
-
-        if (!hasPose) {
-          return;
-        }
-
-        keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
-          result.worldLandmarks[0], // unit: m, origin: center of hips
-          result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
-          model,
-          new Date(),
-          frameCountRef.current
-        );
-      });
-    } else if (lib.common.typeChecker.isTfjs(poseModel)) {
-      // yolov11 tfjs model
-      const inputSize = lib.common.env.getYoloSize();
-
-      const input = tf.tidy(() => {
-        const frame = tf.browser.fromPixels(video);
-        const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
-        return resized.toFloat().div(255).expandDims(0);
-      });
-
-      try {
-        const out = poseModel.execute(input);
-
-        keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
-          output: out as tf.Tensor,
-          inputSize,
-          videoWidth,
-          videoHeight,
-          capturedAt: new Date(),
-          frameNum: frameCountRef.current,
-        });
-
-        tf.dispose(out);
-      } catch (e) {
-        toast.error('Error during inference with TF GraphModel');
-        console.error('Error during inference with TF GraphModel:', e);
-      } finally {
-        input.dispose();
+    let keypoints = await getKeypointsFromModelOutput(
+      {
+        poseModel,
+        model,
+        ortScratchRef,
+        startTimeMs,
+        frameCountRef,
+        recycledCanvasRef,
+      },
+      {
+        videoInput: video,
+        imageInput: undefined,
       }
-    } else if (lib.common.typeChecker.isTflite(poseModel)) {
-      // yolov11 tflite model
-      const inputSize = lib.common.env.getYoloSize();
-
-      if (!recycledCanvasRef.current) {
-        const canvas = document.createElement('canvas');
-        canvas.width = inputSize;
-        canvas.height = inputSize;
-        recycledCanvasRef.current = canvas;
-      }
-
-      const ctx = recycledCanvasRef.current.getContext('2d', {
-        willReadFrequently: true,
-      })!;
-
-      // draw current video frame (and resize/fit as you want)
-      ctx.drawImage(video, 0, 0, inputSize, inputSize);
-
-      const input = tf.tidy(() => {
-        const frame = tf.browser.fromPixels(recycledCanvasRef.current!);
-        const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
-        return resized.toFloat().div(255).expandDims(0);
-      });
-
-      try {
-        const outAny = runWithTfjsTensors(poseModel, input);
-        const out = Array.isArray(outAny) ? outAny[0] : outAny;
-
-        keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
-          output: out as tf.Tensor,
-          inputSize,
-          videoWidth,
-          videoHeight,
-          capturedAt: new Date(),
-          frameNum: frameCountRef.current,
-        });
-
-        tf.dispose(out);
-      } catch (e) {
-        toast.error('Error during inference with TF GraphModel');
-        console.error('Error during inference with TF GraphModel:', e);
-      } finally {
-        input.dispose();
-      }
-    } else if (lib.common.typeChecker.isOnnx(poseModel)) {
-      const inputSize = lib.common.env.getYoloSize();
-
-      // Keep this outside your loop ideally (useRef), but shown inline for clarity:
-      // let ortScratchRef = useRef<...>(null)
-      // We'll assume you have some `ortScratch` variable available.
-      // If not, just store it somewhere persistent.
-      const { tensor: ortInput, scratch: newScratch } =
-        lib.ai.model.videoToOrtInputNHWC(
-          video,
-          inputSize,
-          ortScratchRef.current
-        );
-
-      ortScratchRef.current = newScratch;
-
-      try {
-        const inputName = poseModel.inputNames?.[0] ?? 'images';
-        const outputName = poseModel.outputNames?.[0]; // take first output
-
-        const results = await poseModel.run({ [inputName]: ortInput });
-        const outOrt = outputName
-          ? results[outputName]
-          : results[Object.keys(results)[0]];
-
-        // outOrt is ort.Tensor, likely shape [1,56,8400]
-        const data = outOrt.data as Float32Array;
-
-        // ---- FASTEST: decode directly from ORT tensor data ----
-        // If you want: reuse your existing logic by slightly refactoring it to accept (data, shape)
-        keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
-          output: data,
-          inputSize,
-          videoWidth,
-          videoHeight,
-          capturedAt: new Date(),
-          frameNum: frameCountRef.current,
-          shape: outOrt.dims,
-        });
-
-        // (No dispose needed for ORT tensors)
-      } catch (e) {
-        toast.error('Error during inference with ONNXRuntime');
-        console.error('Error during inference with ONNXRuntime:', e);
-      }
-    } else if (lib.common.typeChecker.isPoseDetector(poseModel)) {
-      // POSE_NET, MOVE_NET, BLAZEPOSE
-      const estimationConfig = {
-        maxPoses: 1,
-      } as PoseNetEstimationConfig;
-
-      if (!recycledCanvasRef.current) {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoWidth;
-        canvas.height = videoHeight;
-        recycledCanvasRef.current = canvas;
-      }
-
-      const ctx = recycledCanvasRef.current.getContext('2d', {
-        willReadFrequently: true,
-      })!;
-
-      // draw current video frame (and resize/fit as you want)
-      ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
-
-      const poses = await poseModel.estimatePoses(
-        recycledCanvasRef.current,
-        estimationConfig
-      );
-
-      if (model === PoseModel.BLAZEPOSE) {
-        keypoints = !poses.length
-          ? []
-          : lib.ai.keypoint.getKeypointsFromBlazePose(
-              poses[0],
-              videoWidth,
-              videoHeight,
-              new Date(),
-              frameCountRef.current
-            );
-      } else {
-        // POSE_NET, MOVE_NET
-        keypoints = !poses.length
-          ? []
-          : lib.ai.keypoint.getKeypointsFromPoseNet(
-              poses[0],
-              videoWidth,
-              videoHeight,
-              new Date(),
-              frameCountRef.current
-            );
-      }
-    } else {
-      toast.error('Unsupported pose model type detected during prediction.');
-      throw new Error('Unsupported pose model type');
-    }
-
-    keypoints = lib.ai.keypoint.processCapturedKeypoints(
-      keypoints,
-      videoWidth,
-      videoHeight
     );
 
     insertKeypointsIntoBuffers({
       statusRef,
       keypointHistory,
       keypointBuffer,
-      constantKeypointHistory: constantKeypointHistory,
+      constantKeypointHistory,
       repStateRefL,
       repStateRefR,
       currentRepBufferL: currentRepRefL.current?.buffer,
@@ -581,12 +421,13 @@ export const predictWebcam = async (state: {
       videoHeight: video.videoHeight,
       doItTimestamp,
       reloadingModelRef,
+      directToRecording,
       POSE_DETECTION_CONSTANTS,
     });
 
     if (statusRef.current === DetectionStatus.RECORDING) {
       // this upper if must go into the function
-      lib.ai.rep.checkRepStatus({
+      await lib.ai.rep.checkRepStatus({
         currentFrameKeypoints: keypoints,
         keypointHistory: keypointHistory,
         constantKeypointHistory,
@@ -687,6 +528,338 @@ export const predictWebcam = async (state: {
 
   window.requestAnimationFrame(predictWebcam.bind(null, state));
 };
+
+export async function getKeypointsFromModelOutput(
+  state: {
+    poseModel:
+      | PoseLandmarker
+      | tf.GraphModel
+      | CompiledModel
+      | InferenceSession
+      | PoseDetector;
+    model: PoseModel;
+    ortScratchRef: RefObject<OrtScratch | null>;
+    startTimeMs: number;
+    frameCountRef: RefObject<number>;
+    recycledCanvasRef: RefObject<HTMLCanvasElement | null>;
+  },
+  input: {
+    videoInput?: HTMLVideoElement;
+    imageInput?: HTMLCanvasElement;
+  }
+): Promise<Keypoint[]> {
+  const {
+    poseModel,
+    model,
+    ortScratchRef,
+    startTimeMs,
+    frameCountRef,
+    recycledCanvasRef,
+  } = state;
+
+  const { videoInput, imageInput } = input;
+
+  if (!videoInput && !imageInput)
+    throw new Error('Either videoInput or imageInput must be provided.');
+
+  const videoWidth = imageInput
+    ? imageInput?.width
+    : videoInput
+      ? videoInput.videoWidth
+      : null;
+  const videoHeight = imageInput
+    ? imageInput?.height
+    : videoInput
+      ? videoInput.videoHeight
+      : null;
+
+  if (!videoWidth || !videoHeight)
+    throw new Error('Unable to determine input dimensions.');
+
+  let keypoints: Keypoint[] = [];
+
+  if (lib.common.typeChecker.isPoseLandmarker(poseModel)) {
+    // mediapipe pose landmarker
+    if (videoInput) {
+      poseModel.detectForVideo(videoInput, startTimeMs, async (result) => {
+        const hasPose =
+          result.landmarks &&
+          result.landmarks.length > 0 &&
+          result.worldLandmarks &&
+          result.worldLandmarks.length > 0;
+
+        if (!hasPose) return;
+
+        keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
+          result.worldLandmarks[0], // unit: m, origin: center of hips
+          result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
+          model,
+          new Date(),
+          frameCountRef.current
+        );
+      });
+    } else if (imageInput) {
+      const result = poseModel.detect(imageInput);
+
+      const hasPose =
+        result.landmarks &&
+        result.landmarks.length > 0 &&
+        result.worldLandmarks &&
+        result.worldLandmarks.length > 0;
+
+      if (!hasPose) throw new Error('No pose detected in the image.');
+
+      keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
+        result.worldLandmarks[0], // unit: m, origin: center of hips
+        result.landmarks[0], // unit: normalized to [0,1], origin: top-left of image
+        model,
+        new Date(),
+        frameCountRef.current
+      );
+    }
+  } else if (lib.common.typeChecker.isTfjs(poseModel)) {
+    // yolov11 tfjs model
+    const inputSize = model === PoseModel.YOLO11_256 ? 256 : 640;
+
+    const input = tf.tidy(() => {
+      const frame = tf.browser.fromPixels((imageInput || videoInput)!);
+      const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
+      return resized.toFloat().div(255).expandDims(0);
+    });
+
+    try {
+      const out = poseModel.execute(input);
+
+      keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
+        output: out as tf.Tensor,
+        inputSize,
+        videoWidth,
+        videoHeight,
+        capturedAt: new Date(),
+        frameNum: frameCountRef.current,
+      });
+
+      tf.dispose(out);
+    } catch (e) {
+      toast.error('Error during inference with TF GraphModel');
+      console.error('Error during inference with TF GraphModel:', e);
+    } finally {
+      input.dispose();
+    }
+  }
+  // else if (lib.common.typeChecker.isTflite(poseModel)) {
+  //   // yolov11 tflite model
+  //   const inputSize = lib.common.env.getYoloSize();
+
+  //   if (!recycledCanvasRef.current) {
+  //     const canvas = document.createElement('canvas');
+  //     canvas.width = inputSize;
+  //     canvas.height = inputSize;
+  //     recycledCanvasRef.current = canvas;
+  //   }
+
+  //   const ctx = recycledCanvasRef.current.getContext('2d', {
+  //     willReadFrequently: true,
+  //   })!;
+
+  //   // draw current video frame (and resize/fit as you want)
+  //   ctx.drawImage((imageInput || videoInput)!, 0, 0, inputSize, inputSize);
+
+  //   const input = tf.tidy(() => {
+  //     const frame = tf.browser.fromPixels(recycledCanvasRef.current!);
+  //     const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
+  //     return resized.toFloat().div(255).expandDims(0);
+  //   });
+
+  //   try {
+  //     const outAny = runWithTfjsTensors(poseModel, input);
+  //     const out = Array.isArray(outAny) ? outAny[0] : outAny;
+
+  //     keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
+  //       output: out as tf.Tensor,
+  //       inputSize,
+  //       videoWidth,
+  //       videoHeight,
+  //       capturedAt: new Date(),
+  //       frameNum: frameCountRef.current,
+  //     });
+
+  //     tf.dispose(out);
+  //   } catch (e) {
+  //     toast.error('Error during inference with TF GraphModel');
+  //     console.error('Error during inference with TF GraphModel:', e);
+  //   } finally {
+  //     input.dispose();
+  //   }
+  // }
+  // else if (lib.common.typeChecker.isOnnx(poseModel)) {
+  //   const inputSize = lib.common.env.getYoloSize();
+
+  //   // Keep this outside your loop ideally (useRef), but shown inline for clarity:
+  //   // let ortScratchRef = useRef<...>(null)
+  //   // We'll assume you have some `ortScratch` variable available.
+  //   // If not, just store it somewhere persistent.
+  //   const { tensor: ortInput, scratch: newScratch } =
+  //     lib.ai.model.videoToOrtInputNHWC(
+  //       (imageInput || videoInput)!,
+  //       inputSize,
+  //       ortScratchRef.current
+  //     );
+
+  //   ortScratchRef.current = newScratch;
+
+  //   try {
+  //     const inputName = poseModel.inputNames?.[0] ?? 'images';
+  //     const outputName = poseModel.outputNames?.[0]; // take first output
+
+  //     const results = await poseModel.run({ [inputName]: ortInput });
+  //     const outOrt = outputName
+  //       ? results[outputName]
+  //       : results[Object.keys(results)[0]];
+
+  //     // outOrt is ort.Tensor, likely shape [1,56,8400]
+  //     const data = outOrt.data as Float32Array;
+
+  //     // ---- FASTEST: decode directly from ORT tensor data ----
+  //     // If you want: reuse your existing logic by slightly refactoring it to accept (data, shape)
+  //     keypoints = await lib.ai.keypoint.getKeypointsFromYoloV11({
+  //       output: data,
+  //       inputSize,
+  //       videoWidth,
+  //       videoHeight,
+  //       capturedAt: new Date(),
+  //       frameNum: frameCountRef.current,
+  //       shape: outOrt.dims,
+  //     });
+
+  //     // (No dispose needed for ORT tensors)
+  //   } catch (e) {
+  //     toast.error('Error during inference with ONNXRuntime');
+  //     console.error('Error during inference with ONNXRuntime:', e);
+  //   }
+  // }
+  else if (lib.common.typeChecker.isPoseDetector(poseModel)) {
+    // POSE_NET, MOVE_NET, BLAZEPOSE
+    const estimationConfig = {
+      maxPoses: 1,
+    } as PoseNetEstimationConfig;
+
+    if (!recycledCanvasRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      recycledCanvasRef.current = canvas;
+    }
+
+    const ctx = recycledCanvasRef.current.getContext('2d', {
+      willReadFrequently: true,
+    })!;
+
+    // draw current video frame (and resize/fit as you want)
+    ctx.drawImage((imageInput || videoInput)!, 0, 0, videoWidth, videoHeight);
+
+    const poses = await poseModel.estimatePoses(
+      recycledCanvasRef.current,
+      estimationConfig
+    );
+
+    if (
+      [
+        PoseModel.BLAZEPOSE_LITE,
+        PoseModel.BLAZEPOSE_FULL,
+        PoseModel.BLAZEPOSE_HEAVY,
+      ].includes(model)
+    ) {
+      keypoints = !poses.length
+        ? []
+        : lib.ai.keypoint.getKeypointsFromBlazePose(
+            poses[0],
+            videoWidth,
+            videoHeight,
+            new Date(),
+            frameCountRef.current
+          );
+    } else {
+      // POSE_NET, MOVE_NET
+      keypoints = !poses.length
+        ? []
+        : lib.ai.keypoint.getKeypointsFromPoseNet(
+            poses[0],
+            videoWidth,
+            videoHeight,
+            new Date(),
+            frameCountRef.current
+          );
+    }
+  } else {
+    toast.error('Unsupported pose model type detected during prediction.');
+    throw new Error('Unsupported pose model type');
+  }
+
+  keypoints = lib.ai.keypoint.processCapturedKeypoints(
+    keypoints,
+    videoWidth,
+    videoHeight,
+    videoInput
+  );
+
+  return keypoints;
+}
+
+export function getFullModelName(model: PoseModel): string {
+  switch (model) {
+    case PoseModel.MEDIAPIPE_LITE: {
+      return `Mediapipe Pose Landmarker Lite`;
+    }
+    case PoseModel.MEDIAPIPE_FULL: {
+      return `Mediapipe Pose Landmarker Full`;
+    }
+    case PoseModel.MEDIAPIPE_HEAVY: {
+      return `Mediapipe Pose Landmarker Heavy`;
+    }
+    case PoseModel.YOLO11_256: {
+      return `YOLOv11n Pose 256x256`;
+    }
+    case PoseModel.YOLO11_640: {
+      return `YOLOv11n Pose 600x600`;
+    }
+
+    case PoseModel.POSE_NET_MOBILE_NET: {
+      return `PoseNet MobileNet`;
+    }
+    case PoseModel.POSE_NET_RES_NET: {
+      return `PoseNet ResNet`;
+    }
+    case PoseModel.MOVENET_SINGLEPOSE_THUNDER: {
+      return `MoveNet SinglePose Thunder`;
+    }
+    case PoseModel.MOVENET_SINGLEPOSE_LIGHTNING: {
+      return `MoveNet SinglePose Lightning`;
+    }
+    case PoseModel.BLAZEPOSE_LITE: {
+      return `BlazePose Light`;
+    }
+    case PoseModel.BLAZEPOSE_FULL: {
+      return `BlazePose Full`;
+    }
+    case PoseModel.BLAZEPOSE_HEAVY: {
+      return `BlazePose Heavy`;
+    }
+    // case PoseModel.YOLO11_LITE: {
+    //   const size = lib.common.env.getYoloSize();
+
+    //   return `YOLOv11 Lite Pose ${size}x${size}`;
+    // }
+    // case PoseModel.YOLO11_ONNX: {
+    //   const size = lib.common.env.getYoloSize();
+
+    //   return `YOLOv11 ONNX Pose ${size}x${size}`;
+    // }
+    default: {
+      return 'Unknown Model';
+    }
+  }
+}
 
 function insertKeypointsIntoBuffers(state: {
   statusRef: RefObject<DetectionStatus>;

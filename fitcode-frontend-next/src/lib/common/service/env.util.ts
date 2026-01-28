@@ -35,17 +35,16 @@ export class EnvUtil {
     return process.env.NEXT_PUBLIC_AI_CONVERT_TO_METRIC_SCALE === '1';
   }
 
-  getPoseLandmarkerModelPath(): string {
-    const model = process.env.NEXT_PUBLIC_POSE_LANDMARKER_VERSION;
-
-    if (model === 'lite') return POSE_LANDMARKER_LITE_PATH;
-    else if (model === 'heavy') return POSE_LANDMARKER_HEAVY_PATH;
-
-    return POSE_LANDMARKER_FULL_PATH; // default to full
-  }
-
   unoptimizeImages(): boolean {
     return process.env.NEXT_PUBLIC_UNOPTIMIZE_IMAGES === '1';
+  }
+
+  getPredictOnFolderWithImages(): boolean {
+    return process.env.NEXT_PUBLIC_PREDICT_ON_FOLDER_WITH_IMAGES === '1';
+  }
+
+  getUseRecordedVideoMode(): boolean {
+    return process.env.NEXT_PUBLIC_USE_RECORDED_VIDEO_MODE === '1';
   }
 
   getPoseModel(): PoseModel {
@@ -57,17 +56,7 @@ export class EnvUtil {
       );
     }
 
-    if (
-      ![
-        PoseModel.MEDIAPIPE,
-        PoseModel.YOLO11,
-        PoseModel.YOLO11_LITE,
-        PoseModel.YOLO11_ONNX,
-        PoseModel.POSE_NET,
-        PoseModel.MOVENET,
-        PoseModel.BLAZEPOSE,
-      ].includes(model as PoseModel)
-    ) {
+    if (!Object.values(PoseModel).includes(model as PoseModel)) {
       toast.error(
         `Invalid pose model "${model}" defined in the environment variables.`
       );
@@ -77,26 +66,6 @@ export class EnvUtil {
     }
 
     return model as PoseModel;
-  }
-
-  getYoloSize(): number {
-    const sizeStr = process.env.NEXT_PUBLIC_YOLO_SIZE;
-    if (!sizeStr) {
-      toast.error('YOLO size is not defined in the environment variables.');
-      throw new Error('YOLO size is not defined in the environment variables.');
-    }
-
-    const size = parseInt(sizeStr, 10);
-    if (isNaN(size)) {
-      toast.error(
-        `Invalid YOLO size "${sizeStr}" defined in the environment variables.`
-      );
-      throw new Error(
-        `Invalid YOLO size "${sizeStr}" defined in the environment variables.`
-      );
-    }
-
-    return size;
   }
 
   getAiNumericConstants(): Record<AINumericConstantName, number> {
@@ -113,29 +82,6 @@ export class EnvUtil {
       number
     >;
     return constants;
-  }
-
-  getPoseNetArchitecture(): PoseNetArchitecture {
-    const architecture = process.env.NEXT_PUBLIC_POSE_NET_ARCHITECTURE;
-    if (!architecture) {
-      toast.error(
-        'PoseNet architecture is not defined in the environment variables.'
-      );
-      throw new Error(
-        'PoseNet architecture is not defined in the environment variables.'
-      );
-    }
-
-    if (!['MobileNetV1', 'ResNet50'].includes(architecture)) {
-      toast.error(
-        `Invalid PoseNet architecture "${architecture}" defined in the environment variables.`
-      );
-      throw new Error(
-        `Invalid PoseNet architecture "${architecture}" defined in the environment variables.`
-      );
-    }
-
-    return architecture as PoseNetArchitecture;
   }
 
   getPoseNetOutputStride(): PoseNetOutputStride {
@@ -233,48 +179,5 @@ export class EnvUtil {
     }
 
     return multiplier as MobileNetMultiplier;
-  }
-
-  getMoveNetModelType(): string {
-    const modelType = process.env.NEXT_PUBLIC_MOVE_NET_MODEL_TYPE;
-    if (!modelType) {
-      toast.error(
-        'MoveNet model type is not defined in the environment variables.'
-      );
-      throw new Error(
-        'MoveNet model type is not defined in the environment variables.'
-      );
-    }
-
-    if (modelType === 'SINGLEPOSE_LIGHTNING')
-      return poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
-    else if (modelType === 'SINGLEPOSE_THUNDER')
-      return poseDetection.movenet.modelType.SINGLEPOSE_THUNDER;
-    else if (modelType === 'MULTIPOSE_LIGHTNING')
-      return poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING;
-
-    throw new Error(
-      `Invalid MoveNet model type "${modelType}" defined in the environment variables.`
-    );
-  }
-
-  getBlazePoseModelType(): poseDetection.BlazePoseModelType {
-    const modelType = process.env.NEXT_PUBLIC_BLAZEPOSE_MODEL_TYPE;
-    if (!modelType) {
-      toast.error(
-        'BlazePose model type is not defined in the environment variables.'
-      );
-      throw new Error(
-        'BlazePose model type is not defined in the environment variables.'
-      );
-    }
-
-    if (modelType === 'LIGHT') return 'lite';
-    else if (modelType === 'FULL') return 'full';
-    else if (modelType === 'HEAVY') return 'heavy';
-
-    throw new Error(
-      `Invalid BlazePose model type "${modelType}" defined in the environment variables.`
-    );
   }
 }
