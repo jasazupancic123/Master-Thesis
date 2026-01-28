@@ -16,6 +16,7 @@ import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
 import { Pose } from '@tensorflow-models/pose-detection/dist/types';
+import { RefObject } from 'react';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;
@@ -40,7 +41,9 @@ export class KeypointUtil {
     const keypoints: Keypoint[] = [];
 
     switch (model) {
-      case PoseModel.MEDIAPIPE: {
+      case PoseModel.MEDIAPIPE_LITE:
+      case PoseModel.MEDIAPIPE_HEAVY:
+      case PoseModel.MEDIAPIPE_FULL: {
         const keypointIds = Object.values(KeypointId);
 
         currentFrameKeypoints.forEach((kp, i) => {
@@ -280,6 +283,7 @@ export class KeypointUtil {
     keypoints: Keypoint[],
     videoWidth: number,
     videoHeight: number,
+    video?: HTMLVideoElement | null,
     centerHipsYToMiddleAnkleOrigin = false,
     centerKneesXToMiddleAnklesOrigin = false // we need this for lateral squat
   ): Keypoint[] {
@@ -322,6 +326,13 @@ export class KeypointUtil {
         leftKnee.position.x -= x;
         rightKnee.position.x -= x;
       }
+    }
+
+    if (lib.common.env.getUseRecordedVideoMode()) {
+      keypoints = keypoints.map((k) => ({
+        ...k,
+        videoCurrentTime: video?.currentTime,
+      }));
     }
 
     return keypoints;

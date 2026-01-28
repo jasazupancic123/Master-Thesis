@@ -2,13 +2,31 @@ import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import type { RefObject } from 'react';
 
 import { lib } from '@/lib';
+import { PoseModel } from '../enum/pose-model.enum';
+import {
+  POSE_LANDMARKER_LITE_PATH,
+  POSE_LANDMARKER_HEAVY_PATH,
+  POSE_LANDMARKER_FULL_PATH,
+} from '../const/pose-landmarker-paths';
 
 let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
 
-export async function preloadPoseLandmarker(forceReload?: boolean) {
+export async function preloadPoseLandmarker(
+  model:
+    | PoseModel.MEDIAPIPE_LITE
+    | PoseModel.MEDIAPIPE_FULL
+    | PoseModel.MEDIAPIPE_HEAVY,
+  forceReload?: boolean,
+  imageMode: boolean = false
+) {
   if (!poseLandmarkerPromise || forceReload) {
     poseLandmarkerPromise = (async () => {
-      const modelAssetPath = lib.common.env.getPoseLandmarkerModelPath();
+      const modelAssetPath =
+        model === PoseModel.MEDIAPIPE_LITE
+          ? POSE_LANDMARKER_LITE_PATH
+          : model === PoseModel.MEDIAPIPE_HEAVY
+            ? POSE_LANDMARKER_HEAVY_PATH
+            : POSE_LANDMARKER_FULL_PATH;
 
       const vision = await FilesetResolver.forVisionTasks('/wasm');
 
@@ -17,7 +35,7 @@ export async function preloadPoseLandmarker(forceReload?: boolean) {
           modelAssetPath,
           delegate: 'GPU',
         },
-        runningMode: 'VIDEO',
+        runningMode: imageMode ? 'IMAGE' : 'VIDEO',
         numPoses: 1,
         minPoseDetectionConfidence: 0.5,
         minPosePresenceConfidence: 0.5,
@@ -32,10 +50,15 @@ export async function preloadPoseLandmarker(forceReload?: boolean) {
 }
 
 export async function getPoseLandmarker(
+  model:
+    | PoseModel.MEDIAPIPE_LITE
+    | PoseModel.MEDIAPIPE_FULL
+    | PoseModel.MEDIAPIPE_HEAVY,
   loadedPoseLandmarkerTimestampRef: RefObject<Date | null>,
-  forceReload?: boolean
+  forceReload?: boolean,
+  imageMode: boolean = false
 ) {
-  const lm = await preloadPoseLandmarker(forceReload);
+  const lm = await preloadPoseLandmarker(model, forceReload, imageMode);
 
   loadedPoseLandmarkerTimestampRef.current = new Date();
 
