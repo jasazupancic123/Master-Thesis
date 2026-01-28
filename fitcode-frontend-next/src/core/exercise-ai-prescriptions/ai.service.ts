@@ -1,4 +1,5 @@
 import { AIDrawingService } from './ai-drawing.service';
+import { AIImageDetectionService } from './ai-image-detection.service';
 import { FeedbackService } from './feedback.service';
 import { PoseDetectionService } from './pose-detection.service';
 import { RepDetectionService } from './rep-detection.service';
@@ -18,6 +19,7 @@ export class AIService {
   readonly rep: RepDetectionService;
   readonly angle: FeedbackService;
   readonly draw: AIDrawingService;
+  readonly imageDetection: AIImageDetectionService;
 
   constructor() {
     this.model = ModelUtil.instance;
@@ -29,5 +31,6 @@ export class AIService {
     this.rep = RepDetectionService.instance;
     this.angle = FeedbackService.instance;
     this.draw = AIDrawingService.instance;
+    this.imageDetection = AIImageDetectionService.instance;
   }
 }

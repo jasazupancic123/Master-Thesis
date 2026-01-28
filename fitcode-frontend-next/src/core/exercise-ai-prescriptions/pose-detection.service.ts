@@ -11,6 +11,7 @@ import type { Keypoint } from './type/keypoint.type';
 import type { PoseValidationCondition } from './type/pose-validation-condition.type';
 import type { RepState } from './type/rep-state.type';
 import { KeypointUtil } from './util/keypoint.util';
+import { RepStatus } from './enum/rep-state';
 
 export class PoseDetectionService {
   private static _instance: PoseDetectionService;
@@ -44,6 +45,7 @@ export class PoseDetectionService {
     videoHeight: number;
     doItTimestamp: RefObject<Date | null>;
     reloadingModelRef: RefObject<boolean>;
+    directToRecording: boolean;
     POSE_DETECTION_CONSTANTS: Record<AINumericConstantName, number>;
   }) {
     const {
@@ -62,11 +64,12 @@ export class PoseDetectionService {
       videoHeight,
       doItTimestamp,
       reloadingModelRef,
+      directToRecording,
       POSE_DETECTION_CONSTANTS,
     } = state;
 
-    const initStatuses =
-      statusRef.current === DetectionStatus.RECORDING
+    const initStatuses = 
+      statusRef.current === DetectionStatus.RECORDING || directToRecording
         ? [DetectionStatus.RECORDING]
         : [
             DetectionStatus.NOT_FULLY_IN_FRAME,
@@ -74,6 +77,13 @@ export class PoseDetectionService {
             DetectionStatus.NOT_STILL,
             DetectionStatus.READY,
           ];
+
+    if(directToRecording){
+      if(repStateRefL.current.status === RepStatus.NONE)
+        repStateRefL.current.status = RepStatus.IDLE;
+      if(repStateRefR.current.status === RepStatus.NONE)
+        repStateRefR.current.status = RepStatus.IDLE;
+    }
 
     for (const status of initStatuses) {
       const validStatus = await this.status.checkAndValidateStatus(status, {
