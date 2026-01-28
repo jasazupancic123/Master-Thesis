@@ -1,7 +1,6 @@
 'use client';
 
 import type { CompiledModel } from '@litertjs/core';
-import { loadAndCompile, loadLiteRt, setWebGpuDevice } from '@litertjs/core';
 import type { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision';
 import {
   Box,
@@ -13,7 +12,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import * as tf from '@tensorflow/tfjs';
-import type { WebGPUBackend } from '@tensorflow/tfjs-backend-webgpu';
 import dayjs from 'dayjs';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { usePathname } from 'next/navigation';
@@ -25,6 +23,7 @@ import FpsText from './fps-text';
 import MovementValidationHeader from './movement-validation-header';
 import {
   enableCam,
+  enableRecordedVideo,
   getAvgTotalRomCm,
   getStatusMessage,
   getTempoObject,
@@ -54,7 +53,6 @@ import type {
   RepsCount,
 } from '@/core/exercise-ai-prescriptions/type/rep.type';
 import type { RepState } from '@/core/exercise-ai-prescriptions/type/rep-state.type';
-import { getPoseLandmarker } from '@/core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { TrackingMethod } from '@/core/training/enum/tracking-method.enum';
 import type { Training } from '@/core/training/type/training.type';
 import type {
@@ -77,13 +75,7 @@ import { useTrainings } from '@/store/trainings.provider';
 import LoadingOverlay from '@/ui/loading-overlay';
 import { InferenceSession } from 'onnxruntime-web';
 import { OrtScratch } from '@/core/exercise-ai-prescriptions/type/ort-scratch.type';
-import { MobileNetMultiplier } from '@tensorflow-models/pose-detection/dist/posenet/types';
-import {
-  PoseDetector,
-  QuantBytes,
-  SupportedModels,
-} from '@tensorflow-models/pose-detection';
-import * as poseDetection from '@tensorflow-models/pose-detection';
+import { PoseDetector } from '@tensorflow-models/pose-detection';
 
 const DEBUG = false;
 
@@ -180,7 +172,7 @@ export default function MobileMovementValidation(
   );
   const [sandboxExerciseId, setSandboxExercise] = useState<string | undefined>(
     sandboxExercisesIds && sandboxExercisesIds.length
-      ? sandboxExercisesIds[0]
+      ? 'biceps-curl-db'
       : undefined
   );
 
@@ -484,66 +476,147 @@ export default function MobileMovementValidation(
   };
 
   useEffect(() => {
-    if (!exerciseDetectionDataRef) return;
+    const initDetection = async () => {
+      if (!exerciseDetectionDataRef) return;
 
-    if (statusRef.current === DetectionStatus.STOPPED) return;
+      if (statusRef.current === DetectionStatus.STOPPED) return;
 
-    enableCam({
-      videoRef,
-      streamRef,
-      setError,
-      looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
-      predictWebcam: async () =>
-        await predictWebcam({
-          statusRef,
-          statusMessage,
-          doItTimestamp,
-          stillnessCountdownRef,
-          canProceedIntoReadyStateRef,
-          repStateRefL,
-          repStateRefR,
-          model,
-          poseModel,
-          keypointHistory: keypointHistoryRef.current,
-          keypointBuffer,
-          constantKeypointHistory: constantKeypointHistoryRef.current,
-          frameBitmapBufferRef,
-          currentRepRefL,
-          currentRepRefR,
-          recordedRepsRef,
-          lastRecordedRepRef,
-          currentInvalidAnglesRef,
-          pxToCmRatioRef,
-          videoRef,
+      if (lib.common.env.getPredictOnFolderWithImages()) {
+        if (!poseModel) return;
+
+        await lib.ai.imageDetection.detectOnFolderWithImages({
           canvasRef,
-          canvasCtxRef,
+          loadedPoseLandmarkerTimestampRef,
           ortScratchRef,
-          recycledCanvasRef,
-          drawingUtilsRef,
-          prevFrameTimeRef,
-          lastVideoTimeRef,
           frameCountRef,
-          isMobile: screenSize.isMobile,
-          avgFps,
-          exerciseDetectionDataRef,
-          currentSideMutexRef,
-          initedFirstFrameInRecordingMode,
-          centerPosRef,
-          recordingTimestampRef,
-          isCurrentlySavingImageRef,
-          canExitWhenImageIsDoneSavingRef,
-          reloadingModelRef,
-          POSE_DETECTION_CONSTANTS,
-          setFps,
-          finishAiDetection,
-          setRepCount,
-          setStartedExitTimeout,
-        }),
-    });
+          recycledCanvasRef,
+        });
+
+        return;
+      } else if (lib.common.env.getUseRecordedVideoMode()) {
+        if (!poseModel) return;
+
+        enableRecordedVideo({
+          videoRef,
+          src: '/exercise-videos/db-biceps-curl.mp4',
+          onVideoEnd: () => {
+            console.log('avgFps:', avgFps.current?.value);
+            console.log(
+              'constantKeypointHistory:',
+              constantKeypointHistoryRef.current.history
+            );
+          },
+          predictWebcam: async () =>
+            await predictWebcam({
+              statusRef,
+              statusMessage,
+              doItTimestamp,
+              stillnessCountdownRef,
+              canProceedIntoReadyStateRef,
+              repStateRefL,
+              repStateRefR,
+              model,
+              poseModel,
+              keypointHistory: keypointHistoryRef.current,
+              keypointBuffer,
+              constantKeypointHistory: constantKeypointHistoryRef.current,
+              frameBitmapBufferRef,
+              currentRepRefL,
+              currentRepRefR,
+              recordedRepsRef,
+              lastRecordedRepRef,
+              currentInvalidAnglesRef,
+              pxToCmRatioRef,
+              videoRef,
+              canvasRef,
+              canvasCtxRef,
+              ortScratchRef,
+              recycledCanvasRef,
+              drawingUtilsRef,
+              prevFrameTimeRef,
+              lastVideoTimeRef,
+              frameCountRef,
+              isMobile: screenSize.isMobile,
+              avgFps,
+              exerciseDetectionDataRef,
+              currentSideMutexRef,
+              initedFirstFrameInRecordingMode,
+              centerPosRef,
+              recordingTimestampRef,
+              isCurrentlySavingImageRef,
+              canExitWhenImageIsDoneSavingRef,
+              reloadingModelRef,
+              directToRecording: true,
+              POSE_DETECTION_CONSTANTS,
+              setFps,
+              finishAiDetection,
+              setRepCount,
+              setStartedExitTimeout,
+            }),
+        });
+      } else {
+        enableCam({
+          videoRef,
+          streamRef,
+          setError,
+          looserConstraints: true, // POSE_DETECTION_CONSTANTS.DISABLE_TIGHT_VIDEO_CONSTRAINTS === 1,
+          predictWebcam: async () =>
+            await predictWebcam({
+              statusRef,
+              statusMessage,
+              doItTimestamp,
+              stillnessCountdownRef,
+              canProceedIntoReadyStateRef,
+              repStateRefL,
+              repStateRefR,
+              model,
+              poseModel,
+              keypointHistory: keypointHistoryRef.current,
+              keypointBuffer,
+              constantKeypointHistory: constantKeypointHistoryRef.current,
+              frameBitmapBufferRef,
+              currentRepRefL,
+              currentRepRefR,
+              recordedRepsRef,
+              lastRecordedRepRef,
+              currentInvalidAnglesRef,
+              pxToCmRatioRef,
+              videoRef,
+              canvasRef,
+              canvasCtxRef,
+              ortScratchRef,
+              recycledCanvasRef,
+              drawingUtilsRef,
+              prevFrameTimeRef,
+              lastVideoTimeRef,
+              frameCountRef,
+              isMobile: screenSize.isMobile,
+              avgFps,
+              exerciseDetectionDataRef,
+              currentSideMutexRef,
+              initedFirstFrameInRecordingMode,
+              centerPosRef,
+              recordingTimestampRef,
+              isCurrentlySavingImageRef,
+              canExitWhenImageIsDoneSavingRef,
+              reloadingModelRef,
+              POSE_DETECTION_CONSTANTS,
+              directToRecording: false,
+              setFps,
+              finishAiDetection,
+              setRepCount,
+              setStartedExitTimeout,
+            }),
+        });
+      }
+    };
+
+    initDetection();
   }, [poseModel]);
 
   const finishAiDetection = async () => {
-    statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+    // statusMessage.current = getStatusMessage(DetectionStatus.STOPPED);
+    statusMessage.current = `Model: ${model}, avgFps: ${avgFps.current?.value.toFixed(2)}`;
 
     // await RepsGraphService.downloadReps(
     //   {
@@ -922,154 +995,22 @@ export default function MobileMovementValidation(
   }, [statusRef.current]);
 
   useEffect(() => {
-    if (canvasRef.current)
-      canvasCtxRef.current = canvasRef.current.getContext('2d');
+    const setup = async () => {
+      if (canvasRef.current)
+        canvasCtxRef.current = canvasRef.current.getContext('2d');
 
-    const loadModel = async () => {
-      if (model === PoseModel.MEDIAPIPE) {
-        const lm = await getPoseLandmarker(loadedPoseLandmarkerTimestampRef);
-        setPoseModel(lm);
-      } else if (model === PoseModel.YOLO11) {
-        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose-web-model/model.json`;
-        await import('@tensorflow/tfjs-backend-webgl');
-        await tf.setBackend('webgl');
-        await tf.ready();
+      setPoseModel(
+        await lib.ai.model.loadModel(model, loadedPoseLandmarkerTimestampRef)
+      );
 
-        const model = await tf.loadGraphModel(modelUrl);
-        setPoseModel(model);
-      } else if (model === PoseModel.YOLO11_LITE) {
-        await import('@tensorflow/tfjs-backend-wasm');
-        await tf.setBackend('wasm');
-        await tf.ready();
-
-        await loadLiteRt('/litert-wasm/');
-
-        const backend = tf.backend() as unknown as WebGPUBackend;
-        // setWebGpuDevice(backend.device);
-
-        const modelUrl = `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose_float32.tflite`;
-        const model: CompiledModel = await loadAndCompile(modelUrl, {
-          accelerator: 'wasm', // or "wasm" :contentReference[oaicite:4]{index=4}
-        });
-
-        setPoseModel(model);
-      } else if (model === PoseModel.YOLO11_ONNX) {
-        console.log('LOADING YOLOv11 ONNX MODEL');
-        if (typeof window === 'undefined') return;
-
-        const ort = await import('onnxruntime-web/webgl'); // registers multiple EPs (webgl/wasm/webgpu depending build)
-
-        // Tell ORT where the wasm binaries live (in /public/ort/)
-        ort.env.wasm.wasmPaths = '/onnx-wasm/'; // :contentReference[oaicite:3]{index=3}
-
-        // Pick execution provider:
-        // - "wasm" is the most reliable everywhere.
-        // - "webgl" can be faster, but is sometimes finicky depending on build/bundler.
-        const session = await ort.InferenceSession.create(
-          `/models/yolov11/${lib.common.env.getYoloSize()}/yolo11n-pose.onnx`,
-          {
-            executionProviders: ['webgl'], // or ["webgl"] if you want to try GPU :contentReference[oaicite:4]{index=4}
-            graphOptimizationLevel: 'all',
-          }
-        );
-
-        setPoseModel(session);
-      } else if (model === PoseModel.POSE_NET) {
-        console.log('LOADING POSE NET MODEL');
-
-        await import('@tensorflow/tfjs-backend-webgl');
-        await tf.setBackend('webgl');
-        await tf.ready();
-
-        const detectorConfig: poseDetection.PosenetModelConfig = {
-          /* Can be either MobileNetV1 or ResNet50, ResNet50 is larger and more accurate but slower */
-          architecture: lib.common.env.getPoseNetArchitecture(),
-          /*
-            outputStride:
-            Downsampling factor between your input image and PoseNet’s main output heatmaps.
-            outputStride: 16 means the heatmap grid is about 1/16th the input resolution in each dimension.
-            With 640x480 input, heatmaps are roughly 40x30 (because 640/16=40, 480/16=30).
-            Smaller stride (8) → larger heatmaps → more precise keypoints, but slower.
-          */
-          outputStride: lib.common.env.getPoseNetOutputStride(),
-          /*
-            inputResolution:
-            Important detail: PoseNet works best when width/height are compatible with the stride 
-            (multiples of 16 if stride is 16). 640 and 480 are perfect for stride 16.
-          */
-          inputResolution: lib.common.env.getPoseNetInputResolution(),
-          /*
-            multiplier:
-            It is the float multiplier for the depth (number of channels) for all convolution ops.
-            Options: 1.0, 0.75, 0.50 for MobileNetV1,
-            Options: 1.0 for ResNet50.
-          */
-          multiplier:
-            lib.common.env.getPoseNetArchitecture() === 'ResNet50'
-              ? 1.0
-              : (lib.common.env.getPoseNetMultiplier() as MobileNetMultiplier),
-          /*
-            quantBytes:
-            This argument controls the bytes used for weight quantization. The available options are:
-            4: 4 bytes per float (no quantization). Leads to highest accuracy and original model size (~90MB).
-            2: 2 bytes per float. Leads to slightly lower accuracy and 2x model size reduction (~45MB).
-            1: 1 byte per float. Leads to lower accuracy and 4x model size reduction (~22MB).
-          */
-          quantBytes: 4 as QuantBytes, // 1, 2, or 4
-        };
-
-        const detector = await poseDetection.createDetector(
-          SupportedModels.PoseNet,
-          detectorConfig
-        );
-
-        setPoseModel(detector);
-      } else if (model === PoseModel.MOVENET) {
-        console.log('LOADING MOVENET MODEL');
-
-        await import('@tensorflow/tfjs-backend-webgl');
-        await tf.setBackend('webgl');
-        await tf.ready();
-
-        const detectorConfig: poseDetection.MoveNetModelConfig = {
-          modelType: lib.common.env.getMoveNetModelType(),
-        };
-
-        const detector = await poseDetection.createDetector(
-          SupportedModels.MoveNet,
-          detectorConfig
-        );
-
-        setPoseModel(detector);
-      } else if (model === PoseModel.BLAZEPOSE) {
-        console.log('LOADING BLAZEPOSE MODEL');
-
-        await import('@tensorflow/tfjs-backend-webgl');
-        await tf.setBackend('webgl');
-        await tf.ready();
-
-        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
-          runtime: 'tfjs',
-          enableSmoothing: true,
-          modelType: lib.common.env.getBlazePoseModelType(),
-        };
-
-        const detector = await poseDetection.createDetector(
-          SupportedModels.BlazePose,
-          detectorConfig
-        );
-
-        setPoseModel(detector);
-      }
+      setupVideoAndContex({
+        videoRef,
+        canvasRef,
+        drawingUtilsRef,
+      });
     };
 
-    loadModel();
-
-    setupVideoAndContex({
-      videoRef,
-      canvasRef,
-      drawingUtilsRef,
-    });
+    setup();
   }, [canvasRef]);
 
   useEffect(() => {

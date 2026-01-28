@@ -6,6 +6,7 @@ import { FileUtil } from './service/file.util';
 import { GenericUtil } from './service/generic.util';
 import { ComponentUtil } from './service/icons.util';
 import { IndexedDbUtil } from './service/indexed-db.util';
+import { MemoryUtil } from './service/memory.util';
 import { NavigationUtil } from './service/navigation.util';
 import { NumberUtil } from './service/number.util';
 import { ObjectUtil } from './service/object.util';
@@ -28,6 +29,7 @@ export class CommonService {
   readonly canvas: CanvasUtil;
   readonly audio: AudioUtil;
   readonly file: FileUtil;
+  readonly memory: MemoryUtil;
 
   constructor() {
     this.env = new EnvUtil();
@@ -44,5 +46,6 @@ export class CommonService {
     this.canvas = new CanvasUtil();
     this.audio = new AudioUtil();
     this.file = new FileUtil();
+    this.memory = new MemoryUtil();
   }
 }

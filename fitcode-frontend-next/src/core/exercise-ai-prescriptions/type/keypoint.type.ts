@@ -11,5 +11,6 @@ export type Keypoint = {
   // so the first captured keypoint has velocity of 0 or undefined?
   capturedAt: Date;
   frameNum: number;
+  videoCurrentTime?: number;
   visibility: number; // [0, 1], how likely the keypoint is visible. Not all models provide this.
 };

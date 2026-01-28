@@ -53,6 +53,7 @@
     "fps-meter": "^0.1.1",
     "framer-motion": "^12.23.25",
     "image-capture": "^0.4.0",
+    "jszip": "^3.10.1",
     "ml-savitzky-golay": "^5.0.0",
     "next": "^16.0.7",
     "onnxruntime-web": "^1.23.2",
