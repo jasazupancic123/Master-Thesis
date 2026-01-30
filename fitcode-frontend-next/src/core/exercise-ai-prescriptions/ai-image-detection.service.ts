@@ -13,7 +13,6 @@ import {
   getKeypointsFromModelOutput,
 } from '@/components/mobile-movement-validation/state';
 import { lib } from '@/lib';
-import { PowerSettingsNewTwoTone } from '@mui/icons-material';
 
 const ROOT_FOLDER_WITH_IMAGES = '/exercise-cut-videos-to-images';
 
@@ -46,15 +45,9 @@ export class AIImageDetectionService {
       recycledCanvasRef,
     } = state;
 
-    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/db-biceps-curl_frames_10fps`;
-    const files: string[] = await fetch(`${folderUrl}/images.json`)
-      .then((r) => r.json())
-      .catch((e) => {
-        console.error('Error fetching images.json:', e);
-        return [];
-      });
-
-    if (!canvasRef.current) throw new Error('Canvas ref is null');
+    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/cmj-bb_frames_10fps`;
+    const folderWithImages = `${folderUrl}/images`;
+    const disableKeypointDrawing = true;
 
     const skippableModels: PoseModel[] = [];
 
@@ -65,7 +58,15 @@ export class AIImageDetectionService {
         !skippableModels.includes(m)
     );
 
-    const disableKeypointDrawing = true;
+    const files: string[] = await fetch(`${folderUrl}/images.json`)
+      .then((r) => r.json())
+      .catch((e) => {
+        console.error('Error fetching images.json:', e);
+        return [];
+      });
+
+    if (!canvasRef.current) throw new Error('Canvas ref is null');
+
     const mod = await import('jszip');
     const JSZipCtor = (mod as any).default ?? (mod as any); // normalize
     const zip = new JSZipCtor();
@@ -96,7 +97,7 @@ export class AIImageDetectionService {
 
         j++;
 
-        const imageSrc = `${folderUrl}/${file}`;
+        const imageSrc = `${folderWithImages}/${file}`;
 
         const keypoints = await this.detectKeypointsOnImage(
           imageSrc,
@@ -154,6 +155,8 @@ export class AIImageDetectionService {
         URL.revokeObjectURL(a.href);
       }
     }
+
+    console.log('All models processed.');
   }
 
   private async detectKeypointsOnImage(
