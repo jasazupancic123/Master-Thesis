@@ -45,11 +45,20 @@ export class AIImageDetectionService {
       recycledCanvasRef,
     } = state;
 
-    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/cmj-bb_frames_10fps`;
+    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/db-biceps-curl_frames_10fps`;
     const folderWithImages = `${folderUrl}/images`;
     const disableKeypointDrawing = true;
 
-    const skippableModels: PoseModel[] = [];
+    const skippableModels: PoseModel[] = Object.values(PoseModel).filter(
+      (m) =>
+        ![
+          PoseModel.POSE_NET_MOBILE_NET,
+          PoseModel.POSE_NET_RES_NET,
+          PoseModel.MEDIAPIPE_LITE,
+          PoseModel.MEDIAPIPE_FULL,
+          PoseModel.MEDIAPIPE_HEAVY,
+        ].includes(m)
+    );
 
     const allModels = Object.values(PoseModel).filter(
       (m) =>
