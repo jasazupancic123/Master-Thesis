@@ -60,7 +60,7 @@ export class ModelUtil {
           | PoseModel.MEDIAPIPE_FULL
           | PoseModel.MEDIAPIPE_HEAVY,
         loadedPoseLandmarkerTimestampRef,
-        false,
+        true,
         lib.common.env.getPredictOnFolderWithImages()
       );
     } else if ([PoseModel.YOLO11_256, PoseModel.YOLO11_640].includes(model)) {
@@ -134,7 +134,7 @@ export class ModelUtil {
               With 640x480 input, heatmaps are roughly 40x30 (because 640/16=40, 480/16=30).
               Smaller stride (8) → larger heatmaps → more precise keypoints, but slower.
             */
-        outputStride: lib.common.env.getPoseNetOutputStride(),
+        outputStride: 16,
         /*
               inputResolution:
               Important detail: PoseNet works best when width/height are compatible with the stride 

@@ -28,6 +28,8 @@ export async function preloadPoseLandmarker(
             ? POSE_LANDMARKER_HEAVY_PATH
             : POSE_LANDMARKER_FULL_PATH;
 
+      console.log('modelAssetPath', modelAssetPath);
+
       const vision = await FilesetResolver.forVisionTasks('/wasm');
 
       const landmarker = await PoseLandmarker.createFromOptions(vision, {
