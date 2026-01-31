@@ -49,16 +49,7 @@ export class AIImageDetectionService {
     const folderWithImages = `${folderUrl}/images`;
     const disableKeypointDrawing = true;
 
-    const skippableModels: PoseModel[] = Object.values(PoseModel).filter(
-      (m) =>
-        ![
-          PoseModel.POSE_NET_MOBILE_NET,
-          PoseModel.POSE_NET_RES_NET,
-          PoseModel.MEDIAPIPE_LITE,
-          PoseModel.MEDIAPIPE_FULL,
-          PoseModel.MEDIAPIPE_HEAVY,
-        ].includes(m)
-    );
+    const skippableModels: PoseModel[] = [];
 
     const allModels = Object.values(PoseModel).filter(
       (m) =>
