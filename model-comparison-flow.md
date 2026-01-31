@@ -22,7 +22,7 @@ Once done, copy the json files into 'D:\Magistrska\blindoff-magistrska\fitcode-f
 
 ### Step 3 - RTMO-X detection (Ground truth)
 
-Open the 'rtmo.ipynb' notebook inside /notebooks. Go to the cell under the "Image Recognition" title and set the correct TITLE, INPUT_DIR and OUTPUT_DIR. Run the cell.
+Open the 'rtmo.ipynb' notebook inside /notebooks. Connect to the tfodj jupyter environment to use cuda. Go to the cell under the "Image Recognition" title and set the correct TITLE, INPUT_DIR and OUTPUT_DIR. Run the cell.
 
 Should save a "RTMO_results.json" file under the /results folder inside the 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images\${video_name}\results' folder.
 
