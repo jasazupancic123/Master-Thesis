@@ -1,4 +1,4 @@
-# 🏋️‍♂️ Zaključno delo - Realno-časovno 3D zaznavanje drže na robnih napravah za spremljanje in analizo vadbe
+# 🏋️‍♂️ Zaključno delo - Realno-časovno zaznavanje drže na robnih napravah za spremljanje in analizo vadbe
 
 ## 🚀 Cilji in teze zaključnega dela
 
