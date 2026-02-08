@@ -1,11 +1,10 @@
-import type { FirebaseStorage } from '@firebase/storage';
+import { FirebaseStorage } from '@firebase/storage';
 import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 
 import { getFirebaseStorage } from '@/lib/firebase/config';
 
 export class FirebaseStorageUtil {
   private storage: FirebaseStorage;
-
   constructor() {
     this.storage = getFirebaseStorage();
   }

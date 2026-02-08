@@ -6,7 +6,7 @@ A tutorial on how to use this repo to produce model comparison results
 
 Open video_util.ipynb file inside the /notebooks folder. Provide the correct input video file name and run the script.
 
-Should save images under 'D:\Magistrska\public\exercise-cut-videos-to-images\', copy the generated folder to 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images'. The folder should contain a .json file with filenames and extracted images inside the /images folder.
+Should save images in a 'images' folder under 'D:\Magistrska\public\exercise-cut-videos-to-images\', copy the generated folder to 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images'. The folder should contain a .json file with filenames and extracted images inside the /images folder.
 
 ### Step 2 - Run models prediction on generated images
 
@@ -20,13 +20,17 @@ For each model, it should download a json file with the predicted keypoints.
 
 Once done, copy the json files into 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images\${video_name}\results'
 
-### Step 3 - RTMO-X detection (Ground truth)
+### Step 3 - Yolo_256 trained on custom dataset detection
+
+Inside /notebooks, there's a predict-yolo.ipynb script, which generates the outputs for the newly trained yolo_256 model. The generated result json should be added to the 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images\${video_name}\results' folder.
+
+### Step 4 - RTMO-X detection (Ground truth)
 
 Open the 'rtmo.ipynb' notebook inside /notebooks. Connect to the tfodj jupyter environment to use cuda. Go to the cell under the "Image Recognition" title and set the correct TITLE, INPUT_DIR and OUTPUT_DIR. Run the cell.
 
 Should save a "RTMO_results.json" file under the /results folder inside the 'D:\Magistrska\blindoff-magistrska\fitcode-frontend-next\public\exercise-cut-videos-to-images\${video_name}\results' folder.
 
-### Step 4 - Plot compared model results
+### Step 5 - Plot compared model results
 
 Open the 'model-results-comparison.ipynb' file inside /notebooks. Go to the cell under the "Compare outputs of models based on groud truth from RTMO-X" title and set the correct TITLE and FOLDER_NAME. Run the cell.
 
