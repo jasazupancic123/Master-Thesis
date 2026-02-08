@@ -619,13 +619,21 @@ export async function getKeypointsFromModelOutput(
     }
   } else if (lib.common.typeChecker.isTfjs(poseModel)) {
     // yolov11 tfjs model
-    const inputSize = model === PoseModel.YOLO11_256 ? 256 : 640;
+    const inputSize = [PoseModel.YOLO11_256].includes(model) ? 256 : 640;
 
     const input = tf.tidy(() => {
       const frame = tf.browser.fromPixels((imageInput || videoInput)!);
       const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
       return resized.toFloat().div(255).expandDims(0);
     });
+
+    console.log(
+      poseModel.inputs.map((i) => ({
+        name: i.name,
+        shape: i.shape,
+        dtype: i.dtype,
+      }))
+    );
 
     try {
       const out = poseModel.execute(input);
@@ -823,7 +831,6 @@ export function getFullModelName(model: PoseModel): string {
     case PoseModel.YOLO11_640: {
       return `YOLOv11n Pose 600x600`;
     }
-
     case PoseModel.POSE_NET_MOBILE_NET: {
       return `PoseNet MobileNet`;
     }
