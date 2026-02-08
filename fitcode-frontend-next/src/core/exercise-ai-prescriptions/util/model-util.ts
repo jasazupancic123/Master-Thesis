@@ -66,8 +66,10 @@ export class ModelUtil {
     } else if ([PoseModel.YOLO11_256, PoseModel.YOLO11_640].includes(model)) {
       const yoloSize = model === PoseModel.YOLO11_256 ? '256' : '640';
       const modelUrl = `/models/yolov11/${yoloSize}/yolo11n-pose-web-model/model.json`;
+
       await import('@tensorflow/tfjs-backend-webgl');
       await tf.setBackend('webgl');
+
       await tf.ready();
 
       poseModel = await tf.loadGraphModel(modelUrl);
@@ -121,7 +123,6 @@ export class ModelUtil {
       await tf.setBackend('webgl');
       await tf.ready();
 
-
       console.log('TF READY');
 
       const detectorConfig: poseDetection.PosenetModelConfig = {
@@ -161,7 +162,7 @@ export class ModelUtil {
         quantBytes: 4 as QuantBytes, // 1, 2, or 4
       };
 
-      console.log('creating detector...')
+      console.log('creating detector...');
       poseModel = await poseDetection.createDetector(
         SupportedModels.PoseNet,
         detectorConfig

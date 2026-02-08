@@ -19,6 +19,7 @@
     "@emotion/styled": "^11.14.1",
     "@firebase/auth": "^1.11.1",
     "@firebase/storage": "^0.14.0",
+    "@google-cloud/storage": "^7.18.0",
     "@litertjs/core": "^0.2.1",
     "@litertjs/tfjs-interop": "^1.0.1",
     "@mediapipe/camera_utils": "^0.3.1675466862",
