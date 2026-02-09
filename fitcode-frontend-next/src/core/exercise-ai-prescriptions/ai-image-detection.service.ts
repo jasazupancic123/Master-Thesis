@@ -45,7 +45,7 @@ export class AIImageDetectionService {
       recycledCanvasRef,
     } = state;
 
-    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/db-biceps-curl_frames_10fps`;
+    const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/test-blindoff-dataset`;
     const folderWithImages = `${folderUrl}/images`;
     const disableKeypointDrawing = true;
 

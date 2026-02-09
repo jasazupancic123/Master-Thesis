@@ -607,7 +607,7 @@ export async function getKeypointsFromModelOutput(
         result.worldLandmarks &&
         result.worldLandmarks.length > 0;
 
-      if (!hasPose) throw new Error('No pose detected in the image.');
+      if (!hasPose) return [];
 
       keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
         result.worldLandmarks[0], // unit: m, origin: center of hips
