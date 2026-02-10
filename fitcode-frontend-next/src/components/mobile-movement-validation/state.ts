@@ -607,7 +607,7 @@ export async function getKeypointsFromModelOutput(
         result.worldLandmarks &&
         result.worldLandmarks.length > 0;
 
-      if (!hasPose) throw new Error('No pose detected in the image.');
+      if (!hasPose) return [];
 
       keypoints = lib.ai.keypoint.getKeypointsFromPoseLandmarker(
         result.worldLandmarks[0], // unit: m, origin: center of hips
@@ -626,14 +626,6 @@ export async function getKeypointsFromModelOutput(
       const resized = tf.image.resizeBilinear(frame, [inputSize, inputSize]);
       return resized.toFloat().div(255).expandDims(0);
     });
-
-    console.log(
-      poseModel.inputs.map((i) => ({
-        name: i.name,
-        shape: i.shape,
-        dtype: i.dtype,
-      }))
-    );
 
     try {
       const out = poseModel.execute(input);
