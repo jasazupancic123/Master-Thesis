@@ -627,14 +627,6 @@ export async function getKeypointsFromModelOutput(
       return resized.toFloat().div(255).expandDims(0);
     });
 
-    console.log(
-      poseModel.inputs.map((i) => ({
-        name: i.name,
-        shape: i.shape,
-        dtype: i.dtype,
-      }))
-    );
-
     try {
       const out = poseModel.execute(input);
 
