@@ -64,7 +64,7 @@ export class ModelUtil {
         lib.common.env.getPredictOnFolderWithImages()
       );
     } else if ([PoseModel.YOLO11_256, PoseModel.YOLO11_640].includes(model)) {
-      const yoloSize = model === PoseModel.YOLO11_256 ? '256' : '640';
+      const yoloSize = [PoseModel.YOLO11_256].includes(model) ? '256' : '640';
       const modelUrl = `/models/yolov11/${yoloSize}/yolo11n-pose-web-model/model.json`;
 
       await import('@tensorflow/tfjs-backend-webgl');
