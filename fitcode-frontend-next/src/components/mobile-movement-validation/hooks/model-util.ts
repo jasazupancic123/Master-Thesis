@@ -6,12 +6,11 @@ import * as tf from '@tensorflow/tfjs';
 import { CompiledModel } from '@litertjs/core';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 
-import {
-  SupportedModels,
-  type BlazePoseTfjsModelConfig,
-  type MoveNetModelConfig,
-  type PoseDetector,
-  type PosenetModelConfig,
+import type {
+  BlazePoseTfjsModelConfig,
+  MoveNetModelConfig,
+  PoseDetector,
+  PosenetModelConfig,
 } from '@tensorflow-models/pose-detection';
 
 import { OrtScratch } from '../../../core/exercise-ai-prescriptions/type/ort-scratch.type';
@@ -160,7 +159,7 @@ export function useModelUtil() {
 
       console.log('creating detector...');
       poseModel = await poseDetection.createDetector(
-        SupportedModels.PoseNet,
+        poseDetection.SupportedModels.PoseNet,
         detectorConfig
       );
       console.log('detector created');
@@ -186,7 +185,7 @@ export function useModelUtil() {
       };
 
       poseModel = await poseDetection.createDetector(
-        SupportedModels.MoveNet,
+        poseDetection.SupportedModels.MoveNet,
         detectorConfig
       );
     } else if (
@@ -216,7 +215,7 @@ export function useModelUtil() {
       };
 
       poseModel = await poseDetection.createDetector(
-        SupportedModels.BlazePose,
+        poseDetection.SupportedModels.BlazePose,
         detectorConfig
       );
     }
