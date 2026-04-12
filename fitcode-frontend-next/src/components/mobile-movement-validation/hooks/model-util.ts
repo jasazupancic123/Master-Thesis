@@ -1,27 +1,24 @@
 'use client';
 
 import * as ort from 'onnxruntime-web';
-import { OrtScratch } from '../../../core/exercise-ai-prescriptions/type/ort-scratch.type';
+import type { RefObject } from 'react';
+import * as tf from '@tensorflow/tfjs';
 import { CompiledModel } from '@litertjs/core';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
+
 import {
-  BlazePoseTfjsModelConfig,
-  MoveNetModelConfig,
-  PoseDetector,
-  QuantBytes,
   SupportedModels,
+  type BlazePoseTfjsModelConfig,
+  type MoveNetModelConfig,
+  type PoseDetector,
+  type PosenetModelConfig,
 } from '@tensorflow-models/pose-detection';
-import {
-  MobileNetMultiplier,
-  PoseNetArchitecture,
-  PosenetModelConfig,
-} from '@tensorflow-models/pose-detection/dist/posenet/types';
+
+import { OrtScratch } from '../../../core/exercise-ai-prescriptions/type/ort-scratch.type';
 import { PoseModel } from '../../../core/exercise-ai-prescriptions/enum/pose-model.enum';
 import { getPoseLandmarker } from '../../../core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
-import { lib } from '@/lib';
-import * as tf from '@tensorflow/tfjs';
-import { RefObject } from 'react';
 import { loadPoseDetection } from '@/core/exercise-ai-prescriptions/util/pose-client';
+import { lib } from '@/lib';
 
 export function useModelUtil() {
   const loadModel = async (
@@ -115,7 +112,7 @@ export function useModelUtil() {
     ) {
       console.log('LOADING POkSE NET MODEL');
 
-      const architecture: PoseNetArchitecture =
+      const architecture =
         model === PoseModel.POSE_NET_MOBILE_NET ? 'MobileNetV1' : 'ResNet50';
 
       await import('@tensorflow/tfjs-backend-webgl');
@@ -150,7 +147,7 @@ export function useModelUtil() {
         multiplier:
           architecture === 'ResNet50'
             ? 1.0
-            : (lib.common.env.getPoseNetMultiplier() as MobileNetMultiplier),
+            : lib.common.env.getPoseNetMultiplier(),
         /*
               quantBytes:
               This argument controls the bytes used for weight quantization. The available options are:
@@ -158,7 +155,7 @@ export function useModelUtil() {
               2: 2 bytes per float. Leads to slightly lower accuracy and 2x model size reduction (~45MB).
               1: 1 byte per float. Leads to lower accuracy and 4x model size reduction (~22MB).
             */
-        quantBytes: 4 as QuantBytes, // 1, 2, or 4
+        quantBytes: 4, // 1, 2, or 4
       };
 
       console.log('creating detector...');
