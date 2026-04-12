@@ -37,9 +37,7 @@ import {
   PoseDetector,
   PoseNetEstimationConfig,
 } from '@tensorflow-models/pose-detection';
-import { MemSample } from '@/lib/common/service/memory.util';
 import { KeypointHistory } from '@/core/exercise-ai-prescriptions/class/keypoint-history';
-import { gridColumnVisibilityModelSelector } from '@mui/x-data-grid';
 
 export async function setupVideoAndContex(state: {
   videoRef: RefObject<HTMLVideoElement | null>;

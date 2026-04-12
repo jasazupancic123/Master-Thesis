@@ -1,18 +1,11 @@
 import toast from 'react-hot-toast';
 
-import {
-  POSE_LANDMARKER_FULL_PATH,
-  POSE_LANDMARKER_HEAVY_PATH,
-  POSE_LANDMARKER_LITE_PATH,
-} from '@/core/exercise-ai-prescriptions/const/pose-landmarker-paths';
 import type { AINumericConstantName } from '@/core/exercise-ai-prescriptions/enum/ai-numeric-constant-name.enum';
 import { PoseModel } from '@/core/exercise-ai-prescriptions/enum/pose-model.enum';
 import {
   MobileNetMultiplier,
-  PoseNetArchitecture,
   PoseNetOutputStride,
 } from '@tensorflow-models/pose-detection/dist/posenet/types';
-import * as poseDetection from '@tensorflow-models/pose-detection';
 
 export class EnvUtil {
   isProd(): boolean {
