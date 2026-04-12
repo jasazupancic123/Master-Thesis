@@ -1,6 +1,8 @@
+'use client';
+
 import * as ort from 'onnxruntime-web';
-import { OrtScratch } from '../type/ort-scratch.type';
-import { CompiledModel, loadLiteRt, loadAndCompile } from '@litertjs/core';
+import { OrtScratch } from '../../../core/exercise-ai-prescriptions/type/ort-scratch.type';
+import { CompiledModel } from '@litertjs/core';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 import {
   PoseDetector,
@@ -11,24 +13,15 @@ import {
   MobileNetMultiplier,
   PoseNetArchitecture,
 } from '@tensorflow-models/pose-detection/dist/posenet/types';
-import { PoseModel } from '../enum/pose-model.enum';
-import { getPoseLandmarker } from './pose-landmarker-loader.util';
+import { PoseModel } from '../../../core/exercise-ai-prescriptions/enum/pose-model.enum';
+import { getPoseLandmarker } from '../../../core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { lib } from '@/lib';
 import * as tf from '@tensorflow/tfjs';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import { RefObject } from 'react';
 
-export class ModelUtil {
-  private static _instance: ModelUtil;
-
-  private constructor() {}
-
-  static get instance(): ModelUtil {
-    if (!ModelUtil._instance) ModelUtil._instance = new ModelUtil();
-    return ModelUtil._instance;
-  }
-
-  loadModel = async (
+export function useModelUtil() {
+  const loadModel = async (
     model: PoseModel,
     loadedPoseLandmarkerTimestampRef: RefObject<Date | null>,
     isFpsVideo: boolean
@@ -229,11 +222,11 @@ export class ModelUtil {
     return poseModel;
   };
 
-  videoToOrtInputNHWC(
+  const videoToOrtInputNHWC = (
     input: HTMLVideoElement | HTMLCanvasElement,
     inputSize: number,
     scratch: OrtScratch | null
-  ) {
+  ) => {
     // Reuse objects to avoid GC
     const canvas = scratch?.canvas ?? document.createElement('canvas');
     canvas.width = inputSize;
@@ -266,5 +259,7 @@ export class ModelUtil {
     ]);
 
     return { tensor, scratch: { canvas, ctx, data } };
-  }
+  };
+
+  return { loadModel, videoToOrtInputNHWC };
 }

@@ -36,6 +36,18 @@ export class AIImageDetectionService {
     ortScratchRef: RefObject<OrtScratch | null>;
     frameCountRef: RefObject<number>;
     recycledCanvasRef: RefObject<HTMLCanvasElement | null>;
+    loadModel: (
+      model: PoseModel,
+      loadedPoseLandmarkerTimestampRef: RefObject<Date | null>,
+      isFpsVideo: boolean
+    ) => Promise<
+      | PoseLandmarker
+      | tf.GraphModel
+      | CompiledModel
+      | InferenceSession
+      | PoseDetector
+      | null
+    >;
   }) {
     const {
       canvasRef,
@@ -43,6 +55,7 @@ export class AIImageDetectionService {
       ortScratchRef,
       frameCountRef,
       recycledCanvasRef,
+      loadModel,
     } = state;
 
     const folderUrl = `${ROOT_FOLDER_WITH_IMAGES}/test-blindoff-dataset`;
@@ -81,7 +94,7 @@ export class AIImageDetectionService {
         allModels.length
       );
 
-      const currentPoseModel = await lib.ai.model.loadModel(
+      const currentPoseModel = await loadModel(
         currentModel,
         loadedPoseLandmarkerTimestampRef,
         false
