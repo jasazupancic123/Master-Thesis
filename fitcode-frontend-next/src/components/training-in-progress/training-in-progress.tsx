@@ -130,7 +130,7 @@ export default function TrainingInProgress() {
   /* Preload pose landmarker */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    preloadPoseLandmarker();
+    // preloadPoseLandmarker();
   }, []);
 
   /* Init training in progress for selected component */

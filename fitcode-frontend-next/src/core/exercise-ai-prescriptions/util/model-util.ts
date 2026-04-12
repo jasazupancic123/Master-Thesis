@@ -30,7 +30,8 @@ export class ModelUtil {
 
   loadModel = async (
     model: PoseModel,
-    loadedPoseLandmarkerTimestampRef: RefObject<Date | null>
+    loadedPoseLandmarkerTimestampRef: RefObject<Date | null>,
+    isFpsVideo: boolean
   ): Promise<
     | PoseLandmarker
     | tf.GraphModel
@@ -61,7 +62,7 @@ export class ModelUtil {
           | PoseModel.MEDIAPIPE_HEAVY,
         loadedPoseLandmarkerTimestampRef,
         true,
-        lib.common.env.getPredictOnFolderWithImages()
+        !isFpsVideo && lib.common.env.getPredictOnFolderWithImages()
       );
     } else if ([PoseModel.YOLO11_256, PoseModel.YOLO11_640].includes(model)) {
       const yoloSize = [PoseModel.YOLO11_256].includes(model) ? '256' : '640';

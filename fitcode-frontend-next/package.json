@@ -8,7 +8,8 @@
     "start": "next start -p 8080",
     "lint": "eslint . --fix",
     "test": "jest",
-    "deploy": "cross-env NODE_ENV=production && gcloud app deploy"
+    "deploy": "cross-env NODE_ENV=production && gcloud app deploy",
+    "git-push": "cross-env HUSKY=0 git push --force origin jasa/docs/MAG-29/thesis-backup-merge"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

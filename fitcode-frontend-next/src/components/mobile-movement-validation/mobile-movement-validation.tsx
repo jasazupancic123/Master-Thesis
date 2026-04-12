@@ -109,6 +109,7 @@ interface MobileMovementValidationProps {
       router: AppRouterInstance
     ) => Promise<void>;
   };
+  passedPoseModel?: PoseModel;
 }
 
 export default function MobileMovementValidation(
@@ -117,6 +118,8 @@ export default function MobileMovementValidation(
   const theme = useTheme();
   const screenSize = useScreenSize();
   const pathname = usePathname();
+
+  const isFpsVideo = pathname.includes('fps-video');
 
   const { user: authenticatedUser } = useAuthenticatedAuth() || {};
   const mainContext = useMain();
@@ -137,6 +140,7 @@ export default function MobileMovementValidation(
     supersetIndex,
     setIndex,
     stationViewProps,
+    passedPoseModel,
   } = props;
 
   const { workloads, handleUpsertSet } = trainingInProgressContext || {};
@@ -206,7 +210,9 @@ export default function MobileMovementValidation(
 
   // Model and PoseLandmarker
   //const [model] = useState<PoseModel>(PoseModel.MEDIAPIPE);
-  const [model] = useState<PoseModel>(lib.common.env.getPoseModel());
+  const [model] = useState<PoseModel>(
+    passedPoseModel || lib.common.env.getPoseModel()
+  );
   const [poseModel, setPoseModel] = useState<
     | PoseLandmarker
     | tf.GraphModel
@@ -428,11 +434,11 @@ export default function MobileMovementValidation(
 
   // ✅ (1) Mobile console: load Eruda when requested
   useEffect(() => {
-    if (!DEBUG) return;
+    if (!DEBUG && !isFpsVideo) return;
 
     if (typeof window === 'undefined') return;
 
-    const wantDebug = !lib.common.env.disableErudaAI();
+    const wantDebug = isFpsVideo || !lib.common.env.disableErudaAI();
 
     if (!wantDebug) return;
 
@@ -481,7 +487,7 @@ export default function MobileMovementValidation(
 
       if (statusRef.current === DetectionStatus.STOPPED) return;
 
-      if (lib.common.env.getPredictOnFolderWithImages()) {
+      if (!isFpsVideo && lib.common.env.getPredictOnFolderWithImages()) {
         if (!poseModel) return;
 
         await lib.ai.imageDetection.detectOnFolderWithImages({
@@ -493,18 +499,16 @@ export default function MobileMovementValidation(
         });
 
         return;
-      } else if (lib.common.env.getUseRecordedVideoMode()) {
+      } else if (lib.common.env.getUseRecordedVideoMode() || isFpsVideo) {
         if (!poseModel) return;
 
         enableRecordedVideo({
           videoRef,
-          src: '/exercise-videos/db-biceps-curl.mp4',
+          src: isFpsVideo
+            ? '/fps-video-low-quality.mp4'
+            : '/exercise-videos/db-biceps-curl.mp4',
           onVideoEnd: () => {
             console.log('avgFps:', avgFps.current?.value);
-            console.log(
-              'constantKeypointHistory:',
-              constantKeypointHistoryRef.current.history
-            );
           },
           predictWebcam: async () =>
             await predictWebcam({
@@ -1000,7 +1004,11 @@ export default function MobileMovementValidation(
         canvasCtxRef.current = canvasRef.current.getContext('2d');
 
       setPoseModel(
-        await lib.ai.model.loadModel(model, loadedPoseLandmarkerTimestampRef)
+        await lib.ai.model.loadModel(
+          model,
+          loadedPoseLandmarkerTimestampRef,
+          isFpsVideo
+        )
       );
 
       setupVideoAndContex({
@@ -1118,6 +1126,20 @@ export default function MobileMovementValidation(
         position: 'relative',
       }}
     >
+      {isFpsVideo && (
+        <Typography
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100000,
+          }}
+        >
+          Pose model: {model}
+        </Typography>
+      )}
+
       {!isSandbox && canExitWhenImageIsDoneSavingRef.current === true && (
         <LoadingOverlay title="Saving images..." topDownCircularProgress />
       )}
@@ -1158,7 +1180,7 @@ export default function MobileMovementValidation(
         </Box>
       )}
 
-      {poseModel && (
+      {poseModel && !isFpsVideo && (
         <>
           {statusRef.current === DetectionStatus.RECORDING &&
           (recordedRepsRef.current.left.length ||
@@ -1262,7 +1284,7 @@ export default function MobileMovementValidation(
             DetectionStatus.READY,
             DetectionStatus.RECORDING,
             DetectionStatus.STOPPED,
-          ].includes(statusRef.current) ? (
+          ].includes(statusRef.current) && !isFpsVideo ? (
             <>
               <Box
                 width={Math.max(160, window.innerWidth / 5)}

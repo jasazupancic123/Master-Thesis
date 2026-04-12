@@ -83,7 +83,8 @@ export class AIImageDetectionService {
 
       const currentPoseModel = await lib.ai.model.loadModel(
         currentModel,
-        loadedPoseLandmarkerTimestampRef
+        loadedPoseLandmarkerTimestampRef,
+        false
       );
 
       if (!currentPoseModel) throw new Error('Pose model is null');

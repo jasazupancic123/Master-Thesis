@@ -1,5 +1,5 @@
 {
-    "model": "YOLO256_trained_on_blindoff_dataset",
+    "model": "YOLO256_trained_on_own_dataset",
     "keypointsOnImages": [
         {
             "file": "0CJGbLQ5T5amS2DDjKVW_dnu0HfSmrSUp0tvYrW9zzTMhQnP2_bb-sl-rdl_1_2.jpg",

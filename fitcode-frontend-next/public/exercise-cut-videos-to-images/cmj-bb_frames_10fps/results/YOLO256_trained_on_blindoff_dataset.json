@@ -1,5 +1,5 @@
 {
-    "model": "YOLO256_trained_on_blindoff_dataset",
+    "model": "YOLO256_trained_on_own_dataset",
     "keypointsOnImages": [
         {
             "file": "frame_000000.jpg",

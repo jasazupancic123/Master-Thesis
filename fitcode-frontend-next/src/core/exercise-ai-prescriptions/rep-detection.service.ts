@@ -1317,6 +1317,8 @@ export class RepDetectionService {
     const cutAtIndex = constantKeypointHistory.history.findIndex((frame) => {
       const keypoint = frame[0];
 
+      if(!keypoint) return false;
+
       return keypoint.frameNum === startValueFrameNum;
     });
 
