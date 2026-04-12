@@ -91,7 +91,7 @@ export class AIImageDetectionService {
 
       const keypointsOnImages: { file: string; keypoints: Keypoint[] }[] = [];
 
-      let j = 0;
+      let j = 0; // test
       for (const file of files) {
         if (j % 10 === 0)
           console.log(`Processing image ${j} of ${files.length}`);
