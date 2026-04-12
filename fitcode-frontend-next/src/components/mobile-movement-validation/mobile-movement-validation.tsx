@@ -76,6 +76,7 @@ import LoadingOverlay from '@/ui/loading-overlay';
 import { InferenceSession } from 'onnxruntime-web';
 import { OrtScratch } from '@/core/exercise-ai-prescriptions/type/ort-scratch.type';
 import { PoseDetector } from '@tensorflow-models/pose-detection';
+import { useModelUtil } from './hooks/model-util';
 
 const DEBUG = false;
 
@@ -297,6 +298,8 @@ export default function MobileMovementValidation(
   const reloadingModelRef = useRef(false);
   const loadedPoseLandmarkerTimestampRef = useRef<Date | null>(null);
 
+  const { loadModel } = useModelUtil();
+
   useEffect(() => {
     if (!sandboxExerciseId) return;
 
@@ -496,6 +499,7 @@ export default function MobileMovementValidation(
           ortScratchRef,
           frameCountRef,
           recycledCanvasRef,
+          loadModel,
         });
 
         return;
@@ -1004,11 +1008,7 @@ export default function MobileMovementValidation(
         canvasCtxRef.current = canvasRef.current.getContext('2d');
 
       setPoseModel(
-        await lib.ai.model.loadModel(
-          model,
-          loadedPoseLandmarkerTimestampRef,
-          isFpsVideo
-        )
+        await loadModel(model, loadedPoseLandmarkerTimestampRef, isFpsVideo)
       );
 
       setupVideoAndContex({
