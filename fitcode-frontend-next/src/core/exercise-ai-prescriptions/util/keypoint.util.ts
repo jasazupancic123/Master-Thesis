@@ -16,7 +16,6 @@ import type { NumericValueFrameNum } from '../type/numeric-value-frame-num';
 import type { Point2D } from '../type/point.type';
 import { lib } from '@/lib';
 import { Pose } from '@tensorflow-models/pose-detection/dist/types';
-import { RefObject } from 'react';
 
 export class KeypointUtil {
   private static _instance: KeypointUtil;

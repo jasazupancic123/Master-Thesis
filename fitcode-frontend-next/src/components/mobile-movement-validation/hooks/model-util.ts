@@ -5,6 +5,8 @@ import { OrtScratch } from '../../../core/exercise-ai-prescriptions/type/ort-scr
 import { CompiledModel } from '@litertjs/core';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 import {
+  BlazePoseTfjsModelConfig,
+  MoveNetModelConfig,
   PoseDetector,
   QuantBytes,
   SupportedModels,
@@ -12,13 +14,14 @@ import {
 import {
   MobileNetMultiplier,
   PoseNetArchitecture,
+  PosenetModelConfig,
 } from '@tensorflow-models/pose-detection/dist/posenet/types';
 import { PoseModel } from '../../../core/exercise-ai-prescriptions/enum/pose-model.enum';
 import { getPoseLandmarker } from '../../../core/exercise-ai-prescriptions/util/pose-landmarker-loader.util';
 import { lib } from '@/lib';
 import * as tf from '@tensorflow/tfjs';
-import * as poseDetection from '@tensorflow-models/pose-detection';
 import { RefObject } from 'react';
+import { loadPoseDetection } from '@/core/exercise-ai-prescriptions/util/pose-client';
 
 export function useModelUtil() {
   const loadModel = async (
@@ -40,6 +43,8 @@ export function useModelUtil() {
       | ort.InferenceSession
       | PoseDetector
       | null = null;
+
+    const poseDetection = await loadPoseDetection();
 
     if (
       [
@@ -119,7 +124,7 @@ export function useModelUtil() {
 
       console.log('TF READY');
 
-      const detectorConfig: poseDetection.PosenetModelConfig = {
+      const detectorConfig: PosenetModelConfig = {
         /* Can be either MobileNetV1 or ResNet50, ResNet50 is larger and more accurate but slower */
         architecture,
         /*
@@ -179,7 +184,7 @@ export function useModelUtil() {
       await tf.setBackend('webgl');
       await tf.ready();
 
-      const detectorConfig: poseDetection.MoveNetModelConfig = {
+      const detectorConfig: MoveNetModelConfig = {
         modelType,
       };
 
@@ -207,7 +212,7 @@ export function useModelUtil() {
             ? 'full'
             : 'heavy';
 
-      const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
+      const detectorConfig: BlazePoseTfjsModelConfig = {
         runtime: 'tfjs',
         enableSmoothing: true,
         modelType,
