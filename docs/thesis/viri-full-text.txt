@@ -1,0 +1,35 @@
+
+[1] 	Google, "Pose landmark detection guide". Dostopno na: https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker [19. 2. 2026].
+[2] 	H. Xu, B. G. Eduard, A. Zanfir, W. T. Freeman, R. Sukthankar and C. Sminchisescu, GHUM & GHUML: Generative 3D Human Shape and Articulated Pose Models. 2020. Dostopno na: https://openaccess.thecvf.com/content_CVPR_2020/papers/Xu_GHUM__GHUML_Generative_3D_Human_Shape_and_Articulated_Pose_CVPR_2020_paper.pdf [26. 2. 2026].
+[3] 	G. Patterson, T.-Y. Lin, M. R. Ronchi, Y. Cui, M. Maire and P. Dollár, COCO 2017 Keypoint Detection Task. 2017. Dostopno na: https://cocodataset.org/#keypoints-2017 [27. 2. 2026].
+[4] 	T.-Y. Lin, M. Maire, S. Belongie, L. Bourdev, R. Girshick, J. Hays, P. Perona, D. Ramanan, C. L. Zitnick and P. Dollar, "Microsoft COCO: Common Objects in Context," 2015. Dostopno na: https://arxiv.org/pdf/1405.0312 [27. 2. 2026].
+[5] 	A. Kendall, M. Grimes and R. Cipolla, "PoseNet: A Convolutional Network for Real-Time 6-DOF Camera Relocalization," 2016. Dostopno na: https://arxiv.org/pdf/1505.07427 [9. 4. 2026].
+[6]	Varshney, A. "The Advent of Pose Estimation". Medium, 2021. Dostopno na: https://medium.com/@adityavarshney99/the-advent-of-pose-estimation-ec8ea2ca46d4 [11. 6. 2026].
+[7] 	A. G. Howard, M. Zhu, B. Chen, D. Kalenichenko, W. Wang, T. Weyand, M. Andreetto and H. Adam, MobileNets: Efficient Convolutional Neural Networks for Mobile Vision. 2017. Dostopno na: https://arxiv.org/pdf/1704.04861 [21. 3. 2026].
+[8] 	F. Beletti, Y.-H. Chen, A. Oerlemans and R. Votel, MoveNet.SinglePose Model Card. Dostopno na: https://storage.googleapis.com/movenet/MoveNet.SinglePose%20Model%20Card.pdf [30. 4. 2026].
+[9] 	R. Votel and N. Li, Next-Generation Pose Detection with MoveNet and TensorFlow.js. 2021. Dostopno na: https://blog.tensorflow.org/2021/05/next-generation-pose-detection-with-movenet-and-tensorflowjs.html [22. 3. 2026].
+[10] 	V. Bazarevsky, I. Grishchenko, K. Raveendran, T. Zhu, F. Zhang and M. Grundmann, BlazePose: On-device Real-time Body Pose tracking. 2020. Dostopno na: https://arxiv.org/pdf/2006.10204 [5. 3. 2026].
+[11] 	A. Eng, D. Gandluri and F. Beaufort, WebAssembly and WebGPU enhancements for faster Web AI, part 1. 2024. Dostopno na: https://developer.chrome.com/blog/io24-webassembly-webgpu-1 [22. 3. 2026].
+[12] 	A. Eng, D. Gandluri and F. Beaufort, WebAssembly and WebGPU enhancements for faster Web AI, part 2. 2024. Dostopno na: https://developer.chrome.com/blog/io24-webassembly-webgpu-2 [28. 3. 2026].
+[13] 	Tensorflow, Platform and environment (TensorFlow.js Guide). 2022. Dostopno na: https://www.tensorflow.org/js/guide/platform_environment [22. 3. 2026].
+[14] 	A. Stasiuk, Pose Estimation. Metrics. Medium, 2020. Dostopno na: https://stasiuk.medium.com/pose-estimation-metrics-844c07ba0a78 [23. 4. 2026].
+[15] 	T. Lab, Evaluation Metrics. SLEAP Documentation. Dostopno na: https://docs.sleap.ai/v1.5.0/reference/evaluation_metrics/ [29. 4. 2026].
+[16] 	Ultralytics, Pose Estimation Datasets Overview. Ultralytics. Dostopno na: https://docs.ultralytics.com/datasets/pose/#ultralytics-yolo-format [30. 4. 2026].
+
+Urls: 
+-	https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
+-	https://openaccess.thecvf.com/content_CVPR_2020/papers/Xu_GHUM__GHUML_Generative_3D_Human_Shape_and_Articulated_Pose_CVPR_2020_paper.pdf
+-	https://cocodataset.org/#keypoints-2017 
+-	https://arxiv.org/pdf/1405.0312 
+-	https://arxiv.org/abs/1505.07427
+- 	https://medium.com/@adityavarshney99/the-advent-of-pose-estimation-ec8ea2ca46d4
+-	https://arxiv.org/pdf/2006.10204
+-	https://stasiuk.medium.com/pose-estimation-metrics-844c07ba0a78
+-	https://docs.sleap.ai/v1.5.0/reference/evaluation_metrics/#distance-metrics
+-	https://docs.ultralytics.com/datasets/pose/#ultralytics-yolo-format
+-	https://developer.chrome.com/blog/io24-webassembly-webgpu-1
+-	https://developer.chrome.com/blog/io24-webassembly-webgpu-2
+-	https://www.tensorflow.org/js/guide/platform_environment
+-	https://arxiv.org/pdf/1704.04861 
+-	https://storage.googleapis.com/movenet/MoveNet.SinglePose%20Model%20Card.pdf
+-	https://blog.tensorflow.org/2021/05/next-generation-pose-detection-with-movenet-and-tensorflowjs.html
